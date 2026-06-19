@@ -2,8 +2,25 @@ package io.rippledown.model
 
 import kotlinx.serialization.Serializable
 
+const val VARIABLE_TOKEN = "\${}"
+
 @Serializable
-data class Conclusion(val id: Int, val text: String) {
+data class CommentVariable(
+    val charIndex: Int,
+    val attributeId: Int
+)
+
+data class RenderedComment(
+    val text: String,
+    val unresolvedRanges: List<IntRange> = emptyList()
+)
+
+@Serializable
+data class Conclusion(
+    val id: Int,
+    val text: String,
+    val variables: List<CommentVariable> = emptyList()
+) {
     init {
         check(text.isNotEmpty()) {
             "Conclusions cannot be blank."
@@ -14,6 +31,57 @@ data class Conclusion(val id: Int, val text: String) {
     }
 
     fun truncatedText() = if(text.length <= 20) text else "${text.substring(0, 20)}..."
+
+    fun render(
+        case: RDRCase,
+        attributeById: (Int) -> Attribute?
+    ): RenderedComment {
+        if (variables.isEmpty()) {
+            return RenderedComment(text, emptyList())
+        }
+
+        val builder = StringBuilder()
+        val unresolvedRanges = mutableListOf<IntRange>()
+        var currentTokenIndex = 0
+        var textPosition = 0
+
+        variables.forEach { variable ->
+            // Append text before this variable
+            if (variable.charIndex > textPosition) {
+                builder.append(text.substring(textPosition, variable.charIndex))
+            }
+
+            // Resolve the variable
+            val attribute = attributeById(variable.attributeId)
+            val value = if (attribute != null && case.dates.isNotEmpty()) {
+                case.latestValue(attribute)
+            } else {
+                null
+            }
+
+            if (value != null && value.isNotBlank()) {
+                // Substitute with the actual value
+                builder.append(value)
+            } else {
+                // Use marker and record unresolved range
+                val marker = if (attribute != null) "${'$'}{${attribute.name}}" else "${'$'}{unknown}"
+                val markerStart = builder.length
+                builder.append(marker)
+                unresolvedRanges.add(markerStart until builder.length)
+            }
+
+            // Skip the placeholder token in the template
+            textPosition = variable.charIndex + VARIABLE_TOKEN.length
+            currentTokenIndex++
+        }
+
+        // Append any remaining text after the last variable
+        if (textPosition < text.length) {
+            builder.append(text.substring(textPosition))
+        }
+
+        return RenderedComment(builder.toString(), unresolvedRanges)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

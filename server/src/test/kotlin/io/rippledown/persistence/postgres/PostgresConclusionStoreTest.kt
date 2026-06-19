@@ -2,6 +2,7 @@ package io.rippledown.persistence.postgres
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.CommentVariable
 import io.rippledown.model.Conclusion
 import io.rippledown.persistence.ConclusionStore
 import org.apache.commons.lang3.RandomStringUtils
@@ -15,7 +16,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
 
     private lateinit var store: ConclusionStore
 
-    override fun tablesInDropOrder() = listOf(CONCLUSIONS_TABLE)
+    override fun tablesInDropOrder() = listOf(CONCLUSION_VARIABLES_TABLE, CONCLUSIONS_TABLE)
 
     @BeforeTest
     fun setup() {
@@ -123,4 +124,127 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     }
 
     private fun getById(id: Int) = store.all().first { it.id == id }
+
+    // ==================== Comment Variable Tests ====================
+
+    @Test
+    fun `create conclusion with variables`() {
+        // Given
+        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+
+        // When
+        val created = store.create(template, variables)
+
+        // Then
+        created.text shouldBe template
+        created.variables shouldBe variables
+        store.all() shouldBe setOf(created)
+
+        // Rebuild and check
+        reload()
+        val loaded = getById(created.id)
+        loaded.text shouldBe template
+        loaded.variables shouldBe variables
+    }
+
+    @Test
+    fun `create plain conclusion (no variables) with empty variables list`() {
+        // Given
+        val plainText = "Normal results."
+
+        // When
+        val created = store.create(plainText, emptyList())
+
+        // Then
+        created.text shouldBe plainText
+        created.variables shouldBe emptyList()
+        store.all() shouldBe setOf(created)
+
+        // Rebuild and check
+        reload()
+        val loaded = getById(created.id)
+        loaded.text shouldBe plainText
+        loaded.variables shouldBe emptyList()
+    }
+
+    @Test
+    fun `cannot create conclusion with same text and variables as existing`() {
+        // Given
+        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val variables1 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables2 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        store.create(template, variables1)
+
+        // When/Then
+        shouldThrow<IllegalArgumentException> {
+            store.create(template, variables2)
+        }.message shouldBe "A conclusion with the given text already exists."
+    }
+
+    @Test
+    fun `can create conclusion with same text but different variables`() {
+        // Given
+        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val variables1 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables2 = listOf(CommentVariable(8, 3), CommentVariable(24, 4))
+        store.create(template, variables1)
+
+        // When
+        val created2 = store.create(template, variables2)
+
+        // Then
+        created2.text shouldBe template
+        created2.variables shouldBe variables2
+        store.all().size shouldBe 2
+    }
+
+    @Test
+    fun `store conclusion with variables`() {
+        // Given
+        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val variables1 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables2 = listOf(CommentVariable(8, 3), CommentVariable(24, 4))
+        val created = store.create(template, variables1)
+
+        // When
+        store.store(Conclusion(created.id, template, variables2))
+
+        // Then
+        val updated = getById(created.id)
+        updated.text shouldBe template
+        updated.variables shouldBe variables2
+
+        // Rebuild and check
+        reload()
+        val reloaded = getById(created.id)
+        reloaded.text shouldBe template
+        reloaded.variables shouldBe variables2
+    }
+
+    @Test
+    fun `load conclusions with variables`() {
+        // Given
+        val template1 = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val variables1 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val template2 = "Glucose is ${'$'}{} mmol/L"
+        val variables2 = listOf(CommentVariable(11, 3))
+        val plainText = "Normal results."
+
+        val toLoad = setOf(
+            Conclusion(1, template1, variables1),
+            Conclusion(2, template2, variables2),
+            Conclusion(3, plainText, emptyList())
+        )
+
+        // When
+        store.load(toLoad)
+
+        // Then
+        store.all() shouldBe toLoad
+
+        // Rebuild and check
+        reload()
+        store.all() shouldBe toLoad
+    }
 }

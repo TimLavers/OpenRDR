@@ -1,12 +1,15 @@
 package io.rippledown.kb
 
 import io.rippledown.model.COMMENT_SEPARATOR
+import io.rippledown.model.CommentVariable
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.persistence.OrderStore
 
-typealias ConclusionProvider = EntityProvider<Conclusion>
+interface ConclusionProvider : EntityProvider<Conclusion> {
+    fun getOrCreate(text: String, variables: List<CommentVariable> = emptyList()): Conclusion
+}
 
 class InterpretationViewManager(
     conclusionOrderStore: OrderStore,
