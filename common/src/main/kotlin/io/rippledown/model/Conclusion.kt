@@ -10,10 +10,16 @@ data class CommentVariable(
     val attributeId: Int
 )
 
+@Serializable
 data class RenderedComment(
     val text: String,
-    val unresolvedRanges: List<IntRange> = emptyList()
+    val unresolvedRanges: List<IntRangeData> = emptyList()
 )
+
+@Serializable
+data class IntRangeData(val start: Int, val endInclusive: Int) {
+    fun toIntRange() = start..endInclusive
+}
 
 @Serializable
 data class Conclusion(
@@ -41,7 +47,7 @@ data class Conclusion(
         }
 
         val builder = StringBuilder()
-        val unresolvedRanges = mutableListOf<IntRange>()
+        val unresolvedRanges = mutableListOf<IntRangeData>()
         var currentTokenIndex = 0
         var textPosition = 0
 
@@ -67,7 +73,7 @@ data class Conclusion(
                 val marker = if (attribute != null) "${'$'}{${attribute.name}}" else "${'$'}{unknown}"
                 val markerStart = builder.length
                 builder.append(marker)
-                unresolvedRanges.add(markerStart until builder.length)
+                unresolvedRanges.add(IntRangeData(markerStart, builder.length - 1))
             }
 
             // Skip the placeholder token in the template

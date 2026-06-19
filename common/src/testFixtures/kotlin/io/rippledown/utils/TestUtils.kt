@@ -101,7 +101,8 @@ fun createViewableCaseWithInterpretation(
         }
     }
     val text = interp.conclusionTexts().joinToString(" ")
-    val viewableInterp = ViewableInterpretation(interpretation = interp, textGivenByRules = text)
+    val viewableInterp =
+        ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = emptyList())
     case.viewableInterpretation = viewableInterp
     return case
 }
@@ -131,7 +132,8 @@ fun createLargeViewableCaseWithInterpretation(
         }
     }
     val text = interp.conclusionTexts().joinToString(" ")
-    case.viewableInterpretation = ViewableInterpretation(interpretation = interp, textGivenByRules = text)
+    case.viewableInterpretation =
+        ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = emptyList())
     return case
 }
 
@@ -170,7 +172,7 @@ fun createViewableInterpretation(
 ): ViewableInterpretation {
     val interp = createInterpretation(commentToConditions)
     val text = interp.conclusionTexts().joinToString(" ")
-    return ViewableInterpretation(interpretation = interp, textGivenByRules = text)
+    return ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = emptyList())
 }
 
 fun beSameAs(other: Condition) = Matcher<Condition> { value ->

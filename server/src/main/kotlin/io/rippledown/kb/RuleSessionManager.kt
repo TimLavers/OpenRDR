@@ -368,7 +368,8 @@ class RuleSessionManager(
         commitCurrentRuleSession()
         logger.info("rule session committed")
         val updatedInterpretation = kb.interpret(case.case)
-        case.viewableInterpretation = kb.interpretationViewManager.viewableInterpretation(updatedInterpretation)
+        case.viewableInterpretation =
+            kb.interpretationViewManager.viewableInterpretation(updatedInterpretation, case.case)
         logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
         return case
     }
