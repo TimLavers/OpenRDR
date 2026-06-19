@@ -95,6 +95,7 @@ object KBChatService {
         "1_task.md",
         "2_interactions.md",
         "3_defining_the_report_change.md",
+        "16_comment_variables.md",
         "4_starting_the_rule_session.md",
         "5_defining_the_reasons.md",
         "6_suggested_conditions.md",

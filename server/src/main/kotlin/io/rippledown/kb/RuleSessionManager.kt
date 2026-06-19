@@ -59,9 +59,13 @@ class RuleSessionManager(
         return cornerstoneStatus(null)
     }
 
-    override fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
+    override fun startRuleSessionToAddComment(
+        viewableCase: ViewableCase,
+        comment: String,
+        variables: List<io.rippledown.model.CommentVariable>
+    ): CornerstoneStatus {
         currentDiff = Addition(comment)
-        val conclusion = kb.conclusionManager.getOrCreate(comment)
+        val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }

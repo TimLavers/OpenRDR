@@ -3,10 +3,14 @@ package io.rippledown.kb.chat.action
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.model.CommentVariable
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
-data class AddComment(val comment: String) : ChatAction {
+data class AddComment(
+    val comment: String,
+    val variables: List<CommentVariable> = emptyList()
+) : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
         currentCase: ViewableCase?,
@@ -16,7 +20,7 @@ data class AddComment(val comment: String) : ChatAction {
             return ChatResponse(RULE_SESSION_ALREADY_ACTIVE_ERROR)
         }
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-        val cornerstoneStatus = ruleService.startRuleSessionToAddComment(sessionCase, comment)
+        val cornerstoneStatus = ruleService.startRuleSessionToAddComment(sessionCase, comment, variables)
         ruleService.sendCornerstoneStatus()
         return modelResponder.response(cornerstoneStatus.summary())
     }

@@ -122,7 +122,7 @@ class RuleSessionManagerTest {
     fun `should clear currentDiff when committing a rule session`() {
         // Given
         val viewableCase = createViewableCase("Case1", value = "1.0")
-        rsm.startRuleSessionToAddComment(viewableCase, "Go.")
+        rsm.startRuleSessionToAddComment(viewableCase, "Go.", emptyList())
         rsm.currentDiff shouldNotBe null
 
         // When
@@ -161,7 +161,7 @@ class RuleSessionManagerTest {
     fun `should clear currentDiff when cancelling a rule session`() {
         // Given
         val viewableCase = createViewableCase("Case1", value = "1.0")
-        rsm.startRuleSessionToAddComment(viewableCase, "Go.")
+        rsm.startRuleSessionToAddComment(viewableCase, "Go.", emptyList())
         rsm.currentDiff shouldNotBe null
 
         // When
@@ -252,7 +252,7 @@ class RuleSessionManagerTest {
         val comment = "Go to Bondi."
 
         // When
-        rsm.startRuleSessionToAddComment(viewableCase, comment)
+        rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
         rsm.currentDiff shouldBe Addition(comment)
@@ -265,7 +265,7 @@ class RuleSessionManagerTest {
         // Given
         val viewableCase = createViewableCase("Case1", value = "1.0")
         val comment = "Go to Bondi."
-        rsm.startRuleSessionToAddComment(viewableCase, comment)
+        rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
         rsm.commitCurrentRuleSession()
 
         // When

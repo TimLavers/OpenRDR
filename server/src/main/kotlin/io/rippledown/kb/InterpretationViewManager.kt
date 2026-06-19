@@ -5,7 +5,7 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.persistence.OrderStore
 
 interface ConclusionProvider : EntityProvider<Conclusion> {
-    fun getOrCreate(text: String, variables: List<CommentVariable> = emptyList()): Conclusion
+    fun getOrCreate(text: String, variables: List<CommentVariable>): Conclusion
 }
 
 class InterpretationViewManager(

@@ -22,6 +22,7 @@ data class ActionComment(
     val attributeMoved: String? = null,
     val destination: String? = null,
     val suggestions: List<String>? = null,
+    val variables: List<io.rippledown.model.CommentVariable>? = null,
 ) {
     companion object {
         val logger = lazyLogger
@@ -50,12 +51,18 @@ data class ActionComment(
         if (reasonId != null) asMap["reasonId"] = reasonId
         if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
         if (destination != null) asMap["destination"] = destination
+        if (variables != null) asMap["variables"] = variables
 
-        if (fn.parameters.size != asMap.size) return null
         val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {
             val parameterName = it.name
-            if (!asMap.containsKey(parameterName)) return null
+            if (!asMap.containsKey(parameterName)) {
+                if (it.isOptional) {
+                    // Skip optional parameters with no value
+                    return@forEach
+                }
+                return null
+            }
 
             val parameterValue = asMap[parameterName]!!
             paramMap[it] = parameterValue

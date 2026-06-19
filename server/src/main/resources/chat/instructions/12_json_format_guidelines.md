@@ -71,6 +71,26 @@ For a user prompt to confirm adding the comment "Let's surf":
 }
 ```
 
+For user input "Patient ${} has glucose ${} mmol/L" with variable bindings:
+
+```json
+{
+  "action": "{{ADD_COMMENT}}",
+  "comment": "Patient ${} has glucose ${} mmol/L",
+  "variables": [
+    {
+      "charIndex": 8,
+      "attributeId": 1
+    },
+    {
+      "charIndex": 26,
+      "attributeId": 2
+    }
+  ],
+  "reasons": []
+}
+```
+
 3, Remove Action:
 For user input "Comment123" with reasons ["Outdated", "Incorrect"]:
 

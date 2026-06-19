@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.rippledown.model.CommentVariable
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
@@ -9,7 +10,11 @@ import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
 
 interface RuleService {
-    fun startRuleSessionToAddComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
+    fun startRuleSessionToAddComment(
+        viewableCase: ViewableCase,
+        comment: String,
+        variables: List<CommentVariable> = emptyList()
+    ): CornerstoneStatus
     fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
     fun startRuleSessionToReplaceComment(
         viewableCase: ViewableCase,
