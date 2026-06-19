@@ -12,6 +12,7 @@ import io.kotest.assertions.withClue
 import io.mockk.mockk
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
+import io.rippledown.model.RenderedComment
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
 import kotlinx.coroutines.test.runTest
@@ -42,8 +43,10 @@ class InterpretationViewUpdateTest {
     fun `should update interpretation when the interpretation text is changed`() = runTest {
         val i1 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(1, textA))) }
         val i2 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(2, textB))) }
-        val original = ViewableInterpretation(i1)
-        val changed = ViewableInterpretation(i2)
+        val original =
+            ViewableInterpretation(i1, textGivenByRules = textA, renderedComments = listOf(RenderedComment(textA)))
+        val changed =
+            ViewableInterpretation(i2, textGivenByRules = textB, renderedComments = listOf(RenderedComment(textB)))
 
         lateinit var textLayoutResult: TextLayoutResult
         val handler = object : InterpretationViewHandler by handler {

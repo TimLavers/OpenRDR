@@ -29,16 +29,20 @@ fun ReadonlyInterpretationView(
 ) {
     val conclusionList = interpretation.conclusions().toList()
     var comments by remember {
-        mutableStateOf(interpretation.conclusions().map { it.text })
+        mutableStateOf(interpretation.renderedComments.map { it.text })
     }
-    var unstyledText by remember { mutableStateOf(comments.unhighlighted(diff)) }
+    var unresolvedRanges by remember {
+        mutableStateOf(interpretation.renderedComments.map { it.unresolvedRanges })
+    }
+    var unstyledText by remember { mutableStateOf(comments.unhighlighted(diff, unresolvedRanges)) }
     var styledText by remember { mutableStateOf(unstyledText) }
     var commentIndex by remember { mutableStateOf(-1) }
     var isOverDiffText by remember { mutableStateOf(false) }
 
     LaunchedEffect(interpretation, diff) {
-        comments = interpretation.conclusions().map { it.text }
-        unstyledText = comments.unhighlighted(diff)
+        comments = interpretation.renderedComments.map { it.text }
+        unresolvedRanges = interpretation.renderedComments.map { it.unresolvedRanges }
+        unstyledText = comments.unhighlighted(diff, unresolvedRanges)
         styledText = unstyledText
     }
 
