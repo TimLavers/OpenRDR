@@ -72,29 +72,25 @@ internal class ConclusionTest {
     @Test
     fun `CommentVariable construction`() {
         // Given
-        val charIndex = 15
         val attributeId = 42
 
         // When
-        val variable = CommentVariable(charIndex, attributeId)
+        val variable = CommentVariable(attributeId)
 
         // Then
-        variable.charIndex shouldBe charIndex
         variable.attributeId shouldBe attributeId
     }
 
     @Test
     fun `CommentVariable equality`() {
         // Given
-        val variable1 = CommentVariable(10, 1)
-        val variable2 = CommentVariable(10, 1)
-        val variable3 = CommentVariable(10, 2)
-        val variable4 = CommentVariable(20, 1)
+        val variable1 = CommentVariable(1)
+        val variable2 = CommentVariable(1)
+        val variable3 = CommentVariable(2)
 
         // Then
         variable1 shouldBe variable2
         variable1 shouldNotBe variable3
-        variable1 shouldNotBe variable4
     }
 
     @Test
@@ -110,7 +106,7 @@ internal class ConclusionTest {
     @Test
     fun `Conclusion with variables serializes correctly`() {
         // Given
-        val variables = listOf(CommentVariable(10, 1), CommentVariable(25, 2))
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val conclusion = Conclusion(1, "Patient ${'$'}{} has ${'$'}{} mmol/L", variables)
 
         // When
@@ -125,9 +121,9 @@ internal class ConclusionTest {
     @Test
     fun `Conclusion equality still based on id only (with variables)`() {
         // Given
-        val conclusion1 = Conclusion(1, "Template ${'$'}{}", listOf(CommentVariable(10, 1)))
-        val conclusion2 = Conclusion(1, "Different ${'$'}{}", listOf(CommentVariable(10, 2)))
-        val conclusion3 = Conclusion(2, "Template ${'$'}{}", listOf(CommentVariable(10, 1)))
+        val conclusion1 = Conclusion(1, "Template ${'$'}{}", listOf(CommentVariable(1)))
+        val conclusion2 = Conclusion(1, "Different ${'$'}{}", listOf(CommentVariable(2)))
+        val conclusion3 = Conclusion(2, "Template ${'$'}{}", listOf(CommentVariable(1)))
 
         // Then
         conclusion1 shouldBe conclusion2
@@ -137,8 +133,8 @@ internal class ConclusionTest {
     @Test
     fun `Conclusion hashCode still based on id only (with variables)`() {
         // Given
-        val conclusion1 = Conclusion(1, "Template ${'$'}{}", listOf(CommentVariable(10, 1)))
-        val conclusion2 = Conclusion(1, "Different ${'$'}{}", listOf(CommentVariable(10, 2)))
+        val conclusion1 = Conclusion(1, "Template ${'$'}{}", listOf(CommentVariable(1)))
+        val conclusion2 = Conclusion(1, "Different ${'$'}{}", listOf(CommentVariable(2)))
 
         // Then
         conclusion1.hashCode() shouldBe conclusion2.hashCode()
@@ -165,7 +161,7 @@ internal class ConclusionTest {
     fun `render single variable with valid value substitutes correctly`() {
         // Given
         val template = "Glucose is ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(11, 1))
+        val variables = listOf(CommentVariable(1))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(mapOf(Attribute(1, "Glucose") to "12"))
         val attributeById = { id: Int -> Attribute(id, "Glucose") }
@@ -182,7 +178,7 @@ internal class ConclusionTest {
     fun `render multiple variables with valid values substitutes all`() {
         // Given
         val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(
             mapOf(
@@ -210,7 +206,7 @@ internal class ConclusionTest {
     fun `render variable with missing attribute uses marker and records unresolved range`() {
         // Given
         val template = "Glucose is ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(11, 999))
+        val variables = listOf(CommentVariable(999))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase()
         val attributeById = { id: Int -> null }
@@ -227,7 +223,7 @@ internal class ConclusionTest {
     fun `render variable with blank value uses marker and records unresolved range`() {
         // Given
         val template = "Glucose is ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(11, 1))
+        val variables = listOf(CommentVariable(1))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(mapOf(Attribute(1, "Glucose") to ""))
         val attributeById = { id: Int -> Attribute(id, "Glucose") }
@@ -244,7 +240,7 @@ internal class ConclusionTest {
     fun `render variable with no value for case uses marker and records unresolved range`() {
         // Given
         val template = "Glucose is ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(11, 1))
+        val variables = listOf(CommentVariable(1))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(emptyMap()) // No values for any attribute
         val attributeById = { id: Int -> Attribute(id, "Glucose") }
@@ -261,7 +257,7 @@ internal class ConclusionTest {
     fun `render adjacent variables substitutes both correctly`() {
         // Given
         val template = "Values: ${'$'}{}${'$'}{}"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(11, 2))
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(
             mapOf(
@@ -289,7 +285,7 @@ internal class ConclusionTest {
     fun `render variable at start of string substitutes correctly`() {
         // Given
         val template = "${'$'}{} is the value"
-        val variables = listOf(CommentVariable(0, 1))
+        val variables = listOf(CommentVariable(1))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(mapOf(Attribute(1, "Test") to "42"))
         val attributeById = { id: Int -> Attribute(id, "Test") }
@@ -306,7 +302,7 @@ internal class ConclusionTest {
     fun `render variable at end of string substitutes correctly`() {
         // Given
         val template = "The value is ${'$'}{}"
-        val variables = listOf(CommentVariable(13, 1))
+        val variables = listOf(CommentVariable(1))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(mapOf(Attribute(1, "Test") to "42"))
         val attributeById = { id: Int -> Attribute(id, "Test") }
@@ -323,7 +319,7 @@ internal class ConclusionTest {
     fun `render mix of resolved and unresolved variables records only unresolved ranges`() {
         // Given
         val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val conclusion = Conclusion(1, template, variables)
         val case = createTestCase(mapOf(Attribute(1, "Patient Name") to "John Doe"))
         val attributeById = { id: Int ->

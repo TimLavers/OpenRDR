@@ -6,7 +6,6 @@ const val VARIABLE_TOKEN = "\${}"
 
 @Serializable
 data class CommentVariable(
-    val charIndex: Int,
     val attributeId: Int
 )
 
@@ -48,37 +47,36 @@ data class Conclusion(
 
         val builder = StringBuilder()
         val unresolvedRanges = mutableListOf<IntRangeData>()
-        var currentTokenIndex = 0
         var textPosition = 0
 
         variables.forEach { variable ->
-            // Append text before this variable
-            if (variable.charIndex > textPosition) {
-                builder.append(text.substring(textPosition, variable.charIndex))
-            }
+            val tokenIndex = text.indexOf(VARIABLE_TOKEN, textPosition)
+            if (tokenIndex != -1) {
+                // Append text before this variable
+                builder.append(text.substring(textPosition, tokenIndex))
 
-            // Resolve the variable
-            val attribute = attributeById(variable.attributeId)
-            val value = if (attribute != null && case.dates.isNotEmpty()) {
-                case.latestValue(attribute)
-            } else {
-                null
-            }
+                // Resolve the variable
+                val attribute = attributeById(variable.attributeId)
+                val value = if (attribute != null && case.dates.isNotEmpty()) {
+                    case.latestValue(attribute)
+                } else {
+                    null
+                }
 
-            if (value != null && value.isNotBlank()) {
-                // Substitute with the actual value
-                builder.append(value)
-            } else {
-                // Use marker and record unresolved range
-                val marker = if (attribute != null) "${'$'}{${attribute.name}}" else "${'$'}{unknown}"
-                val markerStart = builder.length
-                builder.append(marker)
-                unresolvedRanges.add(IntRangeData(markerStart, builder.length - 1))
-            }
+                if (value != null && value.isNotBlank()) {
+                    // Substitute with the actual value
+                    builder.append(value)
+                } else {
+                    // Use marker and record unresolved range
+                    val marker = if (attribute != null) "${'$'}{${attribute.name}}" else "${'$'}{unknown}"
+                    val markerStart = builder.length
+                    builder.append(marker)
+                    unresolvedRanges.add(IntRangeData(markerStart, builder.length - 1))
+                }
 
-            // Skip the placeholder token in the template
-            textPosition = variable.charIndex + VARIABLE_TOKEN.length
-            currentTokenIndex++
+                // Skip the placeholder token in the template
+                textPosition = tokenIndex + VARIABLE_TOKEN.length
+            }
         }
 
         // Append any remaining text after the last variable

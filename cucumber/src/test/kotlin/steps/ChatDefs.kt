@@ -257,6 +257,12 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
     }
 
+    fun requestCommentBeAddedWithVariables(comment: String, attributeNames: List<String>) {
+        waitForBotQuestion()
+        val variableBindings = attributeNames.joinToString(", ") { "attribute \"$it\"" }
+        enterChatTextAndSend("Add the comment: \"$comment\" with bindings: $variableBindings")
+    }
+
     fun removeCommentWithoutConfirmation(comment: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Remove the comment: \"$comment\"")

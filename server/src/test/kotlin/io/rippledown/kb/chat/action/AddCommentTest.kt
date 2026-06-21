@@ -109,12 +109,14 @@ class AddCommentTest {
     @Test
     fun `should start a rule session to add a comment with variables`() = runTest {
         //Given
-        val commentToAdd = "Patient ${'$'}{} has glucose ${'$'}{}"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val commentToAdd = "Patient {Name} has glucose {Glucose}"
+        val internalComment = "Patient \${} has glucose \${}"
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val action = AddComment(commentToAdd, variables)
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
         coEvery {
-            ruleService.startRuleSessionToAddComment(any(), commentToAdd, variables)
+            ruleService.startRuleSessionToAddComment(currentCase, internalComment, variables)
         } returns ccStatus
 
         val responseFromModel = ChatResponse("There are 84 cornerstone cases. Do you want to review them?")
@@ -131,12 +133,14 @@ class AddCommentTest {
     @Test
     fun `should send CornerstoneStatus after starting a rule session to add a comment with variables`() = runTest {
         //Given
-        val commentToAdd = "Patient ${'$'}{} has glucose ${'$'}{}"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val commentToAdd = "Patient {Name} has glucose {Glucose}"
+        val internalComment = "Patient \${} has glucose \${}"
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val action = AddComment(commentToAdd, variables)
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
         coEvery {
-            ruleService.startRuleSessionToAddComment(any(), commentToAdd, variables)
+            ruleService.startRuleSessionToAddComment(currentCase, internalComment, variables)
         } returns ccStatus
 
         val responseFromModel = ChatResponse("There are 84 cornerstone cases. Do you want to review them?")
@@ -152,8 +156,8 @@ class AddCommentTest {
     @Test
     fun `should return error when rule session is already active for AddComment with variables`() = runTest {
         //Given
-        val commentToAdd = "Patient ${'$'}{} has glucose ${'$'}{}"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val commentToAdd = "Patient {Name} has glucose {Glucose}"
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val action = AddComment(commentToAdd, variables)
         coEvery { ruleService.isRuleSessionActive() } returns true
 
@@ -170,13 +174,14 @@ class AddCommentTest {
     @Test
     fun `should start rule session when no rule session is active for AddComment with variables`() = runTest {
         //Given
-        val commentToAdd = "Patient ${'$'}{} has glucose ${'$'}{}"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val commentToAdd = "Patient {Name} has glucose {Glucose}"
+        val internalComment = "Patient \${} has glucose \${}"
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
         val action = AddComment(commentToAdd, variables)
         coEvery { ruleService.isRuleSessionActive() } returns false
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
         coEvery {
-            ruleService.startRuleSessionToAddComment(any(), commentToAdd, variables)
+            ruleService.startRuleSessionToAddComment(currentCase, internalComment, variables)
         } returns ccStatus
 
         val responseFromModel = ChatResponse("There are 84 cornerstone cases. Do you want to review them?")
@@ -186,7 +191,7 @@ class AddCommentTest {
         val response = action.doIt(ruleService, currentCase, modelResponder)
 
         //Then
-        coVerify { ruleService.startRuleSessionToAddComment(any(), commentToAdd, variables) }
+        coVerify { ruleService.startRuleSessionToAddComment(currentCase, internalComment, variables) }
         coVerify { ruleService.sendCornerstoneStatus() }
         response shouldBe responseFromModel
     }

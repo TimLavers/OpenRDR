@@ -25,8 +25,8 @@ class PostgresConclusionStore(private val db: Database): ConclusionStore {
 
     override fun all() = transaction(db) {
         return@transaction PGConclusion.all().map { pgConclusion ->
-            val variables = pgConclusion.variables.map { pgVar ->
-                CommentVariable(pgVar.charIndex, pgVar.attributeId)
+            val variables = pgConclusion.variables.sortedBy { it.ordinal }.map { pgVar ->
+                CommentVariable(pgVar.attributeId)
             }
             Conclusion(pgConclusion.id.value, pgConclusion.conclusionText, variables)
         }.toSet()
@@ -46,10 +46,10 @@ class PostgresConclusionStore(private val db: Database): ConclusionStore {
             pgConclusion = PGConclusion.new {
                 conclusionText = text
             }
-            variables.forEach { variable ->
+            variables.forEachIndexed { index, variable ->
                 PGConclusionVariable.new {
-                    this.conclusion = pgConclusion!!
-                    charIndex = variable.charIndex
+                    this.conclusion = pgConclusion
+                    ordinal = index
                     attributeId = variable.attributeId
                 }
             }
@@ -64,10 +64,10 @@ class PostgresConclusionStore(private val db: Database): ConclusionStore {
 
             // Delete existing variables and reinsert
             pgConclusion.variables.forEach { it.delete() }
-            conclusion.variables.forEach { variable ->
+            conclusion.variables.forEachIndexed { index, variable ->
                 PGConclusionVariable.new {
                     this.conclusion = pgConclusion
-                    charIndex = variable.charIndex
+                    ordinal = index
                     attributeId = variable.attributeId
                 }
             }
@@ -82,10 +82,10 @@ class PostgresConclusionStore(private val db: Database): ConclusionStore {
                 val pgConclusion = PGConclusion.new(conclusion.id) {
                     conclusionText = conclusion.text
                 }
-                conclusion.variables.forEach { variable ->
+                conclusion.variables.forEachIndexed { index, variable ->
                     PGConclusionVariable.new {
                         this.conclusion = pgConclusion
-                        charIndex = variable.charIndex
+                        ordinal = index
                         attributeId = variable.attributeId
                     }
                 }
@@ -106,7 +106,7 @@ class PGConclusion(id: EntityID<Int>): IntEntity(id){
 
 object PGConclusionVariables : IntIdTable(name = CONCLUSION_VARIABLES_TABLE) {
     val conclusion = reference("conclusion_id", PGConclusions)
-    val charIndex = integer("char_index")
+    val ordinal = integer("ordinal")
     val attributeId = integer("attribute_id")
 }
 
@@ -114,6 +114,6 @@ class PGConclusionVariable(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<PGConclusionVariable>(PGConclusionVariables)
 
     var conclusion by PGConclusion referencedOn PGConclusionVariables.conclusion
-    var charIndex by PGConclusionVariables.charIndex
+    var ordinal by PGConclusionVariables.ordinal
     var attributeId by PGConclusionVariables.attributeId
 }

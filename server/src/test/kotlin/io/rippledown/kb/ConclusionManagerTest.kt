@@ -97,8 +97,8 @@ class ConclusionManagerTest {
     fun `getOrCreate with variables`() {
         // Given
         val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
-        val variables1 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
-        val variables2 = listOf(CommentVariable(8, 3), CommentVariable(24, 4))
+        val variables1 = listOf(CommentVariable(1), CommentVariable(2))
+        val variables2 = listOf(CommentVariable(3), CommentVariable(4))
 
         // When
         val conclusion1 = conclusionManager.getOrCreate(template, variables1)
@@ -117,7 +117,7 @@ class ConclusionManagerTest {
     fun `getOrCreate with same text and variables returns same conclusion`() {
         // Given
         val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
 
         // When
         val conclusion1 = conclusionManager.getOrCreate(template, variables)
@@ -145,7 +145,7 @@ class ConclusionManagerTest {
     fun `plain text and templated text with same text are different conclusions`() {
         // Given
         val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
-        val variables = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables = listOf(CommentVariable(1), CommentVariable(2))
 
         // When
         val plainConclusion = conclusionManager.getOrCreate(template) // No variables
@@ -162,9 +162,9 @@ class ConclusionManagerTest {
     fun `load from persistent store with variables`() {
         // Given
         val template1 = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
-        val variables1 = listOf(CommentVariable(8, 1), CommentVariable(24, 2))
+        val variables1 = listOf(CommentVariable(1), CommentVariable(2))
         val template2 = "Glucose is ${'$'}{} mmol/L"
-        val variables2 = listOf(CommentVariable(11, 3))
+        val variables2 = listOf(CommentVariable(3))
         val plainText = "Normal results."
 
         val toLoad = setOf(

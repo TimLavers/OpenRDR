@@ -5,38 +5,45 @@ substitute the actual values from the case when displaying the report.
 
 ## Placeholder Syntax
 
-Placeholders are written as `${}` in the comment text. For example:
+Placeholders are written as `{attributeName}` in the comment text. For example:
 
-- "Patient ${} has a glucose level of ${} mmol/L"
-- "The ${} is elevated at ${}"
+- "Patient {name} has a glucose level of {glucose} mmol/L"
+- "The {wave} is elevated at {height}"
 
 ## Binding Placeholders to Attributes
 
 When the user requests to add a comment with placeholders, you must:
 
-1. Identify each `${}` placeholder in the comment text (in order of appearance)
-2. Ask the user which attribute each placeholder should be bound to
-3. The available attributes are listed in the ATTRIBUTES variable
+1. Identify each `{attributeName}` placeholder in the comment text (in order of appearance)
+2. For each placeholder, check if the name inside the braces matches an attribute name (case-insensitive)
+3. If there is a clear spelling error in the placeholder, correct it in the comment confirmed with the user
+4. Always confirm with the user the comment to be added if there are any placeholders
+5. If there is an exact match, auto-bind that placeholder to the matching attribute WITHOUT asking the user
+6. If there is no clear match or if there are multiple matches, ask the user which attribute the placeholder is
+   referring to
+7. The available attributes are listed in the ATTRIBUTES variable
 
 ## Example Interaction
 
-User: "Add a comment: Patient ${} has a glucose level of ${} mmol/L"
+User: "Add a comment: Patient {name} has a glucose level of {gluc} mmol/L"
 
-You should respond by asking which attributes to bind:
+If "Name" and "Glucose" are valid attributes, auto-bind them and confirm:
 
 ```
 {
   "action": "{{USER_ACTION}}",
-  "message": "Which attribute should the first placeholder be bound to? The available attributes are:\n{{ATTRIBUTES}}"
+  "message": "I will add the comment: 'Patient {Name} has a glucose level of {Glucose} mmol/L'. Confirm?"
 }
 ```
 
-After the user specifies the bindings, confirm the complete comment with the bindings:
+User: "Add a comment: The {} is elevated at {}"
+
+Since the placeholders are empty, ask for bindings:
 
 ```
 {
   "action": "{{USER_ACTION}}",
-  "message": "I will add the comment: 'Patient ${} has a glucose level of ${} mmol/L' with bindings: first placeholder → <attribute name>, second placeholder → <attribute name>. Confirm?"
+  "message": "Which attribute should the first placeholder refer to? The available attributes are:\n{{ATTRIBUTES}}"
 }
 ```
 
@@ -48,33 +55,22 @@ information:
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "Patient ${} has a glucose level of ${} mmol/L",
+  "comment": "Patient {Name} has a glucose level of {Glucose} mmol/L",
   "variables": [
     {
-      "charIndex": 8,
-      "attributeId": <attribute
-      id
-      for
-      first
-      placeholder>
+      "attributeId": <numeric ID of the Name attribute>
     },
     {
-      "charIndex": 32,
-      "attributeId": <attribute
-      id
-      for
-      second
-      placeholder>
+      "attributeId": <numeric ID of the Glucose attribute>
     }
-  ],
-  "reasons": []
+  ]
 }
 ```
 
 Where:
 
-- `charIndex` is the position in the comment text where the `${}` placeholder starts (0-based)
-- `attributeId` is the ID of the attribute to bind to that placeholder
+- `attributeId` is the **numeric ID** (integer) of the attribute to bind to that placeholder, NOT the attribute name.
+  Use the ID from the ATTRIBUTES list.
 
 ## Important Notes
 

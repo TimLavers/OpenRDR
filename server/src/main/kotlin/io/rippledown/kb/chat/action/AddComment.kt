@@ -4,6 +4,7 @@ import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.model.CommentVariable
+import io.rippledown.model.VARIABLE_TOKEN
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
@@ -20,7 +21,11 @@ data class AddComment(
             return ChatResponse(RULE_SESSION_ALREADY_ACTIVE_ERROR)
         }
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
-        val cornerstoneStatus = ruleService.startRuleSessionToAddComment(sessionCase, comment, variables)
+
+        // Convert {attributeName} placeholders to the internal VARIABLE_TOKEN (${})
+        val internalComment = comment.replace(Regex("\\{[^}]*\\}"), Regex.escapeReplacement(VARIABLE_TOKEN))
+
+        val cornerstoneStatus = ruleService.startRuleSessionToAddComment(sessionCase, internalComment, variables)
         ruleService.sendCornerstoneStatus()
         return modelResponder.response(cornerstoneStatus.summary())
     }
