@@ -4,7 +4,6 @@ import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.integration.waitUntilAsserted
-import net.sourceforge.tess4j.Tesseract
 import org.assertj.swing.edt.GuiActionRunner.execute
 import java.awt.Rectangle
 import java.awt.Robot
@@ -18,7 +17,6 @@ import com.google.genai.types.Part
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
-
 
 /**
  * Reads the rendered text from a Compose Text node.
@@ -48,18 +46,6 @@ fun captureComponentScreenshot(context: AccessibleContext): BufferedImage? {
     val size = accessibleComponent.size ?: return null
     val screenRect = Rectangle(screenLocation.x, screenLocation.y, size.width, size.height)
     return Robot().createScreenCapture(screenRect)
-}
-
-object TesseractInstallation {
-    val tesseract: Tesseract = Tesseract()
-
-    init {
-        tesseract.setDatapath("/opt/homebrew/opt/tesseract/share/tessdata")
-    }
-
-    fun getText(image: BufferedImage): String? {
-        return tesseract.doOCR(image)
-    }
 }
 
 object GeminiOCR {
@@ -103,7 +89,6 @@ fun getComponentTextUsingOCR(context: AccessibleContext?): List<String> {
     if (context == null) return emptyList()
     val image = captureComponentScreenshot(context) ?: return emptyList()
 
-//    val text = TesseractInstallation.getText(image)
     val text = GeminiOCR.getText(image)
     return text?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
 }

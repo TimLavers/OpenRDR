@@ -7,7 +7,6 @@ plugins {
 dependencies {
     testImplementation(project(":ui"))
     testImplementation(project(":llm"))
-    testImplementation(project(":llm"))
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.currentOs)
     testImplementation(libs.composePreviewDesktop)
@@ -23,7 +22,6 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.mockk)
-    testImplementation(libs.tess4j)
     testImplementation("com.google.genai:google-genai:1.46.0")
 }
 
@@ -76,7 +74,6 @@ fun runCucumber(cukeArgs: List<String>): Int {
         listOf(
         "-Xmx4G",
             "--enable-native-access=ALL-UNNAMED",
-            "-Djna.library.path=/opt/homebrew/lib",
         "-cp",
             "\"${cp.replace("\\", "\\\\")}\"",
         "io.cucumber.core.cli.Main"
@@ -153,7 +150,7 @@ tasks.register<JavaExec>("cucumberFolderTest") {
 fun JavaExec.setupExec() {
     group = "verification"
     maxHeapSize = "4G"
-    jvmArgs("--enable-native-access=ALL-UNNAMED", "-Djna.library.path=/opt/homebrew/lib")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
     mainClass.set("io.cucumber.core.cli.Main")
     classpath = cukeClassPath
 }
