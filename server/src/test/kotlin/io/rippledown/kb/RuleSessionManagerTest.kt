@@ -258,6 +258,20 @@ class RuleSessionManagerTest {
         rsm.currentDiff shouldBe Addition(comment)
     }
 
+    @Test
+    fun `should use rendered text in diff when adding comment with variable`() {
+        // Given
+        val viewableCase = createViewableCase("Case1", value = "5.0")
+        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(glucose().id))
+
+        // When
+        rsm.startRuleSessionToAddComment(viewableCase, template, variables)
+
+        // Then - diff should show rendered value, not raw template
+        rsm.currentDiff shouldBe Addition("Glucose is 5.0")
+    }
+
     // --- startRuleSessionToRemoveComment ---
 
     @Test
@@ -291,6 +305,23 @@ class RuleSessionManagerTest {
 
         // Then
         rsm.currentDiff shouldBe Replacement(original, replacement)
+    }
+
+    @Test
+    fun `should use rendered text in diff when replacing comment with variable`() {
+        // Given
+        val viewableCase = createViewableCase("Case1", value = "5.0")
+        val original = "Old comment"
+        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(glucose().id))
+        rsm.startRuleSessionToAddComment(viewableCase, original)
+        rsm.commitCurrentRuleSession()
+
+        // When
+        rsm.startRuleSessionToReplaceComment(viewableCase, original, template, variables)
+
+        // Then - diff should show rendered value, not raw template
+        rsm.currentDiff shouldBe Replacement(original, "Glucose is 5.0")
     }
 
     // --- sendCornerstoneStatus ---

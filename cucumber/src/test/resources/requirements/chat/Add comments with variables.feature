@@ -1,6 +1,5 @@
 Feature: Add comments with variables
 
-  @@single
   Scenario: The user should be able to use the chat to add a comment with a single variable
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -8,8 +7,8 @@ Feature: Add comments with variables
     And I start the client application
     And I see the case Bondi as the current case
     And the report is empty
-    When  I build a rule to add the comment "The wave is {wave}"
-    Then the report should be "The wave is excellent"
+    When  I build a rule to add the comment "The wave quality is {wave}"
+    Then the report should be "The wave quality is excellent"
 
   Scenario: The user should be able to use the chat to add a comment with multiple variables
     Given case Bondi is provided having data:
@@ -17,9 +16,23 @@ Feature: Add comments with variables
       | Sun  | hot       |
     And I start the client application
     And I see the case Bondi as the current case
-    And the report is empty
-    When  I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
-    Then the report should be "The wave is excellent and the sun is hot"
+    When  I build a rule to add the comment "The wave quality is {wave} and the air temperature is {sun}"
+    Then the report should be "The wave quality is excellent and the air temperature is hot"
+
+  @single
+  Scenario: Variables in a comment should be re-evaluated when the selected case changes
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And case Malabar is provided having data:
+      | Wave | non-existent |
+      | Sun  | scorching    |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And  I build a rule to add the comment "The wave quality is {wave} and the air temperature is {sun}"
+    When I select the case Malabar
+    Then the report should be "The wave quality is non-existent and the air temperature is scorching"
+    And pause
 
   Scenario: The user should be able to use the chat to add a comment with a variable when the attribute has no value
     Given case Bondi is provided having data:

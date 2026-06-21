@@ -245,8 +245,15 @@ class ChatDefs {
     @And("I request that the comment {string} be added")
     fun requestCommentBeAdded(comment: String) {
         waitForBotQuestion()
-        addCommentWithoutConfirmation(comment)
+        if (commentContainsVariable(comment)) {
+            addCommentThenConfirm(comment)
+        } else {
+            addCommentWithoutConfirmation(comment)
+        }
+        //the model should always prompt for confirmation if the comment contains a variable
     }
+
+    private fun commentContainsVariable(comment: String) = comment.contains("{")
 
     @And("I request that the comment {string} be added without being prompted")
     fun requestCommentBeAddedWithoutPrompt(comment: String) {
@@ -257,10 +264,9 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
     }
 
-    fun requestCommentBeAddedWithVariables(comment: String, attributeNames: List<String>) {
-        waitForBotQuestion()
-        val variableBindings = attributeNames.joinToString(", ") { "attribute \"$it\"" }
-        enterChatTextAndSend("Add the comment: \"$comment\" with bindings: $variableBindings")
+    fun addCommentThenConfirm(comment: String) {
+        addCommentWithoutConfirmation(comment)
+        confirm()
     }
 
     fun removeCommentWithoutConfirmation(comment: String) {

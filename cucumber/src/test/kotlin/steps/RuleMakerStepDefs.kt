@@ -20,22 +20,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @And("I build a rule to add the comment {string} where the value of the attribute called {string} should be inserted into the comment")
-    fun buildRuleToAddCommentWithSingleVariable(comment: String, attributeName: String) {
-        with(chatDefs) {
-            requestCommentBeAddedWithVariables(comment, listOf(attributeName))
-            completeRule()
-        }
-    }
-
-    @And("I build a rule to add the comment {string} where the values of the attributes called {string} and {string} should be inserted into the comment")
-    fun buildRuleToAddCommentWithTwoVariables(comment: String, attribute1: String, attribute2: String) {
-        with(chatDefs) {
-            requestCommentBeAddedWithVariables(comment, listOf(attribute1, attribute2))
-            completeRule()
-        }
-    }
-
     @And("I build a rule to add another comment for the same case {string}")
     fun buildRuleToAddAnotherAnotherCommentForTheSameCase(comment: String) {
         with(chatDefs) {

@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.rippledown.model.Attribute
 import io.rippledown.model.CommentVariable
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -40,4 +41,10 @@ interface RuleService {
     fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition?
     fun currentRuleSessionConditionTexts(): Set<String>
     fun isRuleSessionActive(): Boolean
+
+    /**
+     * Resolve a (possibly misspelt or differently-cased) attribute name typed or dictated by the user
+     * to a known attribute, or null if there is no acceptable match.
+     */
+    fun attributeForName(name: String): Attribute?
 }

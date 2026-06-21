@@ -49,8 +49,9 @@ Since the placeholders are empty, ask for bindings:
 
 ## Emitting the Add Comment Action
 
-When emitting the `{{ADD_COMMENT}}` action for a comment with variables, include the `variables` field with the binding
-information:
+When emitting the `{{ADD_COMMENT}}` action for a comment with variables, include the `variables` field with one entry
+per placeholder, **in the order the placeholders appear in the comment**. Each entry binds a placeholder to an attribute
+by its **name** (taken from the ATTRIBUTES list):
 
 ```json
 {
@@ -58,10 +59,10 @@ information:
   "comment": "Patient {Name} has a glucose level of {Glucose} mmol/L",
   "variables": [
     {
-      "attributeId": <numeric ID of the Name attribute>
+      "attributeName": "Name"
     },
     {
-      "attributeId": <numeric ID of the Glucose attribute>
+      "attributeName": "Glucose"
     }
   ]
 }
@@ -69,14 +70,15 @@ information:
 
 Where:
 
-- `attributeId` is the **numeric ID** (integer) of the attribute to bind to that placeholder, NOT the attribute name.
-  Use the ID from the ATTRIBUTES list.
+- `attributeName` is the name of the attribute to bind to that placeholder, exactly as it appears in the ATTRIBUTES
+  list. Do NOT send numeric ids; the system resolves names to attributes (tolerating case differences and small
+  spelling mistakes).
 
 ## Important Notes
 
 - Placeholders are bound in the order they appear in the comment text
-- Each placeholder must be bound to exactly one attribute
-- The attribute ID must correspond to a valid attribute from the ATTRIBUTES list
+- Each placeholder must have exactly one entry in `variables`, with its `attributeName`
+- The attribute name should correspond to a valid attribute from the ATTRIBUTES list
 - If the user provides a comment without placeholders, do not ask for bindings and emit the action without the
   `variables` field
 - Keep the attribute names in the confirmation message clear and readable for the user

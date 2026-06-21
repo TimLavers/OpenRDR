@@ -8,6 +8,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.DATE_CELL_DESCRIPTION_PREFIX
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -27,7 +28,8 @@ fun RowScope.DateCell(index: Int, date: Long, columnWidths: ColumnWidths) {
                 contentDescription = dateCellContentDescription(index)
             },
         fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Start
+        textAlign = TextAlign.Start,
+        fontSize = 11.sp
     )
 }
 

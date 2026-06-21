@@ -8,9 +8,7 @@ import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.Interpretation
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -64,8 +62,8 @@ class RuleSessionManager(
         comment: String,
         variables: List<io.rippledown.model.CommentVariable>
     ): CornerstoneStatus {
-        currentDiff = Addition(comment)
         val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
+        currentDiff = Addition(renderedText(conclusion, viewableCase.case))
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -83,11 +81,36 @@ class RuleSessionManager(
         replacementComment: String,
         variables: List<io.rippledown.model.CommentVariable>
     ): CornerstoneStatus {
-        currentDiff = Replacement(replacedComment, replacementComment)
         val replacedConclusion = kb.conclusionManager.getOrCreate(replacedComment)
         val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
+        currentDiff = Replacement(
+            renderedText(replacedConclusion, viewableCase.case),
+            renderedText(replacementConclusion, viewableCase.case)
+        )
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
         return startRuleSession(viewableCase.case, action)
+    }
+
+    /**
+     * Render a conclusion for the given case, substituting any comment variables with their attribute
+     * values so that the diff/preview shows human-readable text rather than the internal token form.
+     */
+    private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
+        conclusion.render(case) { id -> runCatching { kb.attributeManager.getById(id) }.getOrNull() }.text
+
+    override fun attributeForName(name: String): Attribute? {
+        val attributes = kb.attributeManager.all()
+        // Exact, case-insensitive match.
+        attributes.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
+        // Tolerate differences in punctuation/whitespace.
+        val target = name.normalizeForComparison()
+        attributes.firstOrNull { it.name.normalizeForComparison() == target }?.let { return it }
+        // Tolerate small misspellings via edit distance, scaled to the attribute name length.
+        return attributes
+            .map { it to levenshtein(it.name.lowercase(), name.lowercase()) }
+            .filter { (attribute, distance) -> distance <= maxOf(1, attribute.name.length / 4) }
+            .minByOrNull { it.second }
+            ?.first
     }
 
     override fun sendCornerstoneStatus() {
@@ -407,4 +430,33 @@ class RuleSessionManager(
             throw e
         }
     }
+}
+
+/**
+ * Classic Levenshtein edit distance, used to tolerate small misspellings when matching a
+ * user-supplied attribute name to a known attribute.
+ */
+internal fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
+    val lhsLength = lhs.length
+    val rhsLength = rhs.length
+    if (lhsLength == 0) return rhsLength
+    if (rhsLength == 0) return lhsLength
+
+    var previousRow = IntArray(rhsLength + 1) { it }
+    var currentRow = IntArray(rhsLength + 1)
+    for (i in 1..lhsLength) {
+        currentRow[0] = i
+        for (j in 1..rhsLength) {
+            val substitutionCost = if (lhs[i - 1] == rhs[j - 1]) 0 else 1
+            currentRow[j] = minOf(
+                currentRow[j - 1] + 1,          // insertion
+                previousRow[j] + 1,             // deletion
+                previousRow[j - 1] + substitutionCost // substitution
+            )
+        }
+        val swap = previousRow
+        previousRow = currentRow
+        currentRow = swap
+    }
+    return previousRow[rhsLength]
 }

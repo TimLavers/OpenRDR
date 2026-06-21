@@ -23,7 +23,7 @@ class InterpretationViewManager(
         val textFromOrderedConclusions = orderedConclusions.joinToString(COMMENT_SEPARATOR) { it.text }
         val renderedComments = orderedConclusions.map { conclusion ->
             conclusion.render(case) { id ->
-                attributeProvider.getById(id)
+                runCatching { attributeProvider.getById(id) }.getOrNull()
             }
         }
         return ViewableInterpretation(

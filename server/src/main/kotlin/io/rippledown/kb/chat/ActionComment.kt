@@ -22,7 +22,7 @@ data class ActionComment(
     val attributeMoved: String? = null,
     val destination: String? = null,
     val suggestions: List<String>? = null,
-    val variables: List<io.rippledown.model.CommentVariable>? = null,
+    val variables: List<ChatCommentVariable>? = null,
 ) {
     companion object {
         val logger = lazyLogger
