@@ -1,10 +1,8 @@
 package io.rippledown.chat
 
 import com.google.genai.Chat
-import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
-import com.google.genai.types.Part
 import io.rippledown.llm.callWithTimeout
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
@@ -52,7 +50,7 @@ class Conversation(
     override suspend fun response(message: String): String {
         val currentChat = checkNotNull(chat) { "Chat not initialized. Call startConversation first." }
         val response = try {
-            callWithTimeout { currentChat.sendMessage(message) }
+            sendMessageHandlingEmptyContent(message)
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             throw e
@@ -60,12 +58,29 @@ class Conversation(
         return handleResponse(response)
     }
 
+    /**
+     * Send [message] on the multi-turn chat, recovering from a google-genai SDK defect.
+     *
+     * google-genai 1.46.0's `ChatBase.updateHistoryNonStreaming` calls `Optional.get()` on the first
+     * candidate's content and throws [NoSuchElementException] when the model returns a candidate with
+     * no content (an empty turn). The SDK throws before recording the turn in history, so the chat is
+     * left in a consistent state and the send can be retried. Because the model runs at temperature 0,
+     * re-sending the identical input would deterministically reproduce the empty turn, so the retry
+     * appends an explicit nudge to vary the input and elicit a non-empty response.
+     */
+    private fun sendMessageHandlingEmptyContent(message: String): GenerateContentResponse =
+        try {
+            callWithTimeout { chat.sendMessage(message) }
+        } catch (e: NoSuchElementException) {
+            logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
+            callWithTimeout { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+        }
+
     internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
         var currentResponse = response
         while (currentResponse.functionCalls()?.isNotEmpty() == true) {
             val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
-            val prompt = Content.fromParts(Part.fromText("Function results: ${functionResults.joinToString(", ")}"))
-            currentResponse = callWithTimeout { chat.sendMessage(prompt) }
+            currentResponse = sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}")
         }
         val text = currentResponse.text()?.stripEnclosingJson()
         if (text != null) {
@@ -74,7 +89,7 @@ class Conversation(
         logEmptyResponse(currentResponse)
         if (emptyResponseRetries < MAX_EMPTY_RESPONSE_RETRIES) {
             logger.info("Retrying after empty response (attempt ${emptyResponseRetries + 1} of $MAX_EMPTY_RESPONSE_RETRIES)...")
-            currentResponse = callWithTimeout { chat.sendMessage("Please continue with the appropriate response.") }
+            currentResponse = sendMessageHandlingEmptyContent(CONTINUE_NUDGE)
             return handleResponse(currentResponse, emptyResponseRetries + 1)
         }
         return "No function call or text response"
@@ -93,6 +108,7 @@ class Conversation(
 
     companion object {
         const val MAX_EMPTY_RESPONSE_RETRIES = 2
+        const val CONTINUE_NUDGE = "Please continue with the appropriate response."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"

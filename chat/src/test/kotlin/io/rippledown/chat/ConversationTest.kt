@@ -6,10 +6,12 @@ import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.chat.Conversation.Companion.CONTINUE_NUDGE
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import kotlinx.coroutines.test.runTest
@@ -135,6 +137,35 @@ class ConversationTest {
             coVerify { reasonTransformer.transform(userExpression) }
         }
     }
+
+    @Test
+    fun `should recover when the SDK throws on an empty candidate by retrying with a nudge`() =
+        runTest {
+            // Given the start succeeds, then the next send throws the google-genai SDK's
+            // NoSuchElementException (a candidate with no content), and the nudged retry succeeds.
+            val startResponse = mockResponse(text = "Hello, how can I assist you today?")
+            val recovered = mockResponse(text = "The comment was replaced.")
+            val messages = mutableListOf<String>()
+            val chat = mockk<Chat>()
+            every { chat.sendMessage(capture(messages)) } answers {
+                when (messages.size) {
+                    1 -> startResponse // startConversation
+                    2 -> throw NoSuchElementException("No value present") // empty candidate content
+                    else -> recovered // nudged retry
+                }
+            }
+            val conversation = Conversation(object : ChatService {
+                override fun startChat() = chat
+            }, functionCallHandlers)
+            conversation.startConversation()
+
+            // When
+            val response = conversation.response("Replace the comment by \"Comment 2.\"")
+
+            // Then
+            response shouldBe "The comment was replaced."
+            messages.last() shouldContain CONTINUE_NUDGE
+        }
 
     @Test
     fun `should handle multiple rounds of function calls`() =
