@@ -266,7 +266,13 @@ class ChatDefs {
 
     fun addCommentThenConfirm(comment: String) {
         addCommentWithoutConfirmation(comment)
-        confirm()
+        // The model is instructed to ask for confirmation when a comment contains a variable, but it
+        // occasionally proceeds straight to the rule session (showing suggestions). Only confirm if it
+        // actually asks, otherwise the "yes" arrives after the suggestions and is misread as a condition.
+        waitForBotTextToContainAnyOf(CONFIRM, SUGGESTION)
+        if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+            confirm()
+        }
     }
 
     fun removeCommentWithoutConfirmation(comment: String) {

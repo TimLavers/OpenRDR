@@ -32,7 +32,6 @@ Feature: Add comments with variables
     When I select the case Malabar
     Then the report should be "The wave quality is non-existent and the air temperature is scorching"
 
-  @single
   Scenario: The user should be able to use the chat to add a comment with a variable when the attribute has no value in the current case
     Given case Manly is provided having data:
       | Wave | good |
@@ -44,7 +43,6 @@ Feature: Add comments with variables
     When  I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
     Then the report should contain "The wave is excellent"
     And the report should show "Sun" as unevaluated
-    And pause
 
   Scenario: Building a rule with variables should create a cornerstone copy of the processed case
     Given case Bondi is provided having data:
@@ -66,9 +64,9 @@ Feature: Add comments with variables
       | Case2 |
     And I start the client application
     And I should see the case Case1 as the current case
-    And I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
-    And the report should be "The wave is excellent and the sun is hot"
+    And I build a rule to add the comment "The TSH value of {TSH} is normal."
+    And the report should be "The TSH value of 0.667 is normal."
     And select the case Case2
-    And the interpretation should be "The wave is excellent and the sun is hot"
-    When I add another comment "Bring flippers.", allowing the report change to the cornerstone case
-    Then the report should be "The wave is excellent and the sun is hot. Bring flippers."
+    And the interpretation should be "The TSH value of 0.72 is normal."
+    When I add another comment "CDE is also normal.", allowing the report change to the cornerstone case
+    Then the report should be "The TSH value of 0.72 is normal. CDE is also normal."
