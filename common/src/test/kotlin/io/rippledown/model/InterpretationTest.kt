@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.Rule
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -195,6 +194,75 @@ class InterpretationTest {
             "r contains \"text r\"",
             "s contains \"text s\""
         )
+    }
+
+    @Test
+    fun toCommentsShouldConvertInternalPlaceholdersToAttributeNameFormat() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val sun = Attribute(2, "Sun")
+        val template = "The wave quality is " + VARIABLE_TOKEN + " and the air temperature is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
+        val conclusion = Conclusion(1, template, variables)
+        val rule = Rule(0, null, conclusion, emptySet())
+        interpretation.add(rule)
+
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+            addValue(sun, 0, "hot")
+        }.build("Test", 1)
+
+        val commentsJson = interpretation.toComments(case)
+        val comments = Json.decodeFromString<Set<String>>(commentsJson)
+        // Bot should see {attributeName} format, not internal ${}
+        comments shouldBe setOf("The wave quality is {Wave} and the air temperature is {Sun}")
+    }
+
+    @Test
+    fun toCommentsShouldHandlePlainCommentsWithoutVariables() {
+        val interpretation = Interpretation(caseId)
+        val conclusion = Conclusion(1, "Plain comment")
+        val rule = Rule(0, null, conclusion, emptySet())
+        interpretation.add(rule)
+
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        val commentsJson = interpretation.toComments(case)
+        val comments = Json.decodeFromString<Set<String>>(commentsJson)
+        comments shouldBe setOf("Plain comment")
+    }
+
+    @Test
+    fun toCommentsShouldReturnEmptyArrayForEmptyInterpretation() {
+        val interpretation = Interpretation(caseId)
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        val commentsJson = interpretation.toComments(case)
+        val comments = Json.decodeFromString<Set<String>>(commentsJson)
+        comments shouldBe emptySet()
+    }
+
+    @Test
+    fun toCommentsShouldConvertInternalPlaceholdersForMultipleComments() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val conclusion1 = Conclusion(1, "First comment")
+        val template2 = "Wave is " + VARIABLE_TOKEN
+        val variables2 = listOf(CommentVariable(wave.id))
+        val conclusion2 = Conclusion(2, template2, variables2)
+        val rule1 = Rule(0, null, conclusion1, emptySet())
+        val rule2 = Rule(1, null, conclusion2, emptySet())
+        interpretation.add(rule1)
+        interpretation.add(rule2)
+
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+
+        val commentsJson = interpretation.toComments(case)
+        val comments = Json.decodeFromString<Set<String>>(commentsJson)
+        // Bot should see {attributeName} format
+        comments shouldBe setOf("First comment", "Wave is {Wave}")
     }
 
     private fun containsText(attribute: Attribute, match: String): EpisodicCondition {

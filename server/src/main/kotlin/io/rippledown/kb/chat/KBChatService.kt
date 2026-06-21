@@ -122,7 +122,7 @@ object KBChatService {
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
-        "COMMENTS" to viewableCase.case.interpretation.toComments(),
+        "COMMENTS" to viewableCase.case.interpretation.toComments(viewableCase.case),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
         "GET_SUGGESTED_CONDITIONS" to GET_SUGGESTED_CONDITIONS,
         "REASON" to REASON,

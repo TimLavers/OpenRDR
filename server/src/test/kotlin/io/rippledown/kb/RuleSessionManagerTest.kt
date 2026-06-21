@@ -324,6 +324,80 @@ class RuleSessionManagerTest {
         rsm.currentDiff shouldBe Replacement(original, "Glucose is 5.0")
     }
 
+    // --- attributeForName ---
+
+    @Test
+    fun `attributeForName should find exact match case-insensitive`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("glucose")
+
+        // Then
+        result?.name shouldBe "Glucose"
+    }
+
+    @Test
+    fun `attributeForName should find exact match with different case`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("GLUCOSE")
+
+        // Then
+        result?.name shouldBe "Glucose"
+    }
+
+    @Test
+    fun `attributeForName should return null for non-existent attribute`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("NonExistent")
+
+        // Then
+        result shouldBe null
+    }
+
+    @Test
+    fun `attributeForName should find match with normalized punctuation`() {
+        // Given
+        kb.attributeManager.getOrCreate("TSH (free)")
+
+        // When
+        val result = rsm.attributeForName("TSH free")
+
+        // Then
+        result?.name shouldBe "TSH (free)"
+    }
+
+    @Test
+    fun `attributeForName should find match with small misspelling via Levenshtein`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("Gluose")
+
+        // Then
+        result?.name shouldBe "Glucose"
+    }
+
+    @Test
+    fun `attributeForName should reject large misspellings`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("Xyz")
+
+        // Then
+        result shouldBe null
+    }
+
     // --- sendCornerstoneStatus ---
 
     @Test
