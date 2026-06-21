@@ -80,11 +80,12 @@ class RuleSessionManager(
     override fun startRuleSessionToReplaceComment(
         viewableCase: ViewableCase,
         replacedComment: String,
-        replacementComment: String
+        replacementComment: String,
+        variables: List<io.rippledown.model.CommentVariable>
     ): CornerstoneStatus {
         currentDiff = Replacement(replacedComment, replacementComment)
         val replacedConclusion = kb.conclusionManager.getOrCreate(replacedComment)
-        val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment)
+        val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
         return startRuleSession(viewableCase.case, action)
     }

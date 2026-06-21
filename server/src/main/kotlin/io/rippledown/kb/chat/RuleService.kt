@@ -19,7 +19,8 @@ interface RuleService {
     fun startRuleSessionToReplaceComment(
         viewableCase: ViewableCase,
         replacedComment: String,
-        replacementComment: String
+        replacementComment: String,
+        variables: List<CommentVariable> = emptyList()
     ): CornerstoneStatus
     fun exemptCornerstoneCase(): CornerstoneStatus
     fun selectCornerstoneCase(index: Int): CornerstoneStatus
