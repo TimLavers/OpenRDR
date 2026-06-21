@@ -51,6 +51,8 @@ const val CANCEL_BUTTON_FOR_REMOVE_COMMENT = "$REMOVE_COMMENT_PREFIX$CANCEL"
 
 const val CONDITION_PREFIX = "CONDITION_PREFIX"
 
+const val UNRESOLVED_VARIABLE_TOOLTIP = "This attribute has no value in the current case."
+
 
 
 

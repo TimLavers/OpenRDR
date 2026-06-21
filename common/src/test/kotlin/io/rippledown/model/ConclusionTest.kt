@@ -215,7 +215,7 @@ internal class ConclusionTest {
         val rendered = conclusion.render(case, attributeById)
 
         // Then
-        rendered.text shouldBe "Glucose is ${'$'}{unknown} mmol/L"
+        rendered.text shouldBe "Glucose is {no value} mmol/L"
         rendered.unresolvedRanges.size shouldBe 1
     }
 
@@ -232,7 +232,7 @@ internal class ConclusionTest {
         val rendered = conclusion.render(case, attributeById)
 
         // Then
-        rendered.text shouldBe "Glucose is ${'$'}{Glucose} mmol/L"
+        rendered.text shouldBe "Glucose is {Glucose: no value} mmol/L"
         rendered.unresolvedRanges.size shouldBe 1
     }
 
@@ -249,7 +249,7 @@ internal class ConclusionTest {
         val rendered = conclusion.render(case, attributeById)
 
         // Then
-        rendered.text shouldBe "Glucose is ${'$'}{Glucose} mmol/L"
+        rendered.text shouldBe "Glucose is {Glucose: no value} mmol/L"
         rendered.unresolvedRanges.size shouldBe 1
     }
 
@@ -334,7 +334,7 @@ internal class ConclusionTest {
         val rendered = conclusion.render(case, attributeById)
 
         // Then
-        rendered.text shouldBe "Patient John Doe has glucose ${'$'}{Glucose} mmol/L"
+        rendered.text shouldBe "Patient John Doe has glucose {Glucose: no value} mmol/L"
         rendered.unresolvedRanges.size shouldBe 1
     }
 

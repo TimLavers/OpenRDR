@@ -19,7 +19,6 @@ Feature: Add comments with variables
     When  I build a rule to add the comment "The wave quality is {wave} and the air temperature is {sun}"
     Then the report should be "The wave quality is excellent and the air temperature is hot"
 
-  @single
   Scenario: Variables in a comment should be re-evaluated when the selected case changes
     Given case Bondi is provided having data:
       | Wave | excellent |
@@ -32,17 +31,20 @@ Feature: Add comments with variables
     And  I build a rule to add the comment "The wave quality is {wave} and the air temperature is {sun}"
     When I select the case Malabar
     Then the report should be "The wave quality is non-existent and the air temperature is scorching"
-    And pause
 
-  Scenario: The user should be able to use the chat to add a comment with a variable when the attribute has no value
-    Given case Bondi is provided having data:
+  @single
+  Scenario: The user should be able to use the chat to add a comment with a variable when the attribute has no value in the current case
+    Given case Manly is provided having data:
+      | Wave | good |
+      | Sun  | warm |
+    And case Bondi is provided having data:
       | Wave | excellent |
     And I start the client application
-    And I see the case Bondi as the current case
-    And the report is empty
+    And I select the case Bondi
     When  I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
     Then the report should contain "The wave is excellent"
-    And the report should contain "sun" as an unresolved marker
+    And the report should show "Sun" as unevaluated
+    And pause
 
   Scenario: Building a rule with variables should create a cornerstone copy of the processed case
     Given case Bondi is provided having data:

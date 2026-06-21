@@ -3,11 +3,16 @@ package io.rippledown.interpretation
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
+import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.model.Conclusion
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -38,6 +43,7 @@ fun ReadonlyInterpretationView(
     var styledText by remember { mutableStateOf(unstyledText) }
     var commentIndex by remember { mutableStateOf(-1) }
     var isOverDiffText by remember { mutableStateOf(false) }
+    var isOverUnresolved by remember { mutableStateOf(false) }
 
     LaunchedEffect(interpretation, diff) {
         comments = interpretation.renderedComments.map { it.text }
@@ -49,7 +55,9 @@ fun ReadonlyInterpretationView(
     TooltipArea(
         modifier = modifier.fillMaxWidth(),
         tooltip = {
-            if (isOverDiffText && ruleConditions.isNotEmpty()) {
+            if (isOverUnresolved) {
+                UnresolvedVariableTooltip()
+            } else if (isOverDiffText && ruleConditions.isNotEmpty()) {
                 ConditionTooltip(ruleConditions)
             } else {
                 ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
@@ -65,6 +73,10 @@ fun ReadonlyInterpretationView(
                     }
 
                     override fun onPointerEnter(characterOffset: Int) {
+                        isOverUnresolved = unstyledText.spanStyles.any { span ->
+                            characterOffset in span.start until span.end &&
+                                    span.item.background == UNRESOLVED_COLOR
+                        }
                         isOverDiffText = unstyledText.spanStyles.any { span ->
                             characterOffset in span.start until span.end &&
                                     (span.item.background == DIFF_ADDITION_COLOR || span.item.background == DIFF_REMOVAL_COLOR)
@@ -78,11 +90,28 @@ fun ReadonlyInterpretationView(
                     override fun onPointerExit() {
                         commentIndex = -1
                         isOverDiffText = false
+                        isOverUnresolved = false
                     }
                 }
             )
         }
     )
+}
+
+@Composable
+fun UnresolvedVariableTooltip() {
+    androidx.compose.material3.Surface(
+        color = UNRESOLVED_COLOR,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+        shadowElevation = 4.dp
+    ) {
+        androidx.compose.material.Text(
+            text = UNRESOLVED_VARIABLE_TOOLTIP,
+            modifier = Modifier
+                .padding(8.dp)
+                .semantics { contentDescription = UNRESOLVED_VARIABLE_TOOLTIP }
+        )
+    }
 }
 
 @Composable

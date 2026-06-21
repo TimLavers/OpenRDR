@@ -67,8 +67,9 @@ data class Conclusion(
                     // Substitute with the actual value
                     builder.append(value)
                 } else {
-                    // Use marker and record unresolved range
-                    val marker = if (attribute != null) "${'$'}{${attribute.name}}" else "${'$'}{unknown}"
+                    // No value available: render a user-friendly marker (no internal ${} syntax)
+                    // and record the range so the UI can highlight it and show an explanatory tooltip.
+                    val marker = if (attribute != null) "{${attribute.name}: no value}" else "{no value}"
                     val markerStart = builder.length
                     builder.append(marker)
                     unresolvedRanges.add(IntRangeData(markerStart, builder.length - 1))

@@ -219,6 +219,43 @@ class InterpretationTest {
     }
 
     @Test
+    fun toCommentsShouldResolveAttributeNameViaResolverWhenAbsentFromCase() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val sun = Attribute(2, "Sun")
+        val template = "The wave is " + VARIABLE_TOKEN + " and the sun is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
+        val conclusion = Conclusion(1, template, variables)
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+
+        // The current case has no value for Sun, so Sun is absent from case.attributes.
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+
+        // The resolver knows about all knowledge base attributes, including Sun.
+        val attributeById = { id: Int -> listOf(wave, sun).find { it.id == id } }
+
+        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case, attributeById))
+        // Sun should resolve to its name rather than falling back to {unknown}.
+        comments shouldBe setOf("The wave is {Wave} and the sun is {Sun}")
+    }
+
+    @Test
+    fun toCommentsShouldFallBackToUnknownWhenAttributeCannotBeResolved() {
+        val interpretation = Interpretation(caseId)
+        val template = "The sun is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(99))
+        val conclusion = Conclusion(1, template, variables)
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case))
+        comments shouldBe setOf("The sun is {unknown}")
+    }
+
+    @Test
     fun toCommentsShouldHandlePlainCommentsWithoutVariables() {
         val interpretation = Interpretation(caseId)
         val conclusion = Conclusion(1, "Plain comment")

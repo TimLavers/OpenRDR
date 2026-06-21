@@ -14,13 +14,18 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
+import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.model.Conclusion
+import io.rippledown.model.IntRangeData
+import io.rippledown.model.RenderedComment
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.utils.createInterpretation
 import io.rippledown.utils.createViewableInterpretation
+import io.rippledown.utils.waitUntilAsserted
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -609,6 +614,135 @@ class ReadonlyInterpretationViewTest {
             //Then
             requireNoConditionsToBeShowing()
         }
+    }
+
+    // ==================== Unresolved variable marker ====================
+
+    @Test
+    fun `unhighlighted should style an unresolved range with the unresolved colour`() {
+        val comment = "Glucose is {Glucose: no value} mmol/L"
+        val markerStart = comment.indexOf("{Glucose: no value}")
+        val markerEndInclusive = markerStart + "{Glucose: no value}".length - 1
+        val unresolvedRanges = listOf(listOf(IntRangeData(markerStart, markerEndInclusive)))
+
+        val annotatedString = listOf(comment).unhighlighted(unresolvedRanges = unresolvedRanges)
+
+        annotatedString.text shouldBe comment
+        val span = annotatedString.spanStyles.first { it.item.background == UNRESOLVED_COLOR }
+        span.start shouldBe markerStart
+        span.end shouldBe markerEndInclusive + 1
+    }
+
+    @Test
+    fun `highlightItem should offset unresolved ranges per comment`() {
+        val first = "All good."
+        val second = "Sun is {Sun: no value}."
+        val markerStartInSecond = second.indexOf("{Sun: no value}")
+        val markerEndInclusiveInSecond = markerStartInSecond + "{Sun: no value}".length - 1
+        // The second comment carries the unresolved range.
+        val unresolvedRanges =
+            listOf(emptyList(), listOf(IntRangeData(markerStartInSecond, markerEndInclusiveInSecond)))
+
+        val annotatedString = listOf(first, second).unhighlighted(unresolvedRanges = unresolvedRanges)
+
+        // Comments are joined with a single space, so the second comment starts after "first ".
+        val globalMarkerStart = "$first ".length + markerStartInSecond
+        val span = annotatedString.spanStyles.first { it.item.background == UNRESOLVED_COLOR }
+        span.start shouldBe globalMarkerStart
+        span.end shouldBe globalMarkerStart + "{Sun: no value}".length
+    }
+
+    @Test
+    fun `unhighlighted should not add an unresolved span when there are no unresolved ranges`() {
+        val comment = "Glucose is 5 mmol/L"
+        val annotatedString = listOf(comment).unhighlighted(unresolvedRanges = listOf(emptyList()))
+        annotatedString.spanStyles.none { it.item.background == UNRESOLVED_COLOR } shouldBe true
+    }
+
+    @Test
+    fun `UnresolvedVariableTooltip should display the explanatory message`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                UnresolvedVariableTooltip()
+            }
+            onNodeWithContentDescription(UNRESOLVED_VARIABLE_TOOLTIP).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the unresolved variable tooltip when hovering over an unresolved marker`() = runTest {
+        //Given
+        val comment = "Glucose is {Glucose: no value} mmol/L"
+        val marker = "{Glucose: no value}"
+        val markerStart = comment.indexOf(marker)
+        val interpretation = interpretationWithUnresolvedMarker(
+            comment,
+            listOf(IntRangeData(markerStart, markerStart + marker.length - 1))
+        )
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : ReadonlyInterpretationViewHandler by handler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+            }
+            requireInterpretationForCornerstone(comment)
+
+            //When
+            movePointerOverComment(marker, textLayoutResult!!)
+
+            //Then
+            waitUntilAsserted {
+                onNodeWithContentDescription(UNRESOLVED_VARIABLE_TOOLTIP).assertIsDisplayed()
+            }
+        }
+    }
+
+    @Test
+    fun `should not show the unresolved variable tooltip when hovering over resolved text`() = runTest {
+        //Given
+        val comment = "Glucose is {Glucose: no value} mmol/L"
+        val marker = "{Glucose: no value}"
+        val markerStart = comment.indexOf(marker)
+        val interpretation = interpretationWithUnresolvedMarker(
+            comment,
+            listOf(IntRangeData(markerStart, markerStart + marker.length - 1))
+        )
+        var textLayoutResult: TextLayoutResult? = null
+        val handler = object : ReadonlyInterpretationViewHandler by handler {
+            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
+                textLayoutResult = layoutResult
+            }
+        }
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+            }
+            requireInterpretationForCornerstone(comment)
+
+            //When - hover over the leading "Glucose is " text, which is outside the unresolved range
+            movePointerOverComment("Glucose is", textLayoutResult!!)
+            waitForIdle()
+
+            //Then
+            onNodeWithContentDescription(UNRESOLVED_VARIABLE_TOOLTIP).assertDoesNotExist()
+        }
+    }
+
+    private fun interpretationWithUnresolvedMarker(
+        commentText: String,
+        unresolvedRanges: List<IntRangeData>
+    ): ViewableInterpretation {
+        val interp = createInterpretation(mapOf(commentText to emptyList()))
+        val renderedComments = listOf(RenderedComment(text = commentText, unresolvedRanges = unresolvedRanges))
+        return ViewableInterpretation(
+            interpretation = interp,
+            textGivenByRules = commentText,
+            renderedComments = renderedComments
+        )
     }
 }
 

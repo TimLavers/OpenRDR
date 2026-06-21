@@ -96,7 +96,10 @@ class RuleSessionManager(
      * values so that the diff/preview shows human-readable text rather than the internal token form.
      */
     private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
-        conclusion.render(case) { id -> runCatching { kb.attributeManager.getById(id) }.getOrNull() }.text
+        conclusion.render(case) { id -> attributeById(id) }.text
+
+    override fun attributeById(id: Int): Attribute? =
+        runCatching { kb.attributeManager.getById(id) }.getOrNull()
 
     override fun attributeForName(name: String): Attribute? {
         val attributes = kb.attributeManager.all()

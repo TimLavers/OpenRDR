@@ -47,4 +47,10 @@ interface RuleService {
      * to a known attribute, or null if there is no acceptable match.
      */
     fun attributeForName(name: String): Attribute?
+
+    /**
+     * Resolve an attribute by its id against the full knowledge base attribute set, independent of
+     * whether the current case has a value for it, or null if there is no such attribute.
+     */
+    fun attributeById(id: Int): Attribute?
 }

@@ -27,18 +27,22 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
         return conclusions().map { it.text }.toSet()
     }
 
-    fun toComments(case: RDRCase): String {
+    fun toComments(case: RDRCase, attributeById: (Int) -> Attribute? = { null }): String {
         return conclusions().map { conclusion ->
             if (conclusion.variables.isEmpty()) {
                 conclusion.text
             } else {
-                // Convert internal ${} placeholders back to {attributeName} format for LLM
+                // Convert internal ${} placeholders back to {attributeName} format for LLM.
+                // Resolve the attribute name from the full attribute set first (an attribute may be
+                // valid for the knowledge base even if the current case has no value for it), falling
+                // back to the case's attributes and finally to "unknown".
                 var result = conclusion.text
                 var position = 0
                 for (variable in conclusion.variables) {
                     val tokenIndex = result.indexOf(VARIABLE_TOKEN, position)
                     if (tokenIndex != -1) {
-                        val attribute = case.attributes.find { it.id == variable.attributeId }
+                        val attribute = attributeById(variable.attributeId)
+                            ?: case.attributes.find { it.id == variable.attributeId }
                         val attributeName = attribute?.name ?: "unknown"
                         result = result.replaceRange(tokenIndex, tokenIndex + VARIABLE_TOKEN.length, "{$attributeName}")
                         position = tokenIndex + attributeName.length + 2 // +2 for {}

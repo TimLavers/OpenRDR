@@ -12,6 +12,7 @@ import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.Attribute
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.toJsonString
@@ -25,9 +26,12 @@ object KBChatService {
             ?: throw IllegalArgumentException("Prompt file not found: $promptResource")).readText()
     }
 
-    private fun String.replacePlaceholders(viewableCase: ViewableCase): String {
+    private fun String.replacePlaceholders(
+        viewableCase: ViewableCase,
+        attributeById: (Int) -> Attribute?
+    ): String {
         var result = this
-        systemPromptVariables(viewableCase).forEach { key, value ->
+        systemPromptVariables(viewableCase, attributeById).forEach { key, value ->
             result = result.replace("{{$key}}", value)
         }
         return result
@@ -83,8 +87,11 @@ object KBChatService {
         )
         .build()
 
-    fun createKBChatService(viewableCase: ViewableCase): ChatService {
-        val systemInstruction = systemPrompt(viewableCase)
+    fun createKBChatService(
+        viewableCase: ViewableCase,
+        attributeById: (Int) -> Attribute? = { null }
+    ): ChatService {
+        val systemInstruction = systemPrompt(viewableCase, attributeById)
         return GeminiChatService(
             systemInstruction = systemInstruction,
             functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
@@ -117,12 +124,15 @@ object KBChatService {
         "non_english_comment.md",
     )
 
-    fun systemPromptVariables(viewableCase: ViewableCase) = mapOf(
+    fun systemPromptVariables(
+        viewableCase: ViewableCase,
+        attributeById: (Int) -> Attribute? = { null }
+    ) = mapOf(
         "ADD" to ADD,
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
-        "COMMENTS" to viewableCase.case.interpretation.toComments(viewableCase.case),
+        "COMMENTS" to viewableCase.case.interpretation.toComments(viewableCase.case, attributeById),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
         "GET_SUGGESTED_CONDITIONS" to GET_SUGGESTED_CONDITIONS,
         "REASON" to REASON,
@@ -157,12 +167,15 @@ object KBChatService {
 
     )
 
-    fun systemPrompt(viewableCase: ViewableCase): String {
+    fun systemPrompt(
+        viewableCase: ViewableCase,
+        attributeById: (Int) -> Attribute? = { null }
+    ): String {
         val mainSection = systemPromptMainSections.map { it ->
-            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase)
+            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase, attributeById)
         }
         val exampleSection = systemPromptExampleSections.map { it ->
-            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(viewableCase)
+            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(viewableCase, attributeById)
         }
         return (mainSection + exampleSection).joinToString(separator = "\n")
     }
