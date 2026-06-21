@@ -269,7 +269,10 @@ class ChatDefs {
         // The model is instructed to ask for confirmation when a comment contains a variable, but it
         // occasionally proceeds straight to the rule session (showing suggestions). Only confirm if it
         // actually asks, otherwise the "yes" arrives after the suggestions and is misread as a condition.
-        waitForBotTextToContainAnyOf(CONFIRM, SUGGESTION)
+        // Detect the suggestion list directly rather than relying on the model's exact wording.
+        await().atMost(ofSeconds(60)).until {
+            chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) || chatPO().numberOfSuggestionRows() > 0
+        }
         if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
             confirm()
         }

@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: Add comments with variables
 
   Scenario: The user should be able to use the chat to add a comment with a single variable
