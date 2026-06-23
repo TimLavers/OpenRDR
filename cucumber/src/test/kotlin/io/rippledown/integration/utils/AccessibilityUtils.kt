@@ -5,10 +5,18 @@ import androidx.compose.ui.awt.ComposeWindow
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
+import java.awt.Rectangle
+import java.awt.Robot
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleText
-
+import com.google.genai.Client
+import com.google.genai.types.Blob
+import com.google.genai.types.Content
+import com.google.genai.types.Part
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
 
 /**
  * Reads the rendered text from a Compose Text node.
@@ -30,6 +38,59 @@ fun renderedText(ctx: AccessibleContext): String {
             if (ch != null) append(ch)
         }
     }
+}
+
+fun captureComponentScreenshot(context: AccessibleContext): BufferedImage? {
+    val accessibleComponent = context.accessibleComponent ?: return null
+    val screenLocation = accessibleComponent.locationOnScreen ?: return null
+    val size = accessibleComponent.size ?: return null
+    val screenRect = Rectangle(screenLocation.x, screenLocation.y, size.width, size.height)
+    return Robot().createScreenCapture(screenRect)
+}
+
+object GeminiOCR {
+    fun getText(image: BufferedImage): String? {
+        val outputStream = ByteArrayOutputStream()
+        ImageIO.write(image, "png", outputStream)
+        val imageBytes = outputStream.toByteArray()
+        val client = Client()
+
+        val textPart = Part.builder()
+            .text("Extract all text from this UI screenshot snippet. Output only the extracted text and nothing else.")
+            .build()
+        val imagePart = Part.builder()
+            .inlineData(
+                Blob.builder()
+                    .mimeType("image/png")
+                    .data(imageBytes)
+                    .build()
+            )
+            .build()
+
+        val contents = Content.builder()
+            .parts(listOf(textPart, imagePart))
+            .build()
+
+        return try {
+            val response = client.models.generateContent(
+                "gemini-2.5-flash",
+                contents,
+                null
+            )
+            response.text()?.trim() ?: ""
+        } catch (e: Exception) {
+            println("Gemini API call failed: ${e.message}")
+            ""
+        }
+    }
+}
+
+fun getComponentTextUsingOCR(context: AccessibleContext?): List<String> {
+    if (context == null) return emptyList()
+    val image = captureComponentScreenshot(context) ?: return emptyList()
+
+    val text = GeminiOCR.getText(image)
+    return text?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
 }
 
 fun AccessibleContext.find(description: String, role: AccessibleRole): AccessibleContext? {

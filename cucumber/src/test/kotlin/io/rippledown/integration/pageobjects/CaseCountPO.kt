@@ -1,8 +1,10 @@
 package io.rippledown.integration.pageobjects
 
+import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
 import javax.accessibility.AccessibleContext
 
-class CaseCountPO(contextProvider: () -> AccessibleContext): AbstractCaseCountPO(contextProvider) {
-    override fun currentCount(): Int = snapshot().processedCount
-    override fun isShowing(): Boolean = snapshot().isShowing
+class CaseCountPO(contextProvider: () -> AccessibleContext) : AbstractCaseCountPO(contextProvider) {
+    override fun contextDescription(): String = PROCESSED_SECTION_HEADER_ID
+
+    override fun countTag(): String = "Processed"
 }
