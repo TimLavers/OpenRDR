@@ -135,7 +135,6 @@ Feature: Reviewing cornerstone cases
     Then the cornerstone index of 2 and total of 2 is displayed
     And the case Case3 is still shown as the cornerstone case
 
-  @single
   Scenario: Ignoring a cornerstone case should remove it from the list of cornerstone cases to review
     Given a list of cases with the following names is stored on the server:
       | Case1 |
