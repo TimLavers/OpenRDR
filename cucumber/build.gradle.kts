@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     testImplementation(project(":ui"))
+    testImplementation(project(":llm"))
     testImplementation(testFixtures(project(":common")))
     testImplementation(compose.desktop.currentOs)
     testImplementation(libs.composePreviewDesktop)
@@ -21,6 +22,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.mockk)
+    testImplementation("com.google.genai:google-genai:1.46.0")
 }
 
 val cukeClassPath = configurations.testRuntimeClasspath.get()

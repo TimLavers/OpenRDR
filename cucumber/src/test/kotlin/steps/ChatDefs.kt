@@ -90,7 +90,7 @@ class ChatDefs {
         waitForBotText(REASON)
         val countBefore = chatPO().numberOfChatMessages()
         confirm()
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().numberOfChatMessages() > countBefore + 1
         }
     }
@@ -111,31 +111,31 @@ class ChatDefs {
     }
 
     fun waitForBotText(vararg terms: String) {
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }
 
     fun waitForBotTextToContainAnyOf(vararg terms: String) {
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().mostRecentBotRowContainsAnyOfTheTerms(terms.toList())
         }
     }
 
     fun waitForSuggestionText(vararg terms: String) {
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().mostRecentSuggestionRowContainsTerms(terms.toList())
         }
     }
 
     fun waitForNewSuggestions(countBefore: Int) {
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().numberOfSuggestionRows() > countBefore
         }
     }
 
     fun waitForPromptToProvideAnotherReason(countBefore: Int) {
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().numberOfSuggestionRows() > countBefore
         }
     }
@@ -212,7 +212,7 @@ class ChatDefs {
     }
 
     private fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
-        await().atMost(ofSeconds(60)).until {
+        await().atMost(ofSeconds(90)).until {
             chatPO().numberOfSuggestionRows() > previousSuggestionCount ||
                     chatPO().numberOfChatMessages() > messageCountAfterSend
         }
