@@ -40,7 +40,12 @@ class SuggestedConditionsHandler(
 
     companion object {
         const val NO_ACTIVE_RULE_SESSION_ERROR =
-            "Error: No rule session is active. You must first output the AddComment, RemoveComment, or ReplaceComment action to start a rule session before calling getSuggestedConditions."
+            "Error: No rule session is active. Calling getSuggestedConditions was premature. " +
+                    "Your VERY NEXT response MUST be a single JSON object whose \"action\" is AddComment, " +
+                    "RemoveComment, or ReplaceComment (matching the change the user asked for), with the " +
+                    "comment text the user provided. Output ONLY that JSON object now. Do NOT apologise, do " +
+                    "NOT write any prose, do NOT ask the user for a reason, and do NOT call any function — just " +
+                    "emit the action JSON so the rule session is started."
         const val EDITABLE_MARKER = "[editable]"
         const val SUGGESTIONS_DELIVERED_PREAMBLE =
             "Suggested conditions have already been displayed to the user by the system. " +
