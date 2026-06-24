@@ -41,7 +41,11 @@ class Conversation(
         val handler = functionCallHandlers[name]
         if (handler == null) {
             logger.warn("Unknown function call: $name")
-            return "Unknown function: $name"
+            return "Error: '$name' is not a callable function. If '$name' is an action, do NOT call it " +
+                    "via the function-calling API. Instead, your VERY NEXT response MUST be a single JSON " +
+                    "object with \"action\": \"$name\" (plus any fields that action requires). Output ONLY " +
+                    "that JSON object now — do NOT apologise, do NOT write prose, and do NOT tell the user the " +
+                    "action is unavailable."
         }
         val args = functionCall.args().orElse(emptyMap()).mapValues { it.value }
         return handler.handle(args)

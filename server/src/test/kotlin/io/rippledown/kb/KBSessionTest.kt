@@ -98,7 +98,7 @@ class KBSessionTest {
         val comment = "Go to Bondi."
 
         // When
-        session.ruleSessionManager.startRuleSessionToAddComment(viewableCase, comment)
+        session.ruleSessionManager.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
         session.ruleSessionManager.currentDiff shouldBe Addition(comment)

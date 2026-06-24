@@ -245,8 +245,15 @@ class ChatDefs {
     @And("I request that the comment {string} be added")
     fun requestCommentBeAdded(comment: String) {
         waitForBotQuestion()
-        addCommentWithoutConfirmation(comment)
+        if (commentContainsVariable(comment)) {
+            addCommentThenConfirm(comment)
+        } else {
+            addCommentWithoutConfirmation(comment)
+        }
+        //the model should always prompt for confirmation if the comment contains a variable
     }
+
+    private fun commentContainsVariable(comment: String) = comment.contains("{")
 
     @And("I request that the comment {string} be added without being prompted")
     fun requestCommentBeAddedWithoutPrompt(comment: String) {
@@ -255,6 +262,20 @@ class ChatDefs {
 
     fun addCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
+    }
+
+    fun addCommentThenConfirm(comment: String) {
+        addCommentWithoutConfirmation(comment)
+        // The model is instructed to ask for confirmation when a comment contains a variable, but it
+        // occasionally proceeds straight to the rule session (showing suggestions). Only confirm if it
+        // actually asks, otherwise the "yes" arrives after the suggestions and is misread as a condition.
+        // Detect the suggestion list directly rather than relying on the model's exact wording.
+        await().atMost(ofSeconds(60)).until {
+            chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) || chatPO().numberOfSuggestionRows() > 0
+        }
+        if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+            confirm()
+        }
     }
 
     fun removeCommentWithoutConfirmation(comment: String) {

@@ -47,10 +47,10 @@ asks to see them again.
   Do NOT call {{TRANSFORM_REASON}} for non-editable suggestions.
 - If the user selects a condition that is marked as [editable] (by number, by clicking, or by typing its exact text),
   you MUST NOT call any function yet. Your very next response MUST be a message to the user that:
-  1. confirms which suggestion was selected using the phrase "you selected" followed by the suggestion text, and
-  2. asks "What value would you like to use instead?" (the phrase "What value" must appear).
-     Only after the user replies with the value should you call {{TRANSFORM_REASON}} with the modified condition text
-     (with the user's value substituted for the original numeric value).
+    1. confirms which suggestion was selected using the phrase "you selected" followed by the suggestion text, and
+    2. asks "What value would you like to use instead?" (the phrase "What value" must appear).
+       Only after the user replies with the value should you call {{TRANSFORM_REASON}} with the modified condition text
+       (with the user's value substituted for the original numeric value).
 
   For example, if the user selects "Waves ≥ 1.5 [editable]", respond with:
 

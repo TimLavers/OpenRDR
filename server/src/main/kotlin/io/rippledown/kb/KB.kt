@@ -18,7 +18,8 @@ class KB(persistentKB: PersistentKB) {
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    val interpretationViewManager = InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager)
+    val interpretationViewManager =
+        InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager, attributeManager)
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
     internal val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
@@ -111,7 +112,7 @@ class KB(persistentKB: PersistentKB) {
 
     fun viewableCase(case: RDRCase): ViewableCase {
         val interpretation = interpret(case)
-        val viewableInterpretation = interpretationViewManager.viewableInterpretation(interpretation)
+        val viewableInterpretation = interpretationViewManager.viewableInterpretation(interpretation, case)
         return caseViewManager.getViewableCase(case, viewableInterpretation)
     }
 

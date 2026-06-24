@@ -122,7 +122,7 @@ class RuleSessionManagerTest {
     fun `should clear currentDiff when committing a rule session`() {
         // Given
         val viewableCase = createViewableCase("Case1", value = "1.0")
-        rsm.startRuleSessionToAddComment(viewableCase, "Go.")
+        rsm.startRuleSessionToAddComment(viewableCase, "Go.", emptyList())
         rsm.currentDiff shouldNotBe null
 
         // When
@@ -161,7 +161,7 @@ class RuleSessionManagerTest {
     fun `should clear currentDiff when cancelling a rule session`() {
         // Given
         val viewableCase = createViewableCase("Case1", value = "1.0")
-        rsm.startRuleSessionToAddComment(viewableCase, "Go.")
+        rsm.startRuleSessionToAddComment(viewableCase, "Go.", emptyList())
         rsm.currentDiff shouldNotBe null
 
         // When
@@ -252,10 +252,24 @@ class RuleSessionManagerTest {
         val comment = "Go to Bondi."
 
         // When
-        rsm.startRuleSessionToAddComment(viewableCase, comment)
+        rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
         rsm.currentDiff shouldBe Addition(comment)
+    }
+
+    @Test
+    fun `should use rendered text in diff when adding comment with variable`() {
+        // Given
+        val viewableCase = createViewableCase("Case1", value = "5.0")
+        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(glucose().id))
+
+        // When
+        rsm.startRuleSessionToAddComment(viewableCase, template, variables)
+
+        // Then - diff should show rendered value, not raw template
+        rsm.currentDiff shouldBe Addition("Glucose is 5.0")
     }
 
     // --- startRuleSessionToRemoveComment ---
@@ -265,7 +279,7 @@ class RuleSessionManagerTest {
         // Given
         val viewableCase = createViewableCase("Case1", value = "1.0")
         val comment = "Go to Bondi."
-        rsm.startRuleSessionToAddComment(viewableCase, comment)
+        rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
         rsm.commitCurrentRuleSession()
 
         // When
@@ -291,6 +305,97 @@ class RuleSessionManagerTest {
 
         // Then
         rsm.currentDiff shouldBe Replacement(original, replacement)
+    }
+
+    @Test
+    fun `should use rendered text in diff when replacing comment with variable`() {
+        // Given
+        val viewableCase = createViewableCase("Case1", value = "5.0")
+        val original = "Old comment"
+        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(glucose().id))
+        rsm.startRuleSessionToAddComment(viewableCase, original)
+        rsm.commitCurrentRuleSession()
+
+        // When
+        rsm.startRuleSessionToReplaceComment(viewableCase, original, template, variables)
+
+        // Then - diff should show rendered value, not raw template
+        rsm.currentDiff shouldBe Replacement(original, "Glucose is 5.0")
+    }
+
+    // --- attributeForName ---
+
+    @Test
+    fun `attributeForName should find exact match case-insensitive`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("glucose")
+
+        // Then
+        result?.name shouldBe "Glucose"
+    }
+
+    @Test
+    fun `attributeForName should find exact match with different case`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("GLUCOSE")
+
+        // Then
+        result?.name shouldBe "Glucose"
+    }
+
+    @Test
+    fun `attributeForName should return null for non-existent attribute`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("NonExistent")
+
+        // Then
+        result shouldBe null
+    }
+
+    @Test
+    fun `attributeForName should find match with normalized punctuation`() {
+        // Given
+        kb.attributeManager.getOrCreate("TSH (free)")
+
+        // When
+        val result = rsm.attributeForName("TSH free")
+
+        // Then
+        result?.name shouldBe "TSH (free)"
+    }
+
+    @Test
+    fun `attributeForName should find match with small misspelling via Levenshtein`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("Gluose")
+
+        // Then
+        result?.name shouldBe "Glucose"
+    }
+
+    @Test
+    fun `attributeForName should reject large misspellings`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+
+        // When
+        val result = rsm.attributeForName("Xyz")
+
+        // Then
+        result shouldBe null
     }
 
     // --- sendCornerstoneStatus ---

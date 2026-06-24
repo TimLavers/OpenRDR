@@ -18,6 +18,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.model.IntRangeData
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
@@ -26,6 +27,7 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 
 val DIFF_ADDITION_COLOR = androidx.compose.ui.graphics.Color(0xFFC8E6C9)
 val DIFF_REMOVAL_COLOR = androidx.compose.ui.graphics.Color(0xFFFFCDD2)
+val UNRESOLVED_COLOR = androidx.compose.ui.graphics.Color(0xFFFFF9C4)
 
 interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 
@@ -85,9 +87,14 @@ fun List<String>.commentIndexForOffset(offset: Int): Int {
     return -1
 }
 
-fun List<String>.unhighlighted(diff: Diff? = null) = highlightItem(-1, diff)
+fun List<String>.unhighlighted(diff: Diff? = null, unresolvedRanges: List<List<IntRangeData>> = emptyList()) =
+    highlightItem(-1, diff, unresolvedRanges)
 
-fun List<String>.highlightItem(index: Int, diff: Diff? = null) = buildAnnotatedString {
+fun List<String>.highlightItem(
+    index: Int,
+    diff: Diff? = null,
+    unresolvedRanges: List<List<IntRangeData>> = emptyList()
+) = buildAnnotatedString {
     forEachIndexed { i, text ->
         val isDiffTarget = when (diff) {
             is Removal -> text == diff.removedText
@@ -110,6 +117,15 @@ fun List<String>.highlightItem(index: Int, diff: Diff? = null) = buildAnnotatedS
             addStyle(SpanStyle(background = DIFF_REMOVAL_COLOR), start, length)
         } else {
             append(text)
+        }
+
+        // Apply unresolved range styling
+        if (i < unresolvedRanges.size) {
+            unresolvedRanges[i].forEach { range ->
+                val rangeStart = length - text.length + range.start
+                val rangeEnd = length - text.length + range.endInclusive + 1
+                addStyle(SpanStyle(background = UNRESOLVED_COLOR), rangeStart, rangeEnd)
+            }
         }
 
         if (diff is Replacement && text == diff.originalText) {

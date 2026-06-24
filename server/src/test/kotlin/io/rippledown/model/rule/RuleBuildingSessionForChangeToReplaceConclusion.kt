@@ -28,7 +28,7 @@ internal class RuleBuildingSessionForChangeToReplaceConclusion : RuleTestBase() 
     @Test
     fun toStringTest() {
         val addAction = ChangeTreeToReplaceConclusion(Conclusion(4, "Whatever"), Conclusion(5, "Blah"))
-        addAction.toString() shouldBe "ChangeTreeToReplaceConclusion(toBeReplaced=Conclusion(id=4, text=Whatever) replacement=Conclusion(id=5, text=Blah))"
+        addAction.toString() shouldBe "ChangeTreeToReplaceConclusion(toBeReplaced=Conclusion(id=4, text=Whatever, variables=[]) replacement=Conclusion(id=5, text=Blah, variables=[]))"
     }
 
     @Test

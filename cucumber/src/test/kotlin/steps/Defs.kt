@@ -361,6 +361,17 @@ class Defs {
         interpretationViewPO().waitForInterpretationText("")
     }
 
+    @Then("the (interpretation )(report )(should )(does )contain {string}")
+    fun theInterpretationShouldContain(text: String) {
+        interpretationViewPO().waitForInterpretationTextToContain(text)
+    }
+
+    @Then("the (interpretation )(report )(should )(does )show {string} as unevaluated")
+    fun theInterpretationShouldShowAsUnevaluated(attributeName: String) {
+        // An attribute with no value in the current case is rendered as "{<name>: no value}"
+        interpretationViewPO().waitForInterpretationTextToContain("{$attributeName: no value}")
+    }
+
     @And("a rule exists to add the comment {string} to case {word} for the following conditions:")
     fun `add rule to give comment for conditions`(commentText: String, caseName: String, dataTable: DataTable) {
         val conditions = dataTable.asList()

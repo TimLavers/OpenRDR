@@ -353,7 +353,7 @@ class ChatManagerTest {
             chatManager.response("")
 
             // Then
-            coVerify { ruleService.startRuleSessionToAddComment(viewableCase, comment) }
+            coVerify { ruleService.startRuleSessionToAddComment(viewableCase, comment, emptyList()) }
         }
 
     @Test

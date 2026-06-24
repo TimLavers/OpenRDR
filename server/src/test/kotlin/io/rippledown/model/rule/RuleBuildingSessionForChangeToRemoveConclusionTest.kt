@@ -28,7 +28,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     @Test
     fun toStringTest() {
         val addAction = ChangeTreeToRemoveConclusion(Conclusion(4, "Whatever"))
-        addAction.toString() shouldBe "ChangeTreeToRemoveConclusion(toBeRemoved=Conclusion(id=4, text=Whatever))"
+        addAction.toString() shouldBe "ChangeTreeToRemoveConclusion(toBeRemoved=Conclusion(id=4, text=Whatever, variables=[]))"
     }
 
     @Test

@@ -21,8 +21,7 @@ the `action` field inside a JSON object, for example:
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "Beach time!",
-  "reasons": []
+  "comment": "Beach time!"
 }
 ```
 
@@ -66,34 +65,46 @@ For a user prompt to confirm adding the comment "Let's surf":
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "Let's surf",
-  "reasons": []
+  "comment": "Let's surf"
+}
+```
+
+For user input "Patient {Name} has glucose {Glucose} mmol/L" with variable bindings:
+
+```json
+{
+  "action": "{{ADD_COMMENT}}",
+  "comment": "Patient {Name} has glucose {Glucose} mmol/L",
+  "variables": [
+    {
+      "attributeId": 1
+    },
+    {
+      "attributeId": 2
+    }
+  ]
 }
 ```
 
 3, Remove Action:
-For user input "Comment123" with reasons ["Outdated", "Incorrect"]:
+For user input "Comment123" with reason "Outdated":
 
 ```json
 {
   "action": "{{REMOVE_COMMENT}}",
   "comment": "Comment123",
-  "reasons": [
-    "Outdated",
-    "Incorrect"
-  ]
+  "reason": "Outdated"
 }
 ```
 
 4. Replace Action:
-   For user input to replace "Old comment" with "New comment" and no reasons:
+   For user input to replace "Old comment" with "New comment":
 
 ```json
 {
   "action": "{{REPLACE_COMMENT}}",
   "comment": "Old comment",
-  "replacementComment": "New comment",
-  "reasons": []
+  "replacementComment": "New comment"
 }
 ```
 
@@ -102,5 +113,5 @@ For user input "Comment123" with reasons ["Outdated", "Incorrect"]:
 - If the user input is ambiguous or requires clarification, generate a message with action: "{{USER_ACTION}}" to request
   clarification before generating an actionable JSON.
 - Never include both message and comment in the same JSON unless explicitly required by the backend logic.
-- Ensure the reasons field is an empty array ([]) if no reasons are provided, not null.
+- Ensure the reason field is provided if required.
 

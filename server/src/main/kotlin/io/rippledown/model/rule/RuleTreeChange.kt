@@ -6,7 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
 
 internal fun ConclusionProvider.getAlignedConclusion(provided: Conclusion): Conclusion {
-    val conclusionInFactory = getOrCreate(provided.text)
+    val conclusionInFactory = getOrCreate(provided.text, provided.variables)
     require(conclusionInFactory.id == provided.id) {
         "Conclusion in factory is $conclusionInFactory, conclusion provided is $provided, which do not match."
     }

@@ -1,5 +1,6 @@
 package io.rippledown.persistence.inmemory
 
+import io.rippledown.model.CommentVariable
 import io.rippledown.model.Conclusion
 import io.rippledown.persistence.ConclusionStore
 
@@ -9,9 +10,13 @@ class InMemoryConclusionStore: ConclusionStore {
     override fun all() = conclusionSet
 
     override fun create(text: String): Conclusion {
+        return create(text, emptyList())
+    }
+
+    override fun create(text: String, variables: List<CommentVariable>): Conclusion {
         val maxById = conclusionSet.maxByOrNull { it.id }
         val maxId = maxById?.id ?: 0
-        val newConclusion = Conclusion(maxId + 1, text)
+        val newConclusion = Conclusion(maxId + 1, text, variables)
         conclusionSet.add(newConclusion)
         return newConclusion
     }

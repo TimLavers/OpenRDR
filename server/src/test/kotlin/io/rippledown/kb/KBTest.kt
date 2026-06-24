@@ -862,7 +862,7 @@ class KBTest {
 
         shouldThrow<IllegalStateException> {
             rsm.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
-        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever.)) is not applicable to case Case2"
+        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever., variables=[])) is not applicable to case Case2"
     }
 
     @Test
@@ -1709,7 +1709,7 @@ class KBTest {
         val comment = "Go to Bondi."
 
         //When
-        rsm.startRuleSessionToAddComment(viewableCase, comment)
+        rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
         rsm.currentDiff shouldBe Addition(comment)
@@ -1721,7 +1721,7 @@ class KBTest {
         val sessionCase = createCase("Case1", value = "1.0", id = 1)
         val viewableCase = kb.viewableCase(sessionCase)
         val comment = "Go to Bondi."
-        rsm.startRuleSessionToAddComment(viewableCase, comment)
+        rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
         rsm.commitCurrentRuleSession()
 
         //When
@@ -1738,7 +1738,7 @@ class KBTest {
         val viewableCase = kb.viewableCase(sessionCase)
         val original = "Go to Bondi."
         val replacement = "Go to Maroubra."
-        rsm.startRuleSessionToAddComment(viewableCase, original)
+        rsm.startRuleSessionToAddComment(viewableCase, original, emptyList())
         rsm.commitCurrentRuleSession()
 
         //When
@@ -1753,7 +1753,7 @@ class KBTest {
         //Given
         val sessionCase = createCase("Case1", value = "1.0", id = 1)
         val viewableCase = kb.viewableCase(sessionCase)
-        rsm.startRuleSessionToAddComment(viewableCase, "Go to Bondi.")
+        rsm.startRuleSessionToAddComment(viewableCase, "Go to Bondi.", emptyList())
         rsm.currentDiff shouldNotBe null
 
         //When
@@ -1768,7 +1768,7 @@ class KBTest {
         //Given
         val sessionCase = createCase("Case1", value = "1.0", id = 1)
         val viewableCase = kb.viewableCase(sessionCase)
-        rsm.startRuleSessionToAddComment(viewableCase, "Go to Bondi.")
+        rsm.startRuleSessionToAddComment(viewableCase, "Go to Bondi.", emptyList())
         rsm.currentDiff shouldNotBe null
 
         //When
@@ -1787,7 +1787,7 @@ class KBTest {
         val comment = "Go to Bondi."
 
         //When
-        val status = rsm.startRuleSessionToAddComment(viewableCase, comment)
+        val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
         status.diff shouldBe Addition(comment)
@@ -1801,7 +1801,7 @@ class KBTest {
         val comment = "Go to Bondi."
 
         //When
-        val status = rsm.startRuleSessionToAddComment(viewableCase, comment)
+        val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
         status.diff shouldBe Addition(comment)

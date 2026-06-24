@@ -1,5 +1,12 @@
 # Starting the rule session
 
+**IMPORTANT ordering rule:** You must NOT call any function (including {{GET_SUGGESTED_CONDITIONS}},
+{{TRANSFORM_REASON}} or {{SELECT_SUGGESTION}}) until AFTER you have emitted the {{ADD_COMMENT}},
+{{REMOVE_COMMENT}} or {{REPLACE_COMMENT}} action AND received the cornerstone status back from the
+system. Emitting that action is what starts the rule session; calling a function before it will fail.
+If a function call ever returns an error saying no rule session is active, your immediate next response
+MUST be the appropriate action JSON object (no prose, no apology, no question).
+
 ## Step 1: Once the user has confirmed the report change, inform the system of the report change as follows:
 
 ### If adding a comment, output the following:

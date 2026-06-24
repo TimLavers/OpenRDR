@@ -1,28 +1,35 @@
 package io.rippledown.kb
 
-import io.rippledown.model.COMMENT_SEPARATOR
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
+import io.rippledown.model.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.persistence.OrderStore
 
-typealias ConclusionProvider = EntityProvider<Conclusion>
+interface ConclusionProvider : EntityProvider<Conclusion> {
+    fun getOrCreate(text: String, variables: List<CommentVariable>): Conclusion
+}
 
 class InterpretationViewManager(
     conclusionOrderStore: OrderStore,
     conclusionProvider: ConclusionProvider,
+    private val attributeProvider: EntityProvider<io.rippledown.model.Attribute>
 ) :
     OrderedEntityManager<Conclusion>(conclusionOrderStore, conclusionProvider) {
 
-    fun viewableInterpretation(interpretation: Interpretation): ViewableInterpretation {
+    fun viewableInterpretation(interpretation: Interpretation, case: RDRCase): ViewableInterpretation {
         require(interpretation.caseId.id != null) {
             "Cannot create a viewable interpretation if the case does not have an id."
         }
         val orderedConclusions = inOrder(interpretation.conclusions())
         val textFromOrderedConclusions = orderedConclusions.joinToString(COMMENT_SEPARATOR) { it.text }
+        val renderedComments = orderedConclusions.map { conclusion ->
+            conclusion.render(case) { id ->
+                runCatching { attributeProvider.getById(id) }.getOrNull()
+            }
+        }
         return ViewableInterpretation(
             interpretation,
-            textGivenByRules = textFromOrderedConclusions
+            textGivenByRules = textFromOrderedConclusions,
+            renderedComments = renderedComments
         )
     }
 }
