@@ -22,6 +22,9 @@ const val CHAT_BOT_PLACEHOLDER = "Your response..."
 const val CHAT_BOT_DONE_MESSAGE = "Done"
 const val START_ACTION = "start"
 
+// A distinctive word that the once-per-session "you can insert case values into a comment" tip must contain.
+const val COMMENT_VARIABLE_TIP_KEYWORD = "braces"
+
 const val ADD_COMMENT = "AddComment"
 const val REMOVE_COMMENT = "RemoveComment"
 const val REPLACE_COMMENT = "ReplaceComment"

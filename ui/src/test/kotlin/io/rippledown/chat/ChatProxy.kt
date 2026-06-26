@@ -17,6 +17,8 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
             // descendants. SuggestionListMessage's outer row keeps the
             // original "$BOT$idx" form because it has no text of its own.
             message is SuggestionListMessage -> "$BOT$idx"
+            // TipRow encodes its visible text as "$TIP$idx:$text", mirroring BotRow.
+            message is TipMessage -> "$TIP$idx:${message.text}"
             else -> "$BOT$idx:${message.text}"
         }
         onNodeWithContentDescription(expectedLabel).assertTextEquals(message.text)

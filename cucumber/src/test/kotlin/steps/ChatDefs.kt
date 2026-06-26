@@ -4,6 +4,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.chat.*
 import io.rippledown.constants.rule.UNDERSTAND
 import org.awaitility.Awaitility.await
@@ -382,6 +383,18 @@ class ChatDefs {
     @Then("the capabilities shown include:")
     fun capabilitiesShownInclude(dataTable: DataTable) {
         waitForBotText(*dataTable.asList().toTypedArray())
+    }
+
+    @Then("the chatbot mentions that a case value can be inserted into a comment using braces")
+    fun waitForBotToMentionCommentVariableTip() {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().mostRecentTipRowContainsTerms(listOf(COMMENT_VARIABLE_TIP_KEYWORD))
+        }
+    }
+
+    @Then("the chatbot has mentioned the comment variable facility exactly once")
+    fun requireCommentVariableTipShownExactlyOnce() {
+        chatPO().numberOfTipMessages() shouldBe 1
     }
 
 }

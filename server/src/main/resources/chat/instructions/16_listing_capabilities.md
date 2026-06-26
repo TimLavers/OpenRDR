@@ -14,6 +14,7 @@ not actually output the ** characters. Do not use any markdown formatting
 - **add** a comment to the report (with a rule)
 - **remove** a comment from the report (with a rule)
 - **replace** a comment in the report (with a rule)
+- **insert** a case value into a comment by writing an attribute name in braces, e.g. {TSH}
 - **review** cornerstone cases
 - see **suggested** reasons for building a rule
 - **undo** the last rule

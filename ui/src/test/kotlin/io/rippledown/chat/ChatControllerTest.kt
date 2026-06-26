@@ -108,6 +108,33 @@ class ChatControllerTest {
     }
 
     @Test
+    fun `should render a tip on the response as a distinct tip message before the bot message`() {
+        val h = object : ChatControllerHandler {
+            override fun sendUserMessage(message: String) {}
+            override var onBotMessageReceived: (ChatResponse) -> Unit = {}
+        }
+
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatController(handler = h)
+            }
+            // When
+            val botResponse = "Here are some suggestions. You can select one or enter your own."
+            val tip =
+                "Tip: you can include a case value in a comment by wrapping an attribute name in braces, e.g. {Wave}."
+            h.onBotMessageReceived(ChatResponse(botResponse, tip = tip))
+
+            // Then - the tip is a separate message shown ahead of the bot's suggestions message
+            val expected = listOf(
+                TipMessage(tip),
+                BotMessage(botResponse)
+            )
+            requireChatMessagesShowing(expected)
+        }
+    }
+
+    @Test
     fun `should give an indication to the user if no bot response is received`() {
         val h = object : ChatControllerHandler {
             override fun sendUserMessage(message: String) {}

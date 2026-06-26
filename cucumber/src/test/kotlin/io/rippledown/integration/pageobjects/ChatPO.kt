@@ -146,6 +146,14 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         return text != null && terms.any { text.contains(it, ignoreCase = true) }
     }
 
+    fun mostRecentTipRowContainsTerms(terms: List<String>): Boolean {
+        val text = snapshot().mostRecentTipText
+        return text != null && terms.all { text.contains(it, ignoreCase = true) }
+    }
+
+    fun numberOfTipMessages(): Int =
+        snapshot().messageList.count { it is TipMessage }
+
     fun mostRecentBotRowDoesNotContainTheTerm(term: String) {
         val text = snapshot().mostRecentBotText
         val found = text != null && text.contains(term, ignoreCase = true)

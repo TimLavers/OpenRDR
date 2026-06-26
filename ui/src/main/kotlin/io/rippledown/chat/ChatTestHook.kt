@@ -32,6 +32,7 @@ object ChatTestHook {
         val suggestionRowCount: Int,
         val mostRecentBotText: String?,
         val mostRecentSuggestionText: String?,
+        val mostRecentTipText: String?,
         val sendIsEnabled: Boolean
     ) {
         companion object {
@@ -40,6 +41,7 @@ object ChatTestHook {
                 suggestionRowCount = 0,
                 mostRecentBotText = null,
                 mostRecentSuggestionText = null,
+                mostRecentTipText = null,
                 // Default to false so tests that poll `waitForChatReady`
                 // block until the UI has had a chance to publish its
                 // first real state.
@@ -63,12 +65,14 @@ object ChatTestHook {
                 }.joinToString("\n")
             }
         val suggestionRowCount = messages.count { it is SuggestionListMessage }
+        val mostRecentTip = messages.lastOrNull { it is TipMessage }?.text
         snapshotRef.set(
             Snapshot(
                 messageList = messages,
                 suggestionRowCount = suggestionRowCount,
                 mostRecentBotText = mostRecentBot,
                 mostRecentSuggestionText = mostRecentSuggestion,
+                mostRecentTipText = mostRecentTip,
                 sendIsEnabled = sendIsEnabled
             )
         )
