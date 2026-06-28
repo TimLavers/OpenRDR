@@ -76,14 +76,16 @@ The options for the chat LLM are:
 
 We have chosen the simplest option which is to stay with Gemini as the API is already in place for the translation of
 user expressions into the corresponding condition syntax.
-See [Google Generative AI](https://github.com/PatilShreyas/generative-ai-kmp/).
+See the [Google Gen AI SDK for Java](https://github.com/googleapis/java-genai) (the `com.google.genai:google-genai`
+module).
 
 ### Combining the rule addition chat task with the condition translation task?
 
 We have chosen to keep the two tasks separate. The chat LLM will focus on gathering the rule information and structuring
 it, while another chat LLM instance will handle the translation of the justification into a formal condition.
 
-There may be some advantage for the translation task if the samechat LLM is also used for the translation task, as it may be
+There may be some advantage for the translation task if the same chat LLM is also used for the translation task, as it
+may be
 able to use the context of the conversation to improve its understanding of the user's intent. However, this would
 require additional complexity in the design of the system. We can consider combining the two chat instances if we find
 that the current approach needs to be improved.
@@ -126,7 +128,8 @@ The chat LLM will operate in a multi-turn chat environment following the sequenc
 8. the model asks for the reason for the action (i.e. the conditions that must be true for the case)
 9. the user enters the reason
 10. the model confirms the reason, or else responds with a question to clarify that reason
-11. if there are cornerstone cases to consider, the model asks the user if the report change should also apply to each cornerstone case. Ifg not, the user is prompted for more conditions.
+11. if there are cornerstone cases to consider, the model asks the user if the report change should also apply to each
+    cornerstone case. If not, the user is prompted for more conditions.
 12. once all the reasons have been entered, the model informs the system to commit the rule session
 
 ## UI design

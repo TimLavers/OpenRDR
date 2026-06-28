@@ -51,8 +51,11 @@ The steps are as follows:
      sentence corresponding to B.
 
 ## The recommended approach
-Option 1 is the recommended (and implemented)approach as it is the simplest and most transparent to the user. There is the disadvantage that 
-each change can only be made to one sentence at a time. The cannot, for example, replace two consecutive sentences with a single sentence. 
+
+Option 1 is the recommended (and implemented) approach as it is the simplest and most transparent to the user. There is
+the disadvantage that
+each change can only be made to one sentence at a time. The user cannot, for example, replace two consecutive sentences
+with a single sentence.
 
 Option 2 was trialled, but it was found to be more complex for the user to use, and the difference algorithm above was not always able to determine the correct changes.
 

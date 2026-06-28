@@ -20,7 +20,7 @@ import kotlin.test.Test
 /**
  * Tests for `ConditionSuggester`'s historical-condition injection. See
  * "Historical-condition injection" in
- * `documentation/design/targeted_suggested_conditions_phase_1.md`.
+ * `documentation/design/targeted_suggested_conditions.md`.
  *
  * The motivating use case: a historical rule `eGFR ≥ 70` for the same
  * conclusion must surface the literal `eGFR ≥ 70` as a suggestion when

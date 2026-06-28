@@ -8,8 +8,8 @@ formulas.
 
 In [Building conditions from user hints](building_conditions_from_user_hints.md)
 we discuss graphical- and text-based approaches to condition editing.
-In [Suggested conditions — non-targeted generation](non_targeted_suggested_conditions.md)
-we look at ways of generating lists of candidate conditions.
+In [Targeted suggested conditions](targeted_suggested_conditions.md)
+we look at how lists of candidate conditions are generated and ranked.
 The present document describes a software design for a system that presents
 good suggestions to the user and allows the editing of those that require adjustments.
 
