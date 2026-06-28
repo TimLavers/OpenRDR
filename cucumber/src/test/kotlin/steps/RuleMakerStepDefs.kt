@@ -6,6 +6,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.collections.shouldContainAll
 import io.rippledown.chat.SuggestionListMessage
+import io.rippledown.constants.chat.CONFIRM
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.SECONDS
@@ -20,11 +21,27 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         }
     }
 
-    @And("I build a rule to add another comment for the same case {string}")
-    fun buildRuleToAddAnotherAnotherCommentForTheSameCase(comment: String) {
+    @When("I add a further comment {string} and complete the rule")
+    fun addFurtherCommentAndCompleteRule(comment: String) {
         with(chatDefs) {
+            // A previous rule in this session has already shown a suggestion list, so detection must
+            // be relative to that: we wait for a NEW suggestion row rather than any suggestion row.
+            val suggestionsBefore = chatPO().numberOfSuggestionRows()
             addCommentWithoutConfirmation(comment)
-            completeRule()
+            // The model sometimes asks to confirm a further comment before starting the rule session.
+            // Wait until it either asks to confirm or presents the new suggestions.
+            await().atMost(ofSeconds(90)).until {
+                chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
+                        chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+                confirm()
+            }
+            await().atMost(ofSeconds(90)).until {
+                chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            decline()
+            waitForBotToSayDone()
         }
     }
 

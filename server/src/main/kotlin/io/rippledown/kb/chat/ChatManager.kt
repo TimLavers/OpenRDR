@@ -27,9 +27,11 @@ class ChatManager(
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
 
-    // The once-per-session tip telling the user they can embed case values in a comment using braces.
-    // Reset implicitly because a new ChatManager is created for each conversation (i.e. each case selection).
-    private var commentVariableTipShown = false
+    // Whether the once-per-session tip about embedding case values in a comment using braces has been
+    // resolved for this session - either because it has been shown, or because the user has already
+    // demonstrated they know the facility by using a variable in a comment. Reset implicitly because a
+    // new ChatManager is created for each conversation (i.e. each case selection).
+    private var commentVariableTipResolved = false
 
     suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
         currentCase = viewableCase
@@ -128,12 +130,17 @@ class ChatManager(
      * already contains a placeholder) or when the add was rejected because a rule session was already active.
      */
     private fun commentVariableTipFor(actionComment: ActionComment, chatResponse: ChatResponse): String? {
-        if (commentVariableTipShown) return null
+        if (commentVariableTipResolved) return null
         if (actionComment.action != ADD_COMMENT) return null
         if (chatResponse.text == RULE_SESSION_ALREADY_ACTIVE_ERROR) return null
         val comment = actionComment.comment ?: return null
-        if (comment.contains("{")) return null // the user has already used the facility
-        commentVariableTipShown = true
+        if (comment.contains("{")) {
+            // The user has already used the facility, so they know about it: never offer the tip this
+            // session, even for later comments that don't use a variable.
+            commentVariableTipResolved = true
+            return null
+        }
+        commentVariableTipResolved = true
         // Use the first attribute of the displayed case as the example, falling back to a generic name
         // if the case has no attributes, so the tip is concrete and relevant to what the user is seeing.
         val exampleAttribute = currentCase?.attributes()?.firstOrNull()?.name ?: DEFAULT_TIP_EXAMPLE_ATTRIBUTE

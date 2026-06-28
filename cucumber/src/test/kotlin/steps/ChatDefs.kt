@@ -397,4 +397,13 @@ class ChatDefs {
         chatPO().numberOfTipMessages() shouldBe 1
     }
 
+    @Then("the chatbot does not mention the comment variable facility")
+    fun requireCommentVariableTipNotShown() {
+        // Wait for the add-comment flow to present its suggestions; the tip (if it were going to
+        // be shown) is delivered in the same response, so by this point it would already be in the
+        // chat. We can then safely assert that none was shown.
+        waitForBotSuggestions()
+        chatPO().numberOfTipMessages() shouldBe 0
+    }
+
 }

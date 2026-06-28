@@ -419,6 +419,28 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `should not show the comment variable tip for a later plain comment once a variable has been used`() = runTest {
+        // Given
+        val initialResponseFromModel =
+            ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+        coEvery { conversationService.startConversation() } returns initialResponseFromModel
+        chatManager.startConversation(viewableCase) //to set the current case
+
+        val addWithVariable = ActionComment(action = ADD_COMMENT, comment = "The TSH is {TSH}.").toJsonString()
+        val addPlain = ActionComment(action = ADD_COMMENT, comment = "Go to Bondi.").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returnsMany
+                listOf(addWithVariable, "anything else?", addPlain, "anything else?")
+
+        // When - the user adds a comment using a variable, then a plain comment
+        val firstResponse = chatManager.response("add a comment with a variable")
+        val secondResponse = chatManager.response("add a plain comment")
+
+        // Then - having used the facility, the user is never shown the tip this session
+        firstResponse.tip shouldBe null
+        secondResponse.tip shouldBe null
+    }
+
+    @Test
     fun `should start a rule session for removing a comment`() =
         runTest {
             // Given

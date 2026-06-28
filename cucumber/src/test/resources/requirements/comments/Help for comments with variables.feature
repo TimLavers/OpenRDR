@@ -22,6 +22,16 @@ Feature: Help for comments with variables
     And I see the case Bondi as the current case
     And the report is empty
     And I build a rule to add the comment "The surf is good"
-    When I build a rule to add another comment for the same case "The water is cold"
+    When I add a further comment "The water is cold" and complete the rule
     Then the chatbot has mentioned the comment variable facility exactly once
+
+  Scenario: The chatbot does not mention the variable facility if the first comment already uses a variable
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the report is empty
+    And I build a rule to add the comment "The surf is {Wave}"
+    When I add a further comment "The water is cold" and complete the rule
+    Then the chatbot does not mention the comment variable facility
 
