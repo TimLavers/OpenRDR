@@ -12,6 +12,9 @@ Current and future versions of OpenRDR should support the following lists of cas
  \* Not yet implemented.
 
 ## Case editing
+
+*Not yet implemented.* The following describes the intended behaviour once the Favourite Cases list (see above) exists.
+
 It is useful to edit cases so that the effects of different values on case interpreation can be assessed. The following restrictions apply:
 - It is not possible to edit cases that are in the Favourite Cases list.
 - It is not possible to copy cases from the other case lists to the Favourites list.

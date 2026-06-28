@@ -10,11 +10,12 @@ The data is shown in a table in which:
 |-----------------|------------------------------------------------------------------------------------------------|------------|
 | Case name       | The name of the case is shown as a heading above the case table.                               |            |
 | Case rows       | There is a row for each attribute that has data in the case.                                   |            |
-| Units           | The units for a test result are shown alongsided the value.                                    |            |
+| Units           | The units for a test result are shown alongside the value.                                     |            |
 | Reference range | If there is a reference range for the most recent test result, it is shown in the last column. |            |
 |                 |                                                                                                |            |
 
 ## Order of attributes
 There is an ordering of attributes, which is used to order the rows of the case table.
 The attributes can be ordered by dragging them within the case table. The initial ordering
-is essentially random.
+is the order in which the attributes are first encountered in the cases presented; new
+attributes are added relative to existing ones so as to preserve that order where possible.

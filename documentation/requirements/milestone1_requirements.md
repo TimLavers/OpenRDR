@@ -38,10 +38,11 @@ A textual comment applicable to a given case.
 
 ## User interface
 **CaseView:**
-An `RDRCase` is presented to the user as a table with three columns. 
-Each `Attribute` and its values in the case in a single row with the `Attribute`
-in the first column, the `Value` and `Unit`s in the second column, and the
-`ReferenceRange` in the third column.  
+An `RDRCase` is presented to the user as a table. Each `Attribute` that has data in
+the case is shown in its own row, with the `Attribute` name in the first column and a
+column for each date at which test results were recorded. The `Value` and its `Unit`s
+are shown together, and the `ReferenceRange` for the most recent result is shown in the
+last column.  
 **Ticket:** [ORD2](../tickets/work_tickets.md)
 
 **InterpretationView:**
@@ -170,9 +171,6 @@ No new concepts.
 No new concepts.
 
 **1.4.29**
-No new concepts.
-
-**1.4.30**
 No new concepts.
 
 **1.4.30**
