@@ -289,6 +289,26 @@ class RuleSessionManagerTest {
         rsm.currentDiff shouldBe Removal(comment)
     }
 
+    @Test
+    fun `should resolve the removed comment to its existing conclusion when it contains a variable`() {
+        // Given a committed comment that itself contains a variable. Its stored conclusion holds the
+        // placeholder as VARIABLE_TOKEN with a CommentVariable, so the comment to remove must be matched
+        // to that existing conclusion rather than a fresh, variable-less one (which would not appear in
+        // the case's interpretation and so could not be removed).
+        val viewableCase = createViewableCase("Case1", value = "5.0")
+        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(glucose().id))
+        rsm.startRuleSessionToAddComment(viewableCase, template, variables)
+        rsm.commitCurrentRuleSession()
+
+        // When the same (internal-form) comment is removed
+        rsm.startRuleSessionToRemoveComment(viewableCase, template)
+
+        // Then the existing conclusion is matched (so the action is applicable) and the diff shows the
+        // rendered text rather than the raw template.
+        rsm.currentDiff shouldBe Removal("Glucose is 5.0")
+    }
+
     // --- startRuleSessionToReplaceComment ---
 
     @Test
@@ -322,6 +342,28 @@ class RuleSessionManagerTest {
 
         // Then - diff should show rendered value, not raw template
         rsm.currentDiff shouldBe Replacement(original, "Glucose is 5.0")
+    }
+
+    @Test
+    fun `should resolve the replaced comment to its existing conclusion when it contains a variable`() {
+        // Given a committed comment that itself contains a variable. Its stored conclusion holds the
+        // placeholder as VARIABLE_TOKEN with a CommentVariable, so the replaced comment must be matched
+        // to that existing conclusion rather than a fresh, variable-less one (which would not appear in
+        // the case's interpretation and would make the replace action inapplicable).
+        val viewableCase = createViewableCase("Case1", value = "5.0")
+        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(glucose().id))
+        rsm.startRuleSessionToAddComment(viewableCase, template, variables)
+        rsm.commitCurrentRuleSession()
+
+        val replacement = "Go to Maroubra."
+
+        // When the same (internal-form) comment is replaced
+        rsm.startRuleSessionToReplaceComment(viewableCase, template, replacement)
+
+        // Then the existing conclusion is matched (so the action is applicable) and the diff shows the
+        // rendered original rather than the raw template.
+        rsm.currentDiff shouldBe Replacement("Glucose is 5.0", replacement)
     }
 
     // --- attributeForName ---

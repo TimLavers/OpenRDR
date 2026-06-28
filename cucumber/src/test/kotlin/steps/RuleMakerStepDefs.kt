@@ -51,6 +51,31 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         completeRule()
     }
 
+    @When("I build another rule to replace the comment {string} by {string}")
+    fun buildRuleToReplaceCommentAndCompleteRule(toBeReplaced: String, replacement: String) {
+        with(chatDefs) {
+            // A previous rule in this session has already shown a suggestion list, so detection must
+            // be relative to that: we wait for a NEW suggestion row rather than any suggestion row.
+            val suggestionsBefore = chatPO().numberOfSuggestionRows()
+            enterChatTextAndSend("Replace the comment \"$toBeReplaced\" by \"$replacement\"")
+            // A replacement comment that contains a variable prompts the model to confirm before
+            // starting the rule session. Wait until it either asks to confirm or presents the new
+            // suggestions.
+            await().atMost(ofSeconds(90)).until {
+                chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
+                        chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+                confirm()
+            }
+            await().atMost(ofSeconds(90)).until {
+                chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            decline()
+            waitForBotToSayDone()
+        }
+    }
+
     @When("Replace the comment {string} by {string} with the reasons:")
     fun replaceCommentWithConditions(toBeReplaced: String, replacement: String, conditions: DataTable) {
         chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
@@ -141,10 +166,34 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     }
 
 
+    @When("I build a rule to remove the comment {string}")
+    fun buildARuleToRemoveTheComment(comment: String) {
+        chatDefs.waitForBotQuestion()
+        buildAnotherRuleToRemoveTheComment(comment)
+    }
     @When("I build another rule to remove the comment {string}")
     fun buildAnotherRuleToRemoveTheComment(comment: String) {
-        chatDefs.removeCommentWithoutConfirmation(comment)
-        completeRule()
+        with(chatDefs) {
+            // A previous rule in this session may already have shown a suggestion list, so detection
+            // must be relative to that: we wait for a NEW suggestion row rather than any suggestion row.
+            val suggestionsBefore = chatPO().numberOfSuggestionRows()
+            enterChatTextAndSend("Remove the comment: \"$comment\"")
+            // Removing a comment that contains a variable can prompt the model to confirm the comment
+            // before starting the rule session. Wait until it either asks to confirm or presents the
+            // new suggestions.
+            await().atMost(ofSeconds(90)).until {
+                chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
+                        chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+                confirm()
+            }
+            await().atMost(ofSeconds(90)).until {
+                chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            decline()
+            waitForBotToSayDone()
+        }
     }
 
     @When("I build a rule to remove the comment {string} with condition(s)")

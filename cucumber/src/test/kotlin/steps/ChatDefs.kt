@@ -279,11 +279,6 @@ class ChatDefs {
         }
     }
 
-    fun removeCommentWithoutConfirmation(comment: String) {
-        waitForBotQuestion()
-        enterChatTextAndSend("Remove the comment: \"$comment\"")
-    }
-
     @And("I request that the comment be removed")
     fun requestCommentBeRemoved() {
         waitForBotQuestion()

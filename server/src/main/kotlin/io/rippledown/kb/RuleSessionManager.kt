@@ -60,7 +60,7 @@ class RuleSessionManager(
     override fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,
         comment: String,
-        variables: List<io.rippledown.model.CommentVariable>
+        variables: List<CommentVariable>
     ): CornerstoneStatus {
         val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
         currentDiff = Addition(renderedText(conclusion, viewableCase.case))
@@ -69,8 +69,9 @@ class RuleSessionManager(
     }
 
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
-        currentDiff = Removal(comment)
-        val conclusion = kb.conclusionManager.getOrCreate(comment)
+        val conclusion = kb.conclusionManager.findByText(comment)
+            ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
+        currentDiff = Removal(renderedText(conclusion, viewableCase.case))
         val action = ChangeTreeToRemoveConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -79,9 +80,10 @@ class RuleSessionManager(
         viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<io.rippledown.model.CommentVariable>
+        variables: List<CommentVariable>
     ): CornerstoneStatus {
-        val replacedConclusion = kb.conclusionManager.getOrCreate(replacedComment)
+        val replacedConclusion = kb.conclusionManager.findByText(replacedComment)
+            ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
         currentDiff = Replacement(
             renderedText(replacedConclusion, viewableCase.case),
