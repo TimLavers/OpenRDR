@@ -2,7 +2,7 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
 
   # This file specifies the *intended* behaviour after Phase 1 of the
   # targeted-suggested-conditions design (see
-  # documentation/design/targeted_suggested_conditions_phase_1.md).
+  # documentation/design/targeted_suggested_conditions.md).
   #
   # Three sets of scenarios:
   #   Set A — Action targeting

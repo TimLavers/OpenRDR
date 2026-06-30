@@ -47,23 +47,20 @@ Here is the expression: x no less than 5.5
 Generate output without additional string.
 ```
 
-where some of the Input: and Output: examples in the prompt have been omitted for brevity. The full list is in the file
-`hints/src/main/resources/training_set.txt`.
+where some of the Input: and Output: examples in the prompt have been omitted for brevity. The full set of examples
+is in the prompt resource files under `hints/src/main/resources/prompt/` (for example `single_expression_examples.txt`).
 
 5. In this example, Gemini provides the output `GreaterThanOrEqualTo, 5.5` Note that it has cleverly inferred the
    correct function name `GreaterThanOrEqualTo` even though that term was not provided as an example in the prompt!
-6. The class `ConditionConstructors` provides the functions to construct the conditions. These functions are called
-   reflexively from the tokens provided by Gemini. For this example, the following function is called:
+6. The `ConditionGenerator` class turns these tokens into a condition. It treats the first token as the name of a
+   predicate (or signature) class and any remaining tokens as that class's constructor parameters, then instantiates
+   the class reflectively via its primary constructor (resolving it from the
+   `io.rippledown.model.condition...predicate` / `...signature` packages). For this example it resolves the
+   `GreaterThanOrEqualTo` predicate class and instantiates it with the parameter `5.5`, then assembles the condition:
 
 ```
-fun GreaterThanOrEqualTo(attribute: Attribute, userExpression: String, d: String) = EpisodicCondition(...)
-
-```  
-
-where
-attribute = `Glucose`\
-userExpression = `Glucose is no less than 5.5`\
-d = `5.5`
+EpisodicCondition(attribute = Glucose, predicate = GreaterThanOrEqualTo(5.5), signature = Current, userExpression = "Glucose is no less than 5.5")
+```
 
 The user expression is stored with the condition instance so that it can be displayed to the user when they are viewing
 the reasons (i.e. conditions) why a particular comment is given or not given for a case.

@@ -28,13 +28,18 @@ fun ChatController(
         val lastBotMessage = chatHistory.lastOrNull()
         val isDuplicate = lastBotMessage is BotMessage && lastBotMessage.text == response.text
         if (!isDuplicate) {
-            chatHistory = if (response.text.isEmpty()) {
-                chatHistory + BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE)
-            } else if (response.suggestions.isNotEmpty()) {
-                chatHistory + BotMessage(response.text) + SuggestionListMessage(response.suggestions)
-            } else {
-                chatHistory + BotMessage(response.text)
+            val additions = buildList {
+                if (response.text.isEmpty()) {
+                    add(BotMessage(CHAT_BOT_NO_RESPONSE_MESSAGE))
+                } else {
+                    // The tip is shown ahead of the bot's message so it lands right after the
+                    // user's comment, before the suggestions are presented.
+                    response.tip?.let { add(TipMessage(it)) }
+                    add(BotMessage(response.text))
+                    if (response.suggestions.isNotEmpty()) add(SuggestionListMessage(response.suggestions))
+                }
             }
+            chatHistory = chatHistory + additions
         }
         sendIsEnabled = true
     }

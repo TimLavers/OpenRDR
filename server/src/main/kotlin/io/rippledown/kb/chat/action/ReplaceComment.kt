@@ -29,9 +29,15 @@ class ReplaceComment(
         val (internalReplacementComment, resolvedVariables) =
             resolveCommentVariables(replacementComment, variables, ruleService)
 
+        // The to-be-replaced comment must also be converted to its internal form so it matches the
+        // conclusion already stored for it (whose variable placeholders are held as VARIABLE_TOKEN);
+        // otherwise it would not be found and a new, unmatched conclusion would be minted. Its own
+        // variables come from the existing conclusion, so none need to be derived here.
+        val (internalReplacedComment, _) = resolveCommentVariables(comment, emptyList(), ruleService)
+
         val cornerstoneStatus = ruleService.startRuleSessionToReplaceComment(
             sessionCase,
-            comment,
+            internalReplacedComment,
             internalReplacementComment,
             resolvedVariables
         )

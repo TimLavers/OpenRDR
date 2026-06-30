@@ -69,6 +69,12 @@ data class SuggestionListMessage(
     override val isUser: Boolean = false
 }
 
+data class TipMessage(
+    override val text: String
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
+
 typealias OnMessageSent = (UserMessage) -> Unit
 
 const val USER = "USER_"
@@ -80,6 +86,7 @@ const val NUMBER_OF_CHAT_MESSAGES_ = "NumberOfChatMessages_"
 const val SUGGESTION_LIST = "SUGGESTION_LIST_"
 const val SUGGESTION_ITEM = "SUGGESTION_ITEM_"
 const val EDITABLE_MARKER = " [editable]"
+const val TIP = "TIP_"
 
 @Composable
 fun ChatPanel(
@@ -138,6 +145,7 @@ fun ChatPanel(
             itemsIndexed(messages) { index, message ->
                 when (message) {
                     is UserMessage -> UserRow(message.text, index)
+                    is TipMessage -> TipRow(message.text, index)
                     is SuggestionListMessage -> SuggestionListRow(
                         message.suggestions, index
                     ) { suggestion, isEditable ->

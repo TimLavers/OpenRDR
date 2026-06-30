@@ -9,13 +9,13 @@ it never has to deal with the situation in which there are no `KB`s.)
 At startup, the server will load all persisted `KB`s. This simplifies things but may
 cause problems down the track in systems that have large numbers of rarely used `KB`s.
 
-| Requirement         | Description                                           | Validation |
-|---------------------|-------------------------------------------------------|------------|
-| List `KB`s.         | The `KBInfo`s for the managed `KB`s can be retrieved. | KBM-1      |
-| Create a `KB`.      | A `KB` can be created for a given name.               | KBM-2      |
-| Ids are UUIDs.      | The `KBInfo.id` of a `KB` is a random UUID.           | KBM-3      |
-| Retrieve `KB`s.     | A `KB` can be retrieved based on its `KBInfo`.        | KBM-4      |
-| Delete a `KB`.      | A `KB` can deleted, based on its `KBInfo.id`.         | KBM-5      |
-| Load `KB`s at init. | All `KB`s are loaded at server startup.               | KBM-6      |
+| Requirement           | Description                                                                                                               | Validation |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------|------------|
+| List `KB`s.           | The `KBInfo`s for the managed `KB`s can be retrieved.                                                                     | KBM-1      |
+| Create a `KB`.        | A `KB` can be created for a given name.                                                                                   | KBM-2      |
+| Id derived from name. | The `KBInfo.id` of a `KB` is its lower-cased alphanumeric name followed by an underscore and a sequence of random digits. | KBM-3      |
+| Retrieve `KB`s.       | A `KB` can be retrieved based on its `KBInfo`.                                                                            | KBM-4      |
+| Delete a `KB`.        | A `KB` can deleted, based on its `KBInfo.id`.                                                                             | KBM-5      |
+| Load `KB`s at init.   | All `KB`s are loaded at server startup.                                                                                   | KBM-6      |
  
 

@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChatResponse(
     val text: String,
-    val suggestions: List<String> = emptyList()
+    val suggestions: List<String> = emptyList(),
+    val tip: String? = null
 )

@@ -26,6 +26,14 @@ class ConclusionManager(private val conclusionStore: ConclusionStore) : Conclusi
         return conclusionKeyMap.values.toSet()
     }
 
+    /**
+     * The existing conclusion with the given (internal-form) text, or null if none exists. Used to
+     * resolve a comment the user is referring to (e.g. one being removed or replaced) back to the
+     * conclusion already stored for it — including its comment variables — rather than minting a new,
+     * variable-less conclusion that would not match the one in the case's interpretation.
+     */
+    fun findByText(text: String): Conclusion? = conclusionKeyMap.values.firstOrNull { it.text == text }
+
     override fun getById(id: Int): Conclusion {
         return conclusionKeyMap.values.first { it.id == id }
     }

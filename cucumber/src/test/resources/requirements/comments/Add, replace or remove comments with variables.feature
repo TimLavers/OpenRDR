@@ -1,5 +1,5 @@
 @delay_after_cuke
-Feature: Add comments with variables
+Feature: Add, replace or remove comments with variables
 
   Scenario: The user should be able to use the chat to add a comment with a single variable
     Given case Bondi is provided having data:
@@ -10,6 +10,30 @@ Feature: Add comments with variables
     And the report is empty
     When  I build a rule to add the comment "The wave quality is {wave}"
     Then the report should be "The wave quality is excellent"
+
+  Scenario: The user should be able to replace a comment with a variable by another comment with a different variable
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the report is empty
+    And I build a rule to add the comment "The wave quality is {wave}"
+    And the report should be "The wave quality is excellent"
+    When I build another rule to replace the comment "The wave quality is {wave}" by "The air temperature is {sun}"
+    Then the report should be "The air temperature is hot"
+
+  Scenario: The user should be able to remove a comment that contains a variable
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the report is empty
+    And I build a rule to add the comment "The wave quality is {wave}"
+    And the report should be "The wave quality is excellent"
+    When I build another rule to remove the comment "The wave quality is {wave}"
+    Then the report should be empty
 
   Scenario: The user should be able to use the chat to add a comment with multiple variables
     Given case Bondi is provided having data:

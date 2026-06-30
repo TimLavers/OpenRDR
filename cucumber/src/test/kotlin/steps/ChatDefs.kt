@@ -4,6 +4,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.chat.*
 import io.rippledown.constants.rule.UNDERSTAND
 import org.awaitility.Awaitility.await
@@ -278,11 +279,6 @@ class ChatDefs {
         }
     }
 
-    fun removeCommentWithoutConfirmation(comment: String) {
-        waitForBotQuestion()
-        enterChatTextAndSend("Remove the comment: \"$comment\"")
-    }
-
     @And("I request that the comment be removed")
     fun requestCommentBeRemoved() {
         waitForBotQuestion()
@@ -382,6 +378,27 @@ class ChatDefs {
     @Then("the capabilities shown include:")
     fun capabilitiesShownInclude(dataTable: DataTable) {
         waitForBotText(*dataTable.asList().toTypedArray())
+    }
+
+    @Then("the chatbot mentions that a case value can be inserted into a comment using braces")
+    fun waitForBotToMentionCommentVariableTip() {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().mostRecentTipRowContainsTerms(listOf(COMMENT_VARIABLE_TIP_KEYWORD))
+        }
+    }
+
+    @Then("the chatbot has mentioned the comment variable facility exactly once")
+    fun requireCommentVariableTipShownExactlyOnce() {
+        chatPO().numberOfTipMessages() shouldBe 1
+    }
+
+    @Then("the chatbot does not mention the comment variable facility")
+    fun requireCommentVariableTipNotShown() {
+        // Wait for the add-comment flow to present its suggestions; the tip (if it were going to
+        // be shown) is delivered in the same response, so by this point it would already be in the
+        // chat. We can then safely assert that none was shown.
+        waitForBotSuggestions()
+        chatPO().numberOfTipMessages() shouldBe 0
     }
 
 }

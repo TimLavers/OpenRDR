@@ -40,7 +40,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      * rule in [SuggestionContext.ruleTree] whose conclusion id matches the
      * action's target conclusion id, restricted to those that hold on the session
      * case. See "Historical-condition injection" in
-     * `documentation/design/targeted_suggested_conditions_phase_1.md` for the
+     * `documentation/design/targeted_suggested_conditions.md` for the
      * rationale: pathology cutoffs in existing rules are usually the clinically
      * defensible ones (evidence-based guideline thresholds, departmental
      * conventions), so surfacing the literal `eGFR ≥ 70` alongside the

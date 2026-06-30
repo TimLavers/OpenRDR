@@ -34,6 +34,34 @@ allow connection to the Postgres server:
 The default values for the Postgres parameters are `jdbc:postgresql://localhost:5432/postgres`, `postgres`
 and `postgres`.
 
+#### Running Postgres locally with Podman
+
+A quick way to get a Postgres server matching the default parameters above is to run one in a container.
+Using [Podman](https://podman.io/):
+
+```shell
+podman run --name openrdr-postgres --restart=always \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres \
+  -p 5432:5432 -d docker.io/library/postgres:18
+```
+
+This listens on `localhost:5432` with user/password/database all set to `postgres`, so no environment
+variables need to be set. The `--restart=always` policy brings the container back automatically (for
+example after the Podman machine restarts).
+
+Useful follow-up commands:
+
+```shell
+podman ps                                 # check it is running
+podman exec openrdr-postgres pg_isready -U postgres   # confirm it accepts connections
+podman stop openrdr-postgres              # stop it (data is retained)
+podman start openrdr-postgres             # start it again
+podman rm -f openrdr-postgres             # remove it for a clean slate
+```
+
+On macOS the container only comes back after a full reboot once the Podman machine is running; start it
+if needed with `podman machine start`.
+
 ### Google Gemini
 
 OpenRDR uses Google Gemini to generate rule conditions from user-entered expressions.

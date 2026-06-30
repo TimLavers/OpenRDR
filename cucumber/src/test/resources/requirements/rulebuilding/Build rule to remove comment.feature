@@ -8,7 +8,7 @@ Feature: The user can make a rule that removes a comment from the interpretive r
     And I start the client application
     And I should see the case Case1 as the current case
     And  the interpretation should contain the text "Go to Bondi."
-    When I build another rule to remove the comment "Go to Bondi."
+    When I build a rule to remove the comment "Go to Bondi."
     Then  the interpretation should be empty
     And select the case Case2
     And  the interpretation should be empty

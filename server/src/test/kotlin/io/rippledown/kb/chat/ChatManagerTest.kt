@@ -12,6 +12,8 @@ import io.rippledown.kb.chat.ChatManager.Companion.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
+import io.rippledown.kb.chat.ChatManager.Companion.commentVariableTip
+import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
@@ -42,6 +44,7 @@ class ChatManagerTest {
         case = mockk()
         suggestionsBuffer = SuggestionsBuffer()
         every { viewableCase.case } returns case
+        every { viewableCase.attributes() } returns listOf(Attribute(1, "Glucose"), Attribute(2, "TSH"))
         every { ruleService.isRuleSessionActive() } returns false
         chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer)
         setupLogger()
@@ -355,6 +358,87 @@ class ChatManagerTest {
             // Then
             coVerify { ruleService.startRuleSessionToAddComment(viewableCase, comment, emptyList()) }
         }
+
+    @Test
+    fun `should append the comment variable tip the first time a comment is added in a session`() = runTest {
+        // Given
+        val initialResponseFromModel =
+            ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+        coEvery { conversationService.startConversation() } returns initialResponseFromModel
+        chatManager.startConversation(viewableCase) //to set the current case
+
+        val addComment = ActionComment(action = ADD_COMMENT, comment = "Go to Bondi.").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returnsMany listOf(addComment, "anything else?")
+
+        // When
+        val responseToUser = chatManager.response("add a comment")
+
+        // Then - the tip is delivered on its own channel, with the example using the
+        // first attribute of the displayed case
+        responseToUser.tip shouldBe commentVariableTip("Glucose")
+    }
+
+    @Test
+    fun `should not repeat the comment variable tip for a second comment in the same session`() = runTest {
+        // Given
+        val initialResponseFromModel =
+            ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+        coEvery { conversationService.startConversation() } returns initialResponseFromModel
+        chatManager.startConversation(viewableCase) //to set the current case
+
+        val firstAdd = ActionComment(action = ADD_COMMENT, comment = "Go to Bondi.").toJsonString()
+        val secondAdd = ActionComment(action = ADD_COMMENT, comment = "Go to Manly.").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returnsMany
+                listOf(firstAdd, "anything else?", secondAdd, "anything else?")
+
+        // When
+        val firstResponse = chatManager.response("add a comment")
+        val secondResponse = chatManager.response("add another comment")
+
+        // Then
+        firstResponse.tip shouldBe commentVariableTip("Glucose")
+        secondResponse.tip shouldBe null
+    }
+
+    @Test
+    fun `should not show the comment variable tip when the first comment already uses a variable`() = runTest {
+        // Given
+        val initialResponseFromModel =
+            ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+        coEvery { conversationService.startConversation() } returns initialResponseFromModel
+        chatManager.startConversation(viewableCase) //to set the current case
+
+        val addComment = ActionComment(action = ADD_COMMENT, comment = "The TSH is {TSH}.").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returnsMany listOf(addComment, "anything else?")
+
+        // When
+        val responseToUser = chatManager.response("add a comment")
+
+        // Then
+        responseToUser.tip shouldBe null
+    }
+
+    @Test
+    fun `should not show the comment variable tip for a later plain comment once a variable has been used`() = runTest {
+        // Given
+        val initialResponseFromModel =
+            ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+        coEvery { conversationService.startConversation() } returns initialResponseFromModel
+        chatManager.startConversation(viewableCase) //to set the current case
+
+        val addWithVariable = ActionComment(action = ADD_COMMENT, comment = "The TSH is {TSH}.").toJsonString()
+        val addPlain = ActionComment(action = ADD_COMMENT, comment = "Go to Bondi.").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returnsMany
+                listOf(addWithVariable, "anything else?", addPlain, "anything else?")
+
+        // When - the user adds a comment using a variable, then a plain comment
+        val firstResponse = chatManager.response("add a comment with a variable")
+        val secondResponse = chatManager.response("add a plain comment")
+
+        // Then - having used the facility, the user is never shown the tip this session
+        firstResponse.tip shouldBe null
+        secondResponse.tip shouldBe null
+    }
 
     @Test
     fun `should start a rule session for removing a comment`() =
