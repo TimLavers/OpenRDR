@@ -1,5 +1,6 @@
 package io.rippledown.main
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -980,7 +981,7 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should not generate report while a rule session is in progress`() = runTest {
+    fun `should hide the report and not regenerate it while a rule session is in progress`() = runTest {
         //Given
         val caseName = "case A"
         val caseId = CaseId(id = 1, name = caseName)
@@ -1014,20 +1015,26 @@ class OpenRDRUITest {
             }
             waitForCaseToBeShowing(caseName)
 
-            //When - a rule session starts and then the report panel is shown
-            updateCornerstoneStatus.invoke(ruleStatus)
+            //Given - the report panel is shown, which generates the report once
             onNodeWithContentDescription("REPORT_TOGGLE").performClick()
             waitForIdle()
+            coVerify(exactly = 1) { api.getCaseReport(1) }
 
-            //Then - no report is generated while the rule session is in progress
-            coVerify(exactly = 0) { api.getCaseReport(any()) }
+            //When - a rule session starts
+            updateCornerstoneStatus.invoke(ruleStatus)
+            waitForIdle()
+
+            //Then - the report is hidden and is not regenerated
+            onNodeWithContentDescription("REPORT_TOGGLE").assertDoesNotExist()
+            coVerify(exactly = 1) { api.getCaseReport(1) }
 
             //When - the rule session completes
             ruleCompleted.invoke()
             waitForIdle()
 
-            //Then - the report is now generated
-            coVerify { api.getCaseReport(1) }
+            //Then - the report reappears and is regenerated
+            onNodeWithContentDescription("REPORT_TOGGLE").assertIsDisplayed()
+            coVerify(exactly = 2) { api.getCaseReport(1) }
         }
     }
 

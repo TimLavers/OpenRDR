@@ -43,7 +43,8 @@ fun CaseInspection(
     reportText: String? = null,
     reportGenerated: Boolean = true,
     isLoadingReport: Boolean = false,
-    onReportToggle: (Boolean) -> Unit = {}
+    onReportToggle: (Boolean) -> Unit = {},
+    showReport: Boolean = true
 ) {
     val columnWidths = ColumnWidths(case.numberOfColumns)
     // Header dates row and attribute body share a single horizontal scroll
@@ -145,13 +146,15 @@ fun CaseInspection(
                     ruleConditions = ruleConditions,
                     handler = handler
                 )
-                ReportView(
-                    reportText = reportText,
-                    isVisible = reportVisible,
-                    onToggle = onReportToggle,
-                    isLoading = isLoadingReport,
-                    hasComments = reportGenerated
-                )
+                if (showReport) {
+                    ReportView(
+                        reportText = reportText,
+                        isVisible = reportVisible,
+                        onToggle = onReportToggle,
+                        isLoading = isLoadingReport,
+                        hasComments = reportGenerated
+                    )
+                }
             }
         }
     )

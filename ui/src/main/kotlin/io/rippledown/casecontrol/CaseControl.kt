@@ -56,7 +56,11 @@ fun CaseControl(
                     reportText = reportText,
                     reportGenerated = reportGenerated,
                     isLoadingReport = isLoadingReport,
-                    onReportToggle = onReportToggle
+                    onReportToggle = onReportToggle,
+                    // The report is not generated during a rule-building
+                    // session, so hide the panel and its toggle entirely
+                    // rather than showing a stale report.
+                    showReport = cornerstoneStatus == null
                 )
             }
             val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview

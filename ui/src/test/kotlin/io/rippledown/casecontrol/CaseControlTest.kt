@@ -454,7 +454,7 @@ class CaseControlTest {
     }
 
     @Test
-    fun `should show only one report toggle when a cornerstone is displayed`() = runTest {
+    fun `should hide the report panel and toggle during a rule session`() = runTest {
         val currentCase = createViewableCase(name = "case A", caseId = 1)
         val cornerstoneStatus = CornerstoneStatus(
             cornerstoneToReview = createViewableCase(name = "case B", caseId = 2),
@@ -472,10 +472,50 @@ class CaseControlTest {
                     reportText = "Test report"
                 )
             }
-            // The report toggle belongs only to the current case's inspection; the
-            // cornerstone pane must not add one.
-            onAllNodesWithContentDescription(REPORT_TOGGLE).assertCountEquals(1)
-            onAllNodesWithContentDescription(REPORT_PANEL).assertCountEquals(1)
+            // The report is not generated during a rule session, so neither the
+            // panel nor its toggle should be shown - not even a stale one.
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should hide the report toggle when a rule session has no cornerstones to review`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+        // A rule session with no cornerstone to review is still in progress.
+        val cornerstoneStatus = CornerstoneStatus()
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = cornerstoneStatus,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should show the report toggle when no rule session is in progress`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = null,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertIsDisplayed()
+            onNodeWithContentDescription(REPORT_PANEL).assertExists()
         }
     }
 }

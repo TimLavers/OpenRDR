@@ -125,6 +125,13 @@ threads it down through `CaseControl` -> `CaseInspection` -> `ReportView` (as `r
 `reportGenerated`, `isLoadingReport`, `reportVisible`, `onReportToggle`). It holds three pieces of
 remembered state: `reportVisible: Boolean`, `report: CaseReport?`, and `isLoadingReport: Boolean`.
 
+During a rule-building session the entire `ReportView` (panel *and* its toggle) is hidden, not just
+left ungenerated: `CaseControl` passes `showReport = cornerstoneStatus == null` to `CaseInspection`,
+which omits the `ReportView` when a session is active. Since the report is deliberately not
+regenerated during a session, hiding it avoids presenting a stale report that no longer matches the
+interpretation being edited. `reportVisible` is preserved across the session, so the panel reappears
+in its previous state (and regenerates) once the session completes.
+
 Two `LaunchedEffect`s drive generation:
 
 1. Keyed on `currentCaseId`, it clears `report` as soon as the selected case changes, so the previous

@@ -131,6 +131,23 @@ class CaseInspectionTest {
             onNodeWithContentDescription(REPORT_TOGGLE).assertIsDisplayed()
         }
     }
+
+    @Test
+    fun `should not show report view when showReport is false`() = runTest {
+        val case = createViewableCase(name = "case a", caseId = 1L)
+        with(composeTestRule) {
+            setContent {
+                CaseInspection(
+                    case = case,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report",
+                    showReport = false
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
+        }
+    }
 }
 
 fun main() {
