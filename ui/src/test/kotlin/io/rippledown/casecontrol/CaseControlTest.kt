@@ -11,8 +11,9 @@ import io.rippledown.constants.caseview.CASE_VIEW_FILTER_CLEAR_DESCRIPTION
 import io.rippledown.constants.caseview.CASE_VIEW_FILTER_FIELD_DESCRIPTION
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
+import io.rippledown.constants.interpretation.REPORT_PANEL
+import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.cornerstone.*
-import io.rippledown.interpretation.REPORT_PANEL
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
@@ -449,6 +450,32 @@ class CaseControlTest {
                 )
             }
             onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should show only one report toggle when a cornerstone is displayed`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+        val cornerstoneStatus = CornerstoneStatus(
+            cornerstoneToReview = createViewableCase(name = "case B", caseId = 2),
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 1
+        )
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = cornerstoneStatus,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            // The report toggle belongs only to the current case's inspection; the
+            // cornerstone pane must not add one.
+            onAllNodesWithContentDescription(REPORT_TOGGLE).assertCountEquals(1)
+            onAllNodesWithContentDescription(REPORT_PANEL).assertCountEquals(1)
         }
     }
 }

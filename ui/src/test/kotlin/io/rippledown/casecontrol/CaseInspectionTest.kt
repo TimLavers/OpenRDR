@@ -12,7 +12,7 @@ import io.kotest.matchers.comparables.shouldBeLessThan
 import io.mockk.mockk
 import io.rippledown.caseview.dateCellContentDescription
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
-import io.rippledown.interpretation.REPORT_TOGGLE
+import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCaseBuilder

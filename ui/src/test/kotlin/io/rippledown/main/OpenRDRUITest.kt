@@ -953,6 +953,84 @@ class OpenRDRUITest {
         }
     }
 
+    @Test
+    fun `should not generate report while the panel is collapsed`() = runTest {
+        //Given
+        val caseName = "case A"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createViewableCaseWithInterpretation(caseName, 1, listOf("Go to Bondi"))
+
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.getCaseReport(1) } returns CaseReport(markdown = "Generated report")
+        coEvery { api.cornerstoneStatus() } returns null
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            //When - a case is shown but the report panel is left collapsed
+            waitForCaseToBeShowing(caseName)
+            waitForIdle()
+
+            //Then - no report is generated
+            coVerify(exactly = 0) { api.getCaseReport(any()) }
+        }
+    }
+
+    @Test
+    fun `should not generate report while a rule session is in progress`() = runTest {
+        //Given
+        val caseName = "case A"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createViewableCaseWithInterpretation(caseName, 1, listOf("Go to Bondi"))
+        val ruleStatus = CornerstoneStatus(
+            cornerstoneToReview = createViewableCase("case B", 2),
+            indexOfCornerstoneToReview = 1,
+            numberOfCornerstones = 3
+        )
+
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.getCaseReport(1) } returns CaseReport(markdown = "Generated report")
+
+        lateinit var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)
+        lateinit var ruleCompleted: (() -> Unit)
+        coEvery {
+            api.startWebSocketSession(
+                updateCornerstoneStatus = any(),
+                ruleSessionCompleted = any(),
+                updateCasesInfo = any()
+            )
+        } coAnswers {
+            updateCornerstoneStatus = firstArg()
+            ruleCompleted = secondArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing(caseName)
+
+            //When - a rule session starts and then the report panel is shown
+            updateCornerstoneStatus.invoke(ruleStatus)
+            onNodeWithContentDescription("REPORT_TOGGLE").performClick()
+            waitForIdle()
+
+            //Then - no report is generated while the rule session is in progress
+            coVerify(exactly = 0) { api.getCaseReport(any()) }
+
+            //When - the rule session completes
+            ruleCompleted.invoke()
+            waitForIdle()
+
+            //Then - the report is now generated
+            coVerify { api.getCaseReport(1) }
+        }
+    }
+
 }
 
 fun main() {

@@ -37,6 +37,7 @@ class EngineConfig {
     var returnConditionList: ConditionList = ConditionList()
     var returnResponse: ChatResponse = ChatResponse("")
     var returnCaseReport: CaseReport? = null
+    var caseReportShouldFail = false
 
     var returnConditionParsingResult: ConditionParsingResult? = null
     var expectedCaseId: Long? = null
@@ -215,7 +216,15 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             CASE_REPORT -> {
                 if (config.expectedCaseId != null) request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
-                httpResponseData(json.encodeToString(config.returnCaseReport))
+                if (config.caseReportShouldFail) {
+                    respond(
+                        content = ByteReadChannel(""),
+                        status = HttpStatusCode.InternalServerError,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    httpResponseData(json.encodeToString(config.returnCaseReport))
+                }
             }
 
             else -> {

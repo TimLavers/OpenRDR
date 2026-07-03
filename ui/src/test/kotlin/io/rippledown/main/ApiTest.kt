@@ -58,6 +58,24 @@ class ApiTest {
     }
 
     @Test
+    fun getCaseReportTest() = runTest {
+        val report = CaseReport(markdown = "The haemoglobin is elevated.")
+        val config = config {
+            returnCaseReport = report
+            expectedCaseId = 1
+        }
+        Api(mock(config)).getCaseReport(1) shouldBe report
+    }
+
+    @Test
+    fun `getCaseReport should return null when the server fails`() = runTest {
+        val config = config {
+            caseReportShouldFail = true
+        }
+        Api(mock(config)).getCaseReport(1) shouldBe null
+    }
+
+    @Test
     fun getCaseWithInterpretationTest() = runTest {
         //Given
         val malabarComment = "go to Malabar"
