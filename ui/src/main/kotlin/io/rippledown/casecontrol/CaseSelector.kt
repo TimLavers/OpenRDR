@@ -3,7 +3,11 @@ package io.rippledown.casecontrol
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -163,7 +167,6 @@ private fun CollapsibleSectionHeader(
     onToggle: () -> Unit,
     semanticId: String
 ) {
-    val arrow = if (expanded) "▾" else "▸"
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -171,12 +174,11 @@ private fun CollapsibleSectionHeader(
             .padding(vertical = 4.dp)
             .semantics { contentDescription = semanticId }
     ) {
-        Text(
-            text = arrow,
-            style = TextStyle(
-                color = Color.DarkGray,
-                fontSize = 20.sp
-            )
+        Icon(
+            imageVector = if (expanded) Icons.Filled.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color.DarkGray,
+            modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(

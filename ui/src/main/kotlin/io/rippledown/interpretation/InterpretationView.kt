@@ -11,11 +11,14 @@ import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.model.IntRangeData
@@ -38,22 +41,30 @@ fun InterpretationView(
     ruleConditions: List<String> = emptyList(),
     handler: InterpretationViewHandler
 ) {
-    OutlinedCard(
-        modifier = Modifier.padding(vertical = 10.dp),
-        colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
-            containerColor = androidx.compose.ui.graphics.Color.White
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Text(
+            text = "Comments",
+            color = Color.DarkGray,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
         )
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                ReadonlyInterpretationView(
-                    interpretation = interpretation,
-                    diff = diff,
-                    ruleConditions = ruleConditions,
-                    contentDescription = INTERPRETATION_TEXT_FIELD,
-                    modifier = Modifier.weight(1f),
-                    handler = handler
-                )
+        OutlinedCard(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+                containerColor = androidx.compose.ui.graphics.Color.White
+            )
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    ReadonlyInterpretationView(
+                        interpretation = interpretation,
+                        diff = diff,
+                        ruleConditions = ruleConditions,
+                        contentDescription = INTERPRETATION_TEXT_FIELD,
+                        modifier = Modifier.weight(1f),
+                        handler = handler
+                    )
+                }
             }
         }
     }
