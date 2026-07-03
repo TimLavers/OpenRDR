@@ -8,6 +8,7 @@ import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
@@ -317,5 +318,28 @@ class ApiTest {
         config.lastRuleUndoCalled shouldBe false
         Api(mock(config)).undoLastRule()
         config.lastRuleUndoCalled shouldBe true
+    }
+
+    @Test
+    fun `should retrieve case report for valid case id`() = runTest {
+        val expectedReport = CaseReport(markdown = "Test report content", generated = true)
+        val caseId = 42L
+        val config = config {
+            returnCaseReport = expectedReport
+            expectedCaseId = caseId
+        }
+        val result = Api(mock(config)).getCaseReport(caseId)
+        result shouldBe expectedReport
+    }
+
+    @Test
+    fun `should return null when case report retrieval fails`() = runTest {
+        val caseId = 999L
+        val config = config {
+            returnCaseReport = null
+            expectedCaseId = caseId
+        }
+        val result = Api(mock(config)).getCaseReport(caseId)
+        result shouldBe null
     }
 }

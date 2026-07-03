@@ -84,6 +84,7 @@ class LaunchedClient {
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
     fun chatPO() = rdUiOperator.chatPO()
     fun ruleMakerPO() = rdUiOperator.ruleMakerPO()
+    fun reportPO() = rdUiOperator.reportPO()
     fun screenshot(file: File) {
         file.parentFile?.mkdirs()
         // Compose renders via Skia so Swing's printAll() produces an empty

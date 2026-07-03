@@ -112,5 +112,6 @@ fun Application.module() {
     conditionManagement(application)
     ruleSession(application)
     chatManagement(application)
+    reportManagement(application)
     webSockets(webSocketManager)
 }

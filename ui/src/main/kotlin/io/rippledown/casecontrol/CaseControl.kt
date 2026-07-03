@@ -24,7 +24,12 @@ fun CaseControl(
     currentCase: ViewableCase?,
     cornerstoneStatus: CornerstoneStatus? = null,
     handler: CaseControlHandler,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    reportVisible: Boolean = false,
+    reportText: String? = null,
+    reportGenerated: Boolean = true,
+    isLoadingReport: Boolean = false,
+    onReportToggle: (Boolean) -> Unit = {}
 ) {
     // The case-view filter is owned here so that a single string applies
     // uniformly to the current case AND the cornerstone case shown beside
@@ -46,7 +51,12 @@ fun CaseControl(
                     cornerstoneStatus?.ruleConditions ?: emptyList(),
                     handler,
                     modifier = Modifier.weight(1f),
-                    filter = filter
+                    filter = filter,
+                    reportVisible = reportVisible,
+                    reportText = reportText,
+                    reportGenerated = reportGenerated,
+                    isLoadingReport = isLoadingReport,
+                    onReportToggle = onReportToggle
                 )
             }
             val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview

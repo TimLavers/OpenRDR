@@ -7,11 +7,10 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import io.rippledown.CaseTestUtils
 import io.rippledown.kb.*
+import io.rippledown.kb.report.ReportService
 import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
@@ -21,12 +20,14 @@ import io.rippledown.model.condition.isCondition
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.toJsonString
 import io.rippledown.util.EntityRetrieval
 import io.rippledown.utils.beSameAs
+import kotlinx.coroutines.test.runTest
 import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -703,5 +704,62 @@ internal class KBEndpointTest {
 
         // Then
         endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("Both ok.")
+    }
+
+    @Test
+    fun `caseReport should delegate to ReportService`() = runTest {
+        // Given
+        val reportService = mockk<ReportService>()
+        val expectedReport = CaseReport(markdown = "Generated report", generated = true)
+        coEvery { reportService.generate(any(), any()) } returns expectedReport
+        val endpointWithMock = KBEndpoint(endpoint.session, reportService)
+        val case1 = supplyCaseFromFile("Case1", endpointWithMock)
+        val id = case1.caseId.id!!
+        endpointWithMock.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+        )
+
+        // When
+        val report = endpointWithMock.caseReport(id)
+
+        // Then
+        report shouldBe expectedReport
+        coVerify { reportService.generate(any(), any()) }
+    }
+
+    @Test
+    fun `caseReport should return cached report on second call without re-invoking ReportService`() = runTest {
+        // Given
+        val reportService = mockk<ReportService>()
+        val expectedReport = CaseReport(markdown = "Generated report", generated = true)
+        coEvery { reportService.generate(any(), any()) } returns expectedReport
+        val endpointWithMock = KBEndpoint(endpoint.session, reportService)
+        val case1 = supplyCaseFromFile("Case1", endpointWithMock)
+        val id = case1.caseId.id!!
+        endpointWithMock.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+        )
+
+        // When - first call then second call
+        val report1 = endpointWithMock.caseReport(id)
+        val report2 = endpointWithMock.caseReport(id)
+
+        // Then - cached value returned, ReportService called only once
+        report2 shouldBe report1
+        coVerify(exactly = 1) { reportService.generate(any(), any()) }
+    }
+
+    @Test
+    fun `caseReport should return empty report when no comments`() = runTest {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+
+        // When
+        val report = endpoint.caseReport(id)
+
+        // Then
+        report.markdown shouldBe ""
+        report.generated shouldBe false
     }
 }

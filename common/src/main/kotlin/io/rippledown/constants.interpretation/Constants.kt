@@ -53,6 +53,11 @@ const val CONDITION_PREFIX = "CONDITION_PREFIX"
 
 const val UNRESOLVED_VARIABLE_TOOLTIP = "This attribute has no value in the current case."
 
+// Report panel constants
+const val REPORT_PANEL = "REPORT_PANEL"
+const val REPORT_TOGGLE = "REPORT_TOGGLE"
+const val REPORT_TEXT = "REPORT_TEXT"
+
 
 
 

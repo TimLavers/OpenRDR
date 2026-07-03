@@ -25,6 +25,7 @@ import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
@@ -921,6 +922,34 @@ class OpenRDRUITest {
             //Then - waitingCasesInfo is called at least once for the initial KB
             waitForCaseToBeShowing("case A")
             coVerify(atLeast = 1) { api.waitingCasesInfo() }
+        }
+    }
+
+    @Test
+    fun `should generate report when panel is visible`() = runTest {
+        //Given
+        val caseName = "case A"
+        val caseId = CaseId(id = 1, name = caseName)
+        val case = createViewableCaseWithInterpretation(caseName, 1, listOf("Go to Bondi"))
+        val expectedReport = CaseReport(markdown = "Generated report", generated = true)
+
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns case
+        coEvery { api.getCaseReport(1) } returns expectedReport
+        coEvery { api.cornerstoneStatus() } returns null
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing(caseName)
+
+            //When - toggle report panel visible
+            onNodeWithContentDescription("REPORT_TOGGLE").performClick()
+            waitForIdle()
+
+            //Then - getCaseReport should be called
+            coVerify { api.getCaseReport(1) }
         }
     }
 

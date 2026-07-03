@@ -50,6 +50,7 @@ open class OpenRDRServerTestBase {
             conditionManagement(serverApplication)
             ruleSession(serverApplication)
             chatManagement(serverApplication)
+            reportManagement(serverApplication)
         }
     }
 }

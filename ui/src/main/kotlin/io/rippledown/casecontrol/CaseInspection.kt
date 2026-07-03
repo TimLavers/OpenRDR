@@ -24,6 +24,7 @@ import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
+import io.rippledown.interpretation.ReportView
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,7 +38,12 @@ fun CaseInspection(
     ruleConditions: List<String> = emptyList(),
     handler: CaseInspectionHandler,
     modifier: Modifier = Modifier,
-    filter: String = ""
+    filter: String = "",
+    reportVisible: Boolean = false,
+    reportText: String? = null,
+    reportGenerated: Boolean = true,
+    isLoadingReport: Boolean = false,
+    onReportToggle: (Boolean) -> Unit = {}
 ) {
     val columnWidths = ColumnWidths(case.numberOfColumns)
     // Header dates row and attribute body share a single horizontal scroll
@@ -138,6 +144,13 @@ fun CaseInspection(
                     diff = diff,
                     ruleConditions = ruleConditions,
                     handler = handler
+                )
+                ReportView(
+                    reportText = reportText,
+                    isVisible = reportVisible,
+                    onToggle = onReportToggle,
+                    isLoading = isLoadingReport,
+                    hasComments = reportGenerated
                 )
             }
         }

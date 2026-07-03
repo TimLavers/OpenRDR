@@ -12,6 +12,7 @@ import io.rippledown.constants.caseview.CASE_VIEW_FILTER_FIELD_DESCRIPTION
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.cornerstone.*
+import io.rippledown.interpretation.REPORT_PANEL
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCaseBuilder
@@ -415,6 +416,39 @@ class CaseControlTest {
             onNodeWithContentDescription(CASE_VIEW_FILTER_FIELD_DESCRIPTION).performTextReplacement("AST")
             attributeRowsWithText(ast.name).assertCountEquals(2)
             attributeRowsWithText(mcv.name).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `should show report view when reportVisible is true`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_PANEL).assertExists()
+        }
+    }
+
+    @Test
+    fun `should not show report view when reportVisible is false`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    handler = handler,
+                    reportVisible = false
+                )
+            }
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
         }
     }
 }

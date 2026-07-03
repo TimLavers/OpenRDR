@@ -58,6 +58,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
+    fun reportPO() = ReportPO {
+        context()
+    }
+
     fun shutdown() {
         window.accessibleContext.accessibleAction.doAccessibleAction(0)
     }

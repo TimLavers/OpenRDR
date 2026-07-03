@@ -4,19 +4,26 @@ import io.rippledown.kb.KBSession
 import io.rippledown.kb.RuleSessionManager
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
+import io.rippledown.kb.report.ReportService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
-class KBEndpoint(val session: KBSession) {
+class KBEndpoint(
+    val session: KBSession,
+    private val reportService: ReportService = ReportService()
+) {
     val kb get() = session.kb
     val logger = lazyLogger
+
+    private val reportCache = mutableMapOf<Long, Pair<Int, CaseReport>>() // caseId -> (commentsHash, report)
 
     fun kbInfo(): KBInfo {
         logger.info("kbName will return: ${kb.kbInfo.name}")
@@ -83,6 +90,18 @@ class KBEndpoint(val session: KBSession) {
     suspend fun startConversation(caseId: Long): ChatResponse = session.startConversation(viewableCase(caseId))
 
     suspend fun responseToUserMessage(message: String): ChatResponse = session.responseToUserMessage(message)
+
+    suspend fun caseReport(caseId: Long): CaseReport {
+        val viewable = viewableCase(caseId)
+        // Cache invalidates when the case's comments change. latestText() is the
+        // already-computed comment text on the viewable interpretation, so we avoid
+        // recomputing toComments() here (generate() does its own comment check).
+        val key = viewable.viewableInterpretation.latestText().hashCode()
+        reportCache[caseId]?.let { (cachedKey, cached) -> if (cachedKey == key) return cached }
+        val report = reportService.generate(viewable) { null }
+        reportCache[caseId] = key to report
+        return report
+    }
 
     fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
 
