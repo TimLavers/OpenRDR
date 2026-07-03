@@ -29,6 +29,7 @@ Feature: Show a list of cases
       | Case2 |
       | Case3 |
 
+  @single
   Scenario: The list of cases should be updated when a case is deleted on the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |

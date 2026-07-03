@@ -234,7 +234,6 @@ class Defs {
     @Then("I (should )see the following cases in the case list:")
     fun IShouldSeeTheFollowingCasesInTheCaseList(dataTable: DataTable) {
         val expectedCaseNames = dataTable.asList()
-        caseCountPO().waitForCountOfNumberOfCasesToBe(expectedCaseNames.size)
         caseListPO().requireCaseNamesToBe(expectedCaseNames)
     }
 

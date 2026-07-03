@@ -55,7 +55,9 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
-        casesListed() shouldBe expectedCaseNames
+        await().atMost(ofSeconds(20)).until {
+            casesListed() == expectedCaseNames
+        }
     }
 
     fun select(caseName: String) {
