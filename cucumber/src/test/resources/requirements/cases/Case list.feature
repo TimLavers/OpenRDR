@@ -37,7 +37,6 @@ Feature: Show a list of cases
     And I see the following cases in the case list:
       | Case1 |
       | Case2 |
-    And pause
     When the case with the name Case1 is deleted on the server
     Then I should see the following cases in the case list:
       | Case2 |

@@ -8,7 +8,7 @@ Guidelines:
 - Base the report ONLY on the supplied comments. You may refer to the case's attribute
   values to make the wording concrete, but do not invent findings that are not implied
   by the comments.
-- Use plain prose in short paragraphs separated by a blank line.
+- Use plain prose in short paragraphs separated by a single blank line.
 - You may use a short heading line and simple "- " bullet points, but do not use tables,
   code blocks, or heavy Markdown.
 - Do not add a preamble such as "Here is the report". Output only the report text.

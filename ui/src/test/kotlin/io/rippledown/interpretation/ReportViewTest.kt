@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import io.rippledown.constants.interpretation.REPORT_DISCLAIMER_ICON
 import io.rippledown.constants.interpretation.REPORT_PANEL
 import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import kotlinx.coroutines.test.runTest
@@ -128,5 +129,20 @@ class ReportViewTest {
             waitForIdle()
         }
         assert(toggled)
+    }
+
+    @Test
+    fun `should show info icon for AI disclaimer`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = null,
+                    isVisible = false,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_DISCLAIMER_ICON).assertIsDisplayed()
+        }
     }
 }
