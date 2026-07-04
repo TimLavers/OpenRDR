@@ -12,12 +12,13 @@ generativeai = "1.46.0"
 guava = "33.5.0-jre"
 jte = "3.2.3"
 kotest = "6.1.10"
-kotlin = "2.3.20"
+kotlin = "2.4.0"
 kotlinx_coroutines = "1.10.2"
 kotlinx_datetime = "0.7.1"
 kotlinx_serialization = "1.10.0"
 ktor = "3.4.2"
 logback = "1.5.32"
+markdownRenderer = "0.43.0"
 material_icons = "1.7.3"
 mockk = "1.14.9"
 postgresql = "42.7.10"
@@ -26,6 +27,8 @@ versionCatalogUpdate = "1.1.0"
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 versionCatalogUpdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
 
 [libraries]
@@ -70,6 +73,8 @@ ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 ktorServerWebSockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+markdownRenderer = { module = "com.mikepenz:multiplatform-markdown-renderer", version.ref = "markdownRenderer" }
+markdownRendererM3 = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdownRenderer" }
 materialIcons = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material_icons" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }

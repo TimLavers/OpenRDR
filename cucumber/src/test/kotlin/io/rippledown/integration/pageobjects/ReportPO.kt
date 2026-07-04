@@ -1,12 +1,11 @@
 package io.rippledown.integration.pageobjects
 
-import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.REPORT_PANEL
 import io.rippledown.constants.interpretation.REPORT_TEXT
 import io.rippledown.constants.interpretation.REPORT_TOGGLE
+import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.mouseClickAtCentre
-import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -15,13 +14,21 @@ import javax.accessibility.AccessibleContext
 class ReportPO(private val contextProvider: () -> AccessibleContext) {
 
     fun clickReportToggle() {
-        waitUntilAsserted {
-            execute<AccessibleContext?> { contextProvider().find(REPORT_TOGGLE) } shouldNotBe null
+        // Wait for any rule session to complete (no cornerstone showing)
+        await().atMost(ofSeconds(30)).until {
+            execute<Boolean> { !CornerstoneTestHook.snapshot().isShowing }
         }
-        // The toggle is a clickable Compose Row which does not expose an
-        // AccessibleAction, so doAccessibleAction() would NPE. Perform an
-        // OS-level mouse click at the row's centre instead.
-        contextProvider().find(REPORT_TOGGLE)!!.mouseClickAtCentre()
+        await().atMost(ofSeconds(15)).until {
+            execute<AccessibleContext?> { contextProvider().find(REPORT_TOGGLE) } != null
+        }
+        execute<Unit> {
+            val toggle = contextProvider().find(REPORT_TOGGLE)
+            if (toggle != null) {
+                toggle.mouseClickAtCentre()
+            } else {
+                throw IllegalStateException("Report toggle not found in accessibility tree")
+            }
+        }
     }
 
     fun waitForReportPanelToBeVisible() {
@@ -38,10 +45,10 @@ class ReportPO(private val contextProvider: () -> AccessibleContext) {
 
     fun reportText(): String =
         execute<String> {
-            // From Compose 1.11 the Java accessibility bridge uses the
-            // contentDescription as the accessible name on Text nodes,
-            // overriding the rendered text. Read the rendered text via
-            // AccessibleText (which exposes the actual characters) instead.
+            // The markdown renderer does not expose its rendered text to the
+            // Java accessibility bridge, so ReportView publishes the raw report
+            // markdown on a hidden, zero-size Text node carrying REPORT_TEXT.
+            // Read the characters from its AccessibleText.
             val ctx = contextProvider().find(REPORT_TEXT) ?: return@execute ""
             val text = ctx.accessibleText ?: return@execute ctx.accessibleName ?: ""
             buildString {

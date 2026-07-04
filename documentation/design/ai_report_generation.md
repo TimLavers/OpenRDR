@@ -114,9 +114,15 @@ panel:
     - `isLoading` -> "Generating report…"
     - `!hasComments` -> "No comments to report on."
     - `reportText.isNullOrBlank()` -> "No report."
-    - otherwise the report text, tagged with `contentDescription = REPORT_TEXT`.
+  - otherwise the report, tagged with `contentDescription = REPORT_TEXT`.
 
-The panel text uses Material 3 `Text`.
+The report is rendered as Markdown via `com.mikepenz.markdown.m3.Markdown` (the
+`multiplatform-markdown-renderer-m3` library, added in `gradle/libs.versions.toml` as
+`markdownRenderer`/`markdownRendererM3`). The renderer is published against a newer Kotlin than
+this project's toolchain, so `ui/build.gradle.kts` forces `kotlin-stdlib` back to the project's
+Kotlin version via a `resolutionStrategy`. The system prompt asks the model for short `##`
+headings, bullet points, and **bold** for out-of-range values, so the panel shows structured,
+formatted output rather than plain text.
 
 ## UI: state and generation trigger
 
@@ -167,9 +173,15 @@ with no comments (`generated = false`) shows "No comments to report on."
 - **Tighter retry/timeout than the LLM defaults.** This is an interactive path, so `ReportService`
   caps retries at 3 and the per-call timeout at 30s to bound worst-case latency, rather than using the
   longer defaults intended for batch work.
-- **Plain text rendering with a light-structure prompt.** No Markdown renderer exists in the repo, so
-  the first cut renders selectable plain text and asks the model for only light structure, avoiding a
-  new dependency. A real Markdown renderer is a scoped follow-up (see below).
+- **Markdown rendering with a structured-report prompt.** The report is rendered with the
+  `multiplatform-markdown-renderer-m3` library and the prompt asks the model to structure the
+  report with `##` headings (which it chooses per case), bullets, and **bold** for out-of-range
+  values. Highlighting of out-of-range values is left to the model rather than done by
+  deterministic post-processing in the app: the case JSON already contains each result's
+  `referenceRange`, so the model has the information it needs, and post-processing would have to
+  locate values within free prose (unreliable when two attributes share a value but differ in
+  range status). This is a trial approach and may be revisited if the model proves unreliable at
+  identifying out-of-range values.
 
 ## Deferred / out of scope
 
@@ -177,8 +189,6 @@ with no comments (`generated = false`) shows "No comments to report on."
   UI-only visibility state via `ChatResponse`).
 - **Selecting which attributes are sent to the LLM.** Currently the full case is serialized and sent;
   a future version will let the user choose which attributes to include.
-- **A real Markdown renderer.** The report renders as plain text and the prompt asks for only light
-  structure; a Compose-Multiplatform Markdown renderer is a possible follow-up.
 - **The future comments redesign** (turning the Interpretation panel's comments into an indexed list
   of derived attributes). `ReportView` is kept independent of `InterpretationView` so that redesign
   will not disturb the report.

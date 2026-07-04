@@ -68,6 +68,9 @@ fun InterpretationView(
             )
         }
         if (commentsExpanded) {
+            // Match the 4.dp gap the case-list section headers leave between
+            // the header and their list, for a consistent look.
+            Spacer(modifier = Modifier.height(4.dp))
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
