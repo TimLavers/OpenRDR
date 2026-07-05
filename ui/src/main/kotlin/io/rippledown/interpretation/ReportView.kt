@@ -22,10 +22,45 @@ import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.markdownAnnotator
+import io.rippledown.chat.TypingIndicator
 import io.rippledown.constants.interpretation.*
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.getTextInNode
+
+internal val powerOfTenRegex = Regex("""10\^(-?\d+)""")
+private val microPrefixRegex = Regex("""\bu(?=[a-zA-Z])""")
+
+/**
+ * Pre-process report text to render powers of 10 as superscripts and
+ * the micro prefix as Greek mu, matching the case view's UnitsCell behavior
+ * (e.g. 10^12 -> 10¹², umol/L -> μmol/L).
+ * Note. We can't use UnitsCell's implementation here because AnnotatedString is not available in Markdown
+ */
+internal fun formatReportText(text: String): String {
+    val withMu = text.replace(microPrefixRegex, "μ")
+    return withMu.replace(powerOfTenRegex) { match ->
+        val exponent = match.groupValues[1]
+        // Use Unicode superscript digits for the exponent
+        val superscript = exponent.map { char ->
+            when (char) {
+                '-' -> '⁻'
+                '0' -> '⁰'
+                '1' -> '¹'
+                '2' -> '²'
+                '3' -> '³'
+                '4' -> '⁴'
+                '5' -> '⁵'
+                '6' -> '⁶'
+                '7' -> '⁷'
+                '8' -> '⁸'
+                '9' -> '⁹'
+                else -> char
+            }
+        }.joinToString("")
+        "10$superscript"
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -87,60 +122,67 @@ fun ReportView(
             // Match the 4.dp gap the case-list section headers leave between
             // the header and their list, for a consistent look.
             Spacer(modifier = Modifier.height(4.dp))
-            OutlinedCard(
+            if (isLoading) {
+                // While generating, show the typing indicator between the
+                // "Report" label and the panel (rather than inside the card),
+                // so it reads like the chat's typing indicator does.
+                TypingIndicator()
+            } else OutlinedCard(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp)
                     .semantics { contentDescription = REPORT_PANEL },
                 colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(8.dp)) {
                     when {
-                        isLoading -> Text("Generating report…")
                         !hasComments -> Text("No comments to report on.")
                         reportText.isNullOrBlank() -> Text("No report.")
-                        else -> Box {
-                            // Zero-size hidden text for accessibility - the markdown
-                            // renderer doesn't expose its content to the Java
-                            // accessibility bridge, so tests read this instead. It is
-                            // clipped to zero size so it adds no visible layout space.
-                            Text(
-                                text = reportText,
-                                modifier = Modifier
-                                    .size(0.dp)
-                                    .semantics { contentDescription = REPORT_TEXT }
-                            )
-                            Markdown(
-                                content = reportText,
-                                typography = markdownTypography(
-                                    h2 = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-                                    h3 = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
-                                    h4 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                                    h5 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                                    h6 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                                    paragraph = TextStyle(fontSize = 12.sp),
-                                    list = TextStyle(fontSize = 12.sp),
-                                    bullet = TextStyle(fontSize = 12.sp)
-                                ),
-                                // Render bold (out-of-range) values in the same red used
-                                // by the case view, so the flagged-value cue is consistent
-                                // across both panels. The default renderer only makes bold
-                                // text heavier, with no colour, so we intercept STRONG nodes.
-                                annotator = markdownAnnotator { content, child ->
-                                    if (child.type == MarkdownElementTypes.STRONG) {
-                                        pushStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red))
-                                        // Append only the content, skipping the "**"/"__"
-                                        // emphasis delimiter tokens that wrap it.
-                                        child.children
-                                            .filter { it.type != MarkdownTokenTypes.EMPH }
-                                            .forEach { node ->
-                                                append(node.getTextInNode(content).toString())
-                                            }
-                                        pop()
-                                        true
-                                    } else {
-                                        false
+                        else -> {
+                            val formattedText = formatReportText(reportText)
+                            Box {
+                                // Zero-size hidden text for accessibility - the markdown
+                                // renderer doesn't expose its content to the Java
+                                // accessibility bridge, so tests read this instead. It is
+                                // clipped to zero size so it adds no visible layout space.
+                                Text(
+                                    text = formattedText,
+                                    modifier = Modifier
+                                        .size(0.dp)
+                                        .semantics { contentDescription = REPORT_TEXT }
+                                )
+                                Markdown(
+                                    content = formattedText,
+                                    typography = markdownTypography(
+                                        h2 = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                                        h3 = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
+                                        h4 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                                        h5 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                                        h6 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                                        paragraph = TextStyle(fontSize = 12.sp),
+                                        list = TextStyle(fontSize = 12.sp),
+                                        bullet = TextStyle(fontSize = 12.sp)
+                                    ),
+                                    // Render bold (out-of-range) values in the same red used
+                                    // by the case view, so the flagged-value cue is consistent
+                                    // across both panels. The default renderer only makes bold
+                                    // text heavier, with no colour, so we intercept STRONG nodes.
+                                    annotator = markdownAnnotator { content, child ->
+                                        if (child.type == MarkdownElementTypes.STRONG) {
+                                            pushStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red))
+                                            // Append only the content, skipping the "**"/"__"
+                                            // emphasis delimiter tokens that wrap it.
+                                            child.children
+                                                .filter { it.type != MarkdownTokenTypes.EMPH }
+                                                .forEach { node ->
+                                                    append(node.getTextInNode(content).toString())
+                                                }
+                                            pop()
+                                            true
+                                        } else {
+                                            false
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
