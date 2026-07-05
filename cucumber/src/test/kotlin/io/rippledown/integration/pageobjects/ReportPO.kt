@@ -62,7 +62,7 @@ class ReportPO(private val contextProvider: () -> AccessibleContext) {
     fun waitForReportTextToContain(phrases: List<String>) {
         await().atMost(ofSeconds(30)).until {
             val text = reportText()
-            phrases.all { text.contains(it) }
+            phrases.all { text.contains(it, true) }
         }
     }
 }

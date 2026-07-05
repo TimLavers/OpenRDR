@@ -1,19 +1,26 @@
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -71,6 +78,18 @@ fun ReportView(
     isLoading: Boolean = false,
     hasComments: Boolean = true, // false when the case has no comments to report on
 ) {
+    var justCopied by remember { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
+    val copyInteractionSource = remember { MutableInteractionSource() }
+    val isCopyHovered by copyInteractionSource.collectIsHoveredAsState()
+
+    if (justCopied) {
+        LaunchedEffect(justCopied) {
+            kotlinx.coroutines.delay(COPY_CONFIRMATION_MS)
+            justCopied = false
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -132,57 +151,91 @@ fun ReportView(
                     .semantics { contentDescription = REPORT_PANEL },
                 colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
             ) {
-                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(8.dp)) {
-                    when {
-                        !hasComments -> Text("No comments to report on.")
-                        reportText.isNullOrBlank() -> Text("No report.")
-                        else -> {
-                            val formattedText = formatReportText(reportText)
-                            Box {
-                                // Zero-size hidden text for accessibility - the markdown
-                                // renderer doesn't expose its content to the Java
-                                // accessibility bridge, so tests read this instead. It is
-                                // clipped to zero size so it adds no visible layout space.
-                                Text(
-                                    text = formattedText,
-                                    modifier = Modifier
-                                        .size(0.dp)
-                                        .semantics { contentDescription = REPORT_TEXT }
-                                )
-                                Markdown(
-                                    content = formattedText,
-                                    typography = markdownTypography(
-                                        h2 = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-                                        h3 = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
-                                        h4 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                                        h5 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                                        h6 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                                        paragraph = TextStyle(fontSize = 12.sp),
-                                        list = TextStyle(fontSize = 12.sp),
-                                        bullet = TextStyle(fontSize = 12.sp)
-                                    ),
-                                    // Render bold (out-of-range) values in the same red used
-                                    // by the case view, so the flagged-value cue is consistent
-                                    // across both panels. The default renderer only makes bold
-                                    // text heavier, with no colour, so we intercept STRONG nodes.
-                                    annotator = markdownAnnotator { content, child ->
-                                        if (child.type == MarkdownElementTypes.STRONG) {
-                                            pushStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red))
-                                            // Append only the content, skipping the "**"/"__"
-                                            // emphasis delimiter tokens that wrap it.
-                                            child.children
-                                                .filter { it.type != MarkdownTokenTypes.EMPH }
-                                                .forEach { node ->
-                                                    append(node.getTextInNode(content).toString())
-                                                }
-                                            pop()
-                                            true
-                                        } else {
-                                            false
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .hoverable(copyInteractionSource)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                            .padding(end = 28.dp, start = 8.dp, top = 8.dp, bottom = 8.dp)
+                    ) {
+                        when {
+                            !hasComments -> Text("No comments to report on.")
+                            reportText.isNullOrBlank() -> Text("No report.")
+                            else -> {
+                                val formattedText = formatReportText(reportText)
+                                Box {
+                                    // Zero-size hidden text for accessibility - the markdown
+                                    // renderer doesn't expose its content to the Java
+                                    // accessibility bridge, so tests read this instead. It is
+                                    // clipped to zero size so it adds no visible layout space.
+                                    Text(
+                                        text = formattedText,
+                                        modifier = Modifier
+                                            .size(0.dp)
+                                            .semantics { contentDescription = REPORT_TEXT }
+                                    )
+                                    Markdown(
+                                        content = formattedText,
+                                        typography = markdownTypography(
+                                            h2 = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                                            h3 = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
+                                            h4 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                                            h5 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                                            h6 = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                                            paragraph = TextStyle(fontSize = 12.sp),
+                                            list = TextStyle(fontSize = 12.sp),
+                                            bullet = TextStyle(fontSize = 12.sp)
+                                        ),
+                                        // Render bold (out-of-range) values in the same red used
+                                        // by the case view, so the flagged-value cue is consistent
+                                        // across both panels. The default renderer only makes bold
+                                        // text heavier, with no colour, so we intercept STRONG nodes.
+                                        annotator = markdownAnnotator { content, child ->
+                                            if (child.type == MarkdownElementTypes.STRONG) {
+                                                pushStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red))
+                                                // Append only the content, skipping the "**"/"__"
+                                                // emphasis delimiter tokens that wrap it.
+                                                child.children
+                                                    .filter { it.type != MarkdownTokenTypes.EMPH }
+                                                    .forEach { node ->
+                                                        append(node.getTextInNode(content).toString())
+                                                    }
+                                                pop()
+                                                true
+                                            } else {
+                                                false
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
+                        }
+                    }
+                    // Copy button is placed AFTER the content so it renders on top
+                    // of the scrollable Column and stays clickable (matching
+                    // AiReportSectionView). If placed before, the Column's
+                    // verticalScroll intercepts the pointer events.
+                    if (!reportText.isNullOrBlank() && !isLoading && hasComments) {
+                        IconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(formatReportText(reportText)))
+                                justCopied = true
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .size(20.dp)
+                                .alpha(if (justCopied || isCopyHovered) 1f else COPY_RESTING_ALPHA)
+                                .semantics { contentDescription = REPORT_COPY_ICON }
+                        ) {
+                            Icon(
+                                imageVector = if (justCopied) Icons.Default.Check else Icons.Default.ContentCopy,
+                                contentDescription = null,
+                                tint = if (justCopied) Color(0xFF2E7D32) else Color.Gray,
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
                     }
                 }
@@ -190,3 +243,9 @@ fun ReportView(
         }
     }
 }
+
+/** Resting opacity of the copy icon, so it is discoverable without hovering. */
+private const val COPY_RESTING_ALPHA = 0.35f
+
+/** How long the copy button shows its "copied" check before reverting. */
+private const val COPY_CONFIRMATION_MS = 1500L

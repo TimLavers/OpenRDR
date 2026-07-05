@@ -11,7 +11,7 @@ class ReportStepDefs {
         reportPO().clickReportToggle()
     }
 
-    @Then("the report should contain the phrases:")
+    @Then("the report (should contain )(contains )the phrase(s):")
     fun reportShouldContainPhrases(phrases: DataTable) {
         reportPO().waitForReportPanelToBeVisible()
         reportPO().waitForReportTextToContain(phrases.asList())

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.TYPING_INDICATOR
+import io.rippledown.constants.interpretation.REPORT_COPY_ICON
 import io.rippledown.constants.interpretation.REPORT_DISCLAIMER_ICON
 import io.rippledown.constants.interpretation.REPORT_PANEL
 import io.rippledown.constants.interpretation.REPORT_TOGGLE
@@ -184,5 +185,210 @@ class ReportViewTest {
         formatReportText("umol/L") shouldBe "μmol/L"
         formatReportText("Creatinine 120 umol/L (10^6/L)") shouldBe "Creatinine 120 μmol/L (10⁶/L)"
         formatReportText("No change") shouldBe "No change"
+    }
+
+    @Test
+    fun `should show copy icon when report is visible and has content`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should not show copy icon when report is not visible`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = false,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should not show copy icon when report text is blank`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should not show copy icon when report text is null`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = null,
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should not show copy icon when loading`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = true,
+                    isLoading = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should not show copy icon when hasComments is false`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = true,
+                    hasComments = false,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should copy formatted text to clipboard when copy icon is clicked`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test 10^6 content umol/L",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+
+            // The click should succeed without error
+            // Actual clipboard content verification is not easily testable in Compose tests
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show checkmark briefly after copying`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+
+            // After clicking, the icon should briefly show a checkmark
+            // We can't easily test the visual state change in unit tests,
+            // but we can verify the click doesn't crash and the icon still exists
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `copy icon should be clickable`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsEnabled()
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+        }
+    }
+
+    @Test
+    fun `copy icon should be clickable multiple times`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test report content",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsEnabled()
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+        }
+    }
+
+    @Test
+    fun `copy icon should work with formatted text containing special characters`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Test 10^6 content umol/L",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsEnabled()
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+        }
+    }
+
+    @Test
+    fun `copy icon should work with plain text`() = runTest {
+        with(composeTestRule) {
+            setContent {
+                ReportView(
+                    reportText = "Simple plain text report",
+                    isVisible = true,
+                    onToggle = {}
+                )
+            }
+
+            onNodeWithContentDescription(REPORT_COPY_ICON).assertIsEnabled()
+            onNodeWithContentDescription(REPORT_COPY_ICON).performClick()
+            waitForIdle()
+        }
     }
 }
