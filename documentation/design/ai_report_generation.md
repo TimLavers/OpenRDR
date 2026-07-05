@@ -24,7 +24,9 @@ a `@Serializable data class CaseReport(val markdown: String, val generated: Bool
 from "generation produced empty text". The endpoint path constant `CASE_REPORT = "/api/caseReport"`
 lives in `@/C:\repos\OpenRDR\common\src\main\kotlin\io\rippledown\constants\api\Constants.kt`.
 
-The UI element content descriptions `REPORT_PANEL`, `REPORT_TOGGLE` and `REPORT_TEXT` are defined in
+The UI element content descriptions `REPORT_PANEL`, `REPORT_TOGGLE`, `REPORT_TEXT`,
+`REPORT_DISCLAIMER_ICON` and `REPORT_COPY_ICON`, together with the disclaimer text `REPORT_DISCLAIMER`,
+are defined in
 `@/C:\repos\OpenRDR\common\src\main\kotlin\io\rippledown\constants.interpretation\Constants.kt` so
 they are shared between the UI and the cucumber page objects.
 
@@ -105,24 +107,48 @@ panel:
 
 - A header `Row` carrying `contentDescription = REPORT_TOGGLE`, made clickable with
   `Modifier.clickable { onToggle(!isVisible) }`. It shows a down/right chevron and the label
-  "Report".
-- When `isVisible`, an `OutlinedCard` (content description `REPORT_PANEL`) bounded to
-  `heightIn(max = 240.dp)` with an internal `verticalScroll`, so long reports scroll within the
-  panel and never push the case body off-screen (the surrounding `CaseInspectionLayout`'s
-  `interpretationContent` slot is intentionally not scrollable).
+  "Report", followed by an information icon (`REPORT_DISCLAIMER_ICON`) wrapped in a `TooltipArea`
+  that shows the `REPORT_DISCLAIMER` text on hover.
+- When `isVisible`, a 4.dp `Spacer` separates the header from the content (matching the case-list
+  section headers), then the body is chosen on `isLoading`:
+    - `isLoading` -> a `TypingIndicator()` (the chat's three-dot indicator) is shown **between the
+      header and the panel**, not inside the card, so it reads like the chat's indicator.
+    - otherwise an `OutlinedCard` (content description `REPORT_PANEL`) bounded to
+      `heightIn(max = 240.dp)` with an internal `verticalScroll`, so long reports scroll within the
+      panel and never push the case body off-screen (the surrounding `CaseInspectionLayout`'s
+      `interpretationContent` slot is intentionally not scrollable).
 - The card body is a `when` over the panel's state:
-    - `isLoading` -> "Generating report…"
     - `!hasComments` -> "No comments to report on."
     - `reportText.isNullOrBlank()` -> "No report."
   - otherwise the report, tagged with `contentDescription = REPORT_TEXT`.
+
+Before rendering, the report text is passed through `formatReportText` (an `internal` function in
+`ReportView.kt`), which rewrites `10^N` as `10` followed by Unicode superscript digits (e.g.
+`10^12` -> `10¹²`) and the SI micro prefix `u` as the Greek letter mu (`umol/L` -> `μmol/L`). This
+mirrors `UnitsCell.formatUnits` in the case view, but returns a plain `String` rather than an
+`AnnotatedString` because the Markdown renderer consumes a `String`. The same formatted text is
+published on a hidden, zero-size `Text` node (content description `REPORT_TEXT`) so the cucumber
+page object and unit tests can read the rendered content, which the Markdown renderer does not
+expose to the Java accessibility bridge.
 
 The report is rendered as Markdown via `com.mikepenz.markdown.m3.Markdown` (the
 `multiplatform-markdown-renderer-m3` library, added in `gradle/libs.versions.toml` as
 `markdownRenderer`/`markdownRendererM3`). The renderer is published against a newer Kotlin than
 this project's toolchain, so `ui/build.gradle.kts` forces `kotlin-stdlib` back to the project's
 Kotlin version via a `resolutionStrategy`. The system prompt asks the model for short `##`
-headings, bullet points, and **bold** for out-of-range values, so the panel shows structured,
-formatted output rather than plain text.
+headings, bullet points, and **bold** for out-of-range values, and to use Australian medical
+terminology, so the panel shows structured, formatted output rather than plain text. A custom
+`markdownAnnotator` intercepts `STRONG` nodes to render bold (out-of-range) values in the same red
+used by the case view, filtering out the `**`/`__` emphasis delimiter tokens so the markers
+themselves are not shown.
+
+A copy `IconButton` (content description `REPORT_COPY_ICON`) is overlaid at the card's top-end when
+a report is shown (`!reportText.isNullOrBlank() && !isLoading && hasComments`). It is placed **after**
+the scrollable `Column` in the `Box` so it renders on top and stays clickable (a preceding sibling
+would have its pointer events intercepted by the `Column`'s `verticalScroll`). Clicking it copies the
+formatted text to the clipboard via `LocalClipboardManager` and sets `justCopied`, which swaps the
+copy icon for a green check for `COPY_CONFIRMATION_MS` (1500ms). The icon rests at `COPY_RESTING_ALPHA`
+(0.35) opacity and becomes fully opaque while hovered or just after copying.
 
 ## UI: state and generation trigger
 
