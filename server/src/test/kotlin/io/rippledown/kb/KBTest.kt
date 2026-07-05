@@ -535,7 +535,7 @@ class KBTest {
         rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(commentText)))
         rsm.commitCurrentRuleSession()
         with(rsm.descriptionOfMostRecentRule()) {
-            description shouldBe "Rule to add comment:\n${commentText.substring(0, 20)}..."
+            description shouldBe "$RULE_TO_ADD_COMMENT\n${commentText.substring(0, 20)}..."
             canRemove shouldBe true
         }
     }
@@ -552,7 +552,7 @@ class KBTest {
         rsm.startRuleSession(case2, ChangeTreeToRemoveConclusion(comment))
         rsm.commitCurrentRuleSession()
         with(rsm.descriptionOfMostRecentRule()) {
-            description shouldBe "Rule to remove comment:\n${commentText.substring(0, 20)}..."
+            description shouldBe "$RULE_TO_REMOVE_COMMENT\n${commentText.substring(0, 20)}..."
             canRemove shouldBe true
         }
     }
@@ -572,9 +572,9 @@ class KBTest {
         rsm.commitCurrentRuleSession()
         with(rsm.descriptionOfMostRecentRule()) {
             val expected = """
-                Rule to replace comment:
+                $RULE_TO_REPLACE_COMMENT
                 ${commentText.substring(0, 20)}...
-                with:
+                $WITH
                 ${replacementText.substring(0, 20)}...
             """.trimIndent()
             description shouldBe expected

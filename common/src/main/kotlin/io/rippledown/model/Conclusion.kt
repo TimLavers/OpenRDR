@@ -35,7 +35,58 @@ data class Conclusion(
         }
     }
 
-    fun truncatedText() = if(text.length <= 20) text else "${text.substring(0, 20)}..."
+    /**
+     * Truncate the conclusion text to at most 20 characters, appending "..." if truncated.
+     * If the truncation point falls in the middle of a `${}` variable token, the token is
+     * preserved by extending the truncation to include the closing brace.
+     *
+     * Each `${}` token is replaced with `{attributeName}` using [attributeNameById] before
+     * truncation, producing a user-friendly representation suitable for confirmation messages.
+     * Conclusions without variables are truncated as plain text.
+     */
+    fun truncatedText(attributeNameById: (Int) -> String): String {
+        val displayText = if (variables.isNotEmpty()) {
+            substitutePlaceholders(attributeNameById)
+        } else {
+            text
+        }
+
+        if (displayText.length <= 20) return displayText
+
+        var truncated = displayText.substring(0, 20)
+
+        // If the truncated text ends with "${", extend to include the closing "}"
+        if (truncated.endsWith("\${")) {
+            val closingBraceIndex = displayText.indexOf('}', 20)
+            if (closingBraceIndex != -1) {
+                truncated = displayText.substring(0, closingBraceIndex + 1)
+            }
+        }
+
+        return "$truncated..."
+    }
+
+    /**
+     * Replace each `${}` token (in order of appearance) with `{attributeName}` using the
+     * supplied resolver.
+     */
+    private fun substitutePlaceholders(attributeNameById: (Int) -> String): String {
+        val builder = StringBuilder()
+        var pos = 0
+        var varIndex = 0
+        while (pos < text.length) {
+            val tokenIndex = text.indexOf(VARIABLE_TOKEN, pos)
+            if (tokenIndex == -1 || varIndex >= variables.size) {
+                builder.append(text.substring(pos))
+                break
+            }
+            builder.append(text.substring(pos, tokenIndex))
+            builder.append("{${attributeNameById(variables[varIndex].attributeId)}}")
+            pos = tokenIndex + VARIABLE_TOKEN.length
+            varIndex++
+        }
+        return builder.toString()
+    }
 
     fun render(
         case: RDRCase,

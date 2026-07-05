@@ -6,10 +6,12 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldEndWith
+import io.rippledown.model.CommentVariable
 import io.rippledown.model.Conclusion
 import kotlin.test.Test
 
 internal class RuleTest : RuleTestBase() {
+    private val resolver: (Int) -> String = { _ -> "unknown" }
     private val conclusion1 = Conclusion(1, "First conclusion")
     private val conclusion2 = Conclusion(2, "Second conclusion")
     private val conclusion3 = Conclusion(3, "Third conclusion")
@@ -25,7 +27,7 @@ internal class RuleTest : RuleTestBase() {
         val rule = Rule(100, null, null, setOf(createCondition("a")))
         val childRule = Rule(200, null, conclusion2, setOf(createCondition("b")))
         rule.addChild(childRule)
-        childRule.actionSummary() shouldBe "Rule to add comment:\n${conclusion2.truncatedText()}"
+        childRule.actionSummary() shouldBe "$RULE_TO_ADD_COMMENT\n${conclusion2.truncatedText(resolver)}"
     }
 
     @Test
@@ -33,7 +35,7 @@ internal class RuleTest : RuleTestBase() {
         val rule = Rule(100, null, conclusion1, setOf(createCondition("a")))
         val childRule = Rule(200, null, null, setOf(createCondition("b")))
         rule.addChild(childRule)
-        childRule.actionSummary() shouldBe "Rule to remove comment:\n${conclusion1.truncatedText()}"
+        childRule.actionSummary() shouldBe "$RULE_TO_REMOVE_COMMENT\n${conclusion1.truncatedText(resolver)}"
     }
 
     @Test
@@ -42,10 +44,10 @@ internal class RuleTest : RuleTestBase() {
         val childRule = Rule(200, null, conclusion2, setOf(createCondition("b")))
         rule.addChild(childRule)
         val expected = """
-            Rule to replace comment:
-            ${conclusion1.truncatedText()}
-            with:
-            ${conclusion2.truncatedText()}
+            $RULE_TO_REPLACE_COMMENT
+            ${conclusion1.truncatedText(resolver)}
+            $WITH
+            ${conclusion2.truncatedText(resolver)}
         """.trimIndent()
         childRule.actionSummary() shouldBe expected
     }
@@ -57,18 +59,154 @@ internal class RuleTest : RuleTestBase() {
         val root = Rule(90, null, null)
         val rule = Rule(100, null, longConclusion, setOf(createCondition("a")))
         root.addChild(rule)
-        rule.actionSummary() shouldEndWith longConclusion.truncatedText()
+        rule.actionSummary() shouldEndWith longConclusion.truncatedText(resolver)
         val longerText = "The previous conclusion was not long enough."
         val longerConclusion = Conclusion(2, longerText)
 
         val replacer = Rule(110, null, longerConclusion )
         rule.addChild(replacer)
-        replacer.actionSummary() shouldContain longConclusion.truncatedText()
-        replacer.actionSummary() shouldContain longerConclusion.truncatedText()
+        replacer.actionSummary() shouldContain longConclusion.truncatedText(resolver)
+        replacer.actionSummary() shouldContain longerConclusion.truncatedText(resolver)
 
         val remover = Rule(120, null, null)
         replacer.addChild(remover)
-        replacer.actionSummary() shouldEndWith longerConclusion.truncatedText()
+        replacer.actionSummary() shouldEndWith longerConclusion.truncatedText(resolver)
+    }
+
+    // ==================== actionSummary with conclusionRenderer Tests ====================
+
+    @Test
+    fun `action summary with renderer uses custom renderer for add rule`() {
+        val conclusionWithVar = Conclusion(1, "The wave is ${'$'}{}", listOf(CommentVariable(10)))
+        val root = Rule(90, null, null)
+        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c -> c.truncatedText { id -> if (id == 10) "Wave" else "unknown" } }
+        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nThe wave is {Wave}"
+    }
+
+    @Test
+    fun `action summary with renderer uses custom renderer for remove rule`() {
+        val conclusionWithVar = Conclusion(1, "The wave is ${'$'}{}", listOf(CommentVariable(10)))
+        val root = Rule(90, null, conclusionWithVar)
+        val rule = Rule(100, null, null, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c -> c.truncatedText { id -> if (id == 10) "Wave" else "unknown" } }
+        rule.actionSummary(renderer) shouldBe "$RULE_TO_REMOVE_COMMENT\nThe wave is {Wave}"
+    }
+
+    @Test
+    fun `action summary with renderer uses custom renderer for replace rule`() {
+        val oldConclusion = Conclusion(1, "Old ${'$'}{} value", listOf(CommentVariable(10)))
+        val newConclusion = Conclusion(2, "New ${'$'}{} value", listOf(CommentVariable(20)))
+        val root = Rule(90, null, oldConclusion)
+        val rule = Rule(100, null, newConclusion, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c ->
+            c.truncatedText { id ->
+                when (id) {
+                    10 -> "Wave"; 20 -> "Sun"; else -> "unknown"
+                }
+            }
+        }
+        val expected = """
+            $RULE_TO_REPLACE_COMMENT
+            Old {Wave} value
+            $WITH
+            New {Sun} value
+        """.trimIndent()
+        rule.actionSummary(renderer) shouldBe expected
+    }
+
+    @Test
+    fun `action summary with renderer and unresolved attribute shows unknown`() {
+        val conclusionWithVar = Conclusion(1, "Value: ${'$'}{}", listOf(CommentVariable(999)))
+        val root = Rule(90, null, null)
+        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c -> c.truncatedText { _ -> "unknown" } }
+        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nValue: {unknown}"
+    }
+
+    @Test
+    fun `action summary with renderer and no variables uses default truncation`() {
+        val plainConclusion = Conclusion(1, "Normal results.")
+        val root = Rule(90, null, null)
+        val rule = Rule(100, null, plainConclusion, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c -> c.truncatedText { _ -> "unknown" } }
+        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nNormal results."
+    }
+
+    @Test
+    fun `action summary with renderer and multiple variables in replace rule`() {
+        val oldConclusion =
+            Conclusion(1, "Quality: ${'$'}{}, temp: ${'$'}{}", listOf(CommentVariable(1), CommentVariable(2)))
+        val newConclusion =
+            Conclusion(2, "Wave: ${'$'}{}, sun: ${'$'}{}", listOf(CommentVariable(3), CommentVariable(4)))
+        val root = Rule(90, null, oldConclusion)
+        val rule = Rule(100, null, newConclusion, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c ->
+            c.truncatedText { id ->
+                when (id) {
+                    1 -> "Wave"; 2 -> "Sun"; 3 -> "Quality"; 4 -> "Heat"; else -> "unknown"
+                }
+            }
+        }
+        val expected = """
+            $RULE_TO_REPLACE_COMMENT
+            Quality: {Wave}, tem...
+            $WITH
+            Wave: {Quality}, sun...
+        """.trimIndent()
+        rule.actionSummary(renderer) shouldBe expected
+    }
+
+    @Test
+    fun `action summary with renderer for root rule still returns empty`() {
+        val root = Rule(90, null, null)
+        val renderer: (Conclusion) -> String = { c -> c.truncatedText { _ -> "Whatever" } }
+        root.actionSummary(renderer) shouldBe ""
+    }
+
+    @Test
+    fun `action summary with renderer truncates long substituted text`() {
+        val conclusionWithVar = Conclusion(
+            1,
+            "The wave quality is ${'$'}{} and the air temperature is ${'$'}{}",
+            listOf(CommentVariable(1), CommentVariable(2))
+        )
+        val root = Rule(90, null, null)
+        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        val renderer: (Conclusion) -> String = { c ->
+            c.truncatedText { id ->
+                when (id) {
+                    1 -> "Wave"; 2 -> "Sun"; else -> "unknown"
+                }
+            }
+        }
+        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nThe wave quality is ..."
+    }
+
+    @Test
+    fun `action summary without renderer uses unknown for conclusion with variables`() {
+        val conclusionWithVar = Conclusion(1, "The wave is ${'$'}{}", listOf(CommentVariable(1)))
+        val root = Rule(90, null, null)
+        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
+        root.addChild(rule)
+
+        // Default renderer uses "unknown" for all attribute ids
+        // "The wave is {unknown}" is 21 chars, truncates to 20
+        rule.actionSummary() shouldBe "$RULE_TO_ADD_COMMENT\nThe wave is {unknown..."
     }
 
     @Test
