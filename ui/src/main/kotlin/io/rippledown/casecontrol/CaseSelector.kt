@@ -44,11 +44,33 @@ fun CaseSelector(
     var processedExpanded by remember { mutableStateOf(true) }
     var cornerstoneExpanded by remember { mutableStateOf(true) }
 
+    // A FocusRequester is only attached once its CaseNameItem has been
+    // composed, which only happens when the item's section is expanded (the
+    // scrolling Column composes all of its children regardless of scroll
+    // offset). Requesting focus on an unattached requester logs a
+    // "FocusRequester is not initialized" warning and forces the accessibility
+    // bridge to re-sync focus state — needless churn that aggravates the
+    // Compose Desktop a11y sync race. Only request focus when the target item
+    // is actually composed, and guard defensively against a not-yet-attached
+    // requester on the current frame.
+    fun requestFocusOnCase(index: Int) {
+        if (index !in focusRequestors.indices) return
+        val isComposed = if (index < caseIds.size) {
+            processedExpanded
+        } else {
+            cornerstoneCaseIds.isNotEmpty() && cornerstoneExpanded
+        }
+        if (!isComposed) return
+        try {
+            focusRequestors[index].requestFocus()
+        } catch (_: IllegalStateException) {
+            // Requester not attached yet on this frame; safe to ignore.
+        }
+    }
+
     // Implement the callback to request focus on the selected case
     handler.requestFocusOnSelectedCase = {
-        if (selectedCaseIndex < focusRequestors.size) {
-            focusRequestors[selectedCaseIndex].requestFocus()
-        }
+        requestFocusOnCase(selectedCaseIndex)
     }
 
     fun indexSelected(index: Int) {
@@ -61,7 +83,7 @@ fun CaseSelector(
         }
         val caseId = allCaseIds[selectedCaseIndex]
         handler.selectCase(caseId.id!!)
-        focusRequestors[selectedCaseIndex].requestFocus()
+        requestFocusOnCase(selectedCaseIndex)
     }
 
     Box(
