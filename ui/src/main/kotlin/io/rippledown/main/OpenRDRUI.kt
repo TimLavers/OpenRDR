@@ -14,7 +14,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
-import io.rippledown.casecontrol.*
+import io.rippledown.casecontrol.CaseControl
+import io.rippledown.casecontrol.CaseControlHandler
+import io.rippledown.casecontrol.CaseSelector
+import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.cornerstone.CornerstoneTestHook
@@ -23,6 +26,7 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.sample.SampleKB
 import io.rippledown.voice.VoiceRecognition
@@ -59,6 +63,11 @@ fun OpenRDRUI(
     var conversationCaseId by remember { mutableStateOf<Long?>(null) }
     var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
     val density = LocalDensity.current
+
+    // Report panel state
+    var reportVisible by remember { mutableStateOf(false) }
+    var report by remember { mutableStateOf<CaseReport?>(null) }
+    var isLoadingReport by remember { mutableStateOf(false) }
 
     // Create CaseSelectorHandler reference
     val caseSelectorHandler = remember {
@@ -159,6 +168,28 @@ fun OpenRDRUI(
         }
     }
 
+    // Clear any stale report as soon as the selected case changes, so the
+    // previous case's report is not shown while the new one is generated.
+    LaunchedEffect(currentCaseId) {
+        report = null
+    }
+
+    // Generate the report when the panel is visible and no rule session is
+    // active. Keyed on the case id and its comment text (not the whole
+    // ViewableCase) so it regenerates when the comments change but not on every
+    // unrelated case refresh (e.g. after each chat message).
+    val reportComments = currentCase?.viewableInterpretation?.latestText()
+    LaunchedEffect(reportVisible, currentCaseId, reportComments, ruleInProgress) {
+        withContext(dispatcher) {
+            val caseId = currentCaseId
+            if (reportVisible && caseId != null && !ruleInProgress) {
+                isLoadingReport = true
+                report = api.getCaseReport(caseId)
+                isLoadingReport = false
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
@@ -255,7 +286,12 @@ fun OpenRDRUI(
                                 }
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        reportVisible = reportVisible,
+                        reportText = report?.markdown,
+                        reportGenerated = report?.generated ?: true,
+                        isLoadingReport = isLoadingReport,
+                        onReportToggle = { reportVisible = it }
                     )
                 }
 

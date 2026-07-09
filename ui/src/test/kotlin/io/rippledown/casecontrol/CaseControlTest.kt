@@ -11,6 +11,8 @@ import io.rippledown.constants.caseview.CASE_VIEW_FILTER_CLEAR_DESCRIPTION
 import io.rippledown.constants.caseview.CASE_VIEW_FILTER_FIELD_DESCRIPTION
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
+import io.rippledown.constants.interpretation.REPORT_PANEL
+import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.cornerstone.*
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.Attribute
@@ -415,6 +417,105 @@ class CaseControlTest {
             onNodeWithContentDescription(CASE_VIEW_FILTER_FIELD_DESCRIPTION).performTextReplacement("AST")
             attributeRowsWithText(ast.name).assertCountEquals(2)
             attributeRowsWithText(mcv.name).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `should show report view when reportVisible is true`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_PANEL).assertExists()
+        }
+    }
+
+    @Test
+    fun `should not show report view when reportVisible is false`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    handler = handler,
+                    reportVisible = false
+                )
+            }
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should hide the report panel and toggle during a rule session`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+        val cornerstoneStatus = CornerstoneStatus(
+            cornerstoneToReview = createViewableCase(name = "case B", caseId = 2),
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 1
+        )
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = cornerstoneStatus,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            // The report is not generated during a rule session, so neither the
+            // panel nor its toggle should be shown - not even a stale one.
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should hide the report toggle when a rule session has no cornerstones to review`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+        // A rule session with no cornerstone to review is still in progress.
+        val cornerstoneStatus = CornerstoneStatus()
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = cornerstoneStatus,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should show the report toggle when no rule session is in progress`() = runTest {
+        val currentCase = createViewableCase(name = "case A", caseId = 1)
+
+        with(composeTestRule) {
+            setContent {
+                CaseControl(
+                    currentCase = currentCase,
+                    cornerstoneStatus = null,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertIsDisplayed()
+            onNodeWithContentDescription(REPORT_PANEL).assertExists()
         }
     }
 }

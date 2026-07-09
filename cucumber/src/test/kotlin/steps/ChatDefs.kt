@@ -111,6 +111,13 @@ class ChatDefs {
         chatPO().mostRecentBotRowDoesNotContainTheTerm(text)
     }
 
+    @Then("the chatbot response contains the following terms:")
+    fun requireChatbotResponseToContain(terms: DataTable) {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().mostRecentBotRowContainsTerms(terms.asList())
+        }
+    }
+
     fun waitForBotText(vararg terms: String) {
         await().atMost(ofSeconds(90)).until {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
@@ -126,18 +133,6 @@ class ChatDefs {
     fun waitForSuggestionText(vararg terms: String) {
         await().atMost(ofSeconds(90)).until {
             chatPO().mostRecentSuggestionRowContainsTerms(terms.toList())
-        }
-    }
-
-    fun waitForNewSuggestions(countBefore: Int) {
-        await().atMost(ofSeconds(90)).until {
-            chatPO().numberOfSuggestionRows() > countBefore
-        }
-    }
-
-    fun waitForPromptToProvideAnotherReason(countBefore: Int) {
-        await().atMost(ofSeconds(90)).until {
-            chatPO().numberOfSuggestionRows() > countBefore
         }
     }
 

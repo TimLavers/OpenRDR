@@ -149,7 +149,25 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I build another rule to append the comment {string} with condition(s)")
     fun buildAnotherRuleToAppendTheCommentWithConditions(comment: String, conditions: DataTable) {
-        chatDefs.addCommentWithoutConfirmation(comment)
+        with(chatDefs) {
+            // A previous rule in this session has already shown a suggestion list, so
+            // waitForBotSuggestions() (which just looks for "1.") would match those stale
+            // rows and fire the first condition while the bot is still waiting to confirm
+            // the comment. Detect relative to the current suggestion count: wait for a
+            // NEW suggestion row (or a CONFIRM prompt) before providing conditions.
+            val suggestionsBefore = chatPO().numberOfSuggestionRows()
+            addCommentWithoutConfirmation(comment)
+            await().atMost(ofSeconds(90)).until {
+                chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
+                        chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+            if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+                confirm()
+            }
+            await().atMost(ofSeconds(90)).until {
+                chatPO().numberOfSuggestionRows() > suggestionsBefore
+            }
+        }
         completeRuleWithConditions(conditions)
     }
 

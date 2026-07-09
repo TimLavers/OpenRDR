@@ -44,6 +44,22 @@ Feature: Add, replace or remove comments with variables
     When  I build a rule to add the comment "The wave quality is {wave} and the air temperature is {sun}"
     Then the report should be "The wave quality is excellent and the air temperature is hot"
 
+  Scenario: The user should be able to see a comment with variables in the confirmation message when undoing a rule
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And  I build a rule to add the comment "Q: {wave}, T: {sun}"
+    And the report should be "Q: excellent, T: hot"
+    When I enter the following text into the chat panel:
+      | Please remove the previous rule |
+    Then the chatbot response contains the following terms:
+      | The last rule was: |
+      | Add comment:       |
+      | Q: {Wave}          |
+      | T: {Sun}           |
+
   Scenario: Variables in a comment should be re-evaluated when the selected case changes
     Given case Bondi is provided having data:
       | Wave | excellent |

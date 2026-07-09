@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":hints"))
     implementation(project(":chat"))
+    implementation(project(":llm"))
 
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)

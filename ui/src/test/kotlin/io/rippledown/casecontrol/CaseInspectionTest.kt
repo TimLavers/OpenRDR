@@ -12,6 +12,7 @@ import io.kotest.matchers.comparables.shouldBeLessThan
 import io.mockk.mockk
 import io.rippledown.caseview.dateCellContentDescription
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCaseBuilder
@@ -112,6 +113,39 @@ class CaseInspectionTest {
             onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true)
                 .assertIsDisplayed()
             requireInterpretation(text)
+        }
+    }
+
+    @Test
+    fun `should show report view`() = runTest {
+        val case = createViewableCase(name = "case a", caseId = 1L)
+        with(composeTestRule) {
+            setContent {
+                CaseInspection(
+                    case = case,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report"
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should not show report view when showReport is false`() = runTest {
+        val case = createViewableCase(name = "case a", caseId = 1L)
+        with(composeTestRule) {
+            setContent {
+                CaseInspection(
+                    case = case,
+                    handler = handler,
+                    reportVisible = true,
+                    reportText = "Test report",
+                    showReport = false
+                )
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
         }
     }
 }

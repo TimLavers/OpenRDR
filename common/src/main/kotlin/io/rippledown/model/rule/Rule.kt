@@ -5,6 +5,11 @@ import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
 
+const val RULE_TO_ADD_COMMENT = "Add comment:"
+const val RULE_TO_REMOVE_COMMENT = "Remove comment:"
+const val RULE_TO_REPLACE_COMMENT = "Replace comment:"
+const val WITH = "with:"
+
 open class Rule(
     val id: Int,
     var parent: Rule? = null,
@@ -21,17 +26,21 @@ open class Rule(
         return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot())
     }
 
-    fun actionSummary(): String {
+    fun actionSummary(conclusionRenderer: (Conclusion) -> String = { it.truncatedText { _ -> "unknown" } }): String {
         if (parent == null) {
             return ""
         }
         if (parent!!.conclusion == null) {
-            return "Rule to add comment:\n${conclusion?.truncatedText()}"
+            return "$RULE_TO_ADD_COMMENT\n${conclusion?.let(conclusionRenderer)}"
         }
         if (conclusion == null) {
-            return "Rule to remove comment:\n${parent!!.conclusion?.truncatedText()}"
+            return "$RULE_TO_REMOVE_COMMENT\n${parent!!.conclusion?.let(conclusionRenderer)}"
         }
-        return "Rule to replace comment:\n${parent!!.conclusion?.truncatedText()}\nwith:\n${conclusion.truncatedText()}"
+        return "$RULE_TO_REPLACE_COMMENT\n${parent!!.conclusion?.let(conclusionRenderer)}\n$WITH\n${
+            conclusionRenderer(
+                conclusion
+            )
+        }"
     }
 
     fun conditionTextsFromRoot(): List<String> {

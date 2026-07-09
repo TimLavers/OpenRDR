@@ -12,6 +12,8 @@ import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
+import io.rippledown.constants.interpretation.REPORT_PANEL
+import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createLargeViewableCaseWithInterpretation
 import io.rippledown.utils.createViewableCase
@@ -109,6 +111,17 @@ class CornerstoneInspectionTest {
                 .assertTextEquals(name)
             onNodeWithContentDescription(CORNERSTONE_ID)
                 .assertTextEquals("$CORNERSTONE_TITLE 1 of 2")
+        }
+    }
+
+    @Test
+    fun `should never show the report panel or toggle for a cornerstone`() {
+        with(composeTestRule) {
+            setContent {
+                CornerstoneInspection(case, index = 0, total = 1)
+            }
+            onNodeWithContentDescription(REPORT_TOGGLE).assertDoesNotExist()
+            onNodeWithContentDescription(REPORT_PANEL).assertDoesNotExist()
         }
     }
 }

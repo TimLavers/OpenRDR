@@ -3,19 +3,26 @@
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import io.rippledown.constants.interpretation.COMMENTS_TOGGLE
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.model.IntRangeData
@@ -38,22 +45,50 @@ fun InterpretationView(
     ruleConditions: List<String> = emptyList(),
     handler: InterpretationViewHandler
 ) {
-    OutlinedCard(
-        modifier = Modifier.padding(vertical = 10.dp),
-        colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
-            containerColor = androidx.compose.ui.graphics.Color.White
-        )
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                ReadonlyInterpretationView(
-                    interpretation = interpretation,
-                    diff = diff,
-                    ruleConditions = ruleConditions,
-                    contentDescription = INTERPRETATION_TEXT_FIELD,
-                    modifier = Modifier.weight(1f),
-                    handler = handler
+    var commentsExpanded by remember { mutableStateOf(true) }
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+                .clickable { commentsExpanded = !commentsExpanded }
+                .semantics { contentDescription = COMMENTS_TOGGLE }
+        ) {
+            Icon(
+                imageVector = if (commentsExpanded) Icons.Filled.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.DarkGray,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = "Comments",
+                color = Color.DarkGray,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+        if (commentsExpanded) {
+            // Match the 4.dp gap the case-list section headers leave between
+            // the header and their list, for a consistent look.
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+                    containerColor = androidx.compose.ui.graphics.Color.White
                 )
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        ReadonlyInterpretationView(
+                            interpretation = interpretation,
+                            diff = diff,
+                            ruleConditions = ruleConditions,
+                            contentDescription = INTERPRETATION_TEXT_FIELD,
+                            modifier = Modifier.weight(1f),
+                            handler = handler
+                        )
+                    }
+                }
             }
         }
     }

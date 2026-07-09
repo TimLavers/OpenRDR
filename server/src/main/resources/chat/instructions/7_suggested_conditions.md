@@ -42,26 +42,53 @@ asks to see them again.
 
 ## Handling the user's selection
 
+FIRST, before doing anything else, decide whether the selected suggestion is editable. A suggestion is editable if and
+only if its text in the numbered list carries the `[editable]` marker. This is a hard gate that determines everything
+below, so check it explicitly every time — do not rely on the wording of the condition.
+
+### Non-editable selection
+
 - If the user selects a non-editable condition (one that is NOT marked as [editable]) by number, by clicking, or by
   typing its exact text, call the {{SELECT_SUGGESTION}} function with the exact condition text.
   Do NOT call {{TRANSFORM_REASON}} for non-editable suggestions.
-- If the user selects a condition that is marked as [editable] (by number, by clicking, or by typing its exact text),
-  you MUST NOT call any function yet. Your very next response MUST be a message to the user that:
+
+### Editable selection — a strict two-turn protocol
+
+When the user selects a condition marked as [editable] (by number, by clicking, or by typing its exact text), selecting
+it is ONLY a request to edit the value — it is NOT the value itself, and it is NOT permission to add the condition. You
+MUST treat this as two separate turns:
+
+- **Turn 1 (this turn): ask for the value. Do NOT call ANY function.** Calling {{TRANSFORM_REASON}} or
+  {{SELECT_SUGGESTION}} now is a mistake. Your very next response MUST be a message-only reply that:
     1. confirms which suggestion was selected using the phrase "you selected" followed by the suggestion text, and
     2. asks "What value would you like to use instead?" (the phrase "What value" must appear).
-       Only after the user replies with the value should you call {{TRANSFORM_REASON}} with the modified condition text
-       (with the user's value substituted for the original numeric value).
+- **Turn 2 (only after the user replies with a value): transform.** Only once the user has replied with an actual
+  value in a later turn may you call {{TRANSFORM_REASON}}, with the user's value substituted for the original numeric
+  value.
 
-  For example, if the user selects "Waves ≥ 1.5 [editable]", respond with:
+Even if the current value already looks correct or the condition already holds for the case, you must STILL ask for the
+value in Turn 1. The user chose the editable variant precisely because they may want a different value; never assume
+they want to keep the shown value.
 
-  ```json
-  {
-    "action": "{{USER_ACTION}}",
-    "message": "Ok, you selected \"Waves ≥ 1.5\". What value would you like to use instead of 1.5?"
-  }
-  ```
+For example, if the user selects "Waves ≥ 1.5 [editable]":
 
-  Then, when the user replies (e.g. "1.3"), call {{TRANSFORM_REASON}} with the reason "Waves ≥ 1.3".
+CORRECT (Turn 1 — message only, no function call):
+
+```json
+{
+  "action": "{{USER_ACTION}}",
+  "message": "Ok, you selected \"Waves ≥ 1.5\". What value would you like to use instead of 1.5?"
+}
+```
+
+Then, when the user replies (e.g. "1.3"), call {{TRANSFORM_REASON}} with the reason "Waves ≥ 1.3".
+
+WRONG (do NOT do this): calling {{TRANSFORM_REASON}} or {{SELECT_SUGGESTION}} for "Waves ≥ 1.5" in the same turn the
+editable suggestion was selected, or replying "Added the condition ..." without first asking "What value would you like
+to use instead?".
+
+### Free-text reason
+
 - If the user types a free-text reason instead of selecting a suggestion, call {{TRANSFORM_REASON}} with that text
   directly.
 - Both {{SELECT_SUGGESTION}} and {{TRANSFORM_REASON}} return a reasonId that you must use if the user later asks to

@@ -28,6 +28,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.sync.Mutex
@@ -177,6 +178,20 @@ class Api(
                 setCaseIdParameter(caseId)
             }.body<ViewableCase>()
         } catch (_: Exception) {
+            null
+        }
+    }
+
+    suspend fun getCaseReport(caseId: Long): CaseReport? {
+        return try {
+            client.get("$API_URL$CASE_REPORT") {
+                setKBParameter()
+                setCaseIdParameter(caseId)
+            }.body<CaseReport>()
+        } catch (_: Exception) {
+            // A failed report fetch is non-critical: return null so the caller
+            // renders the empty-report state rather than surfacing an error. The
+            // server logs the underlying cause (see ReportManagement route).
             null
         }
     }

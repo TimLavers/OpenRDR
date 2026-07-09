@@ -14,6 +14,8 @@ dependencies {
     implementation(compose.components.resources)
     implementation(libs.composePreviewDesktop)
     implementation(libs.materialIcons)
+    implementation(libs.markdownRenderer)
+    implementation(libs.markdownRendererM3)
     implementation(libs.logback)
     implementation(libs.filepicker)
     implementation(libs.bundles.ktor)

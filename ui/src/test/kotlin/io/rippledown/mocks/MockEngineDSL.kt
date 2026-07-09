@@ -16,6 +16,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
 import io.rippledown.utils.createViewableCase
@@ -35,6 +36,8 @@ class EngineConfig {
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
     var returnResponse: ChatResponse = ChatResponse("")
+    var returnCaseReport: CaseReport? = null
+    var caseReportShouldFail = false
 
     var returnConditionParsingResult: ConditionParsingResult? = null
     var expectedCaseId: Long? = null
@@ -209,6 +212,19 @@ private class EngineBuilder(private val config: EngineConfig) {
             START_CONVERSATION -> {
                 request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnResponse))
+            }
+
+            CASE_REPORT -> {
+                if (config.expectedCaseId != null) request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
+                if (config.caseReportShouldFail) {
+                    respond(
+                        content = ByteReadChannel(""),
+                        status = HttpStatusCode.InternalServerError,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    httpResponseData(json.encodeToString(config.returnCaseReport))
+                }
             }
 
             else -> {

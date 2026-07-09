@@ -198,7 +198,10 @@ class RuleSessionManager(
             ?: return UndoRuleDescription("There are no rules to undo.", false)
         val idOfExemplar = record.idsOfRulesAddedInSession.random()
         val exemplar = kb.ruleTree.ruleForId(idOfExemplar)
-        return UndoRuleDescription(exemplar.actionSummary(), true)
+        val summary = exemplar.actionSummary { conclusion ->
+            conclusion.truncatedText { id -> attributeById(id)?.name ?: "unknown" }
+        }
+        return UndoRuleDescription(summary, true)
     }
 
     fun ruleSessionHistories() = kb.ruleSessionRecorder.allRuleSessionHistories()

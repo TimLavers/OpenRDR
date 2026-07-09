@@ -131,6 +131,18 @@ fun transcribeAudio(
     return cleanTranscript(raw)
 }
 
+/**
+ * One-shot text generation. Blocking Gemini call guarded by [callWithTimeout];
+ * callers should wrap this in [retry] to survive 503s.
+ */
+fun generateText(systemInstruction: String, userContent: String, timeoutMs: Long = 90_000): String {
+    val config = generateContentConfig(systemInstruction = systemInstruction)
+    val content = Content.fromParts(Part.fromText(userContent))
+    return callWithTimeout(timeoutMs) {
+        geminiClient.models.generateContent(GEMINI_MODEL, content, config).text() ?: ""
+    }
+}
+
 fun noSafetySettings(): List<SafetySetting> =
     listOf(
         HarmCategory.Known.HARM_CATEGORY_HATE_SPEECH,
