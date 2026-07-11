@@ -6,8 +6,7 @@ import io.rippledown.kb.KB
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.inmemory.InMemoryKB
 import org.junit.jupiter.api.BeforeEach
-
-import java.io.File
+import kotlin.io.path.createDirectories
 import kotlin.test.Test
 
 class KBExporterTest: ExporterTestBase() {
@@ -16,7 +15,7 @@ class KBExporterTest: ExporterTestBase() {
     @BeforeEach
     override fun init() {
         super.init()
-        tempDir.mkdirs()
+        tempDir.createDirectories()
         kb = KB(InMemoryKB(KBInfo("Thyroids")))
     }
 
@@ -30,8 +29,8 @@ class KBExporterTest: ExporterTestBase() {
 
     @Test
     fun `destination should be empty`() {
-        val directory = File(tempDir, "exportDir")
-        directory.mkdirs()
+        val directory = tempDir.resolve("exportDir")
+        directory.createDirectories()
         writeFileInDirectory(directory)
         shouldThrow<IllegalArgumentException>{
             KBExporter(directory, kb)
@@ -40,7 +39,7 @@ class KBExporterTest: ExporterTestBase() {
 
     @Test
     fun `destination should be exist`() {
-        val directory = File(tempDir, "exportDir")
+        val directory = tempDir.resolve("exportDir")
         shouldThrow<IllegalArgumentException>{
             KBExporter(directory, kb)
         }.message shouldBe "KB export destination is not an existing directory."

@@ -6,9 +6,9 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
-import java.io.File
-import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.*
 import kotlin.test.Test
 
 class CaseExporterTest : ExporterTestBase() {
@@ -23,8 +23,8 @@ class CaseExporterTest : ExporterTestBase() {
 
     @Test
     fun `destination should be empty`() {
-        val directory = File(tempDir, "exportDir")
-        directory.mkdirs()
+        val directory = tempDir.resolve("exportDir")
+        directory.createDirectories()
         writeFileInDirectory(directory)
         shouldThrow<IllegalArgumentException>{
             CaseExporter(directory, emptyList())
@@ -33,7 +33,7 @@ class CaseExporterTest : ExporterTestBase() {
 
     @Test
     fun `destination should exist`() {
-        val directory = File(tempDir, "exportDir")
+        val directory = tempDir.resolve("exportDir")
         shouldThrow<IllegalArgumentException>{
             CaseExporter(directory, emptyList())
         }.message shouldBe "Case export destination is not an existing directory."
@@ -55,7 +55,7 @@ class CaseExporterTest : ExporterTestBase() {
         val case1 = CaseTestUtils.createCase(">>Cat<<")
         val case2 = CaseTestUtils.createCase(">>CAT<<")
         CaseExporter(tempDir, listOf(case1, case2)).export()
-        val filesInDir = tempDir.listFiles()!!
+        val filesInDir = tempDir.listDirectoryEntries()
         val fileCat = if (filesInDir[0].name.startsWith("__Cat")) filesInDir[0] else filesInDir[1]
         val fileCAT = if (filesInDir[0].name.startsWith("__CAT")) filesInDir[0] else filesInDir[1]
         checkNamedFileContainsDataForCase(fileCat.name.split(".")[0], case1)
@@ -63,8 +63,8 @@ class CaseExporterTest : ExporterTestBase() {
     }
 
     private fun checkNamedFileContainsDataForCase(filename: String, case: RDRCase) {
-        val file = File(tempDir, "$filename.json")
-        val data = FileUtils.readFileToString(file, Charset.defaultCharset())
+        val file = tempDir.resolve("$filename.json")
+        val data = Files.readString(file)
         val format = Json { allowStructuredMapKeys = true }
         val deserialized = format.decodeFromString<RDRCase>(data)
         case.data shouldBe deserialized.data

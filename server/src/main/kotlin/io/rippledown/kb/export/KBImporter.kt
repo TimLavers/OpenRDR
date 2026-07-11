@@ -3,8 +3,21 @@ package io.rippledown.kb.export
 import io.rippledown.kb.KB
 import io.rippledown.persistence.PersistenceProvider
 import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import kotlin.io.path.listDirectoryEntries
 
-class KBImporter(source: File, private val persistenceProvider: PersistenceProvider): KBExportImport(source) {
+fun importKbFromZipFile(zipFile: Path,persistenceProvider: PersistenceProvider): KB = FileSystems.newFileSystem(zipFile, null as ClassLoader?).use { fs ->
+    val root = fs.rootDirectories.first()
+    val subDirectories = root.listDirectoryEntries()
+    require(subDirectories.size == 1) {
+        "Invalid zip for KB import."
+    }
+    val rootDir = subDirectories[0]
+    KBImporter(rootDir, persistenceProvider).import()
+}
+
+class KBImporter(source: Path, private val persistenceProvider: PersistenceProvider): KBExportImport(source) {
 
     fun import(): KB {
         // Extract the name and id.

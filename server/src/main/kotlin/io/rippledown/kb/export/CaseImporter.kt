@@ -3,11 +3,12 @@ package io.rippledown.kb.export
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
 import java.io.File
-import kotlin.text.Charsets.UTF_8
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.listDirectoryEntries
 
-class CaseImporter(private val source: File) {
+class CaseImporter(private val source: Path) {
     init {
         checkIsDirectory(source)
     }
@@ -15,8 +16,8 @@ class CaseImporter(private val source: File) {
     fun import(): List<RDRCase> {
         val result = mutableListOf<RDRCase>()
         val format = Json { allowStructuredMapKeys = true }
-        source.listFiles()?.forEach {
-            val data = FileUtils.readFileToString(it, UTF_8)
+        source.listDirectoryEntries().forEach {
+            val data = Files.readString(it)
             result.add(format.decodeFromString(data))
         }
         return result

@@ -19,7 +19,9 @@ import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import java.io.File
+import java.nio.file.Files
 import java.time.Instant
+import kotlin.io.path.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -138,10 +140,10 @@ class KBImporterTest : ExporterTestBase() {
         val kbName = "Whatever"
         val kb = buildDummyKB(kbName)
         KBExporter(tempDir, kb).export()
-        val bytes = Zipper(tempDir).zip()
+        val bytes = Zipper(tempDir.toFile()).zip()
 
         //When the file is unzipped
-        Unzipper(bytes, tempDir).unzip()
+        Unzipper(bytes, tempDir.toFile()).unzip()
 
         //Then the KB can be imported
         val rebuilt = KBImporter(tempDir, persistenceProvider).import()
@@ -156,9 +158,9 @@ class KBImporterTest : ExporterTestBase() {
         val bytes = file.readBytes()
 
         //When the file is upzipped
-        Unzipper(bytes, tempDir).unzip()
-        val subDirectories = tempDir.listFiles()
-        require(subDirectories != null && subDirectories.size == 1) {
+        Unzipper(bytes, tempDir.toFile()).unzip()
+        val subDirectories = tempDir.listDirectoryEntries()
+        require(subDirectories.size == 1) {
             "Invalid zip for KB import."
         }
 
@@ -166,5 +168,21 @@ class KBImporterTest : ExporterTestBase() {
         val rootDir = subDirectories[0]
         val rebuilt = KBImporter(rootDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe kbName
+    }
+
+    @Test
+    fun `import from zip file`() {
+        val kbName = "Whatever"
+        val kb = buildDummyKB(kbName)
+        KBExporter(tempDir, kb).export()
+        val zipBytes = Zipper(tempDir.toFile()).zip()
+        val zipFile = createTempFile("import", ".zip")
+        zipFile.writeBytes(zipBytes)
+
+        val rebuilt = importKbFromZipFile(zipFile, persistenceProvider)
+        rebuilt.kbInfo.name shouldBe kbName
+        rebuilt.allCornerstoneCases().size shouldBe 1
+
+        zipFile.deleteIfExists()
     }
 }

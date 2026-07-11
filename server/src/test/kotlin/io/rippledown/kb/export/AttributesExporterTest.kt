@@ -4,7 +4,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.*
 import kotlin.test.Test
 
 class AttributesExporterTest : ExporterTestBase() {
@@ -26,7 +27,7 @@ class AttributesExporterTest : ExporterTestBase() {
 
     @Test
     fun exportEmpty() {
-        val textFile = File(tempDir,"Attributes.txt")
+        val textFile = tempDir.resolve("Attributes.txt")
         AttributesExporter(textFile, emptySet()).export()
         textFile.exists() shouldBe true
     }
@@ -37,8 +38,8 @@ class AttributesExporterTest : ExporterTestBase() {
         val ft3 = Attribute(200, "FT3")
         val ft4 = Attribute(300, "FT4")
         val attributes = setOf(tsh, ft4, ft3)
-        val textFile = File(tempDir,"Attributes.txt")
+        val textFile = tempDir.resolve("Attributes.txt")
         AttributesExporter(textFile, attributes).export()
-        textFile.length() shouldBeGreaterThan 0
+        textFile.fileSize() shouldBeGreaterThan 0
     }
 }

@@ -2,11 +2,10 @@ package io.rippledown.kb.export
 
 import io.rippledown.model.RDRCase
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
-import java.io.File
-import kotlin.text.Charsets.UTF_8
+import java.nio.file.Files
+import java.nio.file.Path
 
-class CaseExporter(private val destination: File, val cases: List<RDRCase>) {
+class CaseExporter(private val destination: Path, val cases: List<RDRCase>) {
     init {
         checkDirectoryIsSuitableForExport(destination, "Case")
     }
@@ -19,8 +18,8 @@ class CaseExporter(private val destination: File, val cases: List<RDRCase>) {
         cases.forEach {
             val serialized = format.encodeToString(RDRCase.serializer(), it)
             val filename = caseNameToFilename[it.name]!!
-            val file = File(destination, filename)
-            FileUtils.writeStringToFile(file, serialized, UTF_8)
+            val file = destination.resolve(filename)
+            Files.writeString(file, serialized)
         }
     }
 }

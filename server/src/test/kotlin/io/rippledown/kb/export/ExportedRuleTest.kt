@@ -8,10 +8,9 @@ import io.rippledown.model.condition.isHigh
 import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.test.Test
-import kotlin.text.Charsets.UTF_8
 
 class ExportedRuleTest: ExporterTestBase() {
     private val id123 = 10123
@@ -45,10 +44,10 @@ class ExportedRuleTest: ExporterTestBase() {
         val root = Rule(id0, null, null, setOf())
         val rule = Rule(id123, root, conclusion1, setOf(tshHigh, ft3GT2))
         val er = ExportedRule(rule)
-        val file = File(tempDir, "rule.json")
+        val file = tempDir.resolve("rule.json")
         er.export(file)
 
-        val stored = FileUtils.readFileToString(file, UTF_8)
+        val stored = Files.readString(file)
         val restored: PersistentRule = Json.decodeFromString(stored)
         restored shouldBe er.persistentRule
     }

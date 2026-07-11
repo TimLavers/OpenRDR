@@ -1,23 +1,25 @@
 package io.rippledown.kb.export
 
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 
-fun checkDirectoryIsSuitableForExport(destination: File, exportType: String) {
+fun checkDirectoryIsSuitableForExport(destination: Path, exportType: String) {
     require(destination.exists()) {
         "$exportType export destination is not an existing directory."
     }
-    require(destination.isDirectory) {
+    require(destination.isDirectory()) {
         "$exportType export destination is not a directory."
     }
-    destination.listFiles()?.let {
-        require(it.isEmpty()) {
-            "$exportType export directory is not empty."
-        }
+    require(destination.listDirectoryEntries().isEmpty()) {
+        "$exportType export directory is not empty."
     }
 }
 
-fun checkIsDirectory(file: File) {
-    require(file.exists() && file.isDirectory) {
-        "$file is not an existing directory."
+fun checkIsDirectory(path: Path) {
+    require(path.exists() && path.isDirectory()) {
+        "$path is not an existing directory."
     }
 }

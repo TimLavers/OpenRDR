@@ -5,7 +5,7 @@ import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.KBImporter
-import io.rippledown.kb.export.util.Unzipper
+import io.rippledown.kb.export.importKbFromZipFile
 import io.rippledown.kb.sample.loadSampleKB
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
@@ -15,7 +15,8 @@ import io.rippledown.sample.SampleKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.util.EntityRetrieval
 import java.io.File
-import kotlin.io.path.createTempDirectory
+import java.nio.file.FileSystems
+import kotlin.io.path.*
 
 class ServerApplication(
     private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider(),
@@ -97,14 +98,11 @@ class ServerApplication(
     fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
 
     fun importKBFromZip(zipBytes: ByteArray): KBInfo {
-        val tempDir: File = createTempDirectory().toFile()
-        Unzipper(zipBytes, tempDir).unzip()
-        val subDirectories = tempDir.listFiles()
-        require(subDirectories != null && subDirectories.size == 1) {
-            "Invalid zip for KB import."
-        }
-        val rootDir = subDirectories[0]
-        val kb = KBImporter(rootDir, persistenceProvider).import()
+        val zipFile = createTempFile("import", ".zip")
+        zipFile.writeBytes(zipBytes)
+        val kb = importKbFromZipFile(zipFile, persistenceProvider)
+        zipFile.deleteIfExists()
+        kbManager.addKB(kb.kbInfo)
         logger.info("Imported KB with name: '${kb.kbInfo.name}' and id: '${kb.kbInfo.id}' from zip.")
         idToKBEndpoint[kb.kbInfo.id] = kbEndpoint(kb)
         return kb.kbInfo

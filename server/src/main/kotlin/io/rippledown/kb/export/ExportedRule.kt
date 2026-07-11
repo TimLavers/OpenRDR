@@ -4,16 +4,16 @@ import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
 data class ExportedRule(val persistentRule: PersistentRule) {
 
     constructor(rule: Rule) : this(PersistentRule(rule))
 
-    fun export(destinationFile: File) {
+    fun export(destinationFile: Path) {
         val format = Json { allowStructuredMapKeys = true }
         val serialized = format.encodeToString(persistentRule)
-        FileUtils.writeStringToFile(destinationFile, serialized, Charsets.UTF_8)
+        Files.writeString(destinationFile, serialized)
     }
 }

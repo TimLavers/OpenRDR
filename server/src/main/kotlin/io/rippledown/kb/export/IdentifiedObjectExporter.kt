@@ -1,7 +1,7 @@
 package io.rippledown.kb.export
 
-import org.apache.commons.io.FileUtils
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
 interface Exporter<T> {
     fun exportToString(t: T): String
@@ -14,7 +14,7 @@ interface IdentifiedObjectSource<T> {
     fun exportType(): String
     fun exportFileSuffix(): String = ".json"
 }
-class IdentifiedObjectExporter<T>(private val destination: File, private val objectSource: IdentifiedObjectSource<T>) {
+class IdentifiedObjectExporter<T>(private val destination: Path, private val objectSource: IdentifiedObjectSource<T>) {
     init {
         checkDirectoryIsSuitableForExport(destination, objectSource.exportType())
     }
@@ -26,9 +26,9 @@ class IdentifiedObjectExporter<T>(private val destination: File, private val obj
 
         items.forEach{
             val filename = idToFilename[objectSource.idFor(it).toString()]!!
-            val destinationFile = File(destination, filename)
+            val destinationFile = destination.resolve(filename)
             val serialized = objectSource.exporter().exportToString(it)
-            FileUtils.writeStringToFile(destinationFile, serialized, Charsets.UTF_8)
+            Files.writeString(destinationFile, serialized)
         }
     }
 }

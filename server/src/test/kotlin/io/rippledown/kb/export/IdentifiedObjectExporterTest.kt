@@ -9,12 +9,11 @@ import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.json.Json
-import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.BeforeEach
-
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.test.Test
-import kotlin.text.Charsets.UTF_8
 
 class IdentifiedObjectExporterTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
@@ -26,7 +25,7 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
         super.init()
         conclusionFactory = DummyConclusionFactory()
         conditionFactory = DummyConditionFactory()
-        tempDir.mkdirs()
+        tempDir.createDirectories()
         tree = RuleTree()
     }
 
@@ -40,8 +39,8 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
 
     @Test
     fun `destination should be empty`() {
-        val directory = File(tempDir, "exportDir")
-        directory.mkdirs()
+        val directory = tempDir.resolve("exportDir")
+        directory.createDirectories()
         writeFileInDirectory(directory)
         shouldThrow<IllegalArgumentException>{
             IdentifiedObjectExporter(directory, RuleSource(tree))
@@ -50,7 +49,7 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
 
     @Test
     fun `destination should be exist`() {
-        val directory = File(tempDir, "exportDir")
+        val directory = tempDir.resolve("exportDir")
         shouldThrow<IllegalArgumentException>{
             IdentifiedObjectExporter(directory, RuleSource(tree))
         }.message shouldBe "Rule export destination is not an existing directory."
@@ -95,8 +94,8 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
         tree.rules().size shouldBe 5
         IdentifiedObjectExporter(tempDir, RuleSource(tree)).export()
         tree.rules().forEach { it ->
-            val file = File(tempDir, "${it.id}.json")
-            val data = FileUtils.readFileToString(file, UTF_8)
+            val file = tempDir.resolve("${it.id}.json")
+            val data = Files.readString(file)
             val persistentRule: PersistentRule = Json.decodeFromString(data)
             persistentRule.id shouldBe it.id
             persistentRule.parentId shouldBe it.parent?.id
