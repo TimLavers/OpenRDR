@@ -25,7 +25,6 @@ import java.io.File
 import java.util.concurrent.TimeUnit.*
 
 class Defs {
-    private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
 
     // Restores keyboard focus to the last-selected case before an arrow-key press.
@@ -172,20 +171,6 @@ class Defs {
     fun importConfiguredZippedKnowledgeBase(toImport: String) {
         val zipFile = ConfiguredTestData.kbZipFile(toImport)
         kbControlsPO().importKB(zipFile.absolutePath)
-    }
-
-    @And("I export the current Knowledge Base")
-    fun exportTheCurrentKnowledgeBase() {
-        exportedZip = File.createTempFile("Exported", ".zip")
-        kbControlsPO().exportKB(exportedZip!!.absolutePath)
-    }
-
-    @Given("I import the previously exported Knowledge Base")
-    fun importThePreviouslyExportedKnowledgeBase() {
-        require(exportedZip != null) {
-            "Import of previously exported KB attempted but exported KB is null."
-        }
-        kbControlsPO().importKB(exportedZip!!.absolutePath)
     }
 
     @Given("case {word} is provided having data:")

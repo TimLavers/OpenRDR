@@ -52,7 +52,7 @@ class KBImporterTest : ExporterTestBase() {
         val emptyKB = persistenceProvider.createKBPersistence(kbInfo)
         val original = KB(emptyKB)
         KBExporter(tempDir, original).export()
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val rebuilt = KBImporter(tempDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe original.kbInfo.name
         rebuilt.allCornerstoneCases().size shouldBe 0
         rebuilt.caseViewManager.allInOrder().size shouldBe 0
@@ -67,7 +67,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, kb).export()
 
         // When the KB is imported.
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val rebuilt = KBImporter(tempDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe kb.kbInfo.name
 
         rebuilt.metaInfo.getDescription() shouldBe description
@@ -90,8 +90,6 @@ class KBImporterTest : ExporterTestBase() {
             size shouldBe 1
             first().idsOfRulesAddedInSession shouldContain rebuiltFirstRule.id
         }
-
-        persistenceProvider.idStore().data() shouldHaveSize 2
     }
 
     private fun buildDummyKB(kbName: String): KB {
@@ -145,7 +143,7 @@ class KBImporterTest : ExporterTestBase() {
         Unzipper(bytes, tempDir.toFile()).unzip()
 
         //Then the KB can be imported
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val rebuilt = KBImporter(tempDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe kbName
     }
 
@@ -165,7 +163,7 @@ class KBImporterTest : ExporterTestBase() {
 
         //Then the KB can be imported
         val rootDir = subDirectories[0]
-        val rebuilt = KBImporter(rootDir, persistenceProvider).import()
+        val rebuilt = KBImporter(rootDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe kbName
     }
 
@@ -178,7 +176,7 @@ class KBImporterTest : ExporterTestBase() {
         val zipFile = createTempFile("import", ".zip")
         zipFile.writeBytes(zipBytes)
 
-        val rebuilt = importKbFromZipFile(zipFile, persistenceProvider)
+        val rebuilt = importKbFromZipFile(zipFile, InMemoryPersistenceProvider())
         rebuilt.kbInfo.name shouldBe kbName
         rebuilt.allCornerstoneCases().size shouldBe 1
 

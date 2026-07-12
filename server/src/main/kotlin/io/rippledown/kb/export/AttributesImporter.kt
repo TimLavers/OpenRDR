@@ -10,7 +10,7 @@ class AttributesImporter(private val source: Path) {
     fun import(): Map<Int, Attribute> {
         val result = mutableMapOf<Int, Attribute>()
         Files.readAllLines(source).forEach{
-            val parts = it.split(' ')
+            val parts = it.split(' ', ignoreCase = false, limit = 2)
             val id = parts[0].toInt()
             result[id] = Attribute(id, parts[1])
         }

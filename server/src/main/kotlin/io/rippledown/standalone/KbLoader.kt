@@ -1,9 +1,13 @@
 package io.rippledown.standalone
 
-import kotlinx.io.files.Path
+import io.rippledown.kb.export.importKbFromZipFile
+import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import java.nio.file.Path
 
 class KbLoader(val zippedKB: Path) {
     fun getInterpreter() : StandAloneInterpreter {
-        TODO()
+        val persistenceProvider = InMemoryPersistenceProvider()
+        val kb = importKbFromZipFile(zippedKB,persistenceProvider)
+        return StandAloneInterpreter(kb)
     }
 }
