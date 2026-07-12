@@ -46,7 +46,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
 
     @Test
     fun `can create long conclusions`() {
-        val longComment = RandomStringUtils.random(2048)
+        val longComment = RandomStringUtils.secure().next(2048)
         val created = store.create(longComment)
 
         store.all() shouldBe setOf(created)
@@ -130,7 +130,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     @Test
     fun `create conclusion with variables`() {
         // Given
-        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val template = $$"Patient ${} has glucose ${} mmol/L"
         val variables = listOf(CommentVariable(1), CommentVariable(2))
 
         // When
@@ -171,7 +171,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     @Test
     fun `cannot create conclusion with same text and variables as existing`() {
         // Given
-        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val template = $$"Patient ${} has glucose ${} mmol/L"
         val variables1 = listOf(CommentVariable(1), CommentVariable(2))
         val variables2 = listOf(CommentVariable(1), CommentVariable(2))
         store.create(template, variables1)
@@ -185,7 +185,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     @Test
     fun `can create conclusion with same text but different variables`() {
         // Given
-        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val template = $$"Patient ${} has glucose ${} mmol/L"
         val variables1 = listOf(CommentVariable(1), CommentVariable(2))
         val variables2 = listOf(CommentVariable(3), CommentVariable(4))
         store.create(template, variables1)
@@ -202,7 +202,7 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     @Test
     fun `store conclusion with variables`() {
         // Given
-        val template = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val template = $$"Patient ${} has glucose ${} mmol/L"
         val variables1 = listOf(CommentVariable(1), CommentVariable(2))
         val variables2 = listOf(CommentVariable(3), CommentVariable(4))
         val created = store.create(template, variables1)
@@ -225,9 +225,9 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     @Test
     fun `load conclusions with variables`() {
         // Given
-        val template1 = "Patient ${'$'}{} has glucose ${'$'}{} mmol/L"
+        val template1 = $$"Patient ${} has glucose ${} mmol/L"
         val variables1 = listOf(CommentVariable(1), CommentVariable(2))
-        val template2 = "Glucose is ${'$'}{} mmol/L"
+        val template2 = $$"Glucose is ${} mmol/L"
         val variables2 = listOf(CommentVariable(3))
         val plainText = "Normal results."
 
