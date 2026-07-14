@@ -12,7 +12,13 @@ appeared in the journal Practical Laboratory Medicine,
 volume 26 (2021), and is included in the requirements directory.
 The KB will be the basis of a simple Clinical Decision Support System.
 
-This release will be called `milestone1` and the requirements
-for it are documented in [Milestone 1 Requirements](milestone1_requirements.md)
+## Second release
+KBs can be used as interpretation engines via a REST API.
 
+## Third release
+A chatbot-based user interface. This greatly simplifies the choice of conditions
+when building rules.
+
+## Fourth release
+Allow a KB to be used as a library component for incorporation into other systems.
 

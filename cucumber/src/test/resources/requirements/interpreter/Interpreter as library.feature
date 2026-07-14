@@ -1,6 +1,5 @@
 Feature: KB available as library component
 
-  @single
   Scenario: An exported KB can be used in conjunction with the OpenRDR jar as an in-JVM interpreter.
     Given I start the client application
     And I create a Knowledge Base with the name CancerTypeClassifier
