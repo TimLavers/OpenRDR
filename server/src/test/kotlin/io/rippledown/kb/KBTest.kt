@@ -1801,7 +1801,7 @@ class KBTest {
         val comment = "Go to Bondi."
 
         //When
-        val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
+        val status = rsm.startRuleSessionToAddComment(viewableCase, comment)
 
         //Then
         status.diff shouldBe Addition(comment)

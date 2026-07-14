@@ -4,7 +4,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.*
 import kotlin.test.Test
 
 class CaseViewExporterTest : ExporterTestBase() {
@@ -26,7 +27,7 @@ class CaseViewExporterTest : ExporterTestBase() {
 
     @Test
     fun exportEmpty() {
-        val textFile = File(tempDir,"Attributes.txt")
+        val textFile = tempDir.resolve("Attributes.txt")
         CaseViewExporter(textFile, emptyList()).export()
         textFile.exists() shouldBe true
     }
@@ -37,8 +38,8 @@ class CaseViewExporterTest : ExporterTestBase() {
         val ft3 = Attribute(200, "FT3")
         val ft4 = Attribute(300, "FT4")
         val attributeList = listOf(tsh, ft4, ft3)
-        val textFile = File(tempDir,"Attributes.txt")
+        val textFile = tempDir.resolve("Attributes.txt")
         CaseViewExporter(textFile, attributeList).export()
-        textFile.length() shouldBeGreaterThan 0
+        textFile.fileSize() shouldBeGreaterThan 0
     }
 }

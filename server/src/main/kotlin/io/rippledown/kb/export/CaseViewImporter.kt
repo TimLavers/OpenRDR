@@ -2,10 +2,12 @@ package io.rippledown.kb.export
 
 import io.rippledown.model.Attribute
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
-class CaseViewImporter(private val source: File, private val idToAttribute: Map<Int, Attribute>) {
+class CaseViewImporter(private val source: Path, private val idToAttribute: Map<Int, Attribute>) {
 
     fun import(): List<Attribute> {
-        return source.readLines().map { idToAttribute[it.toInt()]!! }
+        return Files.readAllLines(source).map { idToAttribute[it.toInt()]!! }
     }
 }

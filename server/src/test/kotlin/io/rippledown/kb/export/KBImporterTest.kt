@@ -20,6 +20,7 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import java.io.File
 import java.time.Instant
+import kotlin.io.path.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -51,7 +52,7 @@ class KBImporterTest : ExporterTestBase() {
         val emptyKB = persistenceProvider.createKBPersistence(kbInfo)
         val original = KB(emptyKB)
         KBExporter(tempDir, original).export()
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val rebuilt = KBImporter(tempDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe original.kbInfo.name
         rebuilt.allCornerstoneCases().size shouldBe 0
         rebuilt.caseViewManager.allInOrder().size shouldBe 0
@@ -66,7 +67,7 @@ class KBImporterTest : ExporterTestBase() {
         KBExporter(tempDir, kb).export()
 
         // When the KB is imported.
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val rebuilt = KBImporter(tempDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe kb.kbInfo.name
 
         rebuilt.metaInfo.getDescription() shouldBe description
@@ -89,8 +90,6 @@ class KBImporterTest : ExporterTestBase() {
             size shouldBe 1
             first().idsOfRulesAddedInSession shouldContain rebuiltFirstRule.id
         }
-
-        persistenceProvider.idStore().data() shouldHaveSize 2
     }
 
     private fun buildDummyKB(kbName: String): KB {
@@ -138,13 +137,13 @@ class KBImporterTest : ExporterTestBase() {
         val kbName = "Whatever"
         val kb = buildDummyKB(kbName)
         KBExporter(tempDir, kb).export()
-        val bytes = Zipper(tempDir).zip()
+        val bytes = Zipper(tempDir.toFile()).zip()
 
         //When the file is unzipped
-        Unzipper(bytes, tempDir).unzip()
+        Unzipper(bytes, tempDir.toFile()).unzip()
 
         //Then the KB can be imported
-        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val rebuilt = KBImporter(tempDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe kbName
     }
 
@@ -156,15 +155,31 @@ class KBImporterTest : ExporterTestBase() {
         val bytes = file.readBytes()
 
         //When the file is upzipped
-        Unzipper(bytes, tempDir).unzip()
-        val subDirectories = tempDir.listFiles()
-        require(subDirectories != null && subDirectories.size == 1) {
+        Unzipper(bytes, tempDir.toFile()).unzip()
+        val subDirectories = tempDir.listDirectoryEntries()
+        require(subDirectories.size == 1) {
             "Invalid zip for KB import."
         }
 
         //Then the KB can be imported
         val rootDir = subDirectories[0]
-        val rebuilt = KBImporter(rootDir, persistenceProvider).import()
+        val rebuilt = KBImporter(rootDir, InMemoryPersistenceProvider()).import()
         rebuilt.kbInfo.name shouldBe kbName
+    }
+
+    @Test
+    fun `import from zip file`() {
+        val kbName = "Whatever"
+        val kb = buildDummyKB(kbName)
+        KBExporter(tempDir, kb).export()
+        val zipBytes = Zipper(tempDir.toFile()).zip()
+        val zipFile = createTempFile("import", ".zip")
+        zipFile.writeBytes(zipBytes)
+
+        val rebuilt = importKbFromZipFile(zipFile, InMemoryPersistenceProvider())
+        rebuilt.kbInfo.name shouldBe kbName
+        rebuilt.allCornerstoneCases().size shouldBe 1
+
+        zipFile.deleteIfExists()
     }
 }

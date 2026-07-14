@@ -3,7 +3,6 @@ package io.rippledown.server
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.RuleSessionManager
 import io.rippledown.kb.export.KBExporter
-import io.rippledown.kb.export.util.Zipper
 import io.rippledown.kb.report.ReportService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
@@ -14,7 +13,9 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import java.io.File
-import kotlin.io.path.createTempDirectory
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import kotlin.io.path.createTempFile
 
 class KBEndpoint(
     val session: KBSession,
@@ -43,12 +44,16 @@ class KBEndpoint(
     }
 
     fun exportKBToZip(): File {
-        val tempDir: File = createTempDirectory().toFile()
-        KBExporter(tempDir, kb).export()
-        val bytes = Zipper(tempDir).zip()
-        val file = File(tempDir, "${kb.kbInfo}.zip")
-        file.writeBytes(bytes)
-        return file
+        val tempDir = Files.createTempDirectory("export")
+        val zipFile = tempDir.resolve("${kb.kbInfo}.zip")
+        val env = mapOf("create" to "true")
+        FileSystems.newFileSystem(zipFile, env).use { fs ->
+            val root = fs.rootDirectories.first()
+            val kbDirectory = root.resolve(kb.kbInfo.name)
+            Files.createDirectories(kbDirectory)
+            KBExporter(kbDirectory, kb).export()
+        }
+        return zipFile.toFile()
     }
 
     fun startRuleSessionToAddConclusion(caseId: Long, conclusion: Conclusion) {

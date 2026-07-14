@@ -7,7 +7,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
+import io.rippledown.kb.KB
+import io.rippledown.kb.export.KBExporter
 import io.rippledown.model.Attribute
+import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.Result
 import io.rippledown.persistence.PersistenceProvider
@@ -197,6 +200,32 @@ internal class ServerApplicationTest {
         shouldThrow<IllegalArgumentException> {
             app.importKBFromZip(Files.readAllBytes(zipFile))
         }.message shouldBe "Invalid zip for KB import."
+    }
+
+    @Test
+    fun `import KB from zip`() {
+        // Given a zipped KB.
+        val kbName = "Whatever"
+        val kb = KB(persistenceProvider.createKBPersistence(KBInfo(kbName)))
+        kb.attributeManager.getOrCreate("Glucose")
+        val zipFile = kotlin.io.path.createTempFile("export", ".zip")
+        java.nio.file.Files.delete(zipFile)
+        java.nio.file.FileSystems.newFileSystem(zipFile, mapOf("create" to "true")).use { fs ->
+            val root = fs.rootDirectories.first()
+            val kbDirectory = root.resolve(kbName)
+            java.nio.file.Files.createDirectories(kbDirectory)
+            KBExporter(kbDirectory, kb).export()
+        }
+        val zipBytes = java.nio.file.Files.readAllBytes(zipFile)
+
+        // When the zip is imported.
+        val kbInfo = app.importKBFromZip(zipBytes)
+
+        // Then the KB is imported.
+        kbInfo.name shouldBe kbName
+        app.kbList().map { it.name } shouldContain kbName
+        app.kbFor(kbInfo).kb.attributeManager.all().map { it.name } shouldContain "Glucose"
+        java.nio.file.Files.delete(zipFile)
     }
 
     @Test

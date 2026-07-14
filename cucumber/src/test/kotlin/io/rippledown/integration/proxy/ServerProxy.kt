@@ -10,7 +10,7 @@ import java.time.Duration
 
 class ServerProxy {
     private lateinit var process: Process
-    private lateinit var jarFile: File
+    lateinit var jarFile: File
     private val systemOutputFile: File
     private val dirProxy = DirProxy()
     private val logProxy = LogProxy(dirProxy.logDir())

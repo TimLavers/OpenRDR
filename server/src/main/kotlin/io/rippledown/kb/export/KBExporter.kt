@@ -1,22 +1,23 @@
 package io.rippledown.kb.export
 
 import io.rippledown.kb.KB
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
-open class KBExportImport(val destination: File) {
-    val kbDetailsFile = File(destination, "Details.txt")
-    val metaInfoDirectory = File(destination, "MetaInfo")
-    val attributesFile = File(destination, "Attributes.txt")
-    val caseViewFile = File(destination, "CaseView.txt")
-    val casesDirectory = File(destination, "CornerstoneCases")
-    val processedCasesDirectory = File(destination, "ProcessedCases")
-    val conclusionsDirectory = File(destination, "Conclusions")
-    val conditionsDirectory = File(destination, "Conditions")
-    val rulesDirectory = File(destination, "Rules")
-    val ruleSessionsDirectory = File(destination, "RuleSessions")
+open class KBExportImport(val destination: Path) {
+    val kbDetailsFile = destination.resolve("Details.txt")
+    val metaInfoDirectory = destination.resolve("MetaInfo")
+    val attributesFile = destination.resolve("Attributes.txt")
+    val caseViewFile = destination.resolve("CaseView.txt")
+    val casesDirectory = destination.resolve("CornerstoneCases")
+    val processedCasesDirectory = destination.resolve("ProcessedCases")
+    val conclusionsDirectory = destination.resolve("Conclusions")
+    val conditionsDirectory = destination.resolve("Conditions")
+    val rulesDirectory = destination.resolve("Rules")
+    val ruleSessionsDirectory = destination.resolve("RuleSessions")
 }
 
-class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
+class KBExporter(destination: Path, val kb: KB) : KBExportImport(destination) {
     init {
         checkDirectoryIsSuitableForExport(destination, "KB")
     }
@@ -26,7 +27,7 @@ class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
         KBInfoExporter(ExportFile(kbDetailsFile, "KBInfo"), kb.kbInfo).export()
 
         // MetaInfo
-        metaInfoDirectory.mkdirs()
+        Files.createDirectories(metaInfoDirectory)
         IdentifiedObjectExporter(metaInfoDirectory, KeyValueSource(kb.metaInfo.keyValueStore, "MetaInfo")).export()
 
         // Attributes.
@@ -36,25 +37,25 @@ class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
         CaseViewExporter(caseViewFile, kb.caseViewManager.allInOrder()).export()
 
         // Conclusions.
-        conclusionsDirectory.mkdirs()
+        Files.createDirectories(conclusionsDirectory)
         IdentifiedObjectExporter(conclusionsDirectory, ConclusionSource(kb.conclusionManager)).export()
 
         // Conditions.
-        conditionsDirectory.mkdirs()
+        Files.createDirectories(conditionsDirectory)
         IdentifiedObjectExporter(conditionsDirectory, ConditionSource(kb.conditionManager)).export()
 
         // Cases.
-        casesDirectory.mkdirs()
-        processedCasesDirectory.mkdirs()
+        Files.createDirectories(casesDirectory)
+        Files.createDirectories(processedCasesDirectory)
         CaseExporter(casesDirectory, kb.allCornerstoneCases()).export()
         CaseExporter(processedCasesDirectory, kb.allProcessedCases()).export()
 
         // Rules.
-        rulesDirectory.mkdirs()
+        Files.createDirectories(rulesDirectory)
         IdentifiedObjectExporter(rulesDirectory, RuleSource(kb.ruleTree)).export()
 
         // Rule sessions
-        ruleSessionsDirectory.mkdirs()
+        Files.createDirectories(ruleSessionsDirectory)
         IdentifiedObjectExporter(
             ruleSessionsDirectory,
             RuleSessionRecordsSource(kb.ruleSessionRecorder.allRuleSessionHistories())

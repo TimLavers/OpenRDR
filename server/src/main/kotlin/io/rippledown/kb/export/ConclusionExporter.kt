@@ -6,7 +6,7 @@ import io.rippledown.model.Conclusion
 class ConclusionExporter: Exporter<Conclusion>, Importer<Conclusion> {
     override fun exportToString(t: Conclusion) = "${t.id} ${t.text}"
     override fun importFromString(data: String): Conclusion {
-        val parts = data.split(' ')
+        val parts = data.split(' ', ignoreCase = false, limit = 2)
         return Conclusion(parts[0].toInt(), parts[1])
     }
 }

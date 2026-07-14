@@ -21,6 +21,7 @@ dependencies {
     testImplementation(libs.junitPlatformSuite)
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.kotlinCompilerEmbeddable)
     testImplementation(libs.mockk)
     testImplementation("com.google.genai:google-genai:1.46.0")
 }
@@ -55,9 +56,11 @@ val featureFolders = listOf(
     "attributes",
     "cases",
     "chat",
+    "comments",
     "conditions",
     "interpreter",
     "kb",
+    "report",
     "rulebuilding",
     "samples",
     "trial-matching",

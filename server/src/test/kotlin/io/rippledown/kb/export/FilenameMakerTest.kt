@@ -3,9 +3,7 @@ package io.rippledown.kb.export
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
-import org.apache.commons.io.FileUtils
-import java.io.File
-import java.nio.charset.Charset
+import java.nio.file.Files
 import kotlin.test.Test
 
 class FilenameMakerTest: ExporterTestBase() {
@@ -80,7 +78,7 @@ class FilenameMakerTest: ExporterTestBase() {
     }
 
     private fun checkIsValidFilename(name: String) {
-        val textFile = File(tempDir, name)
-        FileUtils.writeStringToFile(textFile, "Whatever", Charset.defaultCharset())
+        val textFile = tempDir.resolve(name)
+        Files.writeString(textFile, "Whatever")
     }
 }

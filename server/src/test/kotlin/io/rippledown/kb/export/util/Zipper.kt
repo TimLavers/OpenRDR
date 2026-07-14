@@ -6,7 +6,6 @@ import java.io.FileInputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-
 /**
  * Copied from Baeldung:
  * https://www.baeldung.com/java-compress-and-uncompress

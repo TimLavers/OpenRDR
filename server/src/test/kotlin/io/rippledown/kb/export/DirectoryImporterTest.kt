@@ -9,6 +9,7 @@ import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
 import org.junit.jupiter.api.BeforeEach
+import kotlin.io.path.createDirectories
 import kotlin.test.Test
 
 class DirectoryImporterTest: ExporterTestBase() {
@@ -21,7 +22,7 @@ class DirectoryImporterTest: ExporterTestBase() {
         super.init()
         conclusionFactory = DummyConclusionFactory()
         conditionFactory = DummyConditionFactory()
-        tempDir.mkdirs()
+        tempDir.createDirectories()
         tree = RuleTree()
     }
 

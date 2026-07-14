@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.CaseTestUtils
 import org.junit.jupiter.api.BeforeEach
+import kotlin.io.path.createDirectories
 import kotlin.test.Test
 
 class CaseImporterTest: ExporterTestBase() {
@@ -11,7 +12,7 @@ class CaseImporterTest: ExporterTestBase() {
     @BeforeEach
     override fun init() {
         super.init()
-        tempDir.mkdirs()
+        tempDir.createDirectories()
     }
 
     @Test

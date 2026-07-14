@@ -21,6 +21,10 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
         }
     }
 
+    operator fun get(name: String): Attribute? {
+        return nameToAttribute[name]
+    }
+
     fun all(): Set<Attribute> {
         return nameToAttribute.values.toSet()
     }
