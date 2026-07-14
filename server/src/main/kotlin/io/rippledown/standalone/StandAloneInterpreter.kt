@@ -3,9 +3,10 @@ package io.rippledown.standalone
 import io.rippledown.kb.KB
 import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.simpleapi.SimpleInterpreter
 
-class StandAloneInterpreter(val kb: KB) {
-    fun interpretStringMap(caseData: Map<String, String>): String {
+class StandAloneInterpreter(val kb: KB): SimpleInterpreter {
+    override fun interpretStringMap(caseData: Map<String, String>): String {
         val builder = RDRCaseBuilder()
         caseData.forEach { (attributeName, value) ->
             val attribute = kb.attributeManager[attributeName]

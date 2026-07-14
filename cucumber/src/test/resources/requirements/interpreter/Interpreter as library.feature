@@ -14,6 +14,7 @@ Feature: KB available as library component
       | Topography contains "Uterus"         |
     And  the interpretation should be "Uterine leiomyosarcoma"
     And I export the current Knowledge Base
-
-    And pause for 12 seconds
+    And An in-process interpreter using the exported kb gets the interpretation "Uterine leiomyosarcoma" for the input map
+      | Morphology  | Leiomyosarcoma, not otherwise specified  |
+      | Topography  | Uterus          |
 

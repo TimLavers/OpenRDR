@@ -1,7 +1,11 @@
 package steps
 
+import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
+import io.kotest.matchers.shouldBe
+import io.rippledown.integration.utils.runMapThroughInterpreterBuiltFromZip
+import steps.StepsInfrastructure.uiTestBase
 import java.io.File
 
 class ExportImportDefs {
@@ -20,11 +24,10 @@ class ExportImportDefs {
         kbControlsPO().importKB(exportedZip!!.absolutePath)
     }
 
-    @And("An in-process interpreter using the exported kb gets the interpretation for the case value map")
-    fun createInProcessInterpreterFromExportedKbAndCheckInterpretation() {
-//        val interpreter = KbLoader().createInterpreter(exportedZip!!.absolutePath)
-//        val received = interpreter.interpret(mapOf("" to "value"))
-//        received.interpretation.conclusionTexts() shouldBe setOf()
+    @And("An in-process interpreter using the exported kb gets the interpretation {string} for the input map")
+    fun createInProcessInterpreterFromExportedKbAndCheckInterpretation(interpretation: String, map: DataTable) {
+        val inputMap = map.asMap(String::class.java, String::class.java)
+        val received = runMapThroughInterpreterBuiltFromZip(inputMap,exportedZip!!, uiTestBase.serverProxy.jarFile)
+        received shouldBe interpretation
     }
-
 }
