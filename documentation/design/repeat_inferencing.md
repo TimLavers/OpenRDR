@@ -108,14 +108,13 @@ including cornerstone evaluation during rule building):
    assignments made by the rules that fired.
 3. Write those assignments into the latest episode of the case.
 4. If the assignments (and conclusions) are unchanged from the previous
-   pass, stop. Otherwise repeat from step 2, with a hard cap of
-   (number of derived attributes in the tree) + 1 passes as a
-   belt-and-braces guard.
+   pass, stop. Otherwise repeat from step 2, with no hard cap of
+   passes as this will be provably terminate.
 
 Conditions on LIS data evaluate identically on every pass; only conditions
 on derived attributes can change value between passes. Because the
 dependency graph is kept acyclic (next section), the iteration is
-guaranteed to converge within the cap.
+guaranteed to converge.
 
 ### Reset semantics
 
