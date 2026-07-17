@@ -654,13 +654,15 @@ leaving `GiveConclusion` in place until step 14.
     view (alongside Comments and Report) listing non-comment derived
     attributes as name/value pairs; hidden when empty; excluded from the
     case data table; also shown for cornerstones during rule building.
-    The data source is the materialised case (`RuleTree.materialise`) —
+17. Hovering over a derived attribute name shows both its formula and the conditions that have assigned it a value,
+    similar to showing the conditions for a comment.
+18. The data source is the materialised case (`RuleTree.materialise`) —
     the server should expose derived name/value pairs on the viewable
     case rather than the UI recomputing anything. Once this exists,
     rewrite the REST-based derived-value cucumber assertions from step 9
     to use the panel (Compose UI test ids, following the existing panels'
     conventions).
-17. **AI report.** The report generator receives named comment attributes
+19. **AI report.** The report generator receives named comment attributes
     (name + value pairs) as inputs; update
     `server/src/main/resources/report/report_system_prompt.md`
     accordingly.

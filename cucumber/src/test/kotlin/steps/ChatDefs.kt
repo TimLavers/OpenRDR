@@ -281,6 +281,12 @@ class ChatDefs {
         waitForBotRequestForConfirmationAndConfirm()
     }
 
+    @And("I request that the derived value for {string} be removed")
+    fun requestValueBeRemoved(attributeName: String) {
+        waitForBotQuestion()
+        enterChatTextAndSend("Remove the value for $attributeName")
+    }
+
     @And("I request that the following comment be removed:")
     fun requestCommentBeRemoved(comment: String) {
         waitForBotQuestion()
