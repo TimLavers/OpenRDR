@@ -77,7 +77,24 @@ class RuleSessionManagerAssignmentTest {
     @Test
     fun `text that is not arithmetic over attributes is a literal`() {
         rsm.valueExpressionFor("diabetic") shouldBe Literal("diabetic")
-        rsm.valueExpressionFor("weight / age") shouldBe Literal("weight / age")
+        rsm.valueExpressionFor("not a formula") shouldBe Literal("not a formula")
+    }
+
+    @Test
+    fun `an arithmetic expression referencing a missing attribute is a formula that evaluates to null`() {
+        // Given an expression that references an attribute not yet in the KB
+        val weight = kb.attributeManager.getOrCreate("weight")
+        val expression = rsm.valueExpressionFor("weight / age")
+
+        // Then it is parsed as a formula
+        (expression is Formula) shouldBe true
+
+        // And evaluating it against a case without the referenced attribute makes no assignment
+        val case = with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "93.0")
+            build("Case")
+        }
+        expression.evaluate(case).shouldBeNull()
     }
 
     // --- assign value sessions ---

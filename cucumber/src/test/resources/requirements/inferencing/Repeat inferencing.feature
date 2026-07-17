@@ -1,8 +1,6 @@
 # This file specifies the *intended* behaviour after Phase 1 of the
 # repeat-inferencing design (see documentation/design/repeat_inferencing.md).
-# The whole feature is tagged @ignore until Phase 1 lands; the step
-# definitions for assignment rules and derived values do not exist yet.
-@ignore
+# Phase 1 step 9: step definitions and backdoor plumbing are now in place.
 Feature: Repeat inferencing via derived attributes.
   A rule can assign a value to a derived attribute, and other rules can use
   that value in their conditions. Inference repeats until the interpretation
@@ -21,7 +19,7 @@ Feature: Repeat inferencing via derived attributes.
       | Glucose ≥ 11.0 |
     And a backdoor rule is built for case Fermi to add the comment "Diabetic diet advice given." with conditions:
       | Diabetes status is "diabetic" |
-    When I see the case Fermi as the current case
+    And I select the case Fermi
     Then the interpretation report should be "Diabetic diet advice given."
     And the derived value "Diabetes status" should be "diabetic"
 
@@ -37,7 +35,7 @@ Feature: Repeat inferencing via derived attributes.
       | Glucose ≥ 11.0 |
     And a backdoor rule is built for case Curie to add the comment "High risk patient." with conditions:
       | Risk score > 5 |
-    When I see the case Curie as the current case
+    And I select the case Curie
     Then the interpretation report should be "High risk patient."
 
   ##############################################################################
@@ -52,7 +50,7 @@ Feature: Repeat inferencing via derived attributes.
       | Glucose ≥ 11.0 |
     And a backdoor rule is built for case Bohr to add the comment "No evidence of diabetes." with conditions:
       | Diabetes status is not in case |
-    When I see the case Bohr as the current case
+    And I select the case Bohr
     Then the interpretation report should be "No evidence of diabetes."
 
   ##############################################################################
@@ -67,7 +65,7 @@ Feature: Repeat inferencing via derived attributes.
     And a backdoor rule is built for case Pauli to assign the formula "weight / (height * height)" to the derived attribute "BMI" with no conditions
     And a backdoor rule is built for case Pauli to add the comment "Elevated BMI." with conditions:
       | BMI > 28 |
-    When I see the case Pauli as the current case
+    And I select the case Pauli
     Then the interpretation report should be "Elevated BMI."
 
   Scenario: A formula referencing an attribute with no value makes no assignment
@@ -82,14 +80,20 @@ Feature: Repeat inferencing via derived attributes.
   # Cycle prevention
   ##############################################################################
 
+  @single
   Scenario: A condition that would create a dependency cycle is not suggested
     # "Alpha" is assigned when "Beta" is absent. A rule assigning "Beta"
     # conditioned on "Alpha" would create the cycle Alpha → Beta → Alpha.
     Given case Heisenberg is provided having data:
-      | Glucose | 5.0 |
+      | A | 1.0 |
+    Given case Pauli is provided having data:
+      | A | 1.0 |
+    And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Alpha" with no conditions
+    And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Beta" with conditions:
+      | Alpha is in case |
     And I start the client application
-    And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Alpha" with conditions:
-      | Beta is not in case |
+    And pause
+    And I select the case Heisenberg
     When I request that the value "yes" be assigned to the derived attribute "Beta"
     Then the suggestion "Alpha is in case" should NOT appear
 
@@ -99,6 +103,7 @@ Feature: Repeat inferencing via derived attributes.
     And I start the client application
     And a backdoor rule is built for case Schrodinger to assign the value "yes" to the derived attribute "Alpha" with conditions:
       | Beta is not in case |
+    And I select the case Schrodinger
     And I request that the value "yes" be assigned to the derived attribute "Beta"
     When I provide only the following reason:
       | Alpha is in case |

@@ -183,7 +183,14 @@ class RuleSessionManager(
         if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
             return Literal(trimmed.substring(1, trimmed.length - 1))
         }
-        val parsed = FormulaParser { name -> kb.attributeManager.byName(name) }.parse(trimmed)
+        // Only treat text as a formula if it contains arithmetic operators, so
+        // that plain text like "diabetic" remains a literal. Formulas may
+        // reference attributes that are not yet in the KB; those attributes are
+        // created so the formula can be evaluated against future cases.
+        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()]"""))
+        val parsed = if (hasArithmeticOperators) {
+            FormulaParser { name -> kb.attributeManager.getOrCreate(name) }.parse(trimmed)
+        } else null
         return if (parsed != null) Formula(parsed) else Literal(trimmed)
     }
 

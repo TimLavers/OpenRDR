@@ -131,9 +131,10 @@ class KB(persistentKB: PersistentKB) {
     fun interpret(case: RDRCase) = ruleTree.apply(case)
 
     fun viewableCase(case: RDRCase): ViewableCase {
-        val interpretation = interpret(case)
-        val viewableInterpretation = interpretationViewManager.viewableInterpretation(interpretation, case)
-        return caseViewManager.getViewableCase(case, viewableInterpretation)
+        val materialised = ruleTree.materialise(case)
+        val viewableInterpretation =
+            interpretationViewManager.viewableInterpretation(materialised.interpretation, materialised)
+        return caseViewManager.getViewableCase(materialised, viewableInterpretation)
     }
 
     override fun equals(other: Any?): Boolean {

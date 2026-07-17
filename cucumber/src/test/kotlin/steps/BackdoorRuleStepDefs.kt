@@ -46,6 +46,7 @@ class BackdoorRuleStepDefs {
         restClient().buildRule(caseName, Replacement(toGo, replacement), conditions.asList())
     }
 
+
     @And("a backdoor rule is built for case {word} to assign the value {string} to the derived attribute {string} with conditions:")
     fun backdoorAssignValue(
         caseName: String,
@@ -56,7 +57,7 @@ class BackdoorRuleStepDefs {
         restClient().buildAssignmentRule(caseName, attributeName, "\"$value\"", conditions.asList())
     }
 
-    @And("a backdoor rule is built for case {word} to assign the formula {string} to the derived attribute {string} with no conditions")
+    @And("a backdoor rule is built for case {word} to assign the value {string} to the derived attribute {string} with no conditions")
     fun backdoorAssignFormula(
         caseName: String,
         expression: String,
