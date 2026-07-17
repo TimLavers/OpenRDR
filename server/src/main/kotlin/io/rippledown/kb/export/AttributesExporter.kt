@@ -1,6 +1,7 @@
 package io.rippledown.kb.export
 
 import io.rippledown.model.Attribute
+import kotlinx.serialization.json.Json
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -20,7 +21,10 @@ class AttributesExporter(private val destination: File, val attributes: Set<Attr
     fun export() {
         val outputWriter = BufferedWriter(FileWriter(destination))
         attributes.forEach{
-            outputWriter.write("${it.id} ${it.name}")
+            // One JSON object per line so that names containing spaces and
+            // the attribute kind round-trip. See AttributesImporter for the
+            // legacy "id name" format that older exports used.
+            outputWriter.write(Json.encodeToString(it))
             outputWriter.newLine()
         }
         outputWriter.close()

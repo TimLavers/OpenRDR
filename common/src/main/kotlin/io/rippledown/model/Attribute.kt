@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 // ORD1
 @Serializable
-data class Attribute(val id: Int, val name: String) {
+data class Attribute(val id: Int, val name: String, val kind: AttributeKind = AttributeKind.EXTERNAL) {
     init {
         check(name.isNotEmpty()) {
             "Attribute names cannot be blank."

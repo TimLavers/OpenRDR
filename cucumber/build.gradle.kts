@@ -56,6 +56,7 @@ val featureFolders = listOf(
     "cases",
     "chat",
     "conditions",
+    "inferencing",
     "interpreter",
     "kb",
     "rulebuilding",

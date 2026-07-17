@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.persistence.AttributeStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -100,5 +101,50 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
         shouldThrow<IllegalArgumentException> {
             store.load(setOf())
         }.message shouldBe "Cannot load attributes if there are are some stored already."
+    }
+
+    @Test
+    fun `create without a kind creates an external attribute`() {
+        // When an attribute is created without specifying a kind
+        val glucose = store.create("Glucose")
+
+        // Then it is external, also after a rebuild
+        glucose.kind shouldBe AttributeKind.EXTERNAL
+        reload()
+        store.all().first { it.id == glucose.id }.kind shouldBe AttributeKind.EXTERNAL
+    }
+
+    @Test
+    fun `kind is persisted`() {
+        // Given attributes of each kind
+        val glucose = store.create("Glucose", AttributeKind.EXTERNAL)
+        val bmi = store.create("BMI", AttributeKind.DERIVED)
+        val comment = store.create("DiabetesStatus", AttributeKind.COMMENT)
+
+        // When the store is rebuilt
+        reload()
+
+        // Then the kinds are unchanged
+        store.all().first { it.id == glucose.id }.kind shouldBe AttributeKind.EXTERNAL
+        store.all().first { it.id == bmi.id }.kind shouldBe AttributeKind.DERIVED
+        store.all().first { it.id == comment.id }.kind shouldBe AttributeKind.COMMENT
+    }
+
+    @Test
+    fun `load preserves kinds`() {
+        // Given attributes of each kind
+        val attributes = setOf(
+            Attribute(1, "Glucose"),
+            Attribute(2, "BMI", AttributeKind.DERIVED),
+            Attribute(3, "DiabetesStatus", AttributeKind.COMMENT)
+        )
+
+        // When they are loaded and the store is rebuilt
+        store.load(attributes)
+        reload()
+
+        // Then the kinds are unchanged
+        store.all() shouldBe attributes
+        store.all().map { it.kind }.toSet() shouldBe AttributeKind.entries.toSet()
     }
 }

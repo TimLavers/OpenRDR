@@ -147,6 +147,32 @@ data class RDRCase(
         interpretation.reset()
     }
 
+    /**
+     * A copy of this case with the given value assigned to the given
+     * KB-assigned (derived or comment) attribute in the latest episode.
+     * The interpretation is carried over.
+     */
+    fun withDerivedValue(attribute: Attribute, value: String): RDRCase {
+        require(attribute.kind.isAssignedByKB()) {
+            "Derived values can only be assigned to KB-assigned attributes, but ${attribute.name} is ${attribute.kind}."
+        }
+        check(dates.isNotEmpty()) {
+            "Cannot assign a derived value to a case with no episodes."
+        }
+        val newData = data + (Event(attribute, dates.last()) to Result(value))
+        return RDRCase(caseId, newData, interpretation)
+    }
+
+    /**
+     * A copy of this case with all values of KB-assigned (derived and
+     * comment) attributes removed, so that inference always starts from
+     * externally supplied data only. The interpretation is carried over.
+     */
+    fun withoutDerivedValues(): RDRCase {
+        val externalData = data.filterKeys { !it.attribute.kind.isAssignedByKB() }
+        return RDRCase(caseId, externalData, interpretation)
+    }
+
     fun copyWithoutId(type: CaseType = CaseType.Processed): RDRCase = RDRCase(caseId.copy(id = null, name = name, type = type), data, interpretation.copy())
 
     fun copyWithNewInterpretation() = this.copy(caseId, data, Interpretation(caseId))

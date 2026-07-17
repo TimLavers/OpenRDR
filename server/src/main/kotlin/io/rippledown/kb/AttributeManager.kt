@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.persistence.AttributeStore
 
 typealias AttributeProvider = EntityProvider<Attribute>
@@ -20,6 +21,27 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
             attributeStore.create(name)
         }
     }
+
+    /**
+     * Get the attribute with the given name, creating it with the given kind
+     * if it does not exist. If an attribute with the name exists but has a
+     * different kind, an exception is thrown: an attribute's kind is fixed
+     * at creation.
+     */
+    fun getOrCreate(name: String, kind: AttributeKind): Attribute {
+        val existing = nameToAttribute[name]
+        if (existing != null) {
+            require(existing.kind == kind) {
+                "An attribute with name $name already exists with kind ${existing.kind}, not $kind."
+            }
+            return existing
+        }
+        return nameToAttribute.computeIfAbsent(name) {
+            attributeStore.create(name, kind)
+        }
+    }
+
+    fun byName(name: String): Attribute? = nameToAttribute[name]
 
     fun all(): Set<Attribute> {
         return nameToAttribute.values.toSet()

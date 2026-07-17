@@ -1,9 +1,7 @@
 package io.rippledown.kb
 
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.CaseType
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.RuleSessionRecorder
@@ -55,7 +53,7 @@ class KB(persistentKB: PersistentKB) {
     fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
         val builder = RDRCaseBuilder().apply { setCaseType(CaseType.Cornerstone) }
         externalCase.data.forEach {
-            val attribute = attributeManager.getOrCreate(it.key.name)
+            val attribute = externalAttributeFor(it.key.name)
             builder.addResult(attribute, it.key.time, it.value)
         }
         return caseManager.add(builder.build(externalCase.caseName))
@@ -102,10 +100,32 @@ class KB(persistentKB: PersistentKB) {
     fun createRDRCase(case: ExternalCase): RDRCase {
         val builder = RDRCaseBuilder()
         case.data.forEach {
-            val attribute = attributeManager.getOrCreate(it.key.name)
+            val attribute = externalAttributeFor(it.key.name)
             builder.addResult(attribute, it.key.time, it.value)
         }
         return builder.build(case.caseName)
+    }
+
+    /**
+     * The external attribute for the given externally supplied name. If the
+     * name is taken by a KB-assigned (derived or comment) attribute, the
+     * external data is mapped to a deterministically mangled attribute
+     * instead, so that case ingestion never fails and external data is never
+     * silently dropped. The same external name maps to the same mangled
+     * attribute on every case.
+     */
+    internal fun externalAttributeFor(name: String): Attribute {
+        val existing = attributeManager.byName(name)
+        return if (existing == null || existing.kind == AttributeKind.EXTERNAL) {
+            attributeManager.getOrCreate(name, AttributeKind.EXTERNAL)
+        } else {
+            val mangledName = mangledExternalName(name)
+            logger.warn(
+                "Externally supplied attribute name '$name' collides with a ${existing.kind} attribute. " +
+                        "Its values will be stored under '$mangledName'."
+            )
+            attributeManager.getOrCreate(mangledName, AttributeKind.EXTERNAL)
+        }
     }
 
     fun interpret(case: RDRCase) = ruleTree.apply(case)
@@ -130,3 +150,11 @@ class KB(persistentKB: PersistentKB) {
 
 internal fun String.normalizeForComparison() =
     lowercase().replace("\"", "").replace("'", "").replace(Regex("\\s+"), " ").trim()
+
+const val EXTERNAL_NAME_MANGLING_SUFFIX = " (external)"
+
+/**
+ * The deterministic name under which externally supplied data is stored when
+ * its name collides with a KB-assigned attribute.
+ */
+fun mangledExternalName(name: String) = "$name$EXTERNAL_NAME_MANGLING_SUFFIX"
