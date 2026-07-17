@@ -14,5 +14,7 @@ import kotlinx.serialization.Serializable
 data class BuildRuleRequest(
     val caseName: String,
     val diff: Diff,
-    val conditions: List<String>
+    val conditions: List<String>,
+    val assignAttribute: String? = null,
+    val assignExpression: String? = null,
 )

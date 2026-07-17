@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
@@ -186,6 +187,44 @@ class RuleSessionManagerAssignmentTest {
         shouldThrow<IllegalStateException> {
             rsm.startRuleSessionToAssignValue(createCase("A"), "BMI", "BMI * 2")
         }.message shouldBe "This value cannot be assigned: it would make \"BMI\" depend on itself (BMI → BMI)."
+    }
+
+    @Test
+    fun `suggestions include derived attributes assigned by existing rules`() {
+        // Given an assignment rule that derives Diabetes status from high glucose
+        rsm.startRuleSessionToAssignValue(createCase("Setup"), "Diabetes status", "\"diabetic\"")
+        rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose(), 11.0))
+        rsm.commitCurrentRuleSession()
+
+        // When a comment rule session is started on a high-glucose case and we ask for suggestions
+        val highGlucoseCase = kb.addProcessedCase(createCase("CG", "12.0"))
+        rsm.startRuleSessionToAddComment(kb.viewableCase(highGlucoseCase), "Advice given.")
+        val suggestions = rsm.conditionHintsForCase(highGlucoseCase).suggestions.map { it.asText() }
+
+        // Then a condition on the derived attribute is suggested
+        suggestions.any { "Diabetes status" in it } shouldBe true
+    }
+
+    @Test
+    fun `typed conditions on derived attributes assigned by existing rules are accepted`() {
+        // Given an assignment rule that derives Diabetes status from high glucose
+        rsm.startRuleSessionToAssignValue(createCase("Setup"), "Diabetes status", "\"diabetic\"")
+        rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose(), 11.0))
+        rsm.commitCurrentRuleSession()
+
+        // When a comment rule session is started and a condition on the derived attribute is typed
+        val highGlucoseCase = kb.addProcessedCase(createCase("CG", "12.0"))
+        rsm.startRuleSessionToAddComment(kb.viewableCase(highGlucoseCase), "Advice given.")
+        rsm.setConditionParser(object : ConditionParser {
+            override fun parse(expression: String, attributeFor: (String) -> Attribute) =
+                CaseStructureCondition(null, IsPresentInCase(diabetesStatus()), expression)
+        })
+
+        // Then the condition is accepted
+        val result = rsm.conditionForExpression(highGlucoseCase, "Diabetes status is in case")
+        result.condition shouldNotBe null
+        result.condition?.asText() shouldBe "Diabetes status is in case"
+        result.errorMessage.shouldBeNull()
     }
 
     @Test

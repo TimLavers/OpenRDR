@@ -1,5 +1,7 @@
 package io.rippledown.suggestions
 
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
@@ -83,6 +85,58 @@ class ConditionSuggesterCycleTest {
 
         // Then conditions on the derived attribute are offered
         suggestions.any {
+            "Diabetes status" in it.initialSuggestion().attributeNames()
+        } shouldBe true
+    }
+
+    /**
+     * Case without the derived attribute value: absence condition offered,
+     * presence condition not offered.
+     */
+    private fun caseWithoutDerivedValue() = with(RDRCaseBuilder()) {
+        addValue(glucose, defaultDate, "5.0")
+        build("CaseNoDerived")
+    }
+
+    @Test
+    fun `presence and absence suggestions are offered for derived attributes`() {
+        // Given a session case that has the derived value
+        val ctx = SuggestionContext(
+            sessionCase = materialisedCase(),
+            attributes = setOf(glucose, riskLevel, diabetesStatus),
+            action = null,
+            ruleTree = treeWithDependentRule(),
+        )
+
+        // When suggestions are generated
+        val suggestions = ConditionSuggester(ctx).allSuggestions().map { it.asText() }
+
+        // Then presence is suggested for Diabetes status and absence is not
+        suggestions shouldContain "Diabetes status is in case"
+        suggestions shouldNotContain "Diabetes status is not in case"
+
+        // And for a case without the derived value, absence is suggested
+        val absentCtx = ctx.copy(sessionCase = caseWithoutDerivedValue())
+        val absentSuggestions = ConditionSuggester(absentCtx).allSuggestions().map { it.asText() }
+        absentSuggestions shouldNotContain "Diabetes status is in case"
+        absentSuggestions shouldContain "Diabetes status is not in case"
+    }
+
+    @Test
+    fun `cycle-creating derived attribute suggestions are filtered`() {
+        // Given a session assigning Risk level, on which Diabetes status depends
+        val ctx = SuggestionContext(
+            sessionCase = materialisedCase(),
+            attributes = setOf(glucose, riskLevel, diabetesStatus),
+            action = ChangeTreeToAddAssignment(AssignValue(riskLevel, Literal("low"))),
+            ruleTree = treeWithDependentRule(),
+        )
+
+        // When suggestions are generated
+        val suggestions = ConditionSuggester(ctx).allSuggestions()
+
+        // Then no Diabetes status suggestion is offered
+        suggestions.none {
             "Diabetes status" in it.initialSuggestion().attributeNames()
         } shouldBe true
     }

@@ -99,6 +99,10 @@ class RuleSessionManager(
         attributeName: String,
         expressionText: String
     ): CornerstoneStatus {
+        val existingAttribute = kb.attributeManager.byName(attributeName)
+        if (existingAttribute != null && existingAttribute.kind == AttributeKind.EXTERNAL) {
+            error("The name \"$attributeName\" is already used by an externally supplied attribute. Please choose a different name.")
+        }
         val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
         val assignment = AssignValue(attribute, valueExpressionFor(expressionText))
         return startRuleSession(case, ChangeTreeToAddAssignment(assignment))
@@ -118,6 +122,25 @@ class RuleSessionManager(
         val replacement = AssignValue(toBeReplaced.attribute, valueExpressionFor(replacementExpressionText))
         return startRuleSession(case, ChangeTreeToReplaceAssignment(toBeReplaced, replacement))
     }
+
+    override fun startRuleSessionToAssignValue(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        valueExpression: String
+    ): CornerstoneStatus = startRuleSessionToAssignValue(viewableCase.case, attributeName, valueExpression)
+
+    override fun startRuleSessionToRemoveAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String
+    ): CornerstoneStatus =
+        startRuleSessionToRemoveAssignment(viewableCase.case, attributeName)
+
+    override fun startRuleSessionToReplaceAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        replacementValueExpression: String
+    ): CornerstoneStatus =
+        startRuleSessionToReplaceAssignment(viewableCase.case, attributeName, replacementValueExpression)
 
     private fun dependencyGraph() = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all())
 
@@ -300,8 +323,12 @@ class RuleSessionManager(
     }
 
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
+        // Materialise the case so that derived attributes assigned by existing
+        // rules are visible to the suggestion generators. See step 8a of
+        // documentation/design/repeat_inferencing.md.
+        val materialisedCase = kb.ruleTree.materialise(case)
         val ctx = SuggestionContext(
-            sessionCase = case,
+            sessionCase = materialisedCase,
             attributes = kb.attributeManager.all(),
             action = ruleSession?.action,
             cornerstones = ruleSession?.cornerstoneCases().orEmpty(),
@@ -415,13 +442,16 @@ class RuleSessionManager(
         val attributeFor: AttributeFor = { kb.attributeManager.getOrCreate(it) }
         val condition = conditionParser.parse(expression, attributeFor)
 
+        // Materialise the case so that derived attributes assigned by existing
+        // rules are visible when validating the typed expression.
+        val materialisedCase = kb.ruleTree.materialise(case)
         //Only return the condition if non-null and holds for the case
-        val caseAttributeNames = case.attributes.map { it.name }.toSet()
+        val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
-        } else if (!condition.holds(case)) {
+        } else if (!condition.holds(materialisedCase)) {
             val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
                 INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
             } else {
@@ -499,14 +529,23 @@ class RuleSessionManager(
      * Condition expressions are parsed deterministically from human-readable text.
      */
     fun buildRule(request: BuildRuleRequest) {
-        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
+        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}, assignAttribute=${request.assignAttribute}")
         val case = kb.getProcessedCaseByName(request.caseName)
         kb.interpret(case)
         val viewableCase = kb.viewableCase(case)
-        when (val diff = request.diff) {
-            is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
-            is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
-            is Replacement -> startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
+        val assignAttribute = request.assignAttribute
+        if (assignAttribute != null) {
+            startRuleSessionToAssignValue(viewableCase.case, assignAttribute, request.assignExpression ?: "")
+        } else {
+            when (val diff = request.diff) {
+                is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
+                is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
+                is Replacement -> startRuleSessionToReplaceComment(
+                    viewableCase,
+                    diff.originalText,
+                    diff.replacementText
+                )
+            }
         }
         try {
             val parser = ConditionExpressionParser { kb.attributeManager.getOrCreate(it) }
