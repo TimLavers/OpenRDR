@@ -4,6 +4,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
+import io.rippledown.model.rule.*
 import io.rippledown.persistence.PersistentRule
 import io.rippledown.persistence.RuleStore
 import kotlin.test.BeforeTest
@@ -170,6 +173,42 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         val toLoad = setOf(pr1, pr2, pr3)
         store.load(toLoad)
 
+        store.all() shouldBe toLoad
+        reload()
+        store.all() shouldBe toLoad
+    }
+
+    @Test
+    fun `create with an assignment`() {
+        // Given a persistent rule with an assignment
+        val diabetesStatus = Attribute(10, "Diabetes status", AttributeKind.DERIVED)
+        val assignment = AssignValue(diabetesStatus, Literal("diabetic"))
+        val pr = PersistentRule(null, 0, null, setOf(23), assignment)
+
+        // When it is stored
+        val created = store.create(pr)
+
+        // Then the assignment is persisted and survives a reload
+        created.assignment shouldBe assignment
+        reload()
+        store.all() shouldContain created
+        store.all().single().assignment shouldBe assignment
+    }
+
+    @Test
+    fun `load with assignments`() {
+        // Given persistent rules with and without assignments
+        val bmi = Attribute(11, "BMI", AttributeKind.DERIVED)
+        val weight = Attribute(1, "weight")
+        val formula = AssignValue(bmi, Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0))))
+        val pr1 = PersistentRule(1, 0, 10, setOf(200, 201))
+        val pr2 = PersistentRule(2, 1, null, setOf(200), formula)
+        val toLoad = setOf(pr1, pr2)
+
+        // When they are loaded
+        store.load(toLoad)
+
+        // Then the assignments survive a reload
         store.all() shouldBe toLoad
         reload()
         store.all() shouldBe toLoad

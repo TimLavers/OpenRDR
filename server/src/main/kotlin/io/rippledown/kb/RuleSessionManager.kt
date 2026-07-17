@@ -51,6 +51,7 @@ class RuleSessionManager(
         logger.info("Current conclusions are: ${case.interpretation.conclusionTexts()} ")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
+        checkActionExpressionIsAcyclic(action)
         val alignedAction = action.alignWith(kb.conclusionManager)
         ruleSession = RuleBuildingSession(kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases())
         logger.info("Rule session created")
@@ -91,6 +92,76 @@ class RuleSessionManager(
         )
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
         return startRuleSession(viewableCase.case, action)
+    }
+
+    fun startRuleSessionToAssignValue(
+        case: RDRCase,
+        attributeName: String,
+        expressionText: String
+    ): CornerstoneStatus {
+        val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
+        val assignment = AssignValue(attribute, valueExpressionFor(expressionText))
+        return startRuleSession(case, ChangeTreeToAddAssignment(assignment))
+    }
+
+    fun startRuleSessionToRemoveAssignment(case: RDRCase, attributeName: String): CornerstoneStatus {
+        val assignment = currentAssignmentFor(case, attributeName)
+        return startRuleSession(case, ChangeTreeToRemoveAssignment(assignment))
+    }
+
+    fun startRuleSessionToReplaceAssignment(
+        case: RDRCase,
+        attributeName: String,
+        replacementExpressionText: String
+    ): CornerstoneStatus {
+        val toBeReplaced = currentAssignmentFor(case, attributeName)
+        val replacement = AssignValue(toBeReplaced.attribute, valueExpressionFor(replacementExpressionText))
+        return startRuleSession(case, ChangeTreeToReplaceAssignment(toBeReplaced, replacement))
+    }
+
+    private fun dependencyGraph() = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all())
+
+    /**
+     * The message explaining why the given condition cannot be added to the
+     * current rule session, or null if it can: a condition that would make
+     * a derived attribute depend on itself is refused. See "Stratification"
+     * in documentation/design/repeat_inferencing.md.
+     */
+    private fun cycleMessageFor(condition: Condition): String? {
+        val session = ruleSession ?: return null
+        val cycle = dependencyGraph().cycleCreatedBy(session.action, condition) ?: return null
+        return "This condition cannot be used: ${cycleMessage(cycle)}."
+    }
+
+    /**
+     * Refuses an assignment whose value expression alone would create a
+     * dependency cycle, e.g. assigning BMI the value `BMI * 2`.
+     */
+    private fun checkActionExpressionIsAcyclic(action: RuleTreeChange) {
+        val cycle = dependencyGraph().cycleCreatedBy(action, null) ?: return
+        error("This value cannot be assigned: ${cycleMessage(cycle)}.")
+    }
+
+    private fun currentAssignmentFor(case: RDRCase, attributeName: String): AssignValue {
+        val attribute = kb.attributeManager.byName(attributeName)
+            ?: error("No attribute with name \"$attributeName\" exists.")
+        kb.interpret(case)
+        return case.interpretation.assignments().firstOrNull { it.attribute == attribute }
+            ?: error("No value is assigned to \"$attributeName\" for case ${case.name}.")
+    }
+
+    /**
+     * The value expression for the given user-entered text: a quoted string
+     * is a literal, text that parses as arithmetic over attribute names is a
+     * formula, and anything else is a literal.
+     */
+    internal fun valueExpressionFor(expressionText: String): ValueExpression {
+        val trimmed = expressionText.trim()
+        if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return Literal(trimmed.substring(1, trimmed.length - 1))
+        }
+        val parsed = FormulaParser { name -> kb.attributeManager.byName(name) }.parse(trimmed)
+        return if (parsed != null) Formula(parsed) else Literal(trimmed)
     }
 
     /**
@@ -170,11 +241,19 @@ class RuleSessionManager(
             }
             existing
         }
+        cycleMessageFor(conditionToUse)?.let { throw IllegalArgumentException(it) }
         ruleSession!!.addCondition(conditionToUse)
     }
 
     override fun commitCurrentRuleSession() {
         checkSession()
+        // Internal invariant: the entry points refuse cycle-creating
+        // conditions, so this should never fire.
+        ruleSession!!.conditions.forEach { condition ->
+            check(cycleMessageFor(condition) == null) {
+                "Cannot commit rule session: ${cycleMessageFor(condition)}"
+            }
+        }
         val rulesAdded = ruleSession!!.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
@@ -350,8 +429,13 @@ class RuleSessionManager(
             }
             ConditionParsingResult(errorMessage = message)
         } else {
-            //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-            ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
+            val cycleError = cycleMessageFor(condition)
+            if (cycleError != null) {
+                ConditionParsingResult(errorMessage = cycleError)
+            } else {
+                //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
+                ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
+            }
         }
     }
 

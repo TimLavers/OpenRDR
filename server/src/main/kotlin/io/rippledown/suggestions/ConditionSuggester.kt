@@ -14,6 +14,7 @@ import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.series.Trend
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
+import io.rippledown.model.rule.DerivedAttributeDependencyGraph
 import io.rippledown.suggestions.scorer.targetConclusionId
 
 typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
@@ -32,7 +33,19 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
     internal fun allSuggestions(): List<SuggestedCondition> {
         val generated = caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions()
         val withHistorical = generated + historicalConditionSuggestions(generated)
-        return RelevanceRanker(ctx).rank(pruneSubsumed(withHistorical))
+        return RelevanceRanker(ctx).rank(pruneSubsumed(pruneCycleCreating(withHistorical)))
+    }
+
+    /**
+     * Drops candidates that would make a derived attribute depend on
+     * itself, so that the user is never offered a condition that would be
+     * refused. See "Stratification" in
+     * documentation/design/repeat_inferencing.md.
+     */
+    private fun pruneCycleCreating(candidates: Collection<SuggestedCondition>): Collection<SuggestedCondition> {
+        if (ctx.action?.assignedAttribute() == null) return candidates
+        val graph = DerivedAttributeDependencyGraph(ctx.ruleTree, ctx.attributes)
+        return candidates.filter { graph.cycleCreatedBy(ctx.action, it.initialSuggestion()) == null }
     }
 
     /**

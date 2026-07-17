@@ -19,10 +19,6 @@ class PostgresAttributeStore(private val db: Database) : AttributeStore {
         transaction(db) {
             // addLogger(StdOutSqlLogger)
             SchemaUtils.create(PGAttributes)
-            // Migrate tables created before the kind column existed.
-            exec(
-                "ALTER TABLE $ATTRIBUTES_TABLE ADD COLUMN IF NOT EXISTS kind VARCHAR(32) NOT NULL DEFAULT '${AttributeKind.EXTERNAL.name}'"
-            )
         }
     }
 

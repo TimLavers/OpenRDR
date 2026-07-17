@@ -13,6 +13,10 @@ DummyRuleFactory: RuleFactory {
     override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
         return Rule(0, parent, conclusion, conditions)
     }
+
+    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule {
+        return Rule(0, parent, null, conditions, mutableSetOf(), assignment)
+    }
 }
 
 internal class RuleTreeTest : RuleTestBase() {

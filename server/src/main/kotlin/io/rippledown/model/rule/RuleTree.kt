@@ -12,10 +12,53 @@ fun rootRule(): Rule {
 
 open class RuleTree(val root: Rule = rootRule()) {
 
+    /**
+     * Interpret the case by fixpoint iteration: strip derived values, then
+     * repeatedly evaluate the tree and materialise the derived-attribute
+     * assignments made by the rules that fired, until the interpretation
+     * and the derived values are stable. Termination is guaranteed because
+     * the derived-attribute dependency graph is kept acyclic at rule-build
+     * time. The case's interpretation is updated in place; [materialise]
+     * additionally returns the case with its derived values written.
+     */
     fun apply(kase: RDRCase): Interpretation {
-        kase.resetInterpretation()
-        root.childRules().forEach { it.apply(kase, kase.interpretation) }//don't include the root conclusion
+        materialise(kase)
         return kase.interpretation
+    }
+
+    fun materialise(kase: RDRCase): RDRCase {
+        val base = kase.withoutDerivedValues()
+        var current = base
+        while (true) {
+            current.resetInterpretation()
+            root.childRules().forEach { it.apply(current, current.interpretation) }//don't include the root conclusion
+            val next = materialiseAssignments(base, current)
+            // Rule evaluation is a pure function of the case data, so if the
+            // derived values are unchanged, the interpretation is stable too.
+            if (next.hasSameDataAs(current)) return next
+            current = next
+        }
+    }
+
+    /**
+     * The stripped base case with the assignments made by the rules that
+     * fired written into its latest episode. Rebuilding from the base each
+     * pass ensures that an assignment retracted in a later pass leaves no
+     * stale value. Expressions are evaluated against the case as it stood
+     * during the pass, so an expression referencing an attribute assigned
+     * in the same pass resolves on a later pass.
+     */
+    private fun materialiseAssignments(base: RDRCase, evaluated: RDRCase): RDRCase {
+        if (base.numberOfEpisodes() == 0) return base
+        var result = base
+        evaluated.interpretation.assignments()
+            .sortedBy { it.attribute.id } // deterministic write order
+            .forEach { assignment ->
+                assignment.expression.evaluate(evaluated)?.let {
+                    result = result.withDerivedValue(assignment.attribute, it)
+                }
+            }
+        return result
     }
 
     //Note that the root is counted
