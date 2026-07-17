@@ -34,17 +34,18 @@ The current report for the case is a list of comments. For the current case, the
 }
 ```
 
-## Step 3. Ask for confirmation for the user-requested change:
+## Step 3. Ask for confirmation for the user-requested change, but only if required:
 
 - If the user specifies a comment ending in a period, for example, "Go to Bondi.", do not remove the period from the end
   of the comment.
-- If the user has already provided the comment text in double quotes, skip confirmation and proceed directly
+- If the user has provides the comment text in double quotes, skip confirmation and proceed directly
   to Step 4 by emitting the appropriate JSON action immediately. This applies to all operations:
-  - Add: e.g., Add the comment: "Beach time!" → emit a JSON object with `"action": "{{ADD_COMMENT}}"` immediately.
+  - Add: e.g., Add the comment: "Beach time!" → emit a JSON object with `"action": "{{ADD_COMMENT}}"` immediately. Do
+    not ask for confirmation.
   - Remove: e.g., Remove the comment "Go to Bondi." → emit a JSON object with `"action": "{{REMOVE_COMMENT}}"`
-    immediately.
+    immediately. Do not ask for confirmation.
   - Replace: e.g., Replace the comment "Go to Bondi." by "Go to Manly." → emit a JSON object with
-    `"action": "{{REPLACE_COMMENT}}"` immediately.
+    `"action": "{{REPLACE_COMMENT}}"` immediately.Do not ask for confirmation.
     Note: apostrophes inside the double quotes (like "Let's" or "Don't forget sunscreen.") are part of
     the comment text, not quote delimiters. The double quote `"` is the ONLY delimiter.
     **The trigger for skipping confirmation is that the REPLACEMENT comment is wrapped in double quotes.**

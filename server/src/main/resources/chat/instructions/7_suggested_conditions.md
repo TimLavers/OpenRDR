@@ -15,14 +15,15 @@ asks to see them again.
 - The system has already shown the numbered suggestions to the user when the function was called.
 - The function's return value contains the same numbered list. Use it ONLY to resolve the user's later selection
   (by number or by text) to the exact condition text. Do NOT read it back to the user.
-- Reply with a brief "message" asking the user to select a condition or type their own reason.
+- Reply with a brief "message" asking the user to select a condition, enter their own reason or decline to add any
+  reason.
 - Do NOT include the suggestion texts in the "message" field.
 - Do NOT include a "suggestions" array in your JSON response — the system attaches the suggestions for you.
 
 ```json
 {
   "action": "{{USER_ACTION}}",
-  "message": "Here are some suggestions. You can select one or enter your own."
+  "message": "Here are some suggestions. You can select one, enter your own or just decline to add a reason."
 }
 ```
 
