@@ -1,9 +1,12 @@
 package io.rippledown.model
 
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.isCondition
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.Literal
 import io.rippledown.model.rule.Rule
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -300,6 +303,67 @@ class InterpretationTest {
         val comments = Json.decodeFromString<Set<String>>(commentsJson)
         // Bot should see {attributeName} format
         comments shouldBe setOf("First comment", "Wave is {Wave}")
+    }
+
+    @Test
+    fun `conditionsForAssignment returns condition texts for a rule that assigned a value`() {
+        // Given an interpretation with a rule that assigns a derived value
+        val glucose = Attribute(attributeId++, "Glucose", AttributeKind.EXTERNAL)
+        val weight = Attribute(attributeId++, "weight", AttributeKind.EXTERNAL)
+        val diabetesStatus = Attribute(attributeId++, "Diabetes status", AttributeKind.DERIVED)
+        val assignment = AssignValue(diabetesStatus, Literal("diabetic"))
+        val conditions = setOf(
+            containsText(glucose, "12.0"),
+            isCondition(attributeId++, weight, "80")
+        )
+        val rule = Rule(0, null, null, conditions, assignment = assignment)
+        val interpretation = Interpretation(caseId).apply { add(rule) }
+
+        // When asking for the conditions of that assignment
+        val result = interpretation.conditionsForAssignment(assignment)
+
+        // Then the condition texts from root are returned
+        result shouldContain "Glucose contains \"12.0\""
+    }
+
+    @Test
+    fun `conditionsForAssignment returns empty list when no rule assigned the value`() {
+        // Given an interpretation with no assignment rules
+        val interpretation = Interpretation(caseId)
+        val assignment = AssignValue(
+            Attribute(0, "BMI", AttributeKind.DERIVED),
+            Literal("25")
+        )
+
+        // When asking for conditions of a non-existent assignment
+        val result = interpretation.conditionsForAssignment(assignment)
+
+        // Then an empty list is returned
+        result.shouldBeEmpty()
+    }
+
+    @Test
+    fun `conditionsForAssignment lists parent conditions first for chained rules`() {
+        // Given a parent rule with conditions and a child rule with its own conditions
+        val glucose = Attribute(attributeId++, "Glucose", AttributeKind.EXTERNAL)
+        val weight = Attribute(attributeId++, "weight", AttributeKind.EXTERNAL)
+        val alpha = Attribute(attributeId++, "Alpha", AttributeKind.DERIVED)
+        val beta = Attribute(attributeId++, "Beta", AttributeKind.DERIVED)
+        val parentConditions = setOf(containsText(glucose, "12.0"))
+        val parentAssignment = AssignValue(alpha, Literal("yes"))
+        val parentRule = Rule(0, null, null, parentConditions, assignment = parentAssignment)
+
+        val childConditions = setOf(isCondition(attributeId++, weight, "80"))
+        val childAssignment = AssignValue(beta, Literal("no"))
+        val childRule = Rule(1, parentRule, null, childConditions, assignment = childAssignment)
+
+        val interpretation = Interpretation(caseId).apply { add(childRule) }
+
+        // When asking for the conditions of the child assignment
+        val result = interpretation.conditionsForAssignment(childAssignment)
+
+        // Then parent conditions come first, then child conditions
+        result shouldBe listOf("Glucose contains \"12.0\"", "weight is \"80\"")
     }
 
     private fun containsText(attribute: Attribute, match: String): EpisodicCondition {

@@ -1,5 +1,6 @@
 package io.rippledown.model.caseview
 
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.CaseId
 import io.rippledown.model.RDRCase
 import io.rippledown.model.interpretationview.ViewableInterpretation
@@ -32,6 +33,26 @@ data class ViewableCase(
     fun attributes() = viewProperties.attributes
     fun textGivenByRules() = viewableInterpretation.textGivenByRules
     fun latestText() = viewableInterpretation.latestText()
+
+    /**
+     * Non-comment derived attribute values for display in the Derived values
+     * panel. Each entry includes the attribute name, the value assigned by the
+     * KB for this case, the formula text, and the condition texts from root
+     * for the rule that assigned the value (for the tooltip).
+     */
+    fun derivedValues(): List<DerivedValueInfo> {
+        return viewableInterpretation.assignments()
+            .filter { it.attribute.kind == AttributeKind.DERIVED }
+            .map { assignment ->
+                DerivedValueInfo(
+                    name = assignment.attribute.name,
+                    value = case.latestValue(assignment.attribute) ?: "",
+                    formula = assignment.expression.asText(),
+                    conditions = viewableInterpretation.conditionsForAssignment(assignment)
+                )
+            }
+            .sortedBy { it.name }
+    }
 }
 
 object ViewableCaseSerializer : KSerializer<ViewableCase> {

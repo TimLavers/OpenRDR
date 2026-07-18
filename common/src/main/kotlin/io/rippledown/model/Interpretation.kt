@@ -82,4 +82,15 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
             .first { ruleSummary -> conclusion == ruleSummary.conclusion }
             .conditionTextsFromRoot
     }
+
+    /**
+     * The condition texts from root for the rule that assigned the given
+     * [AssignValue] to its attribute, or an empty list if no such rule fired.
+     */
+    fun conditionsForAssignment(assignment: AssignValue): List<String> {
+        return ruleSummaries
+            .firstOrNull { ruleSummary -> assignment == ruleSummary.assignment }
+            ?.conditionTextsFromRoot
+            ?: emptyList()
+    }
 }

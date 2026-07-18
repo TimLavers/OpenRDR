@@ -22,6 +22,7 @@ import io.rippledown.caseview.ColumnWidths
 import io.rippledown.caseview.HeaderRow
 import io.rippledown.constants.caseview.CASEVIEW_CASE_NAME_ID
 import io.rippledown.constants.caseview.CASE_VIEW_TABLE
+import io.rippledown.interpretation.DerivedValuesPanel
 import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.interpretation.ReportView
@@ -140,6 +141,9 @@ fun CaseInspection(
                         adapter = hScrollbarAdapter
                     )
                 }
+                DerivedValuesPanel(
+                    derivedValues = case.derivedValues()
+                )
                 InterpretationView(
                     interpretation = case.viewableInterpretation,
                     diff = diff,

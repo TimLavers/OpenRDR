@@ -8,9 +8,12 @@ import io.rippledown.constants.interpretation.*
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findComposeDialogThatIsShowing
+import io.rippledown.integration.utils.findLabelByRenderedText
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
+import java.awt.Dimension
+import java.awt.Point
 import java.awt.Rectangle
 import java.awt.Robot
 import java.time.Duration.ofSeconds
@@ -184,6 +187,65 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireNoConditionsToBeShowing() {
         execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(CONDITION_PREFIX) } shouldHaveSize 0
+    }
+
+    // ── Derived values panel ─────────────────────────────────────────────
+
+    fun waitForDerivedValueToBeShown(attributeName: String, expectedValue: String) {
+        waitUntilAsserted {
+            val rowCtx = execute<AccessibleContext?> {
+                contextProvider().find("$DERIVED_VALUE_ROW_PREFIX$attributeName")
+            }
+            rowCtx shouldNotBe null
+            val valueCtx = execute<AccessibleContext?> {
+                rowCtx!!.findLabelByRenderedText(expectedValue)
+            }
+            valueCtx shouldNotBe null
+        }
+    }
+
+    private fun movePointerOverDerivedValueName(attributeName: String) {
+        val nameCtx = execute<AccessibleContext?> {
+            contextProvider().find("$DERIVED_VALUE_NAME_PREFIX$attributeName")
+        } ?: error("Derived value name not found: $attributeName")
+        val component = nameCtx.accessibleComponent
+            ?: error("Derived value name has no accessible component: $attributeName")
+        val location = execute<Point> { component.locationOnScreen }
+        val size = execute<Dimension> { component.size }
+        if (location != null && size != null) {
+            Robot().mouseMove(location.x + size.width / 2, location.y + size.height / 2)
+        }
+    }
+
+    fun waitForDerivedValueFormula(attributeName: String, formula: String) {
+        waitUntilAsserted {
+            movePointerOverDerivedValueName(attributeName)
+            val ctx = execute<AccessibleContext?> {
+                contextProvider().find("$DERIVED_VALUE_FORMULA_PREFIX$formula")
+            }
+            ctx shouldNotBe null
+        }
+    }
+
+    fun waitForDerivedValueConditions(attributeName: String, conditions: List<String>) {
+        waitUntilAsserted {
+            movePointerOverDerivedValueName(attributeName)
+            conditions.forEach { condition ->
+                val ctx = execute<AccessibleContext?> {
+                    contextProvider().find("$DERIVED_VALUE_CONDITIONS_PREFIX$condition")
+                }
+                ctx shouldNotBe null
+            }
+        }
+    }
+
+    fun requireDerivedValuesPanelToBeHidden() {
+        waitUntilAsserted {
+            val ctx = execute<AccessibleContext?> {
+                contextProvider().find(DERIVED_VALUES_TOGGLE)
+            }
+            ctx shouldBe null
+        }
     }
 
     fun selectExistingCommentToAddClickOK(comment: String) {

@@ -17,5 +17,25 @@ class DerivedValueStepDefs {
         actual shouldBe null
     }
 
+    @Then("the UI should show the derived value {string} as {string}")
+    fun uiShouldShowDerivedValue(attributeName: String, expectedValue: String) {
+        interpretationViewPO().waitForDerivedValueToBeShown(attributeName, expectedValue)
+    }
+
+    @Then("the UI should show the formula {string} for the derived value {string}")
+    fun uiShouldShowDerivedValueFormula(formula: String, attributeName: String) {
+        interpretationViewPO().waitForDerivedValueFormula(attributeName, formula)
+    }
+
+    @Then("the UI should show the following conditions for the derived value {string}:")
+    fun uiShouldShowDerivedValueConditions(attributeName: String, conditions: io.cucumber.datatable.DataTable) {
+        interpretationViewPO().waitForDerivedValueConditions(attributeName, conditions.asList())
+    }
+
+    @Then("the derived values panel should be hidden")
+    fun derivedValuesPanelShouldBeHidden() {
+        interpretationViewPO().requireDerivedValuesPanelToBeHidden()
+    }
+
     private fun currentCaseName(): String = caseViewPO().nameShown() ?: error("No case name is currently shown")
 }

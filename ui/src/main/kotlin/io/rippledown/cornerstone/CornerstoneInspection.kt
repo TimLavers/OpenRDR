@@ -24,6 +24,7 @@ import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.decoration.ItalicGrey
+import io.rippledown.interpretation.DerivedValuesPanel
 import io.rippledown.interpretation.ReadonlyInterpretationView
 import io.rippledown.interpretation.ReadonlyInterpretationViewHandler
 import io.rippledown.model.caseview.ViewableCase
@@ -105,6 +106,9 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0, fi
                         adapter = hScrollbarAdapter
                     )
                 }
+                DerivedValuesPanel(
+                    derivedValues = case.derivedValues()
+                )
                 OutlinedCard(
                     modifier = Modifier.padding(vertical = 10.dp),
                     colors = androidx.compose.material3.CardDefaults.outlinedCardColors(

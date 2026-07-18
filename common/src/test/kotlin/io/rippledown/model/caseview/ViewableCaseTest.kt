@@ -3,6 +3,10 @@ package io.rippledown.model.caseview
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.Literal
+import io.rippledown.model.rule.RuleSummary
 import io.rippledown.utils.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -78,6 +82,148 @@ class ViewableCaseTest {
         deserialized.latestText() shouldBe surfComment
 
         checkSerializationIsThreadSafe(viewableCase)
+    }
+
+    @Test
+    fun `derivedValues returns empty list when there are no assignments`() {
+        // Given a case with no derived attribute assignments
+        val viewableCase = ViewableCase(createCase("Case1"), caseViewProperties())
+
+        // When asking for derived values
+        val result = viewableCase.derivedValues()
+
+        // Then an empty list is returned
+        result shouldBe emptyList()
+    }
+
+    @Test
+    fun `derivedValues returns non-comment derived attributes with value formula and conditions`() {
+        // Given a case with a derived attribute assignment
+        val glucose = Attribute(10, "Glucose", AttributeKind.EXTERNAL)
+        val diabetesStatus = Attribute(20, "Diabetes status", AttributeKind.DERIVED)
+        val assignment = AssignValue(diabetesStatus, Literal("diabetic"))
+        val conditions = listOf("Glucose is \"12.0\"")
+
+        val builder = RDRCaseBuilder()
+        builder.addValue(glucose, defaultDate, "12.0")
+        builder.addValue(diabetesStatus, defaultDate, "diabetic")
+        val rdrCase = builder.build("Case1")
+
+        val interp = Interpretation(rdrCase.caseId).apply {
+            add(
+                RuleSummary(
+                    id = 1,
+                    assignment = assignment,
+                    conditionTextsFromRoot = conditions
+                )
+            )
+        }
+        val viewableInterp = ViewableInterpretation(
+            interpretation = interp,
+            textGivenByRules = "",
+            renderedComments = emptyList()
+        )
+        val viewableCase = ViewableCase(
+            rdrCase,
+            CaseViewProperties(listOf(glucose, diabetesStatus)),
+            viewableInterp
+        )
+
+        // When asking for derived values
+        val result = viewableCase.derivedValues()
+
+        // Then the derived value info is returned with name, value, formula, and conditions
+        result.size shouldBe 1
+        val info = result.first()
+        info.name shouldBe "Diabetes status"
+        info.value shouldBe "diabetic"
+        info.formula shouldBe "\"diabetic\""
+        info.conditions shouldBe conditions
+    }
+
+    @Test
+    fun `derivedValues excludes comment-kind attributes`() {
+        // Given a case with both a derived and a comment attribute assignment
+        val glucose = Attribute(10, "Glucose", AttributeKind.EXTERNAL)
+        val diabetesStatus = Attribute(20, "Diabetes status", AttributeKind.DERIVED)
+        val comment1 = Attribute(30, "Comment 1", AttributeKind.COMMENT)
+        val derivedAssignment = AssignValue(diabetesStatus, Literal("diabetic"))
+        val commentAssignment = AssignValue(comment1, Literal("some comment"))
+
+        val builder = RDRCaseBuilder()
+        builder.addValue(glucose, defaultDate, "12.0")
+        builder.addValue(diabetesStatus, defaultDate, "diabetic")
+        builder.addValue(comment1, defaultDate, "some comment")
+        val rdrCase = builder.build("Case1")
+
+        val interp = Interpretation(rdrCase.caseId).apply {
+            add(RuleSummary(id = 1, assignment = derivedAssignment, conditionTextsFromRoot = listOf("Glucose is high")))
+            add(RuleSummary(id = 2, assignment = commentAssignment, conditionTextsFromRoot = listOf("Glucose is low")))
+        }
+        val viewableInterp = ViewableInterpretation(
+            interpretation = interp,
+            textGivenByRules = "some comment",
+            renderedComments = listOf(RenderedComment(text = "some comment", unresolvedRanges = emptyList()))
+        )
+        val viewableCase = ViewableCase(
+            rdrCase,
+            CaseViewProperties(listOf(glucose, diabetesStatus, comment1)),
+            viewableInterp
+        )
+
+        // When asking for derived values
+        val result = viewableCase.derivedValues()
+
+        // Then only the DERIVED-kind attribute is included, not the COMMENT-kind one
+        result.size shouldBe 1
+        result.first().name shouldBe "Diabetes status"
+    }
+
+    @Test
+    fun `derivedValues sorts by attribute name`() {
+        // Given a case with two derived attributes in non-alphabetical order
+        val glucose = Attribute(10, "Glucose", AttributeKind.EXTERNAL)
+        val zebra = Attribute(20, "Zebra score", AttributeKind.DERIVED)
+        val alpha = Attribute(30, "Alpha index", AttributeKind.DERIVED)
+
+        val builder = RDRCaseBuilder()
+        builder.addValue(glucose, defaultDate, "5.0")
+        builder.addValue(zebra, defaultDate, "42")
+        builder.addValue(alpha, defaultDate, "1")
+        val rdrCase = builder.build("Case1")
+
+        val interp = Interpretation(rdrCase.caseId).apply {
+            add(
+                RuleSummary(
+                    id = 1,
+                    assignment = AssignValue(zebra, Literal("42")),
+                    conditionTextsFromRoot = listOf("c1")
+                )
+            )
+            add(
+                RuleSummary(
+                    id = 2,
+                    assignment = AssignValue(alpha, Literal("1")),
+                    conditionTextsFromRoot = listOf("c2")
+                )
+            )
+        }
+        val viewableInterp = ViewableInterpretation(
+            interpretation = interp,
+            textGivenByRules = "",
+            renderedComments = emptyList()
+        )
+        val viewableCase = ViewableCase(
+            rdrCase,
+            CaseViewProperties(listOf(glucose, zebra, alpha)),
+            viewableInterp
+        )
+
+        // When asking for derived values
+        val result = viewableCase.derivedValues()
+
+        // Then they are sorted by name
+        result.map { it.name } shouldBe listOf("Alpha index", "Zebra score")
     }
 
     private fun caseViewProperties() = CaseViewProperties(listOf(abc, tsh, xyz))

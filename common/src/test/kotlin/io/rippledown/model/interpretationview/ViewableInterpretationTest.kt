@@ -2,12 +2,11 @@ package io.rippledown.model.interpretationview
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
-import io.rippledown.model.Conclusion
-import io.rippledown.model.Interpretation
+import io.rippledown.model.*
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.isCondition
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.Literal
 import io.rippledown.model.rule.Rule
 import io.rippledown.utils.checkSerializationIsThreadSafe
 import io.rippledown.utils.serializeDeserialize
@@ -224,6 +223,57 @@ class ViewableInterpretationTest {
         interp.add(rule0)
         val updatedView = ViewableInterpretation(interp)
         updatedView.latestText() shouldBe conclusion.text
+    }
+
+    @Test
+    fun `assignments returns the set of AssignValue actions from the interpretation`() {
+        // Given an interpretation with two assignment rules
+        val attr1 = Attribute(attributeId++, "Alpha", AttributeKind.DERIVED)
+        val attr2 = Attribute(attributeId++, "Beta", AttributeKind.DERIVED)
+        val assignment1 = AssignValue(attr1, Literal("yes"))
+        val assignment2 = AssignValue(attr2, Literal("no"))
+        val rule1 = Rule(1, null, null, emptySet(), assignment = assignment1)
+        val rule2 = Rule(2, null, null, emptySet(), assignment = assignment2)
+        interp.add(rule1)
+        interp.add(rule2)
+        val view = ViewableInterpretation(interp)
+
+        // When asking for assignments
+        val result = view.assignments()
+
+        // Then both assignments are returned
+        result shouldBe setOf(assignment1, assignment2)
+    }
+
+    @Test
+    fun `conditionsForAssignment returns condition texts for an assignment`() {
+        // Given an interpretation with an assignment rule
+        val external = Attribute(attributeId++, "Glucose", AttributeKind.EXTERNAL)
+        val derived = Attribute(attributeId++, "Status", AttributeKind.DERIVED)
+        val assignment = AssignValue(derived, Literal("diabetic"))
+        val conditions = setOf(containsText(external, "12.0"))
+        val rule = Rule(0, null, null, conditions, assignment = assignment)
+        interp.add(rule)
+        val view = ViewableInterpretation(interp)
+
+        // When asking for the conditions of that assignment
+        val result = view.conditionsForAssignment(assignment)
+
+        // Then the condition texts are returned
+        result shouldBe listOf("Glucose contains \"12.0\"")
+    }
+
+    @Test
+    fun `conditionsForAssignment returns empty list for a non-existent assignment`() {
+        // Given a viewable interpretation with no assignments
+        val view = ViewableInterpretation(interp)
+        val assignment = AssignValue(Attribute(0, "X", AttributeKind.DERIVED), Literal("y"))
+
+        // When asking for conditions of a non-existent assignment
+        val result = view.conditionsForAssignment(assignment)
+
+        // Then an empty list is returned
+        result shouldBe emptyList()
     }
 
     private fun containsText(attribute: Attribute, match: String) = containsText(conditionId++, attribute, match)
