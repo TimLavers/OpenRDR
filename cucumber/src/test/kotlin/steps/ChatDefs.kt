@@ -282,15 +282,15 @@ class ChatDefs {
     }
 
     @And("I request that the derived value for {string} be removed")
-    fun requestValueBeRemoved(attributeName: String) {
+    fun requestDerivedAttributeBeRemoved(attributeName: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Remove the value for $attributeName")
+        enterChatTextAndSend("Remove $attributeName")
     }
 
-    @And("I request that the derived value {string} be removed")
-    fun requestValueBeRemoved(attributeName: String) {
+    @And("I request that the derived attribute {string} be added with (formula )(value ){string}")
+    fun requestDerivedAttributeBeAdded(attributeName: String, formula: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Remove the value for $attributeName")
+        enterChatTextAndSend("Add derived attribute $attributeName with formula $formula")
     }
 
     @And("I request that the following comment be removed:")
@@ -390,6 +390,12 @@ class ChatDefs {
     @Then("the chat should explain that the condition would create a cycle involving {string} and {string}")
     fun chatExplainsCycle(first: String, second: String) {
         waitForBotTextToContainAnyOf("depend on itself", "cycle", first, second)
+    }
+
+    @Then("the chat should explain that the name {string} already exists")
+    fun chatExplainsNameAlreadyExists(name: String) {
+        waitForBotText(name)
+        waitForBotTextToContainAnyOf("already exists", "already used")
     }
 
     @Then("the capabilities shown include:")

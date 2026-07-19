@@ -1,9 +1,9 @@
 Feature: Derived attribute
   A case has derived attribute values assigned by the KB, a collapsible
-"Derived values" panel displays each derived attribute name and its value.
-Hovering over any part of a derived attribute row shows a tooltip with the
-formula (when it is not just the displayed value) and the conditions that
-assigned the value. The panel is hidden when there are no derived values.
+  "Derived values" panel displays each derived attribute name and its value.
+  Hovering over any part of a derived attribute row shows a tooltip with the
+  formula (when it is not just the displayed value) and the conditions that
+  assigned the value. The panel is hidden when there are no derived values.
 
   Scenario: The derived values panel shows attribute name, value and condition
     Given case Fermi is provided having data:
@@ -35,8 +35,7 @@ assigned the value. The panel is hidden when there are no derived values.
     And I select the case Fermi
     Then the derived values panel should be hidden
 
-  @single
-  Scenario: The user should be prevented from creating a derived attribute with the same name as an existing attribute
+  Scenario: The user should be prevented from creating a derived attribute with the same name as an existing derived attribute
     Given case Fermi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
       | Height    | 1.72  |     | 2.5  | m     |
@@ -45,10 +44,19 @@ assigned the value. The panel is hidden when there are no derived values.
       | Height is in case |
     And I start the client application
     And I select the case Fermi
-    When I request that the derived value for "bmi" be removed
-    Then the UI should show the derived value "BMI" as "21.97"
-    And the formula showing for the derived value is "Weight/Height**2"
-    And pause
+    When I request that the derived attribute "bmi" be added with formula "weight/height**2"
+    Then the chat should explain that the name "BMI" already exists
+
+  @single
+  Scenario: The user should be prevented from creating a derived attribute with the same name as an existing external attribute
+    Given case Fermi is provided with the following values, reference ranges and units:
+      | Attribute | Value | Low | High | Units |
+      | Height    | 1.72  |     | 2.5  | m     |
+      | Weight    | 65    |     | 100  | kg    |
+    And I start the client application
+    And I select the case Fermi
+    When I request that the derived attribute "height" be added with value "1.5"
+    Then the chat should explain that the name "height" already exists
 
 
 
