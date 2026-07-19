@@ -27,6 +27,11 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
      * if it does not exist. If an attribute with the name exists but has a
      * different kind, an exception is thrown: an attribute's kind is fixed
      * at creation.
+     *
+     * KB-assigned attributes (derived and comment) are also rejected if their
+     * name matches an existing attribute name ignoring case, so that users
+     * cannot define a derived attribute whose name differs only in case from
+     * one that already exists.
      */
     fun getOrCreate(name: String, kind: AttributeKind): Attribute {
         val existing = nameToAttribute[name]
@@ -35,6 +40,14 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
                 "An attribute with name $name already exists with kind ${existing.kind}, not $kind."
             }
             return existing
+        }
+        if (kind.isAssignedByKB()) {
+            val conflicting = nameToAttribute.entries
+                .find { it.key.equals(name, ignoreCase = true) }
+                ?.value
+            if (conflicting != null) {
+                error("An attribute with name \"${conflicting.name}\" already exists. Choose a different name.")
+            }
         }
         return nameToAttribute.computeIfAbsent(name) {
             attributeStore.create(name, kind)

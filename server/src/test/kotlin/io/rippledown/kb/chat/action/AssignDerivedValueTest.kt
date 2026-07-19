@@ -8,6 +8,8 @@ import io.mockk.mockk
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
@@ -96,6 +98,22 @@ class AssignDerivedValueTest {
 
         //Then
         response.text shouldBe "The name \"Glucose\" is already used by an externally supplied attribute. Please choose a different name."
+        coVerify(exactly = 0) { modelResponder.response(any<String>()) }
+    }
+
+    @Test
+    fun `should refuse to assign a derived value when the name already exists ignoring case`() = runTest {
+        //Given
+        val action = AssignDerivedValue("BMI", "weight / (height * height)")
+        every { ruleService.isRuleSessionActive() } returns false
+        every { ruleService.attributeForName("BMI") } returns Attribute(1, "bmi", AttributeKind.DERIVED)
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        response.text shouldBe "A derived attribute named \"bmi\" already exists. Use Replace if you want to change its value."
+        coVerify(exactly = 0) { ruleService.startRuleSessionToAssignValue(any(), any(), any()) }
         coVerify(exactly = 0) { modelResponder.response(any<String>()) }
     }
 }

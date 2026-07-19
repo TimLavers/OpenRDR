@@ -176,6 +176,30 @@ class AttributeManagerTest {
     }
 
     @Test
+    fun `getOrCreate with a kind rejects a name that differs only in case from an existing derived attribute`() {
+        // Given a derived attribute
+        attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When the same name with different case is requested for a derived attribute
+        // Then the request is rejected
+        shouldThrow<IllegalStateException> {
+            attributeManager.getOrCreate("bmi", AttributeKind.DERIVED)
+        }.message shouldBe "An attribute with name \"BMI\" already exists. Choose a different name."
+    }
+
+    @Test
+    fun `getOrCreate with a kind rejects a derived attribute name that matches an external attribute ignoring case`() {
+        // Given an external attribute
+        attributeManager.getOrCreate("Glucose")
+
+        // When a derived attribute with the same name ignoring case is requested
+        // Then the request is rejected
+        shouldThrow<IllegalStateException> {
+            attributeManager.getOrCreate("glucose", AttributeKind.DERIVED)
+        }.message shouldBe "An attribute with name \"Glucose\" already exists. Choose a different name."
+    }
+
+    @Test
     fun `getOrCreate without a kind returns an existing attribute regardless of its kind`() {
         // Given a derived attribute
         val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)

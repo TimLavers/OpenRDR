@@ -3,6 +3,7 @@ package io.rippledown.kb.chat.action
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
@@ -19,6 +20,16 @@ class AssignDerivedValue(
             return ChatResponse(RULE_SESSION_ALREADY_ACTIVE_ERROR)
         }
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
+
+        val existingAttribute = ruleService.attributeForName(attributeName)
+        if (existingAttribute != null && existingAttribute.kind != AttributeKind.EXTERNAL) {
+            if (existingAttribute.name.equals(attributeName, ignoreCase = true)) {
+                return ChatResponse(
+                    "A derived attribute named \"${existingAttribute.name}\" already exists. " +
+                            "Use Replace if you want to change its value."
+                )
+            }
+        }
 
         return try {
             val cornerstoneStatus = ruleService.startRuleSessionToAssignValue(

@@ -88,8 +88,10 @@ flow ("Defining the reasons for report change" and cornerstone handling).
 
 ## Step 5: Handle server refusals
 
-The server may refuse the request for one of two reasons:
+The server may refuse the request for one of three reasons:
 
+- The attribute name is already used by another attribute (case-insensitive). Relay the server's message verbatim and
+  ask the user to pick a different name.
 - The attribute name is already used by an externally supplied case attribute. Relay the server's message verbatim and
   ask the user to pick a different name.
 - The value expression would create a dependency cycle (e.g. assigning BMI the value `BMI * 2`). Relay the message
