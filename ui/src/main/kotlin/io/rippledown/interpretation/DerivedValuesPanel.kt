@@ -103,6 +103,7 @@ internal fun DerivedValueRow(
             Text(
                 text = info.name,
                 fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
                 color = Color.DarkGray,
                 modifier = Modifier
                     .weight(columnWidths.attributeColumnWeight)

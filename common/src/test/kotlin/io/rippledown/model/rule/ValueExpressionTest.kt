@@ -227,6 +227,28 @@ internal class ValueExpressionTest {
     }
 
     @Test
+    fun `should parse double asterisk 2 as exponentiation to the power of 2`() {
+        // When a formula uses ** for exponentiation
+        val parsed = parseValueExpression("weight / height ** 2", attributeFor) as Formula
+
+        // Then ** is interpreted as squared
+        parsed.evaluate(case(weight to "93.0", height to "2.0")) shouldBe "23.25"
+        parsed.referencedAttributes() shouldBe setOf(weight, height)
+        parsed.asText() shouldBe "weight / height ** 2"
+    }
+
+    @Test
+    fun `should parse double asterisk 3 as exponentiation to the power of 3`() {
+        // When a formula uses ** for exponentiation
+        val parsed = parseValueExpression("weight ** 3", attributeFor) as Formula
+
+        // Then ** is interpreted as squared
+        parsed.evaluate(case(weight to "2")) shouldBe "8"
+        parsed.referencedAttributes() shouldBe setOf(weight)
+        parsed.asText() shouldBe "weight ** 3"
+    }
+
+    @Test
     fun `attribute names containing spaces parse in formulas`() {
         // When a formula referencing "Risk score" is parsed
         val parsed = parseValueExpression("Risk score + 1", attributeFor) as Formula

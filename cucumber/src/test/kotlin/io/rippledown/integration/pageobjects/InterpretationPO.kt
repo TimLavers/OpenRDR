@@ -215,7 +215,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForDerivedValueFormula(attributeName: String, formula: String) {
-        val normalizedExpected = formula.filter { !it.isWhitespace() }
+        val normalizedExpected = formula.filter { !it.isWhitespace() }.replace("**", "")
         waitUntilAsserted {
             movePointerOverDerivedValueName(attributeName)
             val ctx = execute<AccessibleContext?> {

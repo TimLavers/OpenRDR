@@ -127,6 +127,9 @@ enum class Operator(val symbol: String, val precedence: Int) {
     },
     DIVIDE("/", 2) {
         override fun apply(left: Double, right: Double) = left / right
+    },
+    POWER("**", 3) {
+        override fun apply(left: Double, right: Double) = Math.pow(left, right)
     };
 
     abstract fun apply(left: Double, right: Double): Double
@@ -186,15 +189,28 @@ class FormulaParser(private val attributeFor: (String) -> Attribute?) {
             if (token.isNotEmpty()) tokens.add(token)
             current.clear()
         }
-        text.forEach {
-            when (it) {
-                '+', '-', '*', '/', '(', ')' -> {
+        var i = 0
+        while (i < text.length) {
+            val c = text[i]
+            when (c) {
+                '+', '-', '/', '(', ')' -> {
                     flush()
-                    tokens.add(it.toString())
+                    tokens.add(c.toString())
                 }
 
-                else -> current.append(it)
+                '*' -> {
+                    flush()
+                    if (i + 1 < text.length && text[i + 1] == '*') {
+                        tokens.add("**")
+                        i++
+                    } else {
+                        tokens.add("*")
+                    }
+                }
+
+                else -> current.append(c)
             }
+            i++
         }
         flush()
         return tokens.ifEmpty { null }

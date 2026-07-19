@@ -7,7 +7,8 @@ import io.rippledown.model.Attribute
  *
  * Parses the grammar:
  *   expression = term { ('+' | '-') term }
- *   term       = factor { ('*' | '/') factor }
+ *   term       = power { ('*' | '/') power }
+ *   power      = factor { '**' power } | factor
  *   factor     = number | attribute | '(' expression ')'
  *
  * Returns null if the token stream is not a well-formed formula or if an
@@ -35,11 +36,21 @@ internal class TokenParser(
     }
 
     private fun parseTerm(): Expr? {
-        var left = parseFactor() ?: return null
+        var left = parsePower() ?: return null
         while (peek() == "*" || peek() == "/") {
             val operator = if (next() == "*") Operator.TIMES else Operator.DIVIDE
-            val right = parseFactor() ?: return null
+            val right = parsePower() ?: return null
             left = Binary(operator, left, right)
+        }
+        return left
+    }
+
+    private fun parsePower(): Expr? {
+        val left = parseFactor() ?: return null
+        if (peek() == "**") {
+            next()
+            val right = parsePower() ?: return null
+            return Binary(Operator.POWER, left, right)
         }
         return left
     }

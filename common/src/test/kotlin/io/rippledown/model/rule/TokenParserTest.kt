@@ -61,6 +61,38 @@ class TokenParserTest {
     }
 
     @Test
+    fun `parses exponentiation`() {
+        parse("2", "**", "3") shouldBe Binary(Operator.POWER, Num(2.0), Num(3.0))
+    }
+
+    @Test
+    fun `exponentiation is right-associative`() {
+        parse("2", "**", "3", "**", "2") shouldBe Binary(
+            Operator.POWER,
+            Num(2.0),
+            Binary(Operator.POWER, Num(3.0), Num(2.0))
+        )
+    }
+
+    @Test
+    fun `exponentiation has higher precedence than multiplication`() {
+        parse("2", "*", "3", "**", "2") shouldBe Binary(
+            Operator.TIMES,
+            Num(2.0),
+            Binary(Operator.POWER, Num(3.0), Num(2.0))
+        )
+    }
+
+    @Test
+    fun `exponentiation has higher precedence than division`() {
+        parse("8", "/", "2", "**", "2") shouldBe Binary(
+            Operator.DIVIDE,
+            Num(8.0),
+            Binary(Operator.POWER, Num(2.0), Num(2.0))
+        )
+    }
+
+    @Test
     fun `multiplication has higher precedence than addition`() {
         parse("1", "+", "2", "*", "3") shouldBe Binary(
             Operator.PLUS,

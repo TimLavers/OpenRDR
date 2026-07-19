@@ -9,6 +9,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.unit.em
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DERIVED_VALUE_CONDITIONS_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
@@ -82,6 +84,31 @@ class DerivedValueTooltipTest {
                 label = DERIVED_VALUE_CONDITIONS_PREFIX,
                 substring = true
             ).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `formula exponent is rendered as a superscript`() = runTest {
+        val info = DerivedValueInfo(
+            name = "BMI",
+            value = "25.3",
+            formula = "Weight / Height ** 2",
+            conditions = listOf("Height is high")
+        )
+
+        with(composeTestRule) {
+            setContent { DerivedValueTooltip(info) }
+
+            val node = onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}")
+                .fetchSemanticsNode()
+            val annotated = node.config.getOrNull(SemanticsProperties.Text)!!.first()
+
+            annotated.text shouldBe "Weight / Height 2"
+            val superscript = annotated.spanStyles.first { it.item.baselineShift == BaselineShift.Superscript }
+            annotated.text.substring(superscript.start, superscript.end) shouldBe "2"
+            superscript.item.fontSize shouldBe 0.85.em
+            superscript.item.color shouldBe Color.Gray
+            superscript.item.fontStyle shouldBe FontStyle.Italic
         }
     }
 
