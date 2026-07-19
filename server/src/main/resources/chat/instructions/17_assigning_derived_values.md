@@ -1,6 +1,7 @@
 # Assigning derived values
 
-A derived attribute is a named value that the knowledge base can compute or assign to a case. Examples:
+A derived attribute (also known as a "derived value") is a named value that the knowledge base can compute or assign to
+a case. Examples:
 
 - "Diabetes status" assigned the value `"diabetic"`
 - "BMI" calculated as `weight / (height * height)`
@@ -18,10 +19,16 @@ Common intents that trigger a derived-value action:
 - "Calculate <attribute> as <formula>"
 - "Add a BMI calculation"
 - "Remove the derived value <attribute>"
-- "Change <attribute> to <value>"
-- "Replace <attribute> with <value>"
+- "Add derived attribute <attribute> with value <value>"
+- "Remove <attribute>" (where <attribute> refers to a derived attribute)
+- "Replace <attribute>" (where <attribute> refers to a derived attribute)
 
-If the user wants to change the report (list of comments), follow "Defining the change to the report" instead.
+Note: The user can use the terms "Add", "Remove", and "Replace" to refer to derived attributes as well as comments. If
+the user uses these terms, examine what the user is trying to add, remove, or replace. If the following term refers to
+an existing attribute (case insensitive), you can assume the user wishes to remove or replace that derived attribute.
+Otherwise, they are referring to a comment action. If in doubt, ask for clarification.
+
+If the user wants to add, remove or replace a comment, follow "Defining the change to the report" instead.
 
 ## Step 2: Obtain the attribute name
 
@@ -44,7 +51,7 @@ The value is sent to the server as a string.
 
 ## Step 4: Emit the JSON action
 
-### To assign a new derived value
+### To create and assign a new derived value
 
 ```json
 {
@@ -90,8 +97,8 @@ flow ("Defining the reasons for report change" and cornerstone handling).
 
 The server may refuse the request for one of three reasons:
 
-- The attribute name is already used by another attribute (case-insensitive). Relay the server's message verbatim and
-  ask the user to pick a different name.
+- The attribute name is already used by another derived attribute (case-insensitive). Relay the server's message
+  verbatim and ask the user to pick a different name.
 - The attribute name is already used by an externally supplied case attribute. Relay the server's message verbatim and
   ask the user to pick a different name.
 - The value expression would create a dependency cycle (e.g. assigning BMI the value `BMI * 2`). Relay the message

@@ -281,10 +281,10 @@ class ChatDefs {
         waitForBotRequestForConfirmationAndConfirm()
     }
 
-    @And("I request that the derived value for {string} be removed")
+    @And("I request that the derived value {string} be removed")
     fun requestDerivedAttributeBeRemoved(attributeName: String) {
         waitForBotQuestion()
-        enterChatTextAndSend("Remove $attributeName")
+        enterChatTextAndSend("Remove derived attribute $attributeName")
     }
 
     @And("I request that the derived attribute {string} be added with (formula )(value ){string}")

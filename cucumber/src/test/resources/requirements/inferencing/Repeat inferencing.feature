@@ -87,7 +87,7 @@ Feature: Repeat inferencing via derived attributes.
     And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Beta" with conditions:
       | Alpha is in case |
     And I start the client application
-    When I request that the derived value for "alpha" be removed
+    When I request that the derived value "alpha" be removed
     Then none of the suggestions should contain any of the following terms:
       | Alpha |
       | Beta  |
@@ -99,7 +99,7 @@ Feature: Repeat inferencing via derived attributes.
     And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Beta" with conditions:
       | Alpha is in case |
     And I start the client application
-    And I request that the derived value for "alpha" be removed
+    And I request that the derived value "alpha" be removed
     When I provide the following reason:
       | Beta is in case |
     Then the chat should explain that the condition would create a cycle involving "Alpha" and "Beta"
