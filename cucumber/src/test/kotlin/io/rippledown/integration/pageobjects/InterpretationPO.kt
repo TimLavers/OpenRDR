@@ -5,10 +5,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.findComposeDialogThatIsShowing
-import io.rippledown.integration.utils.findLabelByRenderedText
+import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -218,12 +215,15 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForDerivedValueFormula(attributeName: String, formula: String) {
+        val normalizedExpected = formula.filter { !it.isWhitespace() }
         waitUntilAsserted {
             movePointerOverDerivedValueName(attributeName)
             val ctx = execute<AccessibleContext?> {
-                contextProvider().find("$DERIVED_VALUE_FORMULA_PREFIX$formula")
+                contextProvider().find(DERIVED_VALUE_FORMULA_PREFIX)
             }
             ctx shouldNotBe null
+            val actual = execute<String> { renderedText(ctx!!) }
+            actual.filter { !it.isWhitespace() } shouldBe normalizedExpected
         }
     }
 

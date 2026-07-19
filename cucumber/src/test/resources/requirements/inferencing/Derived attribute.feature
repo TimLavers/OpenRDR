@@ -1,9 +1,12 @@
+@single
+
 Feature: Derived attribute
 When a case has derived attribute values assigned by the KB, a collapsible
 "Derived values" panel displays each derived attribute name and its value.
 Hovering over any part of a derived attribute row shows a tooltip with the
 formula (when it is not just the displayed value) and the conditions that
 assigned the value. The panel is hidden when there are no derived values.
+
 
   Scenario: The derived values panel shows attribute name, value and condition
     Given case Fermi is provided having data:
@@ -16,7 +19,6 @@ assigned the value. The panel is hidden when there are no derived values.
     And the UI should show the following conditions for the derived value "Diabetes status":
       | Glucose ≥ 11.0 |
 
-  @single
   Scenario: The derived values panel shows attribute name,formula and value
     Given case Fermi is provided having data:
       | Height | 172 |
@@ -26,6 +28,7 @@ assigned the value. The panel is hidden when there are no derived values.
       | Height is in case |
     When I select the case Fermi
     Then the UI should show the derived value "BMI" as "21.97"
+    And the formula showing for the derived value is "Weight*10000/(Height*Height)"
 
   Scenario: The derived values panel is hidden when there are no derived values
     Given case Fermi is provided having data:

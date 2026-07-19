@@ -5,8 +5,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.DERIVED_VALUE_CONDITIONS_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
@@ -17,7 +21,7 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo) {
     Column {
         if (!info.formula.isLiteralValue(info.value)) {
             Text(
-                text = info.formula,
+                text = formulaAnnotatedString(info.formula),
                 modifier = Modifier.padding(4.dp)
                     .semantics { contentDescription = "$DERIVED_VALUE_FORMULA_PREFIX${info.formula}" }
             )
@@ -32,4 +36,10 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo) {
     }
 }
 
+internal fun formulaAnnotatedString(formula: String) = buildAnnotatedString {
+    append(formula)
+    addStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Color.Gray), 0, length)
+}
+
 private fun String.isLiteralValue(value: String) = this == "\"$value\""
+

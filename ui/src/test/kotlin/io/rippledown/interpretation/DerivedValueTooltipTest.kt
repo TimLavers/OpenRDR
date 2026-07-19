@@ -1,10 +1,15 @@
 package io.rippledown.interpretation
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.text.font.FontStyle
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DERIVED_VALUE_CONDITIONS_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
@@ -60,7 +65,7 @@ class DerivedValueTooltipTest {
     }
 
     @Test
-    fun `shows formula only when there are no conditions`() = runTest {
+    fun `shows formula even if there are no conditions`() = runTest {
         val info = DerivedValueInfo(
             name = "Ratio",
             value = "2",
@@ -77,6 +82,32 @@ class DerivedValueTooltipTest {
                 label = DERIVED_VALUE_CONDITIONS_PREFIX,
                 substring = true
             ).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `formula text is italic and grey`() = runTest {
+        val info = DerivedValueInfo(
+            name = "BMI",
+            value = "25.3",
+            formula = "Weight / (Height * Height)",
+            conditions = listOf("Weight is high")
+        )
+
+        with(composeTestRule) {
+            setContent { DerivedValueTooltip(info) }
+
+            val node = onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}")
+                .fetchSemanticsNode()
+            val annotated = node.config.getOrNull(SemanticsProperties.Text)!!.first()
+
+            annotated.text shouldBe info.formula
+            annotated.spanStyles.size shouldBe 1
+            val span = annotated.spanStyles[0]
+            span.start shouldBe 0
+            span.end shouldBe info.formula.length
+            span.item.fontStyle shouldBe FontStyle.Italic
+            span.item.color shouldBe Color.Gray
         }
     }
 }

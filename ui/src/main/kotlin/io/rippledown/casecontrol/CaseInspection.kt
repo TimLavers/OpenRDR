@@ -142,7 +142,8 @@ fun CaseInspection(
                     )
                 }
                 DerivedValuesPanel(
-                    derivedValues = case.derivedValues()
+                    derivedValues = case.derivedValues(),
+                    columnWidths = columnWidths
                 )
                 InterpretationView(
                     interpretation = case.viewableInterpretation,

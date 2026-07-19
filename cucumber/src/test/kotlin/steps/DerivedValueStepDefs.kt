@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 
 class DerivedValueStepDefs {
 
+    private var lastDerivedValueName: String? = null
+
     @Then("the derived value {string} should be {string}")
     fun derivedValueShouldBe(attributeName: String, expectedValue: String) {
         val actual = restClient().derivedValueFor(currentCaseName(), attributeName)
@@ -19,11 +21,13 @@ class DerivedValueStepDefs {
 
     @Then("the UI should show the derived value {string} as {string}")
     fun uiShouldShowDerivedValue(attributeName: String, expectedValue: String) {
+        lastDerivedValueName = attributeName
         interpretationViewPO().waitForDerivedValueToBeShown(attributeName, expectedValue)
     }
 
-    @Then("the UI should show the formula {string} for the derived value {string}")
-    fun uiShouldShowDerivedValueFormula(formula: String, attributeName: String) {
+    @Then("the formula showing for the derived value is {string}")
+    fun formulaShowingForDerivedValue(formula: String) {
+        val attributeName = lastDerivedValueName ?: error("No derived value has been checked in this scenario")
         interpretationViewPO().waitForDerivedValueFormula(attributeName, formula)
     }
 

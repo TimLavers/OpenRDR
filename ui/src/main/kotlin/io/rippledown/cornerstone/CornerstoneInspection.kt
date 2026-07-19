@@ -107,7 +107,8 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0, fi
                     )
                 }
                 DerivedValuesPanel(
-                    derivedValues = case.derivedValues()
+                    derivedValues = case.derivedValues(),
+                    columnWidths = columnWidths
                 )
                 OutlinedCard(
                     modifier = Modifier.padding(vertical = 10.dp),

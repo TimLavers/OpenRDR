@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.DERIVED_VALUES_PANEL
 import io.rippledown.constants.interpretation.DERIVED_VALUES_TOGGLE
 import io.rippledown.constants.interpretation.DERIVED_VALUE_NAME_PREFIX
@@ -37,7 +38,8 @@ import io.rippledown.model.caseview.DerivedValueInfo
  */
 @Composable
 fun DerivedValuesPanel(
-    derivedValues: List<DerivedValueInfo>
+    derivedValues: List<DerivedValueInfo>,
+    columnWidths: ColumnWidths = ColumnWidths(1)
 ) {
     if (derivedValues.isEmpty()) return
 
@@ -72,9 +74,9 @@ fun DerivedValuesPanel(
                     containerColor = Color.White
                 )
             ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp, vertical = 8.dp)) {
                     derivedValues.forEach { info ->
-                        DerivedValueRow(info)
+                        DerivedValueRow(info, columnWidths)
                     }
                 }
             }
@@ -83,12 +85,15 @@ fun DerivedValuesPanel(
 }
 
 @Composable
-internal fun DerivedValueRow(info: DerivedValueInfo) {
+internal fun DerivedValueRow(
+    info: DerivedValueInfo,
+    columnWidths: ColumnWidths = ColumnWidths(1)
+) {
     TooltipArea(
         tooltip = { DerivedValueTooltip(info) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp)
+            .padding(2.dp)
             .semantics { contentDescription = "$DERIVED_VALUE_ROW_PREFIX${info.name}" }
     ) {
         Row(
@@ -100,13 +105,20 @@ internal fun DerivedValueRow(info: DerivedValueInfo) {
                 fontWeight = FontWeight.Bold,
                 color = Color.DarkGray,
                 modifier = Modifier
-                    .padding(end = 8.dp)
+                    .weight(columnWidths.attributeColumnWeight)
+                    .padding(end = 12.dp)
                     .semantics { contentDescription = "$DERIVED_VALUE_NAME_PREFIX${info.name}" }
             )
             Text(
                 text = info.value,
                 fontSize = 13.sp,
-                color = Color.Black
+                color = Color.Black,
+                modifier = Modifier.weight(columnWidths.scrollableAreaWeight())
+            )
+            Spacer(
+                modifier = Modifier.weight(
+                    1f - columnWidths.attributeColumnWeight - columnWidths.scrollableAreaWeight()
+                )
             )
         }
     }
