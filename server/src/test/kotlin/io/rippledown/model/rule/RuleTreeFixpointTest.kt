@@ -189,7 +189,7 @@ internal class RuleTreeFixpointTest {
         val materialised = tree.materialise(case)
 
         // Then the computed value is assigned and the dependent rule fired
-        materialised.latestValue(bmi) shouldBe "28.7037037"
+        materialised.latestValue(bmi) shouldBe "28.7"
         case.interpretation.conclusions() shouldBe setOf(elevated)
     }
 

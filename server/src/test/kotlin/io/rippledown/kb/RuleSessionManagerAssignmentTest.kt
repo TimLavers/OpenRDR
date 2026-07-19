@@ -71,13 +71,35 @@ class RuleSessionManagerAssignmentTest {
             build("Case")
         }
         (expression is Formula) shouldBe true
-        expression.evaluate(case) shouldBe "28.7037037"
+        expression.evaluate(case) shouldBe "28.7"
     }
 
     @Test
     fun `text that is not arithmetic over attributes is a literal`() {
         rsm.valueExpressionFor("diabetic") shouldBe Literal("diabetic")
         rsm.valueExpressionFor("not a formula") shouldBe Literal("not a formula")
+    }
+
+    @Test
+    fun `an arithmetic expression resolves attribute names case-insensitively`() {
+        // Given existing attributes with capitalised names
+        val weight = kb.attributeManager.getOrCreate("Weight")
+        val height = kb.attributeManager.getOrCreate("Height")
+
+        // When the expression uses lower-case names
+        val expression = rsm.valueExpressionFor("weight / (height * height)")
+
+        // Then it is a formula that references the existing Weight and Height attributes
+        (expression is Formula) shouldBe true
+        expression.referencedAttributes() shouldBe setOf(weight, height)
+
+        // And evaluates correctly against a case with those attributes
+        val case = with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "93.0")
+            addValue(height, defaultDate, "1.8")
+            build("Case")
+        }
+        expression.evaluate(case) shouldBe "28.7"
     }
 
     @Test

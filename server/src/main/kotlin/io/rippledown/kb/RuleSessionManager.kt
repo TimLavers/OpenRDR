@@ -189,7 +189,12 @@ class RuleSessionManager(
         // created so the formula can be evaluated against future cases.
         val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()]"""))
         val parsed = if (hasArithmeticOperators) {
-            FormulaParser { name -> kb.attributeManager.getOrCreate(name) }.parse(trimmed)
+            val attributeFor: (String) -> Attribute = { name ->
+                kb.attributeManager.all()
+                    .firstOrNull { it.name.equals(name, ignoreCase = true) }
+                    ?: kb.attributeManager.getOrCreate(name)
+            }
+            FormulaParser(attributeFor).parse(trimmed)
         } else null
         return if (parsed != null) Formula(parsed) else Literal(trimmed)
     }

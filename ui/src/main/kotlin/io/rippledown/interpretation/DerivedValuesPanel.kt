@@ -5,16 +5,12 @@ package io.rippledown.interpretation
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,13 +21,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.rippledown.constants.interpretation.*
+import io.rippledown.constants.interpretation.DERIVED_VALUES_PANEL
+import io.rippledown.constants.interpretation.DERIVED_VALUES_TOGGLE
+import io.rippledown.constants.interpretation.DERIVED_VALUE_NAME_PREFIX
+import io.rippledown.constants.interpretation.DERIVED_VALUE_ROW_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
 
 /**
  * A collapsible panel that lists non-comment derived attribute values as
- * name/value pairs. Hovering over a derived attribute name shows a tooltip
- * with the formula and the conditions that assigned the value.
+ * name/value pairs. Hovering over any part of a derived attribute row
+ * (name or value) shows a tooltip with the formula and the conditions that
+ * assigned the value. The value itself is not repeated in the tooltip.
  *
  * The panel is hidden entirely when [derivedValues] is empty.
  */
@@ -83,51 +83,30 @@ fun DerivedValuesPanel(
 }
 
 @Composable
-private fun DerivedValueRow(info: DerivedValueInfo) {
-    val nameInteractionSource = remember { MutableInteractionSource() }
-    val isNameHovered by nameInteractionSource.collectIsHoveredAsState()
-
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
-            .semantics { contentDescription = "$DERIVED_VALUE_ROW_PREFIX${info.name}" },
-        verticalAlignment = Alignment.CenterVertically
+internal fun DerivedValueRow(info: DerivedValueInfo) {
+    TooltipArea(
+        tooltip = { DerivedValueTooltip(info) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .semantics { contentDescription = "$DERIVED_VALUE_ROW_PREFIX${info.name}" }
     ) {
-        TooltipArea(
-            modifier = Modifier
-                .hoverable(nameInteractionSource)
-                .semantics { contentDescription = "$DERIVED_VALUE_NAME_PREFIX${info.name}" },
-            tooltip = {
-                DerivedValueTooltip(info)
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = info.name,
                 fontWeight = FontWeight.Bold,
-                color = if (isNameHovered) MaterialTheme.colorScheme.primary else Color.DarkGray,
-                modifier = Modifier.padding(end = 8.dp)
+                color = Color.DarkGray,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .semantics { contentDescription = "$DERIVED_VALUE_NAME_PREFIX${info.name}" }
             )
-        }
-        Text(
-            text = info.value,
-            fontSize = 13.sp,
-            color = Color.Black
-        )
-    }
-}
-
-@Composable
-private fun DerivedValueTooltip(info: DerivedValueInfo) {
-    Column {
-        Text(
-            text = info.formula,
-            modifier = Modifier.padding(4.dp)
-                .semantics { contentDescription = "$DERIVED_VALUE_FORMULA_PREFIX${info.formula}" }
-        )
-        info.conditions.forEach { condition ->
             Text(
-                text = condition,
-                modifier = Modifier.padding(4.dp)
-                    .semantics { contentDescription = "$DERIVED_VALUE_CONDITIONS_PREFIX$condition" }
+                text = info.value,
+                fontSize = 13.sp,
+                color = Color.Black
             )
         }
     }

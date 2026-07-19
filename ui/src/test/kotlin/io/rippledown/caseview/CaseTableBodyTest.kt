@@ -8,6 +8,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
@@ -278,5 +279,32 @@ class CaseTableBodyTest {
 
         // Then the listener is never called
         listenerCalled shouldBe false
+    }
+
+    @Test
+    fun `derived and comment attributes are not rendered in the case table body`() = runTest {
+        // Given a case whose attributes include external, derived and comment kinds
+        val external = Attribute(10, "TSH")
+        val derived = Attribute(11, "Derived TSH", AttributeKind.DERIVED)
+        val comment = Attribute(12, "Notes", AttributeKind.COMMENT)
+        val builder = RDRCaseBuilder()
+        builder.addValue(external, defaultDate, "2.5")
+        builder.addValue(derived, defaultDate, "calculated")
+        builder.addValue(comment, defaultDate, "note")
+        val case = builder.build("CaseWithDerived")
+        val withDerived = ViewableCase(case, CaseViewProperties(listOf(external, derived, comment)))
+        val columnWidths = ColumnWidths(withDerived.numberOfColumns)
+
+        // When the body is rendered
+        composeTestRule.setContent {
+            CaseTableBody(withDerived, columnWidths)
+        }
+
+        // Then only the external attribute is shown
+        with(composeTestRule) {
+            waitUntilExactlyOneExists(hasText(external.name))
+            onAllNodesWithText(derived.name).assertCountEquals(0)
+            onAllNodesWithText(comment.name).assertCountEquals(0)
+        }
     }
 }

@@ -133,12 +133,19 @@ enum class Operator(val symbol: String, val precedence: Int) {
 }
 
 /**
+ * The default number of significant figures used when displaying a
+ * derived attribute value. Repeated evaluation is deterministic because
+ * the same precision is used on every computation path.
+ */
+internal const val DERIVED_VALUE_SIGNIFICANT_FIGURES = 4
+
+/**
  * Render a numeric value as an assigned value string: whole numbers
- * without a decimal point, others to at most ten significant digits so
- * that repeated evaluation is deterministic.
+ * without a decimal point, others to [DERIVED_VALUE_SIGNIFICANT_FIGURES]
+ * significant digits.
  */
 internal fun Double.toValueString(): String {
-    val rounded = toBigDecimal(MathContext(10)).stripTrailingZeros()
+    val rounded = toBigDecimal(MathContext(DERIVED_VALUE_SIGNIFICANT_FIGURES)).stripTrailingZeros()
     return rounded.toPlainString()
 }
 
@@ -168,9 +175,7 @@ class FormulaParser(private val attributeFor: (String) -> Attribute?) {
 
     fun parse(text: String): Expr? {
         val tokens = tokenize(text) ?: return null
-        val parser = TokenParser(tokens, attributeFor)
-        val expr = parser.parseExpression() ?: return null
-        return if (parser.isAtEnd()) expr else null
+        return TokenParser(tokens, attributeFor).parse()
     }
 
     private fun tokenize(text: String): List<String>? {
@@ -193,48 +198,5 @@ class FormulaParser(private val attributeFor: (String) -> Attribute?) {
         }
         flush()
         return tokens.ifEmpty { null }
-    }
-
-    private class TokenParser(private val tokens: List<String>, private val attributeFor: (String) -> Attribute?) {
-        private var position = 0
-
-        fun isAtEnd() = position == tokens.size
-
-        fun parseExpression(): Expr? {
-            var left = parseTerm() ?: return null
-            while (peek() == "+" || peek() == "-") {
-                val operator = if (next() == "+") Operator.PLUS else Operator.MINUS
-                val right = parseTerm() ?: return null
-                left = Binary(operator, left, right)
-            }
-            return left
-        }
-
-        private fun parseTerm(): Expr? {
-            var left = parseFactor() ?: return null
-            while (peek() == "*" || peek() == "/") {
-                val operator = if (next() == "*") Operator.TIMES else Operator.DIVIDE
-                val right = parseFactor() ?: return null
-                left = Binary(operator, left, right)
-            }
-            return left
-        }
-
-        private fun parseFactor(): Expr? {
-            val token = peek() ?: return null
-            if (token == "(") {
-                next()
-                val expr = parseExpression() ?: return null
-                if (next() != ")") return null
-                return expr
-            }
-            next()
-            token.toDoubleOrNull()?.let { return Num(it) }
-            return attributeFor(token)?.let { AttributeValue(it) }
-        }
-
-        private fun peek() = tokens.getOrNull(position)
-
-        private fun next() = tokens.getOrNull(position++)
     }
 }

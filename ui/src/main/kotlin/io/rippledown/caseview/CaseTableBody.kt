@@ -18,6 +18,7 @@ import io.rippledown.constants.caseview.CASE_VIEW_TABLE
 import io.rippledown.dragdrop.DragDropState
 import io.rippledown.dragdrop.move
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.caseview.ViewableCase
 
 /**
@@ -36,7 +37,11 @@ fun CaseTableBody(
     attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> },
 ) {
     val attributes = remember(viewableCase) {
-        mutableStateListOf<Attribute>().apply { addAll(viewableCase.attributes()) }
+        // Derived and comment attributes have their own panels; do not render
+        // them as rows in the episodic case data table.
+        mutableStateListOf<Attribute>().apply {
+            addAll(viewableCase.attributes().filter { it.kind == AttributeKind.EXTERNAL })
+        }
     }
     // Filter the displayed attribute list without touching the underlying
     // drag-drop source-of-truth list above. Filtering is purely a view
