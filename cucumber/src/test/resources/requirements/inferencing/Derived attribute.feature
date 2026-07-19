@@ -47,7 +47,6 @@ Feature: Derived attribute
     When I request that the derived attribute "bmi" be added with formula "weight/height**2"
     Then the chat should explain that the name "BMI" already exists
 
-  @single
   Scenario: The user should be prevented from creating a derived attribute with the same name as an existing external attribute
     Given case Fermi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
