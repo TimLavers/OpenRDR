@@ -36,8 +36,8 @@ class DerivedValueStepDefs {
         interpretationViewPO().waitForDerivedValueConditions(attributeName, conditions.asList())
     }
 
-    @Then("the derived values panel should be hidden")
-    fun derivedValuesPanelShouldBeHidden() {
+    @Then("the derived attributes panel should be hidden")
+    fun derivedAttributesPanelShouldBeHidden() {
         interpretationViewPO().requireDerivedValuesPanelToBeHidden()
     }
 

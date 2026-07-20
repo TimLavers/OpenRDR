@@ -186,7 +186,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(CONDITION_PREFIX) } shouldHaveSize 0
     }
 
-    // ── Derived values panel ─────────────────────────────────────────────
+    // ── Derived attributes panel ─────────────────────────────────────────────
 
     fun waitForDerivedValueToBeShown(attributeName: String, expectedValue: String) {
         waitUntilAsserted {

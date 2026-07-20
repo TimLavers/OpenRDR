@@ -35,7 +35,7 @@ data class ViewableCase(
     fun latestText() = viewableInterpretation.latestText()
 
     /**
-     * Non-comment derived attribute values for display in the Derived values
+     * Non-comment derived attribute values for display in the Derived attributes
      * panel. Each entry includes the attribute name, the value assigned by the
      * KB for this case, the formula text, and the condition texts from root
      * for the rule that assigned the value (for the tooltip).

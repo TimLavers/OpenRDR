@@ -25,8 +25,7 @@ class AssignDerivedValue(
         if (existingAttribute != null && existingAttribute.kind != AttributeKind.EXTERNAL) {
             if (existingAttribute.name.equals(attributeName, ignoreCase = true)) {
                 return ChatResponse(
-                    "A derived attribute named \"${existingAttribute.name}\" already exists. " +
-                            "Use Replace if you want to change its value."
+                    "A derived attribute named \"${existingAttribute.name}\" already exists.\nPlease choose a different name."
                 )
             }
         }

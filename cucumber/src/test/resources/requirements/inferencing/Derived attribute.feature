@@ -1,11 +1,11 @@
 Feature: Derived attribute
   A case has derived attribute values assigned by the KB, a collapsible
-  "Derived values" panel displays each derived attribute name and its value.
+  "Derived attributes" panel displays each derived attribute name and its value.
   Hovering over any part of a derived attribute row shows a tooltip with the
   formula (when it is not just the displayed value) and the conditions that
-  assigned the value. The panel is hidden when there are no derived values.
+  assigned the value. The panel is hidden when there are no derived attributes.
 
-  Scenario: The derived values panel shows attribute name, value and condition
+  Scenario: The derived attributes panel shows attribute name, value and condition
     Given case Fermi is provided having data:
       | Glucose | 12.0 |
     And I start the client application
@@ -16,7 +16,7 @@ Feature: Derived attribute
     And the UI should show the following conditions for the derived value "Diabetes status":
       | Glucose ≥ 11.0 |
 
-  Scenario: The derived values panel shows attribute name,formula and value
+  Scenario: The derived attributes panel shows attribute name,formula and value
     Given case Fermi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
       | Height    | 1.72  |     | 2.5  | m     |
@@ -28,12 +28,12 @@ Feature: Derived attribute
     Then the UI should show the derived value "BMI" as "21.97"
     And the formula showing for the derived value is "Weight/Height**2"
 
-  Scenario: The derived values panel is hidden when there are no derived values
+  Scenario: The derived attributes panel is hidden when there are no derived attributes
     Given case Fermi is provided having data:
       | Glucose | 5.0 |
     And I start the client application
     And I select the case Fermi
-    Then the derived values panel should be hidden
+    Then the derived attributes panel should be hidden
 
   Scenario: The user should be prevented from creating a derived attribute with the same name as an existing derived attribute
     Given case Fermi is provided with the following values, reference ranges and units:

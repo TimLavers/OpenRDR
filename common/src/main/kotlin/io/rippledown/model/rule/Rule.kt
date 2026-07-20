@@ -34,7 +34,7 @@ open class Rule(
      * stopping rule, which retracts the action of its parent).
      */
     val action: RuleAction?
-        get() = assignment ?: conclusion?.let { GiveConclusion(it) }
+        get() = assignment ?: conclusion?.let { AssignConclusion(it) }
 
     fun summary(): RuleSummary {
         return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot(), assignment)

@@ -58,7 +58,7 @@ fun DerivedValuesPanel(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                text = "Derived values",
+                text = "Derived attributes",
                 color = Color.DarkGray,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,

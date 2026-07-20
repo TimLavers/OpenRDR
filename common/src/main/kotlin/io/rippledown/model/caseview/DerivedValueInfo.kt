@@ -3,7 +3,7 @@ package io.rippledown.model.caseview
 import kotlinx.serialization.Serializable
 
 /**
- * A non-comment derived attribute value shown in the Derived values panel.
+ * A non-comment derived attribute value shown in the Derived attributes panel.
  *
  * @param name The attribute name.
  * @param value The value assigned by the KB for the current case.

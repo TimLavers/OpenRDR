@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * What a rule does when it fires. Two kinds for now:
- * [GiveConclusion] wraps the existing conclusion behaviour, and
+ * [AssignConclusion] wraps the existing conclusion behaviour, and
  * [AssignValue] assigns the result of a [ValueExpression] to a derived
  * attribute. See documentation/design/repeat_inferencing.md.
  */
@@ -15,8 +15,8 @@ import kotlinx.serialization.Serializable
 sealed class RuleAction
 
 @Serializable
-@SerialName("GiveConclusion")
-data class GiveConclusion(val conclusion: Conclusion) : RuleAction()
+@SerialName("AssignConclusion")
+data class AssignConclusion(val conclusion: Conclusion) : RuleAction()
 
 @Serializable
 @SerialName("AssignValue")

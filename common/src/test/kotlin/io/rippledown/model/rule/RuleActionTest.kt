@@ -33,7 +33,7 @@ internal class RuleActionTest {
     @Test
     fun serialization() {
         // Given actions of each kind
-        val give: RuleAction = GiveConclusion(conclusion)
+        val give: RuleAction = AssignConclusion(conclusion)
         val assign: RuleAction = diabetic
 
         // When they are serialized and deserialized
@@ -60,7 +60,7 @@ internal class RuleActionTest {
 
         // Then the actions are as expected
         assigning.action shouldBe diabetic
-        concluding.action shouldBe GiveConclusion(conclusion)
+        concluding.action shouldBe AssignConclusion(conclusion)
         stopping.action.shouldBeNull()
     }
 

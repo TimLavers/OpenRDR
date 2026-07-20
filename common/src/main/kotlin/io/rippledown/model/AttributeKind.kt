@@ -17,7 +17,7 @@ enum class AttributeKind {
     EXTERNAL,
 
     /**
-     * Assigned by the knowledge base, shown in the Derived values panel.
+     * Assigned by the knowledge base, shown in the Derived attributes panel.
      */
     DERIVED,
 
