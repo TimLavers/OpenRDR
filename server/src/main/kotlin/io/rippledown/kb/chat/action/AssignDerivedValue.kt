@@ -25,7 +25,7 @@ class AssignDerivedValue(
         if (existingAttribute != null && existingAttribute.kind != AttributeKind.EXTERNAL) {
             if (existingAttribute.name.equals(attributeName, ignoreCase = true)) {
                 return ChatResponse(
-                    "A derived attribute named \"${existingAttribute.name}\" already exists.\nPlease choose a different name."
+                    nameClashWithExistingDerivedAttributeMessage(attributeName)
                 )
             }
         }
@@ -42,4 +42,11 @@ class AssignDerivedValue(
             ChatResponse(e.message ?: "Could not start derived-value rule session.")
         }
     }
+
 }
+
+fun nameClashWithExistingDerivedAttributeMessage(existingAttributeName: String): String =
+    "A derived attribute named \"${existingAttributeName}\" already exists.\nPlease choose a different name."
+
+fun nameClashWithExistingExternalAttributeMessage(existingAttributeName: String): String =
+    "An externally supplied attribute named \"${existingAttributeName}\" already exists.\nPlease choose a different name."

@@ -42,7 +42,12 @@ class ChatSessionManager(
             chatService = chatService,
             functionCallHandlers = functionCallHandlers
         )
-        chatManager = ChatManager(conversationService, ruleSessionManager, suggestionsBuffer)
+        chatManager = ChatManager(
+            conversationService,
+            ruleSessionManager,
+            suggestionsBuffer,
+            suggestedConditionsHandler
+        )
         return chatManager.startConversation(viewableCase)
     }
 

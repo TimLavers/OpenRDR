@@ -98,8 +98,15 @@ Feature: Repeat inferencing via derived attributes.
     And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Alpha" with no conditions
     And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Beta" with conditions:
       | Alpha is in case |
+    And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Gamma" with conditions:
+      | Beta is in case |
+    And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Delta" with conditions:
+      | Gamma is in case |
     And I start the client application
     And I request that the derived value "alpha" be removed
     When I provide the following reason:
-      | Beta is in case |
-    Then the chat should explain that the condition would create a cycle involving "Alpha" and "Beta"
+      | Gamma is in case |
+    Then the chat should explain that the condition would create a cycle involving the following terms:
+      | Alpha |
+      | Beta  |
+      | Gamma |

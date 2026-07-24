@@ -118,6 +118,11 @@ EXPECTED SIGNATURE: Current
 x is greater than y
 x more than y
 
+EXPECTED PREDICATE: GreaterThan, 4.1
+EXPECTED SIGNATURE: Current
+x is greater than 4.1
+x more than 4.1
+
 EXPECTED PREDICATE: GreaterThanOrEquals, y
 EXPECTED SIGNATURE: Current
 x is greater than or equal to y

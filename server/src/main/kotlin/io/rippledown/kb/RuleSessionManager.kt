@@ -7,6 +7,7 @@ import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -101,7 +102,7 @@ class RuleSessionManager(
     ): CornerstoneStatus {
         val existingAttribute = kb.attributeManager.byName(attributeName)
         if (existingAttribute != null && existingAttribute.kind == AttributeKind.EXTERNAL) {
-            error("The name \"$attributeName\" is already used by an externally supplied attribute. Please choose a different name.")
+            error(nameClashWithExistingExternalAttributeMessage(attributeName))
         }
         val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
         val assignment = AssignValue(attribute, valueExpressionFor(expressionText))

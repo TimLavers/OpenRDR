@@ -382,14 +382,11 @@ class ChatDefs {
         enterChatTextAndSend("What can you help me with? List the things you can do.")
     }
 
-    @When("I request that the value {string} be assigned to the derived attribute {string}")
-    fun requestDerivedValueAssignment(value: String, attributeName: String) {
-        enterChatTextAndSend("Assign value \"$value\" to the derived attribute \"$attributeName\"")
-    }
 
-    @Then("the chat should explain that the condition would create a cycle involving {string} and {string}")
-    fun chatExplainsCycle(first: String, second: String) {
-        waitForBotTextToContainAnyOf("depend on itself", "cycle", first, second)
+    @Then("the chat should explain that the condition would create a cycle involving the following terms:")
+    fun chatExplainsCycle(terms: DataTable) {
+        waitForBotText(*terms.asList().toTypedArray())
+        waitForBotTextToContainAnyOf("cycle", "depend on itself")
     }
 
     @Then("the chat should explain that the name {string} already exists")

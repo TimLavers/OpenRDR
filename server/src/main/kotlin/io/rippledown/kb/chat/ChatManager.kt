@@ -1,8 +1,8 @@
 package io.rippledown.kb.chat
 
 import io.rippledown.chat.ConversationService
-import io.rippledown.constants.chat.ADD_COMMENT
-import io.rippledown.constants.chat.COMMENT_VARIABLE_TIP_KEYWORD
+import io.rippledown.chat.FunctionCallHandler
+import io.rippledown.constants.chat.*
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
@@ -23,6 +23,7 @@ class ChatManager(
     val conversationService: ConversationService,
     val ruleService: RuleService,
     private val suggestionsBuffer: SuggestionsBuffer = SuggestionsBuffer(),
+    private val suggestedConditionsHandler: FunctionCallHandler? = null,
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
@@ -110,7 +111,7 @@ class ChatManager(
         }
         val tip = commentVariableTipFor(actionComment, chatResponse)
         val bufferedSuggestions = suggestionsBuffer.consume()
-        return when {
+        val response = when {
             bufferedSuggestions != null -> ChatResponse(chatResponse.text, bufferedSuggestions, tip)
             !actionComment.suggestions.isNullOrEmpty() -> ChatResponse(
                 chatResponse.text,
@@ -120,6 +121,27 @@ class ChatManager(
 
             else -> chatResponse.copy(tip = tip ?: chatResponse.tip)
         }
+        return ensureSuggestionsAfterStartingRuleSession(actionComment, response)
+    }
+
+    /**
+     * Guarantee that suggested conditions accompany the response when an action has just started a
+     * rule session. The model is instructed to call {@code getSuggestedConditions} immediately after
+     * the session starts, but some models (e.g. Gemini flash-lite) instead go straight to asking the
+     * user for a reason, leaving the user with a question and no suggestions - which stalls the flow.
+     * In that case, populate the suggestions deterministically.
+     */
+    private suspend fun ensureSuggestionsAfterStartingRuleSession(
+        actionComment: ActionComment,
+        response: ChatResponse
+    ): ChatResponse {
+        if (actionComment.action !in SESSION_STARTING_ACTIONS) return response
+        if (response.suggestions.isNotEmpty()) return response
+        val handler = suggestedConditionsHandler ?: return response
+        if (!ruleService.isRuleSessionActive()) return response
+        handler.handle(emptyMap())
+        val suggestions = suggestionsBuffer.consume()
+        return if (suggestions.isNullOrEmpty()) response else response.copy(suggestions = suggestions)
     }
 
     /**
@@ -160,6 +182,17 @@ class ChatManager(
         const val AI_UNAVAILABLE_MESSAGE = "The AI assistant is temporarily unavailable. Please try again later."
         const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
         const val DEFAULT_TIP_EXAMPLE_ATTRIBUTE = "TSH"
+
+        // Actions whose successful execution starts a rule session, after which the user must be shown
+        // suggested conditions.
+        val SESSION_STARTING_ACTIONS = setOf(
+            ADD_COMMENT,
+            REMOVE_COMMENT,
+            REPLACE_COMMENT,
+            ASSIGN_DERIVED_VALUE,
+            REMOVE_DERIVED_VALUE,
+            REPLACE_DERIVED_VALUE,
+        )
         fun commentVariableTip(exampleAttributeName: String) =
             "Tip: you can include a case value in a comment by wrapping an attribute name in " +
                     "$COMMENT_VARIABLE_TIP_KEYWORD, e.g. {$exampleAttributeName}."

@@ -1,11 +1,24 @@
 package steps
 
+import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 
-class DerivedValueStepDefs {
+class DerivedValueStepDefs(val chatDefs: ChatDefs) {
 
     private var lastDerivedValueName: String? = null
+
+    @When("I request that the derived attribute {string} be added with value {string} for reason {string}")
+    fun requestDerivedValueAssignment(attributeName: String, value: String, reason: String) {
+        with(chatDefs) {
+            enterChatTextAndSend("Assign value \"$value\" to the derived attribute \"$attributeName\"")
+            waitForBotSuggestions()
+            enterChatTextAndSend(reason)
+            decline() //no more reasons
+            waitForBotToSayDone()
+        }
+    }
 
     @Then("the derived value {string} should be {string}")
     fun derivedValueShouldBe(attributeName: String, expectedValue: String) {
@@ -19,7 +32,7 @@ class DerivedValueStepDefs {
         actual shouldBe null
     }
 
-    @Then("the UI should show the derived value {string} as {string}")
+    @Then("the UI should show the value for derived attribute {string} as {string}")
     fun uiShouldShowDerivedValue(attributeName: String, expectedValue: String) {
         lastDerivedValueName = attributeName
         interpretationViewPO().waitForDerivedValueToBeShown(attributeName, expectedValue)
@@ -32,7 +45,7 @@ class DerivedValueStepDefs {
     }
 
     @Then("the UI should show the following conditions for the derived value {string}:")
-    fun uiShouldShowDerivedValueConditions(attributeName: String, conditions: io.cucumber.datatable.DataTable) {
+    fun uiShouldShowDerivedValueConditions(attributeName: String, conditions: DataTable) {
         interpretationViewPO().waitForDerivedValueConditions(attributeName, conditions.asList())
     }
 

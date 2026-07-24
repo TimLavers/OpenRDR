@@ -112,7 +112,7 @@ class AssignDerivedValueTest {
         val response = action.doIt(ruleService, currentCase, modelResponder)
 
         //Then
-        response.text shouldBe "A derived attribute named \"bmi\" already exists. Use Replace if you want to change its value."
+        response.text shouldBe nameClashWithExistingDerivedAttributeMessage("BMI")
         coVerify(exactly = 0) { ruleService.startRuleSessionToAssignValue(any(), any(), any()) }
         coVerify(exactly = 0) { modelResponder.response(any<String>()) }
     }
