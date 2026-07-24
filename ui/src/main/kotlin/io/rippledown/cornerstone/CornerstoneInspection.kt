@@ -1,28 +1,31 @@
 package io.rippledown.cornerstone
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.HorizontalScrollbar
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.rippledown.caseview.CaseTableBody
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.caseview.HeaderRow
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
+import io.rippledown.constants.interpretation.COMMENTS_TOGGLE_FOR_CORNERSTONE
 import io.rippledown.decoration.ItalicGrey
 import io.rippledown.interpretation.DerivedValuesPanel
 import io.rippledown.interpretation.ReadonlyInterpretationView
@@ -37,6 +40,7 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0, fi
     val hScrollState = rememberScrollState()
     val hScrollbarAdapter = rememberScrollbarAdapter(hScrollState)
     val multiEpisode = case.dates.size > 1
+    var commentsExpanded by remember(case) { mutableStateOf(true) }
     LaunchedEffect(case) {
         if (multiEpisode) {
             snapshotFlow { hScrollState.maxValue }
@@ -110,17 +114,40 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0, fi
                     derivedValues = case.derivedValues(),
                     columnWidths = columnWidths
                 )
-                OutlinedCard(
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
-                        containerColor = androidx.compose.ui.graphics.Color.White
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .clickable { commentsExpanded = !commentsExpanded }
+                        .semantics { contentDescription = COMMENTS_TOGGLE_FOR_CORNERSTONE }
                 ) {
-                    ReadonlyInterpretationView(
-                        case.viewableInterpretation,
-                        modifier = Modifier.fillMaxWidth(),
-                        handler = object : ReadonlyInterpretationViewHandler {}
+                    Icon(
+                        imageVector = if (commentsExpanded) Icons.Filled.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = Color.DarkGray,
+                        modifier = Modifier.size(18.dp)
                     )
+                    Text(
+                        text = "Comments",
+                        color = Color.DarkGray,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+                if (commentsExpanded) {
+                    OutlinedCard(
+                        modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
+                        colors = androidx.compose.material3.CardDefaults.outlinedCardColors(
+                            containerColor = androidx.compose.ui.graphics.Color.White
+                        )
+                    ) {
+                        ReadonlyInterpretationView(
+                            case.viewableInterpretation,
+                            modifier = Modifier.fillMaxWidth(),
+                            handler = object : ReadonlyInterpretationViewHandler {}
+                        )
+                    }
                 }
             }
         }

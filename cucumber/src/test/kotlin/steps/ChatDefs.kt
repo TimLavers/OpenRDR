@@ -281,6 +281,12 @@ class ChatDefs {
         waitForBotRequestForConfirmationAndConfirm()
     }
 
+    @And("I request that the only comment be removed")
+    fun requestOnlyCommentBeRemovedWithoutConfirmation() {
+        waitForBotQuestion()
+        enterChatTextAndSend("Remove the comment")
+    }
+
     @And("I request that the derived value {string} be removed")
     fun requestDerivedAttributeBeRemoved(attributeName: String) {
         waitForBotQuestion()

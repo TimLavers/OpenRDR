@@ -44,6 +44,8 @@ The current report for the case is a list of comments. For the current case, the
     not ask for confirmation.
   - Remove: e.g., Remove the comment "Go to Bondi." → emit a JSON object with `"action": "{{REMOVE_COMMENT}}"`
     immediately. Do not ask for confirmation.
+  - Remove if there is only one comment and the user requests that it be removed: e.g Remove the comment. → emit a JSON
+    object with `"action": "{{REMOVE_COMMENT}}"` immediately. Do not ask for confirmation.
   - Replace: e.g., Replace the comment "Go to Bondi." by "Go to Manly." → emit a JSON object with
     `"action": "{{REPLACE_COMMENT}}"` immediately.Do not ask for confirmation.
     Note: apostrophes inside the double quotes (like "Let's" or "Don't forget sunscreen.") are part of

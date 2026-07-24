@@ -7,10 +7,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
+import io.rippledown.constants.interpretation.COMMENTS_TOGGLE_FOR_CORNERSTONE
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.constants.interpretation.REPORT_PANEL
 import io.rippledown.constants.interpretation.REPORT_TOGGLE
@@ -111,6 +113,29 @@ class CornerstoneInspectionTest {
                 .assertTextEquals(name)
             onNodeWithContentDescription(CORNERSTONE_ID)
                 .assertTextEquals("$CORNERSTONE_TITLE 1 of 2")
+        }
+    }
+
+    @Test
+    fun `should show the Comments header for a cornerstone`() {
+        with(composeTestRule) {
+            setContent {
+                CornerstoneInspection(case, index = 0, total = 1)
+            }
+            onNodeWithContentDescription(COMMENTS_TOGGLE_FOR_CORNERSTONE).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should collapse the comments when the Comments header is clicked`() {
+        with(composeTestRule) {
+            setContent {
+                CornerstoneInspection(case, index = 0, total = 1)
+            }
+            onNodeWithContentDescription(COMMENTS_TOGGLE_FOR_CORNERSTONE).performClick()
+            waitForIdle()
+            onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE, useUnmergedTree = true)
+                .assertDoesNotExist()
         }
     }
 

@@ -3,6 +3,7 @@ package io.rippledown.constants.interpretation
 const val INTERPRETATION_TEXT_FIELD = "interpretation_text_field"
 const val INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE = "interpretation_text_field_for_cornerstone"
 const val COMMENTS_TOGGLE = "COMMENTS_TOGGLE"
+const val COMMENTS_TOGGLE_FOR_CORNERSTONE = "COMMENTS_TOGGLE_FOR_CORNERSTONE"
 const val DEBOUNCE_WAIT_PERIOD_MILLIS = 1_000L
 
 const val CHANGE_INTERPRETATION_ICON = "CHANGE_INTERPRETATION_BUTTON"
