@@ -34,7 +34,7 @@ class ChatSessionManager(
             SuggestedConditionsHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
         val selectSuggestionHandler = SelectSuggestionHandler(viewableCase.case, ruleSessionManager)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
-            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer),
+            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer, ruleSessionManager),
             GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler,
             SELECT_SUGGESTED_CONDITION to selectSuggestionHandler
         )

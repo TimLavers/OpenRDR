@@ -16,6 +16,7 @@
 ## Step 2. Allow the cornerstone case report to change:
 
 - If the user confirms they want to allow the report change to apply to this cornerstone case, inform the system.
+- The user may confirm by using terms such as "yes" or "allow" or "OK".
 
 ```json
 {
