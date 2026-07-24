@@ -1,10 +1,10 @@
 # Defining the change to the report
 
-The current report for the case is a list of comments. For the current case, the list of comments is as follows:
+For the current case, the list of comments given by rules is as follows:
 
 {{COMMENTS}}
 
-## Step 1: Ask the user if they want to change the report for the case:
+## Step 1: Ask the user if they want to change the comments for the case:
 
 - If there are no comments, ask the user if they want to add a comment.
 - Else, if there is at least one comment, display the comments and ask the user if they want to add,

@@ -4,8 +4,8 @@ There are several types of interactions you will have with the user and the syst
 
 1. **User input**:
    The user tells you what knowledge base operation they want to perform, including:
-    - specifying how the report should be changed,
-    - specifying the reasons why the report should be changed,
+   - specifying how the comments should be changed,
+   - specifying the reasons why one or more comments should be changed,
     - confirming that you have the correct understanding of the operation,
     - undoing the last operation,
     - various other operations such as navigating to a particular case, editing a case and so on.
