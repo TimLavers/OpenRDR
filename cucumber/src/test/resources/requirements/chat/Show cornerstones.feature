@@ -86,7 +86,7 @@ Feature: Show cornerstones
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
       | Case1     | x              | 1     | Comment 1. | x is in case |
-      | Case2     | x              | 2     | Comment 2. | x is in caFse |
+      | Case2     | x              | 2     | Comment 2. | x is in case |
     And I start the client application
     And I see the case Case1 as the current case
     And I request that the comment "Comment 3." be added
