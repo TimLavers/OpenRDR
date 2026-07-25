@@ -2,10 +2,7 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -23,12 +20,6 @@ import io.rippledown.model.caseview.DerivedValueInfo
 
 @Composable
 internal fun DerivedValueTooltip(info: DerivedValueInfo) {
-    Surface(
-        shape = RoundedCornerShape(4.dp),
-        color = MaterialTheme.colorScheme.inverseSurface,
-        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-        shadowElevation = 4.dp
-    ) {
     Column {
         if (!info.formula.isLiteralValue(info.value)) {
             Text(
@@ -44,7 +35,6 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo) {
                     .semantics { contentDescription = "$DERIVED_VALUE_CONDITIONS_PREFIX$condition" }
             )
         }
-    }
     }
 }
 
