@@ -47,7 +47,7 @@ fun CaseControl(
             if (currentCase != null) {
                 CaseInspection(
                     currentCase,
-                    cornerstoneStatus?.diff,
+                    cornerstoneStatus?.commentDiff,
                     cornerstoneStatus?.ruleConditions ?: emptyList(),
                     handler,
                     modifier = Modifier.weight(1f),
@@ -61,7 +61,7 @@ fun CaseControl(
                     // session, so hide the panel and its toggle entirely
                     // rather than showing a stale report.
                     showReport = cornerstoneStatus == null,
-                    derivedValueChange = cornerstoneStatus?.derivedValueChange
+                    derivedValueChange = cornerstoneStatus?.derivedValueDiff
                 )
             }
             val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview

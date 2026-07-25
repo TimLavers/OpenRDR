@@ -557,7 +557,7 @@ class RuleSessionManagerAssignmentTest {
         // Then the status sent to the client carries the preview
         val status = rsm.cornerstoneStatus()
         status.cornerstoneToReview.shouldBeNull()
-        status.derivedValueChange shouldBe DerivedValueAddition(
+        status.derivedValueDiff shouldBe DerivedValueAddition(
             attributeName = "Diabetes status",
             value = "diabetic",
             formula = "\"diabetic\""
@@ -572,7 +572,7 @@ class RuleSessionManagerAssignmentTest {
         rsm.startRuleSessionToAssignValue(createCase("A", "13.0"), "Risk level", "\"high\"")
 
         // Then the status carries the preview along with the cornerstone
-        rsm.cornerstoneStatus().derivedValueChange shouldBe DerivedValueAddition(
+        rsm.cornerstoneStatus().derivedValueDiff shouldBe DerivedValueAddition(
             attributeName = "Risk level",
             value = "high",
             formula = "\"high\""
@@ -587,7 +587,7 @@ class RuleSessionManagerAssignmentTest {
 
         // Then the status carries both, which is what the pending row's tooltip needs
         val status = rsm.cornerstoneStatus()
-        status.derivedValueChange shouldNotBe null
+        status.derivedValueDiff shouldNotBe null
         status.ruleConditions shouldBe listOf(highGlucose().asText())
     }
 }

@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * value expression against the session case and sends the result here.
  */
 @Serializable
-sealed interface DerivedValueChange {
+sealed interface DerivedValueChange : PendingChange {
     val attributeName: String
 }
 

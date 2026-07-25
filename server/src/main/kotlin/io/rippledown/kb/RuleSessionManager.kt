@@ -29,8 +29,19 @@ class RuleSessionManager(
     val logger = lazyLogger
 
     private var ruleSession: RuleBuildingSession? = null
-    internal var currentDiff: Diff? = null
-    internal var currentDerivedValueChange: DerivedValueChange? = null
+
+    /**
+     * The change the session in progress is about to make. A session makes one
+     * change, so this is one field; [currentDiff] and [currentDerivedValueChange]
+     * are read views of it for the code that handles only one kind.
+     */
+    internal var currentChange: PendingChange? = null
+
+    internal val currentDiff: Diff?
+        get() = currentChange as? Diff
+
+    internal val currentDerivedValueChange: DerivedValueChange?
+        get() = currentChange as? DerivedValueChange
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -63,7 +74,7 @@ class RuleSessionManager(
         variables: List<CommentVariable>
     ): CornerstoneStatus {
         val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
-        currentDiff = Addition(renderedText(conclusion, viewableCase.case))
+        currentChange = Addition(renderedText(conclusion, viewableCase.case))
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -71,7 +82,7 @@ class RuleSessionManager(
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
         val conclusion = kb.conclusionManager.findByText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentDiff = Removal(renderedText(conclusion, viewableCase.case))
+        currentChange = Removal(renderedText(conclusion, viewableCase.case))
         val action = ChangeTreeToRemoveConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -85,7 +96,7 @@ class RuleSessionManager(
         val replacedConclusion = kb.conclusionManager.findByText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
-        currentDiff = Replacement(
+        currentChange = Replacement(
             renderedText(replacedConclusion, viewableCase.case),
             renderedText(replacementConclusion, viewableCase.case)
         )
@@ -156,11 +167,11 @@ class RuleSessionManager(
         change: DerivedValueChange,
         action: RuleTreeChange
     ): CornerstoneStatus {
-        currentDerivedValueChange = change
+        currentChange = change
         return try {
             startRuleSession(case, action)
         } catch (e: Throwable) {
-            currentDerivedValueChange = null
+            currentChange = null
             throw e
         }
     }
@@ -293,8 +304,7 @@ class RuleSessionManager(
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
-        currentDiff = null
-        currentDerivedValueChange = null
+        currentChange = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -336,8 +346,7 @@ class RuleSessionManager(
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
-        currentDiff = null
-        currentDerivedValueChange = null
+        currentChange = null
         checkRuleSessionHistoryConsistency()
         val casesInfo = CasesInfo(
             caseIds = kb.processedCaseIds(),
@@ -477,9 +486,8 @@ class RuleSessionManager(
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
-            diff = currentDiff,
-            ruleConditions = conditionTexts,
-            derivedValueChange = currentDerivedValueChange
+            pendingChange = currentChange,
+            ruleConditions = conditionTexts
         )
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
@@ -494,9 +502,8 @@ class RuleSessionManager(
             viewableCornerstone,
             index,
             cornerstones.size,
-            currentDiff,
-            conditionTexts,
-            currentDerivedValueChange
+            currentChange,
+            conditionTexts
         )
     }
 
@@ -556,7 +563,7 @@ class RuleSessionManager(
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-        currentDiff = diff
+        currentChange = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
         return when (diff) {
