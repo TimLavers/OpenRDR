@@ -77,11 +77,11 @@ const val DERIVED_ATTRIBUTES_NONE_TEXT = "None for this case"
 const val DERIVED_ATTRIBUTES_INFO_ICON = "DERIVED_ATTRIBUTES_INFO_ICON"
 const val DERIVED_ATTRIBUTES_HELP = "DERIVED_ATTRIBUTES_HELP"
 const val DERIVED_ATTRIBUTES_HELP_TEXT =
-    "Derived attributes are values that OpenRDR itself adds to a case: calculated with a formula " +
-            "(e.g. BMI = Weight / Height ** 2) or assigned by rules (e.g. Diabetes status = \"diabetic\" " +
-            "when HbA1c is high). Rules can use derived attributes in their conditions. " +
+    "'Derived attributes' are attributes which have values which your project adds to a case. The values may be text (e.g. Diabetes status = \"diabetic\"), numeric (e.g. PI = 3.14159) or calculated with a formula " +
+            "(e.g. BMI = Weight / Height ** 2). Derived attributes are be added, removed or replaced in a case by rules. Subsequent rules can use derived attributes in their conditions. " +
             "To create one, ask the chat, e.g.: " +
-            "Assign the formula \"weight / (height * height)\" to the derived attribute \"BMI\"."
+            "Assign the formula \"weight / (height * height)\" to the derived attribute \"BMI\" when \"Height is in case\". or \n" +
+            "Assign the value \"diabetic\" to the derived attribute \"Diabetes status\" when \"HbA1c is high\"."
 
 
 

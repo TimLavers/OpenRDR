@@ -45,7 +45,7 @@ Running
    macOS/Linux:  ./start-demo.sh  from a terminal
 3. A console window will open running the server on localhost:9090. The
    server boots in in-memory mode AND auto-creates a knowledge base named
-   "Demo" pre-populated with the cases used by the two demo scenarios
+   "Demo" pre-populated with the cases used by the three demo scenarios
    below. Shortly after, the OpenRDR desktop UI will launch.
 4. In the UI, open the KB selector and choose "Demo" if it is not already
    the active KB.
@@ -55,7 +55,7 @@ Running
 The Demo KB
 -----------
 
-The Demo KB is seeded with two cases:
+The Demo KB is seeded with three cases:
 
   - Lindsay   waiting case, simple lab panel
               (Glucose 5.2 mmol/L [ref < 5.1], Pregnant Y, Age 21).
@@ -64,9 +64,13 @@ The Demo KB is seeded with two cases:
     - Jane    cornerstone case, simple lab panel
               Surfaced as a cornerstone when adding a comment to Lindsay.
 
+  - Sam       waiting case, used for the derived-attributes demo
+              (HbA1c 7.8 % [ref 4.0-6.0], Height 1.78 m, Weight 98 kg,
+              Age 54, Sex M).
+
 No rules are pre-built; you create them as part of the demo.
 
-Demo scenario: build a rule with Spanish conditions
+Demo scenario 1: build a rule with Spanish conditions
 ------------------------------------------------------
 
 1. Select the case "Lindsay".
@@ -102,6 +106,52 @@ Demo scenario 2: review a cornerstone case via chat
 
 5. Hover the mouse of the interpretation and you will see the formal condition age < 40.0
 6. The point is that user has control over the extent to which the rule change applies to the cornerstone cases.
+
+Demo scenario 3: derived attributes, repeat inferencing and the AI report
+-------------------------------------------------------------------------
+
+This scenario is automated end-to-end by the cucumber feature
+"Pathology demo script.feature" (cucumber/src/test/resources/requirements/
+demo/), so if that cuke passes, this script is known to work.
+
+1. Select the case "Sam". Note the "Derived attributes" panel under the
+   case data: it is empty ("None for this case"). Hover over the heading
+   and click the info icon for a short explanation of derived attributes.
+
+2. Create a formula-based derived attribute. In the chat, type:
+       Add derived attribute BMI with formula weight / (height * height)
+   Reply with the reason:
+       Height is in case
+   Decline to add more reasons. The Derived attributes panel now shows
+   BMI = 30.93; hover over the name to see the formula and the condition.
+
+3. Create a rule-based derived attribute. In the chat, type:
+       Add derived attribute Diabetes status with value diabetic
+   The suggested conditions appear -- note that the FIRST suggestion is
+   "HbA1c is high": suggestions are prioritised by out-of-range values
+   and by the rule action. Reply with the reason:
+       HbA1c is high
+   Decline to add more reasons. The panel now also shows
+   Diabetes status = diabetic.
+
+4. Build a comment on the BMI value (repeat inferencing: the condition
+   refers to a derived attribute, not to raw case data). Type:
+       Add the comment: "BMI of {BMI} indicates obesity. Weight reduction is advised."
+   Confirm when asked ({BMI} is a comment variable that quotes the value).
+   Reply with the reason:
+       BMI > 30
+   Decline to add more reasons. The comment appears with the actual BMI:
+   "BMI of 30.93 indicates obesity. Weight reduction is advised."
+
+5. Build a comment on the diabetes status. Type:
+       Add the comment: "The patient is diabetic. Dietary review is recommended."
+   Confirm if asked. Reply with the reason:
+       Diabetes status is "diabetic"
+   Decline to add more reasons.
+
+6. Read the two comments in the Comments panel: correct, but stilted when
+   read together. Now open the Report panel: the AI has integrated them
+   into a single readable report quoting the BMI value.
 
 Notes
 -----
