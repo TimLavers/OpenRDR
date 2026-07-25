@@ -1,12 +1,14 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.rippledown.model.*
+import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.diff.Addition
@@ -270,6 +272,36 @@ class RuleSessionManagerTest {
 
         // Then - diff should show rendered value, not raw template
         rsm.currentDiff shouldBe Addition("Glucose is 5.0")
+    }
+
+    /**
+     * A comment variable naming a *derived* attribute must resolve in the
+     * preview. The chat holds the case it was given when the conversation
+     * started, so a derived attribute whose rule was built later in the same
+     * conversation is absent from that snapshot. Rendering against it as-is
+     * produced "{BMI: no value}" in the pending comment even though the panel
+     * beside it showed the value. Re-materialising the case for the preview
+     * evaluates the derived attribute against the rule tree as it now stands.
+     */
+    @Test
+    fun `should resolve a derived attribute variable that is absent from the supplied case`() {
+        // Given a committed rule assigning the derived attribute BMI
+        val bmi = kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+        rsm.startRuleSessionToAssignValue(createCase("Setup", value = "5.0"), "BMI", "Glucose * 2")
+        rsm.commitCurrentRuleSession()
+
+        // And a case snapshot taken before that rule existed, so it carries no
+        // value for BMI - exactly what the chat's start-of-conversation case is
+        val staleCase = createCase("Case1", value = "5.0")
+        staleCase.latestValue(bmi).shouldBeNull()
+        val viewableCase = ViewableCase(staleCase, CaseViewProperties(listOf(glucose())))
+
+        // When a comment referencing BMI is previewed
+        val template = "BMI is " + io.rippledown.model.VARIABLE_TOKEN
+        rsm.startRuleSessionToAddComment(viewableCase, template, listOf(CommentVariable(bmi.id)))
+
+        // Then the value is resolved rather than marked as missing
+        rsm.currentDiff shouldBe Addition("BMI is 10")
     }
 
     // --- startRuleSessionToRemoveComment ---
