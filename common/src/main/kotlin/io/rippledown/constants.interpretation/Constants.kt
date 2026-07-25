@@ -79,12 +79,5 @@ const val COMMENTS_NONE_TEXT = "None for this case"
 const val DERIVED_ATTRIBUTES_INFO_ICON = "DERIVED_ATTRIBUTES_INFO_ICON"
 const val DERIVED_ATTRIBUTES_HELP = "DERIVED_ATTRIBUTES_HELP"
 const val DERIVED_ATTRIBUTES_HELP_TEXT =
-    "These are attributes which have values which your project adds to a case using rules.\nThe values may be text (e.g. Diabetes status = \"diabetic\"), numeric (e.g. PI = 3.14159) or calculated with a formula " +
-            "(e.g. BMI = Weight / Height ** 2). Derived attributes are be added, removed or replaced in a case by rules. Subsequent rules can use derived attributes in their conditions. " +
-            "To create one, ask the chat, e.g.: " +
-            "Assign the formula \"weight / (height * height)\" to the derived attribute \"BMI\" when \"Height is in case\". or \n" +
-            "Assign the value \"diabetic\" to the derived attribute \"Diabetes status\" when \"HbA1c is high\"."
-
-
-
-
+    "These are attributes which have values added to a case using rules. To create one, ask the chat, e.g. " +
+            "Assign the formula \"weight / height ^2\" to the derived attribute \"BMI\"."

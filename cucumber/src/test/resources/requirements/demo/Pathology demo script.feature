@@ -12,6 +12,7 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
   of them quoting the BMI value via a comment variable,
   - the AI report integrating the stilted comments into a readable report.
 
+  @single
   Scenario: BMI and Diabetes status drive comments that the AI integrates into a report
     Given case Sam is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
@@ -22,6 +23,8 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
       | Sex       | M     |     |      |       |
     And I start the client application
     And I see the case Sam as the current case
+
+    And pause
 
     # Before any rules are built, the Derived attributes panel shows its
     # empty state, so the audience sees where derived values will appear.

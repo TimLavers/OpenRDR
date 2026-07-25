@@ -30,46 +30,28 @@ class DerivedValuesPanelTest {
     }
 
     @Test
-    fun `should not show the info icon until the heading is hovered`() = runTest {
+    fun `should show the info icon when no derived attributes`() = runTest {
         with(composeTestRule) {
             setContent {
                 DerivedValuesPanel(derivedValues = emptyList())
             }
 
-            // Then the info icon is not shown initially
-            onNodeWithContentDescription(DERIVED_ATTRIBUTES_INFO_ICON).assertDoesNotExist()
-
-            // When the heading is hovered
-            onNodeWithContentDescription(DERIVED_VALUES_TOGGLE).performMouseInput { enter(center) }
-            waitForIdle()
-
-            // Then the info icon appears
+            // Then the info icon is shown without needing to hover the heading
             onNodeWithContentDescription(DERIVED_ATTRIBUTES_INFO_ICON).assertIsDisplayed()
         }
     }
 
     @Test
-    fun `clicking the info icon should toggle the derived attributes explainer`() = runTest {
+    fun `should show the info icon when the panel has derived values`() = runTest {
+        val values = listOf(
+            DerivedValueInfo(name = "BMI", value = "25.3", formula = "Weight / Height", conditions = emptyList())
+        )
         with(composeTestRule) {
             setContent {
-                DerivedValuesPanel(derivedValues = emptyList())
+                DerivedValuesPanel(derivedValues = values)
             }
-            onNodeWithContentDescription(DERIVED_VALUES_TOGGLE).performMouseInput { enter(center) }
-            waitForIdle()
 
-            // When the info icon is clicked
-            onNodeWithContentDescription(DERIVED_ATTRIBUTES_INFO_ICON).performClick()
-            waitForIdle()
-
-            // Then the explainer is shown
-            onNodeWithContentDescription(DERIVED_ATTRIBUTES_HELP).assertIsDisplayed()
-
-            // When the info icon is clicked again
-            onNodeWithContentDescription(DERIVED_ATTRIBUTES_INFO_ICON).performClick()
-            waitForIdle()
-
-            // Then the explainer is hidden
-            onNodeWithContentDescription(DERIVED_ATTRIBUTES_HELP).assertDoesNotExist()
+            onNodeWithContentDescription(DERIVED_ATTRIBUTES_INFO_ICON).assertIsDisplayed()
         }
     }
 

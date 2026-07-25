@@ -115,11 +115,11 @@ This scenario is automated end-to-end by the cucumber feature
 demo/), so if that cuke passes, this script is known to work.
 
 1. Select the case "Sam". Note the "Derived attributes" panel under the
-   case data: it is empty ("None for this case"). Hover over the heading
-   and click the info icon for a short explanation of derived attributes.
+   case data: it is empty ("None for this case"). Hover over the info icon
+   next to the heading for a short explanation of derived attributes.
 
 2. Create a formula-based derived attribute. In the chat, type:
-       Add derived attribute BMI with formula weight / (height * height)
+       Add derived attribute BMI with formula weight / height ^2
    Reply with the reason:
        Height is in case
    Decline to add more reasons. The Derived attributes panel now shows
