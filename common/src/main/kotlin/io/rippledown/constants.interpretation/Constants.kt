@@ -74,10 +74,12 @@ const val DERIVED_VALUE_FORMULA_PREFIX = "DERIVED_VALUE_FORMULA_"
 const val DERIVED_VALUE_CONDITIONS_PREFIX = "DERIVED_VALUE_CONDITIONS_"
 const val DERIVED_ATTRIBUTES_NONE = "DERIVED_ATTRIBUTES_NONE"
 const val DERIVED_ATTRIBUTES_NONE_TEXT = "None for this case"
+const val COMMENTS_NONE = "COMMENTS_NONE"
+const val COMMENTS_NONE_TEXT = "None for this case"
 const val DERIVED_ATTRIBUTES_INFO_ICON = "DERIVED_ATTRIBUTES_INFO_ICON"
 const val DERIVED_ATTRIBUTES_HELP = "DERIVED_ATTRIBUTES_HELP"
 const val DERIVED_ATTRIBUTES_HELP_TEXT =
-    "'Derived attributes' are attributes which have values which your project adds to a case. The values may be text (e.g. Diabetes status = \"diabetic\"), numeric (e.g. PI = 3.14159) or calculated with a formula " +
+    "These are attributes which have values which your project adds to a case using rules.\nThe values may be text (e.g. Diabetes status = \"diabetic\"), numeric (e.g. PI = 3.14159) or calculated with a formula " +
             "(e.g. BMI = Weight / Height ** 2). Derived attributes are be added, removed or replaced in a case by rules. Subsequent rules can use derived attributes in their conditions. " +
             "To create one, ask the chat, e.g.: " +
             "Assign the formula \"weight / (height * height)\" to the derived attribute \"BMI\" when \"Height is in case\". or \n" +

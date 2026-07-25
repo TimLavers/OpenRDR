@@ -14,17 +14,17 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.rippledown.constants.interpretation.COMMENTS_TOGGLE
-import io.rippledown.constants.interpretation.CONDITION_PREFIX
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
+import io.rippledown.constants.interpretation.*
 import io.rippledown.model.IntRangeData
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
@@ -77,15 +77,24 @@ fun InterpretationView(
                     containerColor = androidx.compose.ui.graphics.Color.White
                 )
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        ReadonlyInterpretationView(
-                            interpretation = interpretation,
-                            diff = diff,
-                            ruleConditions = ruleConditions,
-                            contentDescription = INTERPRETATION_TEXT_FIELD,
-                            modifier = Modifier.weight(1f),
-                            handler = handler
+                val commentsAreEmpty = interpretation.latestText().isEmpty() && diff == null
+                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp, vertical = 8.dp)) {
+                    ReadonlyInterpretationView(
+                        interpretation = interpretation,
+                        diff = diff,
+                        ruleConditions = ruleConditions,
+                        contentDescription = INTERPRETATION_TEXT_FIELD,
+                        modifier = Modifier.fillMaxWidth().alpha(if (commentsAreEmpty) 0f else 1f),
+                        handler = handler
+                    )
+                    if (commentsAreEmpty) {
+                        Text(
+                            text = COMMENTS_NONE_TEXT,
+                            fontSize = 12.sp,
+                            fontStyle = FontStyle.Italic,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(2.dp)
+                                .semantics { contentDescription = COMMENTS_NONE }
                         )
                     }
                 }
