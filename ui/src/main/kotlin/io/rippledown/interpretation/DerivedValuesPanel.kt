@@ -4,6 +4,7 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,14 +23,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.caseview.DerivedValueInfo
+import io.rippledown.model.diff.DerivedValueChange
 
 /**
  * A collapsible panel that lists non-comment derived attribute values as
@@ -42,12 +47,21 @@ import io.rippledown.model.caseview.DerivedValueInfo
  * "None for this case" line. The info icon is always visible; hovering over
  * it shows a tooltip explaining what derived attributes are and how to
  * create one via the chat, matching the Report panel info icon behaviour.
+ *
+ * If a rule session is in progress that will change a derived attribute,
+ * [change] describes it and the affected row previews the change: green for a
+ * value being added, red for one being removed, and the old value red followed
+ * by the new one green for a replacement. This mirrors the way the Comments
+ * panel previews a pending comment change.
  */
 @Composable
 fun DerivedValuesPanel(
     derivedValues: List<DerivedValueInfo>,
-    columnWidths: ColumnWidths = ColumnWidths(1)
+    columnWidths: ColumnWidths = ColumnWidths(1),
+    change: DerivedValueChange? = null,
+    ruleConditions: List<String> = emptyList()
 ) {
+    val rows = rowsToDisplay(derivedValues, change, ruleConditions)
     var expanded by remember { mutableStateOf(true) }
     Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
         Row(
@@ -106,7 +120,7 @@ fun DerivedValuesPanel(
                 )
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp, vertical = 8.dp)) {
-                    if (derivedValues.isEmpty()) {
+                    if (rows.isEmpty()) {
                         Text(
                             text = DERIVED_ATTRIBUTES_NONE_TEXT,
                             fontSize = 12.sp,
@@ -116,8 +130,8 @@ fun DerivedValuesPanel(
                                 .semantics { contentDescription = DERIVED_ATTRIBUTES_NONE }
                         )
                     } else {
-                        derivedValues.forEach { info ->
-                            DerivedValueRow(info, columnWidths)
+                        rows.forEach { row ->
+                            DerivedValueRow(row, columnWidths)
                         }
                     }
                 }
@@ -128,14 +142,31 @@ fun DerivedValuesPanel(
 
 @Composable
 internal fun DerivedValueRow(
-    info: DerivedValueInfo,
+    row: DerivedValueRowState,
     columnWidths: ColumnWidths = ColumnWidths(1)
 ) {
+    val info = row.info
+    // A value being added or removed is tinted as a whole, since the analogue of
+    // an added or removed comment is the whole name/value pair. A replacement is
+    // shown within the value cell instead, so that the attribute name is not
+    // duplicated in the panel.
+    val rowBackground = when (row.highlight) {
+        DerivedValueHighlight.ADDED -> DIFF_ADDITION_COLOR
+        DerivedValueHighlight.REMOVED -> DIFF_REMOVAL_COLOR
+        else -> Color.Transparent
+    }
+    val valueDescription = when (row.highlight) {
+        DerivedValueHighlight.ADDED -> "$DERIVED_VALUE_PENDING_ADD_PREFIX${info.name}"
+        DerivedValueHighlight.REMOVED -> "$DERIVED_VALUE_PENDING_REMOVE_PREFIX${info.name}"
+        DerivedValueHighlight.REPLACED -> "$DERIVED_VALUE_PENDING_REPLACE_PREFIX${info.name}"
+        DerivedValueHighlight.NONE -> "$DERIVED_VALUE_VALUE_PREFIX${info.name}"
+    }
     TooltipArea(
         tooltip = { DerivedValueTooltip(info) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(2.dp)
+            .background(rowBackground)
             .semantics { contentDescription = "$DERIVED_VALUE_ROW_PREFIX${info.name}" }
     ) {
         Row(
@@ -153,10 +184,12 @@ internal fun DerivedValueRow(
                     .semantics { contentDescription = "$DERIVED_VALUE_NAME_PREFIX${info.name}" }
             )
             Text(
-                text = info.value,
+                text = valueAnnotatedString(row),
                 fontSize = 13.sp,
                 color = Color.Black,
-                modifier = Modifier.weight(columnWidths.scrollableAreaWeight())
+                modifier = Modifier
+                    .weight(columnWidths.scrollableAreaWeight())
+                    .semantics { contentDescription = valueDescription }
             )
             Spacer(
                 modifier = Modifier.weight(
@@ -164,5 +197,24 @@ internal fun DerivedValueRow(
                 )
             )
         }
+    }
+}
+
+/**
+ * The value cell's text. For a replacement this is the value being replaced,
+ * on a red background, followed by its replacement on a green one, mirroring
+ * the way the Comments panel renders a replaced comment.
+ */
+internal fun valueAnnotatedString(row: DerivedValueRowState) = buildAnnotatedString {
+    if (row.highlight == DerivedValueHighlight.REPLACED && row.newValue != null) {
+        withStyle(SpanStyle(background = DIFF_REMOVAL_COLOR)) {
+            append(row.info.value)
+        }
+        append(" ")
+        withStyle(SpanStyle(background = DIFF_ADDITION_COLOR)) {
+            append(row.newValue)
+        }
+    } else {
+        append(row.info.value)
     }
 }

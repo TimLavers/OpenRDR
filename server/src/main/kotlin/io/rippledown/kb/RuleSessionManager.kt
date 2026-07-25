@@ -14,10 +14,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
 import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
@@ -33,6 +30,7 @@ class RuleSessionManager(
 
     private var ruleSession: RuleBuildingSession? = null
     internal var currentDiff: Diff? = null
+    internal var currentDerivedValueChange: DerivedValueChange? = null
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -105,13 +103,26 @@ class RuleSessionManager(
             error(nameClashWithExistingExternalAttributeMessage(attributeName))
         }
         val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
-        val assignment = AssignValue(attribute, valueExpressionFor(expressionText))
-        return startRuleSession(case, ChangeTreeToAddAssignment(assignment))
+        val expression = valueExpressionFor(expressionText)
+        val assignment = AssignValue(attribute, expression)
+        return startAssignmentSession(
+            case,
+            DerivedValueAddition(
+                attributeName = attributeName,
+                value = expression.evaluate(case) ?: "",
+                formula = expression.asText()
+            ),
+            ChangeTreeToAddAssignment(assignment)
+        )
     }
 
     fun startRuleSessionToRemoveAssignment(case: RDRCase, attributeName: String): CornerstoneStatus {
         val assignment = currentAssignmentFor(case, attributeName)
-        return startRuleSession(case, ChangeTreeToRemoveAssignment(assignment))
+        return startAssignmentSession(
+            case,
+            DerivedValueRemoval(attributeName),
+            ChangeTreeToRemoveAssignment(assignment)
+        )
     }
 
     fun startRuleSessionToReplaceAssignment(
@@ -120,8 +131,38 @@ class RuleSessionManager(
         replacementExpressionText: String
     ): CornerstoneStatus {
         val toBeReplaced = currentAssignmentFor(case, attributeName)
-        val replacement = AssignValue(toBeReplaced.attribute, valueExpressionFor(replacementExpressionText))
-        return startRuleSession(case, ChangeTreeToReplaceAssignment(toBeReplaced, replacement))
+        val replacementExpression = valueExpressionFor(replacementExpressionText)
+        val replacement = AssignValue(toBeReplaced.attribute, replacementExpression)
+        return startAssignmentSession(
+            case,
+            DerivedValueReplacement(
+                attributeName = attributeName,
+                newValue = replacementExpression.evaluate(case) ?: "",
+                newFormula = replacementExpression.asText()
+            ),
+            ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
+        )
+    }
+
+    /**
+     * Starts a session that will change a derived attribute, previewing [change]
+     * in the Derived attributes panel while it is in progress. The preview is
+     * set before the session starts so that the returned status carries it, and
+     * rolled back if the session is refused, so that a request that never became
+     * a session leaves nothing behind for the next one to show.
+     */
+    private fun startAssignmentSession(
+        case: RDRCase,
+        change: DerivedValueChange,
+        action: RuleTreeChange
+    ): CornerstoneStatus {
+        currentDerivedValueChange = change
+        return try {
+            startRuleSession(case, action)
+        } catch (e: Throwable) {
+            currentDerivedValueChange = null
+            throw e
+        }
     }
 
     override fun startRuleSessionToAssignValue(
@@ -188,7 +229,7 @@ class RuleSessionManager(
         // that plain text like "diabetic" remains a literal. Formulas may
         // reference attributes that are not yet in the KB; those attributes are
         // created so the formula can be evaluated against future cases.
-        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()]"""))
+        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()\^]"""))
         val parsed = if (hasArithmeticOperators) {
             val attributeFor: (String) -> Attribute = { name ->
                 kb.attributeManager.all()
@@ -253,6 +294,7 @@ class RuleSessionManager(
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
         currentDiff = null
+        currentDerivedValueChange = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -295,6 +337,7 @@ class RuleSessionManager(
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
         currentDiff = null
+        currentDerivedValueChange = null
         checkRuleSessionHistoryConsistency()
         val casesInfo = CasesInfo(
             caseIds = kb.processedCaseIds(),
@@ -433,7 +476,11 @@ class RuleSessionManager(
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
-        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff, ruleConditions = conditionTexts)
+        if (cornerstones.isEmpty()) return CornerstoneStatus(
+            diff = currentDiff,
+            ruleConditions = conditionTexts,
+            derivedValueChange = currentDerivedValueChange
+        )
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
@@ -443,7 +490,14 @@ class RuleSessionManager(
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff, conditionTexts)
+        return CornerstoneStatus(
+            viewableCornerstone,
+            index,
+            cornerstones.size,
+            currentDiff,
+            conditionTexts,
+            currentDerivedValueChange
+        )
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests

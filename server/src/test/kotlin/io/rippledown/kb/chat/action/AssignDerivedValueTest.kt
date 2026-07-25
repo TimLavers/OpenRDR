@@ -10,6 +10,7 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
+import io.rippledown.model.caseview.DerivedValueInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
@@ -27,6 +28,7 @@ class AssignDerivedValueTest {
         ruleService = mockk()
         currentCase = mockk()
         modelResponder = mockk()
+        every { currentCase.derivedValues() } returns emptyList()
     }
 
     @Test
@@ -115,5 +117,63 @@ class AssignDerivedValueTest {
         response.text shouldBe nameClashWithExistingDerivedAttributeMessage("BMI")
         coVerify(exactly = 0) { ruleService.startRuleSessionToAssignValue(any(), any(), any()) }
         coVerify(exactly = 0) { modelResponder.response(any<String>()) }
+    }
+
+    @Test
+    fun `should ask whether to replace a value the case already has`() = runTest {
+        //Given the attribute already has a value for this case
+        val action = AssignDerivedValue("BMI", "weight / height ^ 3")
+        every { ruleService.isRuleSessionActive() } returns false
+        every { currentCase.derivedValues() } returns listOf(
+            DerivedValueInfo("BMI", "30.93", "weight / height ^ 2", emptyList())
+        )
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then the user is told and asked, rather than a change being assumed
+        response.text shouldBe alreadyAssignedForCaseMessage("BMI", "30.93", "weight / height ^ 3")
+        coVerify(exactly = 0) { ruleService.startRuleSessionToAssignValue(any(), any(), any()) }
+        coVerify(exactly = 0) { ruleService.startRuleSessionToReplaceAssignment(any(), any(), any()) }
+        coVerify(exactly = 0) { modelResponder.response(any<String>()) }
+    }
+
+    @Test
+    fun `should ask about an existing value ignoring case in the name`() = runTest {
+        //Given the case has the value under a differently cased name
+        val action = AssignDerivedValue("bmi", "weight / height ^ 3")
+        every { ruleService.isRuleSessionActive() } returns false
+        every { currentCase.derivedValues() } returns listOf(
+            DerivedValueInfo("BMI", "30.93", "weight / height ^ 2", emptyList())
+        )
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then the question names the attribute as the case has it
+        response.text shouldBe alreadyAssignedForCaseMessage("BMI", "30.93", "weight / height ^ 3")
+        coVerify(exactly = 0) { ruleService.startRuleSessionToAssignValue(any(), any(), any()) }
+    }
+
+    @Test
+    fun `should assign when another derived attribute has a value but this one does not`() = runTest {
+        //Given the case has a different derived value
+        val action = AssignDerivedValue("BMI", "weight / height ^ 2")
+        every { ruleService.isRuleSessionActive() } returns false
+        every { ruleService.attributeForName("BMI") } returns null
+        every { currentCase.derivedValues() } returns listOf(
+            DerivedValueInfo("Risk", "high", "\"high\"", emptyList())
+        )
+        val ccStatus = CornerstoneStatus()
+        coEvery { ruleService.startRuleSessionToAssignValue(any(), any(), any()) } returns ccStatus
+        val responseFromModel = ChatResponse("Why?")
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then the session starts as normal
+        response shouldBe responseFromModel
+        coVerify { ruleService.startRuleSessionToAssignValue(any(), "BMI", "weight / height ^ 2") }
     }
 }

@@ -24,19 +24,17 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
     And I start the client application
     And I see the case Taylor as the current case
 
-    And pause
-
     # Before any rules are built, the Derived attributes panel shows its
     # empty state, so the audience sees where derived values will appear.
     And the derived attributes panel should show that there are none for the case
 
     # Act 1 — a formula-based derived attribute.
     And the chatbot has asked if I would like to add a comment
-    When I request that the derived attribute "BMI" be added with formula "weight / (height * height)"
+    When I request that the derived attribute "BMI" be added with formula "weight / height ^ 2"
     And I provide only the following reason:
       | Height is in case |
     Then the UI should show the value for derived attribute "BMI" as "30.93"
-    And the formula showing for the derived value is "Weight/(Height*Height)"
+    And the formula showing for the derived value is "Weight/Height^2"
 
     # Act 2 — a rule-based derived attribute. The suggested conditions are
     # led by the out-of-range HbA1c (suggestion prioritisation).
@@ -63,3 +61,4 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
       | BMI    |
       | 30.93  |
       | diabet |
+    And pause

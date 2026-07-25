@@ -72,6 +72,14 @@ const val DERIVED_VALUE_ROW_PREFIX = "DERIVED_VALUE_ROW_"
 const val DERIVED_VALUE_NAME_PREFIX = "DERIVED_VALUE_NAME_"
 const val DERIVED_VALUE_FORMULA_PREFIX = "DERIVED_VALUE_FORMULA_"
 const val DERIVED_VALUE_CONDITIONS_PREFIX = "DERIVED_VALUE_CONDITIONS_"
+
+// The value cell of a derived attribute row. The prefix used encodes whether the
+// rule session in progress is about to add, remove or replace the value, so that
+// the highlighting, which is invisible to the semantics tree, can be asserted.
+const val DERIVED_VALUE_VALUE_PREFIX = "DERIVED_VALUE_VALUE_"
+const val DERIVED_VALUE_PENDING_ADD_PREFIX = "DERIVED_VALUE_PENDING_ADD_"
+const val DERIVED_VALUE_PENDING_REMOVE_PREFIX = "DERIVED_VALUE_PENDING_REMOVE_"
+const val DERIVED_VALUE_PENDING_REPLACE_PREFIX = "DERIVED_VALUE_PENDING_REPLACE_"
 const val DERIVED_ATTRIBUTES_NONE = "DERIVED_ATTRIBUTES_NONE"
 const val DERIVED_ATTRIBUTES_NONE_TEXT = "None for this case"
 const val COMMENTS_NONE = "COMMENTS_NONE"

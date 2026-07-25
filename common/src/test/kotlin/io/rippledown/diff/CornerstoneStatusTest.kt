@@ -6,9 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import io.rippledown.utils.checkSerializationIsThreadSafe
@@ -46,7 +44,8 @@ class CornerstoneStatusTest {
                 "indexOfCornerstoneToReview": -1,
                 "numberOfCornerstones": 0,
                 "diff": null,
-                "ruleConditions": []
+                "ruleConditions": [],
+                "derivedValueChange": null
             }
         """.trimIndent()
     }
@@ -240,7 +239,8 @@ class CornerstoneStatusTest {
                 "ruleConditions": [
                     "Sun is in case",
                     "Wave is in case"
-                ]
+                ],
+                "derivedValueChange": null
             }
         """.trimIndent()
     }
@@ -250,6 +250,96 @@ class CornerstoneStatusTest {
         val cornerstoneStatus = CornerstoneStatus(
             diff = Addition("Go to Bondi."),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+        checkSerializationIsThreadSafe(cornerstoneStatus)
+    }
+
+    @Test
+    fun `should default derivedValueChange to null`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus()
+
+        //Then
+        cornerstoneStatus.derivedValueChange shouldBe null
+    }
+
+    @Test
+    fun `should serialize and deserialize with a derived value addition`() {
+        //Given
+        val change = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+        val cornerstoneStatus = CornerstoneStatus(derivedValueChange = change)
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.derivedValueChange shouldBe change
+    }
+
+    @Test
+    fun `should serialize and deserialize with a derived value removal`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(derivedValueChange = DerivedValueRemoval("BMI"))
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.derivedValueChange shouldBe DerivedValueRemoval("BMI")
+    }
+
+    @Test
+    fun `should serialize and deserialize with a derived value replacement`() {
+        //Given
+        val change = DerivedValueReplacement("BMI", "15.47", "weight / height ^ 3")
+        val cornerstoneStatus = CornerstoneStatus(derivedValueChange = change)
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.derivedValueChange shouldBe change
+    }
+
+    @Test
+    fun `should serialize and deserialize a derived value change with a cornerstone and conditions`() {
+        //Given
+        val rdrCase = createCase("Case1")
+        val viewableCase = ViewableCase(rdrCase, caseViewProperties())
+        val cornerstoneStatus = CornerstoneStatus(
+            cornerstoneToReview = viewableCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 1,
+            ruleConditions = listOf("Weight is high"),
+            derivedValueChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+    }
+
+    @Test
+    fun `a derived value change and a comment diff are independent`() {
+        //Given a status carrying only a derived value change
+        val cornerstoneStatus = CornerstoneStatus(
+            derivedValueChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+        )
+
+        //Then the comment diff is unaffected, so the Comments panel previews nothing
+        cornerstoneStatus.diff shouldBe null
+        serializeDeserialize(cornerstoneStatus).diff shouldBe null
+    }
+
+    @Test
+    fun `should be thread safe with a derived value change`() {
+        val cornerstoneStatus = CornerstoneStatus(
+            derivedValueChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
         )
         checkSerializationIsThreadSafe(cornerstoneStatus)
     }

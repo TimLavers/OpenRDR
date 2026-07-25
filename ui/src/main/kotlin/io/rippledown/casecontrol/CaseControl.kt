@@ -60,7 +60,8 @@ fun CaseControl(
                     // The report is not generated during a rule-building
                     // session, so hide the panel and its toggle entirely
                     // rather than showing a stale report.
-                    showReport = cornerstoneStatus == null
+                    showReport = cornerstoneStatus == null,
+                    derivedValueChange = cornerstoneStatus?.derivedValueChange
                 )
             }
             val cornerstoneToReview = cornerstoneStatus?.cornerstoneToReview
