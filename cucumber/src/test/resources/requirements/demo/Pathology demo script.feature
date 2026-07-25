@@ -20,7 +20,6 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
   actions into a single plan, is work no individual rule can do, because no
   rule knows what the others concluded.
 
-  @single
   Scenario: BMI and Diabetes status drive comments that the AI integrates into a report
     Given case Taylor is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
@@ -81,4 +80,3 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
       | weight         |
       | dietary        |
       | 3 months       |
-    And pause
