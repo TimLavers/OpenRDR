@@ -136,22 +136,39 @@ demo/), so if that cuke passes, this script is known to work.
 
 4. Build a comment on the BMI value (repeat inferencing: the condition
    refers to a derived attribute, not to raw case data). Type:
-       Add the comment: "BMI of {BMI} indicates obesity. Weight reduction is advised."
+       Add the comment: "Obesity. BMI {BMI}. Weight reduction."
    Confirm when asked ({BMI} is a comment variable that quotes the value).
    Reply with the reason:
        BMI > 30
    Decline to add more reasons. The comment appears with the actual BMI:
-   "BMI of 30.93 indicates obesity. Weight reduction is advised."
+   "Obesity. BMI 30.93. Weight reduction."
+   Note how clipped it is. A rule's comment is written once and then reused
+   verbatim on every case the rule fires for, so experts write them terse
+   and self-contained -- which is exactly why several of them landing on
+   the one case read as disconnected fragments.
 
 5. Build a comment on the diabetes status. Type:
-       Add the comment: "The patient is diabetic. Dietary review is recommended."
+       Add the comment: "Diabetic. Dietary review."
    Confirm if asked. Reply with the reason:
        Diabetes status is "diabetic"
    Decline to add more reasons.
 
-6. Read the two comments in the Comments panel: correct, but stilted when
-   read together. Now open the Report panel: the AI has integrated them
-   into a single readable report quoting the BMI value.
+6. Build a third comment, this one on the raw out-of-range HbA1c. Type:
+       Add the comment: "HbA1c above target. Repeat in 3 months."
+   Confirm if asked. Reply with the reason:
+       HbA1c is high
+   Decline to add more reasons.
+
+7. Read the three comments in the Comments panel: each is correct, but they
+   are clipped, and each ends in its own dangling action. Now open the
+   Report panel. The AI has done two things no rule can do:
+     - written the fragments up as flowing prose for THIS patient, quoting
+       the BMI and bolding the out-of-range HbA1c, and
+     - consolidated the three separate follow-ups into a single
+       "Recommendation" section.
+   The point to make to the audience: no individual rule could produce that
+   recommendation, because no rule knows what the other rules concluded.
+   Only the report sees all the comments at once.
 
 Notes
 -----

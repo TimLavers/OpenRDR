@@ -10,7 +10,15 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
   conditions led by the out-of-range HbA1c,
   - comments conditioned on the derived values (repeat inferencing), one
   of them quoting the BMI value via a comment variable,
-  - the AI report integrating the stilted comments into a readable report.
+  - the AI report turning the clipped, fragmentary comments into readable
+  prose and consolidating their separate follow-ups into one recommendation.
+
+  The comments are deliberately terse. A rule's comment is written once and
+  reused verbatim on every case it fires for, so experts write them clipped
+  and self-contained; several landing on the one case read as disconnected
+  fragments. Re-wording them for this patient, and merging three dangling
+  actions into a single plan, is work no individual rule can do, because no
+  rule knows what the others concluded.
 
   @single
   Scenario: BMI and Diabetes status drive comments that the AI integrates into a report
@@ -46,19 +54,31 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
 
     # Act 3 — repeat inferencing: comments conditioned on the derived
     # values. The first comment quotes the BMI via a comment variable.
-    When I request that the comment "BMI of {BMI} indicates obesity. Weight reduction is advised." be added
+    # Each comment is clipped and ends in a dangling action.
+    When I request that the comment "Obesity. BMI {BMI}. Weight reduction." be added
     And I provide only the following reason:
       | BMI > 30 |
-    Then the interpretation report should be "BMI of 30.93 indicates obesity. Weight reduction is advised."
+    Then the interpretation report should be "Obesity. BMI 30.93. Weight reduction."
 
-    When I request that the comment "The patient is diabetic. Dietary review is recommended." be added
+    When I request that the comment "Diabetic. Dietary review." be added
     And I provide only the following reason:
       | Diabetes status is "diabetic" |
 
-    # Act 4 — the AI report integrates the two stilted comments.
+    # A third comment, on the raw out-of-range HbA1c, so that consolidating
+    # the follow-ups is visibly non-trivial.
+    When I request that the comment "HbA1c above target. Repeat in 3 months." be added
+    And I provide only the following reason:
+      | HbA1c is high |
+
+    # Act 4 — the AI report. It must do more than echo the comments: it
+    # writes them up as prose and consolidates the three separate actions
+    # into a single Recommendation section that appears in no one rule.
     When I click to show the report panel
     Then the report should contain the phrases:
-      | BMI    |
-      | 30.93  |
-      | diabet |
+      | 30.93          |
+      | diabet         |
+      | Recommendation |
+      | weight         |
+      | dietary        |
+      | 3 months       |
     And pause
