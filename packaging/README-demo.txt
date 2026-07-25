@@ -64,9 +64,9 @@ The Demo KB is seeded with three cases:
     - Jane    cornerstone case, simple lab panel
               Surfaced as a cornerstone when adding a comment to Lindsay.
 
-  - Sam       waiting case, used for the derived-attributes demo
+  - Taylor   waiting case, used for the derived-attributes demo
               (HbA1c 7.8 % [ref 4.0-6.0], Height 1.78 m, Weight 98 kg,
-              Age 54, Sex M).
+              Age 54, Sex F).
 
 No rules are pre-built; you create them as part of the demo.
 
@@ -114,7 +114,7 @@ This scenario is automated end-to-end by the cucumber feature
 "Pathology demo script.feature" (cucumber/src/test/resources/requirements/
 demo/), so if that cuke passes, this script is known to work.
 
-1. Select the case "Sam". Note the "Derived attributes" panel under the
+1. Select the case "Taylor". Note the "Derived attributes" panel under the
    case data: it is empty ("None for this case"). Hover over the info icon
    next to the heading for a short explanation of derived attributes.
 

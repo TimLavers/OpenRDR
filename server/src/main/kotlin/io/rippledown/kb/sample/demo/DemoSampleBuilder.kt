@@ -18,7 +18,7 @@ A small demonstration KB used to show OpenRDR features:
      **Jane** cornerstone case which shares Lindsay's attributes
      (Glucose, Pregnant, Age) but with different values.
   3. Derived attributes, repeat inferencing and the AI-generated report,
-     via the **Sam** waiting case (HbA1c out of range; Height and Weight
+     via the **Taylor** waiting case (HbA1c out of range; Height and Weight
      for a BMI formula).
 """
 
@@ -34,7 +34,7 @@ class DemoSampleBuilder(private val kbe: KBEndpoint) {
         kbe.setDescription(DEMO_SAMPLE_DESCRIPTION)
         addLindsayWaitingCase()
         addJaneCornerstoneCase()
-        addSamWaitingCase()
+        addTaylorWaitingCase()
     }
 
     /**
@@ -84,7 +84,7 @@ class DemoSampleBuilder(private val kbe: KBEndpoint) {
     }
 
     /**
-     * Sam: a waiting case for the derived-attributes demo (see
+     * Taylor: a waiting case for the derived-attributes demo (see
      * `packaging/README-demo.txt`). HbA1c is out of range so that
      * suggestion prioritisation surfaces it when building the
      * "Diabetes status" rule; Height and Weight give BMI
@@ -92,7 +92,7 @@ class DemoSampleBuilder(private val kbe: KBEndpoint) {
      * Age and Sex are included so the formula can be extended (e.g. BMR)
      * if the demo wants a gender-dependent example.
      */
-    private fun addSamWaitingCase() {
+    private fun addTaylorWaitingCase() {
         val attributes = kbe.kb.attributeManager
         val builder = RDRCaseBuilder()
         val hba1c = attributes.getOrCreate("HbA1c")
@@ -116,7 +116,7 @@ class DemoSampleBuilder(private val kbe: KBEndpoint) {
             Result(Value("98"), null, " kg")
         )
         builder.addValue(age, defaultDate, "54")
-        builder.addValue(sex, defaultDate, "M")
-        kbe.kb.addProcessedCase(builder.build("Sam"))
+        builder.addValue(sex, defaultDate, "F")
+        kbe.kb.addProcessedCase(builder.build("Taylor"))
     }
 }

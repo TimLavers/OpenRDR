@@ -17,7 +17,7 @@ class DemoSampleBuilderTest : SampleBuilderTest() {
         endpoint.kb.ruleTree.size() shouldBe 1
 
         val processedNames = endpoint.kb.allProcessedCases().map { it.name }
-        processedNames shouldContainExactlyInAnyOrder listOf("Lindsay", "Sam")
+        processedNames shouldContainExactlyInAnyOrder listOf("Lindsay", "Taylor")
 
         val cornerstoneNames = endpoint.kb.allCornerstoneCases().map { it.name }
         cornerstoneNames shouldContainExactlyInAnyOrder listOf("Jane")
@@ -72,16 +72,16 @@ class DemoSampleBuilderTest : SampleBuilderTest() {
     }
 
     @Test
-    fun `Sam case has the expected attributes for the derived-attributes demo`() {
+    fun `Taylor case has the expected attributes for the derived-attributes demo`() {
         DemoSampleBuilder(endpoint).setupCases()
 
-        val sam = endpoint.kb.getProcessedCaseByName("Sam")
-        val attributeNames = sam.attributes.map { it.name }
+        val taylor = endpoint.kb.getProcessedCaseByName("Taylor")
+        val attributeNames = taylor.attributes.map { it.name }
         attributeNames shouldContainExactlyInAnyOrder listOf("HbA1c", "Height", "Weight", "Age", "Sex")
 
         // HbA1c is out of range so that suggestion prioritisation surfaces it.
         val hba1c = endpoint.kb.attributeManager.getOrCreate("HbA1c")
-        val hba1cResult = sam.getLatest(hba1c).shouldNotBeNull()
+        val hba1cResult = taylor.getLatest(hba1c).shouldNotBeNull()
         hba1cResult.value.text shouldBe "7.8"
         hba1cResult.referenceRange.shouldNotBeNull().run {
             lowerString shouldBe "4.0"
@@ -91,20 +91,20 @@ class DemoSampleBuilderTest : SampleBuilderTest() {
 
         // Height and Weight give BMI = 98 / (1.78 * 1.78) = 30.93.
         val height = endpoint.kb.attributeManager.getOrCreate("Height")
-        val heightResult = sam.getLatest(height).shouldNotBeNull()
+        val heightResult = taylor.getLatest(height).shouldNotBeNull()
         heightResult.value.text shouldBe "1.78"
         heightResult.units shouldBe " m"
 
         val weight = endpoint.kb.attributeManager.getOrCreate("Weight")
-        val weightResult = sam.getLatest(weight).shouldNotBeNull()
+        val weightResult = taylor.getLatest(weight).shouldNotBeNull()
         weightResult.value.text shouldBe "98"
         weightResult.units shouldBe " kg"
 
         val age = endpoint.kb.attributeManager.getOrCreate("Age")
-        sam.getLatest(age).shouldNotBeNull().value.text shouldBe "54"
+        taylor.getLatest(age).shouldNotBeNull().value.text shouldBe "54"
 
         val sex = endpoint.kb.attributeManager.getOrCreate("Sex")
-        sam.getLatest(sex).shouldNotBeNull().value.text shouldBe "M"
+        taylor.getLatest(sex).shouldNotBeNull().value.text shouldBe "F"
     }
 
     @Test

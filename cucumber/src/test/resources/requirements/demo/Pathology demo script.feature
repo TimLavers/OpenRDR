@@ -1,6 +1,6 @@
 Feature: Demo script — derived attributes, repeat inferencing and the AI report
   This scenario is the step-by-step script for demo scenario 3 in
-  packaging/README-demo.txt, run against the same data as the seeded "Sam"
+  packaging/README-demo.txt, run against the same data as the seeded "Taylor"
   case in the Demo KB. A passing run means the demo is solid.
 
   It shows, in order:
@@ -14,15 +14,15 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
 
   @single
   Scenario: BMI and Diabetes status drive comments that the AI integrates into a report
-    Given case Sam is provided with the following values, reference ranges and units:
+    Given case Taylor is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
       | HbA1c     | 7.8   | 4.0 | 6.0  | %     |
       | Height    | 1.78  |     |      | m     |
       | Weight    | 98    |     |      | kg    |
       | Age       | 54    |     |      |       |
-      | Sex       | M     |     |      |       |
+      | Sex       | F     |     |      |       |
     And I start the client application
-    And I see the case Sam as the current case
+    And I see the case Taylor as the current case
 
     And pause
 
