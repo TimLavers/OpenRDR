@@ -239,12 +239,16 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun requireDerivedValuesPanelToBeHidden() {
+    fun waitForDerivedValuesEmptyState() {
         waitUntilAsserted {
-            val ctx = execute<AccessibleContext?> {
+            val toggleCtx = execute<AccessibleContext?> {
                 contextProvider().find(DERIVED_VALUES_TOGGLE)
             }
-            ctx shouldBe null
+            toggleCtx shouldNotBe null
+            val emptyCtx = execute<AccessibleContext?> {
+                contextProvider().find(DERIVED_ATTRIBUTES_NONE)
+            }
+            emptyCtx shouldNotBe null
         }
     }
 

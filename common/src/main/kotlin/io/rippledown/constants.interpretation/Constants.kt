@@ -72,6 +72,16 @@ const val DERIVED_VALUE_ROW_PREFIX = "DERIVED_VALUE_ROW_"
 const val DERIVED_VALUE_NAME_PREFIX = "DERIVED_VALUE_NAME_"
 const val DERIVED_VALUE_FORMULA_PREFIX = "DERIVED_VALUE_FORMULA_"
 const val DERIVED_VALUE_CONDITIONS_PREFIX = "DERIVED_VALUE_CONDITIONS_"
+const val DERIVED_ATTRIBUTES_NONE = "DERIVED_ATTRIBUTES_NONE"
+const val DERIVED_ATTRIBUTES_NONE_TEXT = "None for this case"
+const val DERIVED_ATTRIBUTES_INFO_ICON = "DERIVED_ATTRIBUTES_INFO_ICON"
+const val DERIVED_ATTRIBUTES_HELP = "DERIVED_ATTRIBUTES_HELP"
+const val DERIVED_ATTRIBUTES_HELP_TEXT =
+    "Derived attributes are values that OpenRDR itself adds to a case: calculated with a formula " +
+            "(e.g. BMI = Weight / Height ** 2) or assigned by rules (e.g. Diabetes status = \"diabetic\" " +
+            "when HbA1c is high). Rules can use derived attributes in their conditions. " +
+            "To create one, ask the chat, e.g.: " +
+            "Assign the formula \"weight / (height * height)\" to the derived attribute \"BMI\"."
 
 
 

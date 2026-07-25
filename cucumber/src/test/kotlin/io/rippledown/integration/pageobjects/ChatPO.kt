@@ -212,6 +212,20 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
 
     fun numberOfSuggestionRows(): Int = snapshot().suggestionRowCount
 
+    /**
+     * True if a suggestion list has been shown after the user's most recent
+     * message, i.e. the suggestions on screen are the bot's response to the
+     * latest request rather than ones left over from an earlier rule session
+     * in the same conversation. Guards chained-rule scenarios (e.g. the demo
+     * script) against sending a reason before the new session has started.
+     */
+    fun suggestionsAreForLatestRequest(): Boolean {
+        val messages = snapshot().messageList
+        val lastUserIndex = messages.indexOfLast { it is UserMessage }
+        val lastSuggestionIndex = messages.indexOfLast { it is SuggestionListMessage }
+        return lastSuggestionIndex > lastUserIndex
+    }
+
     fun chatTextFieldContains(text: String): Boolean {
         return execute<Boolean> {
             // Compose 1.11's accessibility bridge overrides accessibleName
