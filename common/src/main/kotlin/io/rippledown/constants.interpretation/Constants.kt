@@ -76,6 +76,10 @@ const val DERIVED_ATTRIBUTES_NONE = "DERIVED_ATTRIBUTES_NONE"
 const val DERIVED_ATTRIBUTES_NONE_TEXT = "None for this case"
 const val COMMENTS_NONE = "COMMENTS_NONE"
 const val COMMENTS_NONE_TEXT = "None for this case"
+const val COMMENTS_INFO_ICON = "COMMENTS_INFO_ICON"
+const val COMMENTS_HELP = "COMMENTS_HELP"
+const val COMMENTS_HELP_TEXT =
+    "These are sentences added to the case using rules and used to generate the report"
 const val DERIVED_ATTRIBUTES_INFO_ICON = "DERIVED_ATTRIBUTES_INFO_ICON"
 const val DERIVED_ATTRIBUTES_HELP = "DERIVED_ATTRIBUTES_HELP"
 const val DERIVED_ATTRIBUTES_HELP_TEXT =
