@@ -38,7 +38,7 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo) {
     }
 }
 
-private val powerRegex = """[*][*][ \t]*([0-9]+(?:[.][0-9]+)?)""".toRegex()
+private val powerRegex = """(?:[*][*]|\^)[ \t]*([0-9]+(?:[.][0-9]+)?)""".toRegex()
 
 internal fun formulaAnnotatedString(formula: String) = buildAnnotatedString {
     var cursor = 0

@@ -128,7 +128,7 @@ enum class Operator(val symbol: String, val precedence: Int) {
     DIVIDE("/", 2) {
         override fun apply(left: Double, right: Double) = left / right
     },
-    POWER("**", 3) {
+    POWER("^", 3) {
         override fun apply(left: Double, right: Double) = Math.pow(left, right)
     };
 
@@ -169,7 +169,7 @@ fun parseValueExpression(text: String, attributeFor: (String) -> Attribute?): Va
 }
 
 /**
- * Recursive descent parser for the formula language: `+ - * /`,
+ * Recursive descent parser for the formula language: `+ - * / ** ^`,
  * parentheses, numeric literals, and attribute names (which may contain
  * spaces). Returns null from [parse] if the text is not a well-formed
  * formula or an identifier does not resolve to an attribute.
@@ -193,7 +193,7 @@ class FormulaParser(private val attributeFor: (String) -> Attribute?) {
         while (i < text.length) {
             val c = text[i]
             when (c) {
-                '+', '-', '/', '(', ')' -> {
+                '+', '-', '/', '(', ')', '^' -> {
                     flush()
                     tokens.add(c.toString())
                 }

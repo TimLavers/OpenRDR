@@ -91,7 +91,31 @@ class DerivedValueTooltipTest {
         val info = DerivedValueInfo(
             name = "BMI",
             value = "25.3",
-            formula = "Weight / Height ** 2",
+            formula = "Weight / Height ^ 2",
+            conditions = listOf("Height is high")
+        )
+
+        with(composeTestRule) {
+            setContent { DerivedValueTooltip(info) }
+
+            val node = onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}")
+                .fetchSemanticsNode()
+            val annotated = node.config.getOrNull(SemanticsProperties.Text)!!.first()
+
+            annotated.text shouldBe "Weight / Height 2"
+            val superscript = annotated.spanStyles.first { it.item.baselineShift == BaselineShift.Superscript }
+            annotated.text.substring(superscript.start, superscript.end) shouldBe "2"
+            superscript.item.fontSize shouldBe 0.85.em
+            superscript.item.fontStyle shouldBe FontStyle.Italic
+        }
+    }
+
+    @Test
+    fun `formula exponent using caret is rendered as a superscript`() = runTest {
+        val info = DerivedValueInfo(
+            name = "BMI",
+            value = "25.3",
+            formula = "Weight / Height ^ 2",
             conditions = listOf("Height is high")
         )
 
