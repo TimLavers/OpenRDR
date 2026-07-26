@@ -243,13 +243,10 @@ class ChatDefs {
         if (waitForBotQuestionFirst) {
             waitForBotQuestion()
         }
-        waitForBotQuestion()
         addCommentWithoutConfirmation(comment)
         waitForBotSuggestions()
         decline()
         waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
-        waitForBotSuggestions()
-        decline()
         waitForBotToSayDone()
     }
 

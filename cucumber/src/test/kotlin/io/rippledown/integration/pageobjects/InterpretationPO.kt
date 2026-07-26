@@ -63,7 +63,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         // string doesn't exactly match" (trailing whitespace, newline,
         // etc.). Without this diagnostic the scenario fails with just an
         // Awaitility timeout and no indication of the actual content.
-        val lastObserved = java.util.concurrent.atomic.AtomicReference<String>("<never read>")
+        val lastObserved = java.util.concurrent.atomic.AtomicReference("<never read>")
         try {
             await()
                 .atMost(ofSeconds(30))
