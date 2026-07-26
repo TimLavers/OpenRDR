@@ -1,9 +1,12 @@
 package io.rippledown.kb.chat.action
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
@@ -58,5 +61,25 @@ class RemoveReasonTest {
         //Then
         coVerify { ruleService.sendCornerstoneStatus() }
         response shouldBe responseFromModel
+    }
+
+    @Test
+    fun `should not tell the model to commit the rule when there are no cornerstones left`() = runTest {
+        //Given a removal leaving no cornerstones to review
+        val conditionText = "Sun is \"hot\""
+        val action = RemoveReason(conditionText)
+        coEvery { ruleService.removeConditionByText(conditionText) } returns CornerstoneStatus()
+        coEvery { ruleService.sendCornerstoneStatus() } returns Unit
+        val sentToModel = slot<String>()
+        coEvery { modelResponder.response(capture(sentToModel)) } returns ChatResponse("Reason removed.")
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then the model is told to confirm the removal, not to commit. Removing a
+        //reason is not the end of cornerstone review, and the commit directive used
+        //by the review actions made the model commit the rule instead of replying.
+        sentToModel.captured shouldContain "removed"
+        sentToModel.captured shouldNotContain "CommitRule"
     }
 }
