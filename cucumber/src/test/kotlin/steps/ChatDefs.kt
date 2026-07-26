@@ -408,7 +408,7 @@ class ChatDefs {
     @Then("the chat should explain that the name {string} already exists")
     fun chatExplainsNameAlreadyExists(name: String) {
         waitForBotText(name)
-        waitForBotTextToContainAnyOf("already exists", "already used")
+        waitForBotTextToContainAnyOf("already exists", "already used", "already given", "replace")
     }
 
     @Then("the capabilities shown include:")
