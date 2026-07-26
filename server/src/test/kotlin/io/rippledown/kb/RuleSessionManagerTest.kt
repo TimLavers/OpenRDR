@@ -261,7 +261,7 @@ class RuleSessionManagerTest {
     }
 
     @Test
-    fun `should use rendered text in diff when adding comment with variable`() {
+    fun `should show the variable name, not its value, in the diff when adding a comment with a variable`() {
         // Given
         val viewableCase = createViewableCase("Case1", value = "5.0")
         val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
@@ -270,21 +270,20 @@ class RuleSessionManagerTest {
         // When
         rsm.startRuleSessionToAddComment(viewableCase, template, variables)
 
-        // Then - diff should show rendered value, not raw template
-        rsm.currentDiff shouldBe Addition("Glucose is 5.0")
+        // Then - the pending comment shows the template, with the variable named
+        rsm.currentDiff shouldBe Addition("Glucose is {Glucose}")
     }
 
     /**
-     * A comment variable naming a *derived* attribute must resolve in the
-     * preview. The chat holds the case it was given when the conversation
+     * A comment variable naming a *derived* attribute must not be evaluated in the
+     * preview either. The chat holds the case it was given when the conversation
      * started, so a derived attribute whose rule was built later in the same
-     * conversation is absent from that snapshot. Rendering against it as-is
-     * produced "{BMI: no value}" in the pending comment even though the panel
-     * beside it showed the value. Re-materialising the case for the preview
-     * evaluates the derived attribute against the rule tree as it now stands.
+     * conversation is absent from that snapshot, and rendering against it produced
+     * "{BMI: no value}". A pending comment is a template, so the variable name is
+     * shown regardless of whether a value is available.
      */
     @Test
-    fun `should resolve a derived attribute variable that is absent from the supplied case`() {
+    fun `should show the variable name for a derived attribute that is absent from the supplied case`() {
         // Given a committed rule assigning the derived attribute BMI
         val bmi = kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
         rsm.startRuleSessionToAssignValue(createCase("Setup", value = "5.0"), "BMI", "Glucose * 2")
@@ -300,8 +299,8 @@ class RuleSessionManagerTest {
         val template = "BMI is " + io.rippledown.model.VARIABLE_TOKEN
         rsm.startRuleSessionToAddComment(viewableCase, template, listOf(CommentVariable(bmi.id)))
 
-        // Then the value is resolved rather than marked as missing
-        rsm.currentDiff shouldBe Addition("BMI is 10")
+        // Then the variable is shown by name, not marked as missing
+        rsm.currentDiff shouldBe Addition("BMI is {BMI}")
     }
 
     // --- startRuleSessionToRemoveComment ---
@@ -360,7 +359,7 @@ class RuleSessionManagerTest {
     }
 
     @Test
-    fun `should use rendered text in diff when replacing comment with variable`() {
+    fun `should show the variable name, not its value, in the diff when replacing a comment with a variable`() {
         // Given
         val viewableCase = createViewableCase("Case1", value = "5.0")
         val original = "Old comment"
@@ -372,8 +371,8 @@ class RuleSessionManagerTest {
         // When
         rsm.startRuleSessionToReplaceComment(viewableCase, original, template, variables)
 
-        // Then - diff should show rendered value, not raw template
-        rsm.currentDiff shouldBe Replacement(original, "Glucose is 5.0")
+        // Then - the pending replacement shows the template, with the variable named
+        rsm.currentDiff shouldBe Replacement(original, "Glucose is {Glucose}")
     }
 
     @Test

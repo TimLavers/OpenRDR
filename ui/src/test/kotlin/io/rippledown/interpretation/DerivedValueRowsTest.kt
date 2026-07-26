@@ -41,7 +41,7 @@ class DerivedValueRowsTest {
         // When an addition for a name in between is applied
         val rows = rowsToDisplay(
             listOf(alpha, zeta),
-            DerivedValueAddition("Mu", "2", "\"2\""),
+            DerivedValueAddition("Mu", "\"2\""),
             ruleConditions = listOf("Sex is F")
         )
 
@@ -55,33 +55,33 @@ class DerivedValueRowsTest {
     }
 
     @Test
-    fun `an added row carries the pending value, formula and rule conditions`() {
+    fun `an added row shows the formula in braces, with the rule conditions`() {
         // Given a rule session with a condition so far
         // When an addition is applied
         val rows = rowsToDisplay(
             emptyList(),
-            DerivedValueAddition("BMI", "30.93", "weight / height ^ 2"),
+            DerivedValueAddition("BMI", "weight / height ^ 2"),
             ruleConditions = listOf("Weight is high")
         )
 
-        // Then the row previews everything the committed rule would produce
+        // Then the row shows the formula the rule will give the attribute rather
+        // than a value, since no rule assigns one yet
         rows.single().info shouldBe DerivedValueInfo(
             name = "BMI",
-            value = "30.93",
+            value = "{weight / height ^ 2}",
             formula = "weight / height ^ 2",
             conditions = listOf("Weight is high")
         )
     }
 
     @Test
-    fun `an addition with an unevaluable expression still gives a row`() {
-        // Given an expression that could not be evaluated against the case
+    fun `an added row shows a literal definition without braces`() {
+        // Given a rule session assigning a literal
         // When the addition is applied
-        val rows = rowsToDisplay(emptyList(), DerivedValueAddition("BMI", "", "weight / height ^ 2"))
+        val rows = rowsToDisplay(emptyList(), DerivedValueAddition("Risk", "\"high\""))
 
-        // Then a row appears with a blank value, so the user can see nothing will be assigned
-        rows.single().highlight shouldBe DerivedValueHighlight.ADDED
-        rows.single().info.value shouldBe ""
+        // Then the literal is shown as the value it will assign, whatever the case
+        rows.single().info.value shouldBe "high"
     }
 
     @Test
@@ -89,7 +89,7 @@ class DerivedValueRowsTest {
         // Given the attribute already has a value, which the user is asked about
         // before such a session can start
         // When an addition for it is applied anyway
-        val rows = rowsToDisplay(listOf(bmi), DerivedValueAddition("BMI", "15.47", "weight / height ^ 3"))
+        val rows = rowsToDisplay(listOf(bmi), DerivedValueAddition("BMI", "weight / height ^ 3"))
 
         // Then the current state is shown unchanged: no duplicate row, and no
         // replacement the user never asked for
@@ -118,21 +118,21 @@ class DerivedValueRowsTest {
     }
 
     @Test
-    fun `a replacement keeps one row and previews the new value and formula`() {
+    fun `a replacement keeps one row and previews the new definition`() {
         // Given a rule session replacing an existing assignment
         // When the rows are computed
         val rows = rowsToDisplay(
             listOf(bmi),
-            DerivedValueReplacement("BMI", "15.47", "weight / height ^ 3"),
+            DerivedValueReplacement("BMI", "weight / height ^ 3"),
             ruleConditions = listOf("Height is high")
         )
 
-        // Then a single row shows the current value plus the pending one
+        // Then a single row shows the current value plus the definition replacing it
         rows.size shouldBe 1
         with(rows.single()) {
             highlight shouldBe DerivedValueHighlight.REPLACED
             info.value shouldBe "30.93"
-            newValue shouldBe "15.47"
+            newFormula shouldBe "{weight / height ^ 3}"
             info.formula shouldBe "weight / height ^ 3"
             info.conditions shouldBe listOf("Height is high")
         }
@@ -142,7 +142,7 @@ class DerivedValueRowsTest {
     fun `a replacement leaves other rows alone`() {
         // Given another derived value that is not being changed
         // When a replacement is applied
-        val rows = rowsToDisplay(listOf(bmi, risk), DerivedValueReplacement("BMI", "15.47", "weight / height ^ 3"))
+        val rows = rowsToDisplay(listOf(bmi, risk), DerivedValueReplacement("BMI", "weight / height ^ 3"))
 
         // Then it is untouched
         rows.last() shouldBe DerivedValueRowState(risk)

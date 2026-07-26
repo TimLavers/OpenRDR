@@ -7,9 +7,10 @@ import kotlinx.serialization.Serializable
  * progress, so that the Derived attributes panel can preview it. This is the
  * derived-attribute analogue of [Diff], which previews pending comment changes.
  *
- * The pending value is not present anywhere on the client during a session,
- * because the rule tree has not been changed yet, so the server evaluates the
- * value expression against the session case and sends the result here.
+ * A pending change is previewed as the definition the rule will give the
+ * attribute, not as a value for the current case. The definition is what the
+ * user is confirming, and it has not been given by a rule yet, so evaluating it
+ * would show a value that no rule assigns.
  */
 @Serializable
 sealed interface DerivedValueChange : PendingChange {
@@ -17,14 +18,12 @@ sealed interface DerivedValueChange : PendingChange {
 }
 
 /**
- * The rule being built will assign [value] to a derived attribute that has no
- * value on the case yet. [value] is empty if the expression cannot be evaluated
- * against the case, for example because an attribute it references has no value.
+ * The rule being built will assign the value of [formula] to a derived attribute
+ * that has no value on the case yet.
  */
 @Serializable
 data class DerivedValueAddition(
     override val attributeName: String = "",
-    val value: String = "",
     val formula: String = ""
 ) : DerivedValueChange
 
@@ -37,12 +36,11 @@ data class DerivedValueRemoval(
 ) : DerivedValueChange
 
 /**
- * The rule being built will change the attribute's value from its current one
- * to [newValue].
+ * The rule being built will change the attribute's definition from the one that
+ * gave its current value to [newFormula].
  */
 @Serializable
 data class DerivedValueReplacement(
     override val attributeName: String = "",
-    val newValue: String = "",
     val newFormula: String = ""
 ) : DerivedValueChange

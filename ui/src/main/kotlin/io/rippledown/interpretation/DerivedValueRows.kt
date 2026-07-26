@@ -16,14 +16,15 @@ enum class DerivedValueHighlight { NONE, ADDED, REMOVED, REPLACED }
  * A derived attribute row to draw, together with the pending change, if any,
  * that affects it.
  *
- * @param newValue for [DerivedValueHighlight.REPLACED], the value the rule
- *   being built will assign. It is shown after the current value, so that the
- *   user sees the value being replaced and its replacement together.
+ * @param newFormula for [DerivedValueHighlight.REPLACED], the definition the
+ *   rule being built will give the attribute. It is shown after the current
+ *   value, so that the user sees what is being replaced and its replacement
+ *   together.
  */
 data class DerivedValueRowState(
     val info: DerivedValueInfo,
     val highlight: DerivedValueHighlight = DerivedValueHighlight.NONE,
-    val newValue: String? = null
+    val newFormula: String? = null
 )
 
 /**
@@ -33,6 +34,9 @@ data class DerivedValueRowState(
  * A pending addition is not on the case yet, so a row for it is inserted in
  * name order. A pending removal or replacement applies to a row that is already
  * there.
+ *
+ * A pending addition or replacement is shown as the definition the rule will
+ * give the attribute, not as a value: no rule assigns a value to the case yet.
  *
  * An addition naming an attribute that already has a value on the case is not
  * previewed at all, and the panel simply shows the current state. Such a
@@ -66,7 +70,7 @@ fun rowsToDisplay(
                 DerivedValueRowState(
                     info = it.copy(formula = change.newFormula, conditions = ruleConditions),
                     highlight = DerivedValueHighlight.REPLACED,
-                    newValue = change.newValue
+                    newFormula = change.newFormula.definitionText()
                 )
             } else {
                 DerivedValueRowState(it)
@@ -77,7 +81,7 @@ fun rowsToDisplay(
             val added = DerivedValueRowState(
                 info = DerivedValueInfo(
                     name = change.attributeName,
-                    value = change.value,
+                    value = change.formula.definitionText(),
                     formula = change.formula,
                     conditions = ruleConditions
                 ),
@@ -89,3 +93,13 @@ fun rowsToDisplay(
         }
     }
 }
+
+/**
+ * How the definition a rule is about to give an attribute is shown while the
+ * change is pending. A formula is shown in braces, as a comment variable is,
+ * marking it as something that is yet to be evaluated. A literal is shown as
+ * the value itself, without braces or the quotes that mark it as a literal in
+ * the expression, since it is the value the rule will assign whatever the case.
+ */
+internal fun String.definitionText() =
+    if (length >= 2 && startsWith("\"") && endsWith("\"")) substring(1, length - 1) else "{$this}"

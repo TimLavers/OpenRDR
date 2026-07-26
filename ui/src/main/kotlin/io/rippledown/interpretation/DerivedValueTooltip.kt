@@ -19,9 +19,9 @@ import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
 
 @Composable
-internal fun DerivedValueTooltip(info: DerivedValueInfo) {
+internal fun DerivedValueTooltip(info: DerivedValueInfo, showFormula: Boolean = true) {
     Column {
-        if (!info.formula.isLiteralValue(info.value)) {
+        if (showFormula && !info.formula.isLiteralValue(info.value)) {
             Text(
                 text = formulaAnnotatedString(info.formula),
                 modifier = Modifier.padding(4.dp)

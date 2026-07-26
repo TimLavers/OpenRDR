@@ -162,7 +162,9 @@ internal fun DerivedValueRow(
         DerivedValueHighlight.NONE -> "$DERIVED_VALUE_VALUE_PREFIX${info.name}"
     }
     TooltipArea(
-        tooltip = { DerivedValueTooltip(info) },
+        // A pending row shows the definition in the value cell, so the tooltip
+        // does not repeat it.
+        tooltip = { DerivedValueTooltip(info, showFormula = row.highlight == DerivedValueHighlight.NONE) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(2.dp)
@@ -202,17 +204,17 @@ internal fun DerivedValueRow(
 
 /**
  * The value cell's text. For a replacement this is the value being replaced,
- * on a red background, followed by its replacement on a green one, mirroring
- * the way the Comments panel renders a replaced comment.
+ * on a red background, followed by the definition replacing it on a green one,
+ * mirroring the way the Comments panel renders a replaced comment.
  */
 internal fun valueAnnotatedString(row: DerivedValueRowState) = buildAnnotatedString {
-    if (row.highlight == DerivedValueHighlight.REPLACED && row.newValue != null) {
+    if (row.highlight == DerivedValueHighlight.REPLACED && row.newFormula != null) {
         withStyle(SpanStyle(background = DIFF_REMOVAL_COLOR)) {
             append(row.info.value)
         }
         append(" ")
         withStyle(SpanStyle(background = DIFF_ADDITION_COLOR)) {
-            append(row.newValue)
+            append(row.newFormula)
         }
     } else {
         append(row.info.value)

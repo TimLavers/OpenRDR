@@ -188,35 +188,37 @@ class DerivedValuesPanelTest {
             setContent {
                 DerivedValuesPanel(
                     derivedValues = emptyList(),
-                    change = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+                    change = DerivedValueAddition("BMI", "weight / height ^ 2")
                 )
             }
 
-            // Then a row for it appears, marked as being added
+            // Then a row for it appears, marked as being added, showing the
+            // formula the rule will give it rather than a value
             onNodeWithContentDescription("${DERIVED_VALUE_ROW_PREFIX}BMI").assertIsDisplayed()
             onNodeWithContentDescription("${DERIVED_VALUE_PENDING_ADD_PREFIX}BMI")
                 .assertIsDisplayed()
-                .assertTextEquals("30.93")
+                .assertTextEquals("{weight / height ^ 2}")
             // And the empty state is gone, since there is now something to show
             onNodeWithContentDescription(DERIVED_ATTRIBUTES_NONE).assertDoesNotExist()
         }
     }
 
     @Test
-    fun `should preview an addition whose expression cannot be evaluated`() = runTest {
-        // Given a rule session whose formula references an attribute with no value
+    fun `should preview an addition of a literal without braces`() = runTest {
+        // Given a rule session assigning a literal
         with(composeTestRule) {
             setContent {
                 DerivedValuesPanel(
                     derivedValues = emptyList(),
-                    change = DerivedValueAddition("BMI", "", "weight / height ^ 2")
+                    change = DerivedValueAddition("Risk", "\"high\"")
                 )
             }
 
-            // Then the row still appears, with a blank value
-            onNodeWithContentDescription("${DERIVED_VALUE_PENDING_ADD_PREFIX}BMI")
+            // Then the row shows the literal itself, since that is what the rule
+            // will assign whatever the case
+            onNodeWithContentDescription("${DERIVED_VALUE_PENDING_ADD_PREFIX}Risk")
                 .assertIsDisplayed()
-                .assertTextEquals("")
+                .assertTextEquals("high")
         }
     }
 
@@ -231,7 +233,7 @@ class DerivedValuesPanelTest {
             setContent {
                 DerivedValuesPanel(
                     derivedValues = values,
-                    change = DerivedValueAddition("Mu", "2", "\"2\"")
+                    change = DerivedValueAddition("Mu", "\"2\"")
                 )
             }
 
@@ -290,14 +292,14 @@ class DerivedValuesPanelTest {
             setContent {
                 DerivedValuesPanel(
                     derivedValues = values,
-                    change = DerivedValueReplacement("BMI", "15.47", "weight / height ^ 3")
+                    change = DerivedValueReplacement("BMI", "weight / height ^ 3")
                 )
             }
 
-            // Then one row shows the old value followed by the new one
+            // Then one row shows the old value followed by the new definition
             onNodeWithContentDescription("${DERIVED_VALUE_PENDING_REPLACE_PREFIX}BMI")
                 .assertIsDisplayed()
-                .assertTextEquals("30.93 15.47")
+                .assertTextEquals("30.93 {weight / height ^ 3}")
         }
     }
 
@@ -308,7 +310,7 @@ class DerivedValuesPanelTest {
             setContent {
                 DerivedValuesPanel(
                     derivedValues = emptyList(),
-                    change = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+                    change = DerivedValueAddition("BMI", "weight / height ^ 2")
                 )
             }
 

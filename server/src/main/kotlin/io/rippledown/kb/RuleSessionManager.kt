@@ -74,7 +74,7 @@ class RuleSessionManager(
         variables: List<CommentVariable>
     ): CornerstoneStatus {
         val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
-        currentChange = Addition(renderedText(conclusion, viewableCase.case))
+        currentChange = Addition(pendingText(conclusion))
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -98,7 +98,7 @@ class RuleSessionManager(
         val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
         currentChange = Replacement(
             renderedText(replacedConclusion, viewableCase.case),
-            renderedText(replacementConclusion, viewableCase.case)
+            pendingText(replacementConclusion)
         )
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
         return startRuleSession(viewableCase.case, action)
@@ -120,7 +120,6 @@ class RuleSessionManager(
             case,
             DerivedValueAddition(
                 attributeName = attributeName,
-                value = expression.evaluate(case) ?: "",
                 formula = expression.asText()
             ),
             ChangeTreeToAddAssignment(assignment)
@@ -148,7 +147,6 @@ class RuleSessionManager(
             case,
             DerivedValueReplacement(
                 attributeName = attributeName,
-                newValue = replacementExpression.evaluate(case) ?: "",
                 newFormula = replacementExpression.asText()
             ),
             ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
@@ -258,6 +256,14 @@ class RuleSessionManager(
      */
     private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
         conclusion.render(case) { id -> attributeById(id) }.text
+
+    /**
+     * The text of a comment that is yet to be given by a rule, with each variable shown as
+     * `{attributeName}`. Variables are deliberately not evaluated: the comment is a pending change,
+     * so it is the template, not a value for the current case, that the user is confirming.
+     */
+    private fun pendingText(conclusion: Conclusion): String =
+        conclusion.textWithAttributeNames { id -> attributeById(id)?.name ?: "unknown" }
 
     override fun attributeById(id: Int): Attribute? =
         runCatching { kb.attributeManager.getById(id) }.getOrNull()

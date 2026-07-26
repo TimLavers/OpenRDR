@@ -266,7 +266,7 @@ class CornerstoneStatusTest {
     @Test
     fun `should serialize and deserialize with a derived value addition`() {
         //Given
-        val change = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+        val change = DerivedValueAddition("BMI", "weight / height ^ 2")
         val cornerstoneStatus = CornerstoneStatus(pendingChange = change)
 
         //When
@@ -293,7 +293,7 @@ class CornerstoneStatusTest {
     @Test
     fun `should serialize and deserialize with a derived value replacement`() {
         //Given
-        val change = DerivedValueReplacement("BMI", "15.47", "weight / height ^ 3")
+        val change = DerivedValueReplacement("BMI", "weight / height ^ 3")
         val cornerstoneStatus = CornerstoneStatus(pendingChange = change)
 
         //When
@@ -314,7 +314,7 @@ class CornerstoneStatusTest {
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
             ruleConditions = listOf("Weight is high"),
-            pendingChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+            pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
         )
 
         //When
@@ -328,7 +328,7 @@ class CornerstoneStatusTest {
     fun `a derived value change and a comment diff are independent`() {
         //Given a status carrying only a derived value change
         val cornerstoneStatus = CornerstoneStatus(
-            pendingChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+            pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
         )
 
         //Then the comment view of it is null, so the Comments panel previews nothing
@@ -339,7 +339,7 @@ class CornerstoneStatusTest {
     @Test
     fun `should be thread safe with a derived value change`() {
         val cornerstoneStatus = CornerstoneStatus(
-            pendingChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+            pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
         )
         checkSerializationIsThreadSafe(cornerstoneStatus)
     }

@@ -95,14 +95,15 @@ class CaseInspectionDerivedValueTest {
                 CaseInspection(
                     case = caseWithNothing(),
                     handler = handler,
-                    derivedValueChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+                    derivedValueChange = DerivedValueAddition("BMI", "weight / height ^ 2")
                 )
             }
 
-            // Then the Derived attributes panel shows it as being added
+            // Then the Derived attributes panel shows it as being added, as the
+            // formula the rule will give it rather than a value
             onNodeWithContentDescription("${DERIVED_VALUE_PENDING_ADD_PREFIX}BMI", useUnmergedTree = true)
                 .assertIsDisplayed()
-                .assertTextEquals("30.93")
+                .assertTextEquals("{weight / height ^ 2}")
         }
     }
 
@@ -115,7 +116,7 @@ class CaseInspectionDerivedValueTest {
                     case = caseWithNothing(),
                     diff = null,
                     handler = handler,
-                    derivedValueChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+                    derivedValueChange = DerivedValueAddition("BMI", "weight / height ^ 2")
                 )
             }
 
@@ -153,14 +154,15 @@ class CaseInspectionDerivedValueTest {
                 CaseInspection(
                     case = caseWithBmi(),
                     handler = handler,
-                    derivedValueChange = DerivedValueReplacement("BMI", "15.47", "weight / height ^ 3")
+                    derivedValueChange = DerivedValueReplacement("BMI", "weight / height ^ 3")
                 )
             }
 
-            // Then one row shows the value being replaced followed by its replacement
+            // Then one row shows the value being replaced followed by the
+            // definition replacing it
             onNodeWithContentDescription("${DERIVED_VALUE_PENDING_REPLACE_PREFIX}BMI", useUnmergedTree = true)
                 .assertIsDisplayed()
-                .assertTextEquals("30.93 15.47")
+                .assertTextEquals("30.93 {weight / height ^ 3}")
         }
     }
 
@@ -249,7 +251,7 @@ class CaseInspectionDerivedValueTest {
                     case = caseWithNothing(),
                     ruleConditions = listOf("Glucose is high"),
                     handler = handler,
-                    derivedValueChange = DerivedValueAddition("BMI", "30.93", "weight / height ^ 2")
+                    derivedValueChange = DerivedValueAddition("BMI", "weight / height ^ 2")
                 )
             }
 

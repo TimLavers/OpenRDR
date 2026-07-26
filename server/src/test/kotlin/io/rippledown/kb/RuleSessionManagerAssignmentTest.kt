@@ -335,23 +335,23 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
-    fun `assigning a formula previews the evaluated value and the formula`() {
+    fun `assigning a formula previews the formula, not its value for the case`() {
         // Given a case with the attributes the formula references
         val case = bmiCase()
 
         // When an assign-value session is started
         rsm.startRuleSessionToAssignValue(case, "BMI", "weight / (height * height)")
 
-        // Then the change previews exactly what the committed rule would assign
+        // Then the change previews the definition the rule will give the
+        // attribute: no rule assigns a value to the case yet
         rsm.currentDerivedValueChange shouldBe DerivedValueAddition(
             attributeName = "BMI",
-            value = "28.7",
             formula = "weight / (height * height)"
         )
     }
 
     @Test
-    fun `assigning a formula that cannot be evaluated previews an empty value`() {
+    fun `assigning a formula that cannot be evaluated previews the formula just the same`() {
         // Given a case missing an attribute the formula references
         kb.attributeManager.getOrCreate("height")
         val case = bmiCase(heightValue = null)
@@ -359,24 +359,21 @@ class RuleSessionManagerAssignmentTest {
         // When an assign-value session is started
         rsm.startRuleSessionToAssignValue(case, "BMI", "weight / (height * height)")
 
-        // Then the change is still previewed, with no value, so the user can see
-        // that nothing will be assigned to this case
+        // Then the preview is the same, since it never depended on the case
         rsm.currentDerivedValueChange shouldBe DerivedValueAddition(
             attributeName = "BMI",
-            value = "",
             formula = "weight / (height * height)"
         )
     }
 
     @Test
-    fun `assigning a literal previews the literal and its quoted formula`() {
+    fun `assigning a literal previews its quoted formula`() {
         // When an assign-value session is started with a literal
         rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
 
-        // Then the value is the literal itself
+        // Then the definition is the quoted literal
         rsm.currentDerivedValueChange shouldBe DerivedValueAddition(
             attributeName = "Diabetes status",
-            value = "diabetic",
             formula = "\"diabetic\""
         )
     }
@@ -394,23 +391,22 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
-    fun `replacing an assignment previews the new value and formula`() {
+    fun `replacing an assignment previews the new formula`() {
         // Given a KB with an assignment rule
         buildAssignmentRule()
 
         // When a replace-assignment session is started
         rsm.startRuleSessionToReplaceAssignment(createCase("C", "25.0"), "Diabetes status", "\"severely diabetic\"")
 
-        // Then the change previews the value the rule would assign instead
+        // Then the change previews the definition the rule would give instead
         rsm.currentDerivedValueChange shouldBe DerivedValueReplacement(
             attributeName = "Diabetes status",
-            newValue = "severely diabetic",
             newFormula = "\"severely diabetic\""
         )
     }
 
     @Test
-    fun `replacing with a formula previews its evaluated value`() {
+    fun `replacing with a formula previews the new formula`() {
         // Given a rule assigning BMI by formula
         val case = bmiCase()
         rsm.startRuleSessionToAssignValue(case, "BMI", "weight / (height * height)")
@@ -424,10 +420,9 @@ class RuleSessionManagerAssignmentTest {
         // When the assignment is replaced by another formula
         rsm.startRuleSessionToReplaceAssignment(caseB, "BMI", "weight / height")
 
-        // Then the preview carries the new formula's value for this case
+        // Then the preview carries the new formula, unevaluated
         rsm.currentDerivedValueChange shouldBe DerivedValueReplacement(
             attributeName = "BMI",
-            newValue = "51.67",
             newFormula = "weight / height"
         )
     }
@@ -559,7 +554,6 @@ class RuleSessionManagerAssignmentTest {
         status.cornerstoneToReview.shouldBeNull()
         status.derivedValueDiff shouldBe DerivedValueAddition(
             attributeName = "Diabetes status",
-            value = "diabetic",
             formula = "\"diabetic\""
         )
     }
@@ -574,7 +568,6 @@ class RuleSessionManagerAssignmentTest {
         // Then the status carries the preview along with the cornerstone
         rsm.cornerstoneStatus().derivedValueDiff shouldBe DerivedValueAddition(
             attributeName = "Risk level",
-            value = "high",
             formula = "\"high\""
         )
     }
