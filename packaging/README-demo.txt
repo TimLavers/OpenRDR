@@ -119,14 +119,14 @@ demo/), so if that cuke passes, this script is known to work.
    next to the heading for a short explanation of derived attributes.
 
 2. Create a formula-based derived attribute. In the chat, type:
-       Add derived attribute BMI with formula weight / height ^2
-   Reply with the reason:
-       Height is in case
-   Decline to add more reasons. The Derived attributes panel now shows
+       Add attribute BMI with formula weight / height ^2
+  Note that the height and weight suggestions are at the top of this list, as these are in the formula.
+  Decline to provide a reason.
+  The Derived attributes panel now shows
    BMI = 30.93; hover over the name to see the formula and the condition.
 
 3. Create a rule-based derived attribute. In the chat, type:
-       Add derived attribute Diabetes status with value diabetic
+       Add attribute "Diabetes status" with value diabetic
    The suggested conditions appear -- note that the FIRST suggestion is
    "HbA1c is high": suggestions are prioritised by out-of-range values
    and by the rule action. Reply with the reason:
@@ -136,8 +136,7 @@ demo/), so if that cuke passes, this script is known to work.
 
 4. Build a comment on the BMI value (repeat inferencing: the condition
    refers to a derived attribute, not to raw case data). Type:
-       Add the comment: "Obesity. BMI {BMI}. Weight reduction."
-   Confirm when asked ({BMI} is a comment variable that quotes the value).
+       Add the comment: "Obesity. BMI is {BMI}. Weight reduction."
    Reply with the reason:
        BMI > 30
    Decline to add more reasons. The comment appears with the actual BMI:
@@ -149,7 +148,7 @@ demo/), so if that cuke passes, this script is known to work.
 
 5. Build a comment on the diabetes status. Type:
        Add the comment: "Diabetic. Dietary review."
-   Confirm if asked. Reply with the reason:
+   Confirm if asked. Reply with the reason, which should be the first suggestion:
        Diabetes status is "diabetic"
    Decline to add more reasons.
 
@@ -160,7 +159,7 @@ demo/), so if that cuke passes, this script is known to work.
    Decline to add more reasons.
 
 7. Read the three comments in the Comments panel: each is correct, but they
-   are clipped, and each ends in its own dangling action. Now open the
+   are clipped, and each ends in its own dangling action.Now show the Report tool tip. Now open the
    Report panel. The AI has done two things no rule can do:
      - written the fragments up as flowing prose for THIS patient, quoting
        the BMI and bolding the out-of-range HbA1c, and
