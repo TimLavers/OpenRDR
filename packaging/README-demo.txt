@@ -119,9 +119,9 @@ demo/), so if that cuke passes, this script is known to work.
    next to the heading for a short explanation of derived attributes.
 
 2. Create a formula-based derived attribute. In the chat, type:
-       Add attribute BMI with formula weight / height ^2
+       Add attribute BMI with formula weight / height^2
   Note that the height and weight suggestions are at the top of this list, as these are in the formula.
-  Decline to provide a reason.
+  Add the single reason: "Height is in case".
   The Derived attributes panel now shows
    BMI = 30.93; hover over the name to see the formula and the condition.
 
