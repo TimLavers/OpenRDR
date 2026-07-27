@@ -38,7 +38,8 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
     # Act 1 — a formula-based derived attribute.
     And the chatbot has asked if I would like to add a comment
     When I request that the derived attribute "BMI" be added with formula "weight / height ^ 2"
-    And the chatbot has asked if I want to provide any reasons and I decline
+    And I provide only the following reason:
+      | Height is in case |
     Then the UI should show the value for derived attribute "BMI" as "30.93"
     And the formula showing for the derived value is "Weight/Height^2"
 
