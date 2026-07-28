@@ -222,7 +222,22 @@ class ChatDefs {
         }
     }
 
-    private fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
+    /**
+     * Enter a condition into a rule session that is already under way. Unlike [provideTheseReasons]
+     * this does not require the suggestion list to be newer than the user's most recent message,
+     * because the user may have said something else since the suggestions appeared (e.g. asking to
+     * see the next cornerstone case).
+     */
+    fun addConditionToCurrentRuleSession(condition: String) {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().numberOfSuggestionRows() > 0
+        }
+        val suggestionsBefore = chatPO().numberOfSuggestionRows()
+        enterChatTextAndSend(condition)
+        waitForBotResponseToReason(suggestionsBefore, chatPO().numberOfChatMessages())
+    }
+
+    fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
         await().atMost(ofSeconds(90)).until {
             chatPO().numberOfSuggestionRows() > previousSuggestionCount ||
                     chatPO().numberOfChatMessages() > messageCountAfterSend
@@ -378,14 +393,23 @@ class ChatDefs {
 
     @When("I ask the chatbot to show the next cornerstone case")
     fun askToShowNextCornerstoneCase() {
-        waitForBotQuestion()
+        waitForBotToBeReadyForCornerstoneNavigation()
         enterChatTextAndSend("show me the next cornerstone case")
     }
 
     @When("I ask the chatbot to show the previous cornerstone case")
     fun askToShowPreviousCornerstoneCase() {
-        waitForBotQuestion()
+        waitForBotToBeReadyForCornerstoneNavigation()
         enterChatTextAndSend("show me the previous cornerstone case")
+    }
+
+    /**
+     * Cornerstone navigation can be requested either when the bot has asked a question
+     * or while it is offering suggested conditions in a rule session (in which case its
+     * most recent message is not a question).
+     */
+    fun waitForBotToBeReadyForCornerstoneNavigation() {
+        waitForBotTextToContainAnyOf("?", SUGGESTION, "1.")
     }
 
     @Then("the chatbot has mentioned the cornerstone case {string}")
