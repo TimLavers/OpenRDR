@@ -114,6 +114,11 @@ This scenario is automated end-to-end by the cucumber feature
 "Pathology demo script.feature" (cucumber/src/test/resources/requirements/
 demo/), so if that cuke passes, this script is known to work.
 
+Explain that we are going to build 2 derived attributes and 3 comments We will be demonstrating;
+- repeat inferencing by using derived attributes as conditions for comments,
+- inserting a value into a comment,
+- producing a formatted and narrative-style report from the set of comments.
+
 1. Select the case "Taylor". Note the "Derived attributes" panel under the
    case data: it is empty ("None for this case"). Hover over the info icon
    next to the heading for a short explanation of derived attributes.
@@ -121,7 +126,7 @@ demo/), so if that cuke passes, this script is known to work.
 2. Create a formula-based derived attribute. In the chat, type:
        Add attribute BMI with formula weight / height^2
   Note that the height and weight suggestions are at the top of this list, as these are in the formula.
-  Add the single reason: "Height is in case".
+  Add the single reason: "Height > 0".
   The Derived attributes panel now shows
    BMI = 30.93; hover over the name to see the formula and the condition.
 
