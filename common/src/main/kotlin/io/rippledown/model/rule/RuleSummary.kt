@@ -9,5 +9,6 @@ data class RuleSummary(
     val id: Int = 0,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = setOf(),
-    val conditionTextsFromRoot: List<String> = listOf()
+    val conditionTextsFromRoot: List<String> = listOf(),
+    val assignment: AssignValue? = null
 )

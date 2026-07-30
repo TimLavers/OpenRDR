@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.rippledown.model.Conclusion
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.persistence.PersistentRule
@@ -45,37 +46,62 @@ class RuleManager(
     fun ruleTree() = ruleTree
 
     override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        println("--- create rule and add to parent ---")
-        println("parent: $parent")
-        println("conclusion: $conclusion")
-        println("conditions: $conditions")
         val parentInTree = ruleTree.rulesMatching { it.id == parent.id }.firstOrNull()
         require(parentInTree != null) {
             "Parent rule not in tree."
         }
-        // Some of the conditions may not yet exist in the KB, for example
-        // if they were created as suggestions. We need to store such conditions.
-        val storedConditions = conditions.map {
-            if (it.id != null) it else conditionManager.getOrCreate(it)
-        }.toSet()
-        println("stored conditions: $storedConditions")
-        val conditionIds = storedConditions.map { it.id!! }.toSet()
+        val storedConditions = storeConditionsAsNeeded(conditions)
+        val conditionIds = conditionIds(storedConditions)
         val toStore = PersistentRule(null, parent.id, conclusion?.id, conditionIds)
         val stored = ruleStore.create(toStore)
-        val newRule = Rule(stored.id!!, parent, conclusion, storedConditions)
+        val newRule = Rule(storedRuleId(stored), parent, conclusion, storedConditions)
         parent.addChild(newRule)
-        println("--- rule created ---")
         return newRule
     }
 
+    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule {
+        val parentInTree = ruleTree.rulesMatching { it.id == parent.id }.firstOrNull()
+        require(parentInTree != null) {
+            "Parent rule not in tree."
+        }
+        val storedConditions = storeConditionsAsNeeded(conditions)
+        val conditionIds = conditionIds(storedConditions)
+        val toStore = PersistentRule(null, parent.id, null, conditionIds, assignment)
+        val stored = ruleStore.create(toStore)
+        val newRule = Rule(storedRuleId(stored), parent, null, storedConditions, mutableSetOf(), assignment)
+        parent.addChild(newRule)
+        return newRule
+    }
+
+    // Some of the conditions may not yet exist in the KB, for example
+    // if they were created as suggestions. We need to store such conditions.
+    private fun storeConditionsAsNeeded(conditions: Set<Condition>) = conditions.map {
+        if (it.id != null) it else conditionManager.getOrCreate(it)
+    }.toSet()
+
+    private fun conditionIds(storedConditions: Set<Condition>) = storedConditions.map {
+        requireNotNull(it.id) { "Stored condition has no id." }
+    }.toSet()
+
+    private fun storedRuleId(stored: PersistentRule) =
+        checkNotNull(stored.id) { "Stored rule has no id." }
+
     fun deleteLeafRule(rule: Rule) {
-        rule.parent!!.removeChildLeafRule(rule)
+        val parent = requireNotNull(rule.parent) { "Cannot delete the root rule." }
+        parent.removeChildLeafRule(rule)
         ruleStore.removeById(rule.id)
     }
 
     private fun rebuildRuleButDoNotSetParent(persistentRule: PersistentRule): Rule {
         val conclusion = if (persistentRule.conclusionId != null) conclusionManager.getById(persistentRule.conclusionId) else null
         val conditions = persistentRule.conditionIds.map { conditionManager.getById(it) }.toSet()
-        return Rule(persistentRule.id!!, null, conclusion, conditions, mutableSetOf())
+        return Rule(
+            storedRuleId(persistentRule),
+            null,
+            conclusion,
+            conditions,
+            mutableSetOf(),
+            persistentRule.assignment
+        )
     }
 }

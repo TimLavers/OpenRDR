@@ -2,6 +2,7 @@ package io.rippledown.suggestions.scorer
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
@@ -13,10 +14,7 @@ import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.case
+import io.rippledown.model.rule.*
 import io.rippledown.suggestions.SuggestionContext
 import kotlin.test.Test
 import io.rippledown.model.condition.episodic.signature.AtLeast as AtLeastSignature
@@ -27,6 +25,12 @@ class CommentTokenOverlapScorerTest {
     private val mcv = Attribute(11, "MCV")
     private val glucose = Attribute(12, "Glucose")
 
+    private val hba1c = Attribute(20, "HbA1c")
+    private val height = Attribute(21, "Height")
+    private val weight = Attribute(22, "Weight")
+    private val bmi = Attribute(23, "BMI", AttributeKind.DERIVED)
+    private val anotherBmi = Attribute(24, "another bmi", AttributeKind.DERIVED)
+
     private val sessionCase = case(tsh to "5.0")
 
     private fun nonEdit(condition: io.rippledown.model.condition.Condition): SuggestedCondition =
@@ -36,6 +40,21 @@ class CommentTokenOverlapScorerTest {
         sessionCase = sessionCase,
         attributes = setOf(tsh, mcv, glucose),
         action = ChangeTreeToAddConclusion(Conclusion(1, commentText)),
+    )
+
+    private fun ctxForAssignment(assigned: Attribute, expression: ValueExpression) = SuggestionContext(
+        sessionCase = sessionCase,
+        attributes = setOf(hba1c, height, weight, bmi),
+        action = ChangeTreeToAddAssignment(AssignValue(assigned, expression)),
+    )
+
+    /** `weight / height ^ power`, the formula from the reported case. */
+    private fun weightOverHeightToThePower(power: Int) = Formula(
+        Binary(
+            Operator.DIVIDE,
+            AttributeValue(weight),
+            Binary(Operator.POWER, AttributeValue(height), Num(power.toDouble())),
+        )
     )
 
     /**
@@ -356,6 +375,97 @@ class CommentTokenOverlapScorerTest {
 
         //Then lte matches both "tsh" and "below"
         scorer.score(lte) shouldBe 2
+    }
+
+    /**
+     * The bug this covers: assigning a derived attribute whose formula names
+     * Height and Weight used to score 0 for every candidate, so ranking fell
+     * through to [OutOfRangeScorer] and the flagged HbA1c led the list while
+     * Height and Weight missed the top ten entirely. The attributes named in
+     * the formula must now score, and the unrelated flagged one must not.
+     */
+    @Test
+    fun `assignment scores the attributes referenced by its formula`() {
+        //Given an assignment of "another bmi" with formula weight / height ^ 3
+        val ctx = ctxForAssignment(anotherBmi, weightOverHeightToThePower(3))
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then the formula's attributes score, and the out-of-range HbA1c -
+        //named nowhere in the action - does not
+        scorer.score(nonEdit(EpisodicCondition(height, High, Current))) shouldBe 1
+        scorer.score(nonEdit(EpisodicCondition(weight, High, Current))) shouldBe 1
+        scorer.score(nonEdit(EpisodicCondition(hba1c, High, Current))) shouldBe 0
+    }
+
+    /**
+     * The assigned attribute's own name is a token source too, mirroring the
+     * way a comment's wording is: "another BMI" makes BMI a relevant subject.
+     */
+    @Test
+    fun `assignment scores the name of the attribute being assigned`() {
+        //Given an assignment to "another bmi" whose expression names no
+        //attribute at all
+        val ctx = ctxForAssignment(anotherBmi, Literal("1"))
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then a candidate on BMI picks up the shared "bmi" token
+        scorer.score(nonEdit(EpisodicCondition(bmi, High, Current))) shouldBe 1
+        scorer.score(nonEdit(EpisodicCondition(hba1c, High, Current))) shouldBe 0
+    }
+
+    /**
+     * Replacing an assignment scores against the replacement's expression,
+     * matching the convention already used for `ChangeTreeToReplaceConclusion`:
+     * signal comes from what the user is introducing, not what is going away.
+     */
+    @Test
+    fun `replace assignment scores against the replacement formula`() {
+        //Given an assignment to "another bmi" being replaced, the old formula
+        //referencing HbA1c and the new one referencing Weight
+        val old = AssignValue(anotherBmi, Formula(AttributeValue(hba1c)))
+        val replacement = AssignValue(anotherBmi, Formula(AttributeValue(weight)))
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(hba1c, height, weight, bmi),
+            action = ChangeTreeToReplaceAssignment(toBeReplaced = old, replacement = replacement),
+        )
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then the replacement's Weight scores and the replaced HbA1c does not
+        scorer.score(nonEdit(EpisodicCondition(weight, High, Current))) shouldBe 1
+        scorer.score(nonEdit(EpisodicCondition(hba1c, High, Current))) shouldBe 0
+    }
+
+    /**
+     * A removal carries no expression, so the attribute name is all there is
+     * to score on. It must not crash or score the whole case.
+     */
+    @Test
+    fun `remove assignment scores on the assigned attribute name alone`() {
+        //Given the removal of the "another bmi" assignment, whose formula
+        //references Weight
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(hba1c, weight, bmi),
+            action = ChangeTreeToRemoveAssignment(
+                AssignValue(anotherBmi, Formula(AttributeValue(weight)))
+            ),
+        )
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then only the assigned name overlaps; the removal exposes no
+        //expression, so Weight contributes nothing
+        scorer.score(nonEdit(EpisodicCondition(bmi, High, Current))) shouldBe 1
+        scorer.score(nonEdit(EpisodicCondition(weight, High, Current))) shouldBe 0
+        scorer.score(nonEdit(EpisodicCondition(hba1c, High, Current))) shouldBe 0
     }
 
     /**

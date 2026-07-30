@@ -16,9 +16,20 @@ class RuleBuildingSession(
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
+    /**
+     * The session case and cornerstones with their derived values written
+     * by the current tree, so that conditions on derived attributes can be
+     * evaluated during rule building.
+     */
+    val materialisedCase: RDRCase
+    private val materialisedCornerstones = mutableMapOf<RDRCase, RDRCase>()
+
     class TemporaryRuleFactory : RuleFactory {
         override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) =
             Rule(Random.nextInt(), parent, conclusion, conditions)
+
+        override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>) =
+            Rule(Random.nextInt(), parent, null, conditions, mutableSetOf(), assignment)
     }
 
     init {
@@ -36,13 +47,18 @@ class RuleBuildingSession(
             .forEach {
                 copyOfTree.apply(it)
                 val conclusionsGivenByModifiedTree = it.interpretation.conclusions()
-                tree.apply(it)
+                val assignmentsGivenByModifiedTree = it.interpretation.assignments()
+                val materialised = tree.materialise(it)
                 val conclusionsGivenByOriginalTree = it.interpretation.conclusions()
-                if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree) {
+                val assignmentsGivenByOriginalTree = it.interpretation.assignments()
+                if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree ||
+                    assignmentsGivenByModifiedTree != assignmentsGivenByOriginalTree
+                ) {
                     cornerstonesNotExempted.add(it)
+                    materialisedCornerstones[it] = materialised
                 }
             }
-        case.copyWithoutId()
+        materialisedCase = tree.materialise(case)
     }
 
     fun cornerstoneCases(): List<RDRCase> {
@@ -57,11 +73,12 @@ class RuleBuildingSession(
     }
 
     private fun caseSatisfiesConditions(case: RDRCase): Boolean {
-        return conditions.all { it.holds(case) }
+        val materialised = materialisedCornerstones[case] ?: case
+        return conditions.all { it.holds(materialised) }
     }
 
     fun addCondition(condition: Condition): RuleBuildingSession {
-        require(condition.holds(case)) {
+        require(condition.holds(materialisedCase)) {
             "Condition $condition was not true for the case ${case.name}"
         }
         conditions.add(condition)

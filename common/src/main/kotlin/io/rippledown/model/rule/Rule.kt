@@ -8,6 +8,9 @@ import io.rippledown.model.condition.Condition
 const val RULE_TO_ADD_COMMENT = "Add comment:"
 const val RULE_TO_REMOVE_COMMENT = "Remove comment:"
 const val RULE_TO_REPLACE_COMMENT = "Replace comment:"
+const val RULE_TO_ASSIGN_VALUE = "Assign value:"
+const val RULE_TO_RETRACT_ASSIGNMENT = "Retract assignment:"
+const val RULE_TO_REPLACE_ASSIGNMENT = "Replace assignment:"
 const val WITH = "with:"
 
 open class Rule(
@@ -15,32 +18,54 @@ open class Rule(
     var parent: Rule? = null,
     val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf(),
-    private val childRules: MutableSet<Rule> = mutableSetOf()
+    private val childRules: MutableSet<Rule> = mutableSetOf(),
+    val assignment: AssignValue? = null
 ) {
 
     init {
+        require(conclusion == null || assignment == null) {
+            "A rule cannot both give a conclusion and assign a value."
+        }
         childRules.forEach { it.parent = this }
     }
 
+    /**
+     * What this rule does when it fires, or null if it does nothing (a
+     * stopping rule, which retracts the action of its parent).
+     */
+    val action: RuleAction?
+        get() = assignment ?: conclusion?.let { AssignConclusion(it) }
+
     fun summary(): RuleSummary {
-        return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot())
+        return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot(), assignment)
     }
 
     fun actionSummary(conclusionRenderer: (Conclusion) -> String = { it.truncatedText { _ -> "unknown" } }): String {
-        if (parent == null) {
-            return ""
+        val parentRule = parent ?: return ""
+        if (assignment != null || parentRule.assignment != null) {
+            return assignmentSummary(parentRule)
         }
-        if (parent!!.conclusion == null) {
-            return "$RULE_TO_ADD_COMMENT\n${conclusion?.let(conclusionRenderer)}"
-        }
+        val parentConclusion = parentRule.conclusion
+            ?: return "$RULE_TO_ADD_COMMENT\n${conclusion?.let(conclusionRenderer)}"
         if (conclusion == null) {
-            return "$RULE_TO_REMOVE_COMMENT\n${parent!!.conclusion?.let(conclusionRenderer)}"
+            return "$RULE_TO_REMOVE_COMMENT\n${conclusionRenderer(parentConclusion)}"
         }
-        return "$RULE_TO_REPLACE_COMMENT\n${parent!!.conclusion?.let(conclusionRenderer)}\n$WITH\n${
+        return "$RULE_TO_REPLACE_COMMENT\n${conclusionRenderer(parentConclusion)}\n$WITH\n${
             conclusionRenderer(
                 conclusion
             )
         }"
+    }
+
+    private fun assignmentSummary(parentRule: Rule): String {
+        val parentAssignment = parentRule.assignment
+        if (parentAssignment == null) {
+            return "$RULE_TO_ASSIGN_VALUE\n${assignment?.asText()}"
+        }
+        if (assignment == null) {
+            return "$RULE_TO_RETRACT_ASSIGNMENT\n${parentAssignment.asText()}"
+        }
+        return "$RULE_TO_REPLACE_ASSIGNMENT\n${parentAssignment.asText()}\n$WITH\n${assignment.asText()}"
     }
 
     fun conditionTextsFromRoot(): List<String> {
@@ -104,7 +129,7 @@ open class Rule(
     fun copy(): Rule {
         val copyChildRules = mutableSetOf<Rule>()
         childRules().forEach { r -> copyChildRules.add(r.copy()) }
-        val rule = Rule(id, null, conclusion?.copy(), conditions.toSet(), copyChildRules)
+        val rule = Rule(id, null, conclusion?.copy(), conditions.toSet(), copyChildRules, assignment)
         rule.parent = parent
         return rule
     }
@@ -113,6 +138,7 @@ open class Rule(
         val sb = StringBuilder().append("Rule($id, ")
         parent?.let { sb.append("parent=$parent") }
         conclusion?.let { sb.append(" conclusion=$conclusion") }
+        assignment?.let { sb.append(" assignment=$assignment") }
         if (conditions.isNotEmpty()) {
             sb.append(" conditions=$conditions")
         }
@@ -122,6 +148,7 @@ open class Rule(
 
     fun structurallyEqual(other: Rule): Boolean {
         if (conclusion != other.conclusion) return false
+        if (assignment != other.assignment) return false
         if (conditions != other.conditions) return false
         return parent == other.parent
     }

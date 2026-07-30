@@ -45,7 +45,7 @@ Running
    macOS/Linux:  ./start-demo.sh  from a terminal
 3. A console window will open running the server on localhost:9090. The
    server boots in in-memory mode AND auto-creates a knowledge base named
-   "Demo" pre-populated with the cases used by the two demo scenarios
+   "Demo" pre-populated with the cases used by the three demo scenarios
    below. Shortly after, the OpenRDR desktop UI will launch.
 4. In the UI, open the KB selector and choose "Demo" if it is not already
    the active KB.
@@ -55,7 +55,7 @@ Running
 The Demo KB
 -----------
 
-The Demo KB is seeded with two cases:
+The Demo KB is seeded with three cases:
 
   - Lindsay   waiting case, simple lab panel
               (Glucose 5.2 mmol/L [ref < 5.1], Pregnant Y, Age 21).
@@ -64,9 +64,13 @@ The Demo KB is seeded with two cases:
     - Jane    cornerstone case, simple lab panel
               Surfaced as a cornerstone when adding a comment to Lindsay.
 
+  - Taylor   waiting case, used for the derived-attributes demo
+              (HbA1c 7.8 % [ref 4.0-6.0], Height 1.78 m, Weight 98 kg,
+              Age 54, Sex F).
+
 No rules are pre-built; you create them as part of the demo.
 
-Demo scenario: build a rule with Spanish conditions
+Demo scenario 1: build a rule with Spanish conditions
 ------------------------------------------------------
 
 1. Select the case "Lindsay".
@@ -102,6 +106,73 @@ Demo scenario 2: review a cornerstone case via chat
 
 5. Hover the mouse of the interpretation and you will see the formal condition age < 40.0
 6. The point is that user has control over the extent to which the rule change applies to the cornerstone cases.
+
+Demo scenario 3: derived attributes, repeat inferencing and the AI report
+-------------------------------------------------------------------------
+
+This scenario is automated end-to-end by the cucumber feature
+"Pathology demo script.feature" (cucumber/src/test/resources/requirements/
+demo/), so if that cuke passes, this script is known to work.
+
+Explain that we are going to build 2 derived attributes and 3 comments We will be demonstrating;
+- repeat inferencing by using derived attributes as conditions for comments,
+- inserting a value into a comment,
+- producing a formatted and narrative-style report from the set of comments.
+
+1. Select the case "Taylor". Note the "Derived attributes" panel under the
+   case data: it is empty ("None for this case"). Hover over the info icon
+   next to the heading for a short explanation of derived attributes.
+
+2. Create a formula-based derived attribute. In the chat, type:
+       Add attribute BMI with formula weight / height^2
+  Note that the height and weight suggestions are at the top of this list, as these are in the formula.
+  Add the single reason: "Height > 0".
+  The Derived attributes panel now shows
+   BMI = 30.93; hover over the name to see the formula and the condition.
+
+3. Create a rule-based derived attribute. In the chat, type:
+       Add attribute "Diabetes status" with value diabetic
+   The suggested conditions appear -- note that the FIRST suggestion is
+   "HbA1c is high": suggestions are prioritised by out-of-range values
+   and by the rule action. Reply with the reason:
+       HbA1c is high
+   Decline to add more reasons. The panel now also shows
+   Diabetes status = diabetic.
+
+4. Build a comment on the BMI value (repeat inferencing: the condition
+   refers to a derived attribute, not to raw case data). Type:
+       Add the comment: "Obesity. BMI is {BMI}. Weight reduction."
+   Reply with the reason:
+       BMI > 30
+   Decline to add more reasons. The comment appears with the actual BMI:
+   "Obesity. BMI 30.93. Weight reduction."
+   Note how clipped it is. A rule's comment is written once and then reused
+   verbatim on every case the rule fires for, so experts write them terse
+   and self-contained -- which is exactly why several of them landing on
+   the one case read as disconnected fragments.
+
+5. Build a comment on the diabetes status. Type:
+       Add the comment: "Diabetic. Dietary review."
+   Confirm if asked. Reply with the reason, which should be the first suggestion:
+       Diabetes status is "diabetic"
+   Decline to add more reasons.
+
+6. Build a third comment, this one on the raw out-of-range HbA1c. Type:
+       Add the comment: "HbA1c above target. Repeat in 3 months."
+   Confirm if asked. Reply with the reason:
+       HbA1c is high
+   Decline to add more reasons.
+
+7. Read the three comments in the Comments panel: each is correct, but they
+   are clipped, and each ends in its own dangling action.Now show the Report tool tip. Now open the
+   Report panel. The AI has done two things no rule can do:
+     - written the fragments up as flowing prose for THIS patient, quoting
+       the BMI and bolding the out-of-range HbA1c, and
+     - consolidated the three separate follow-ups into a single
+       "Recommendation" section.
+   The point to make to the audience: no individual rule could produce that
+   recommendation, because no rule knows what the other rules concluded.
+   Only the report sees all the comments at once.
 
 Notes
 -----

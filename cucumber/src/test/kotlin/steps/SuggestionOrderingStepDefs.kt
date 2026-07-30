@@ -1,5 +1,6 @@
 package steps
 
+import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.kotest.matchers.collections.shouldNotContain
 import io.rippledown.chat.ChatTestHook
@@ -151,6 +152,14 @@ class SuggestionOrderingStepDefs {
     fun suggestedConditionShouldNotAppear(text: String) {
         await().atMost(ofSeconds(20)).until { currentSuggestions().isNotEmpty() }
         currentSuggestions() shouldNotContain text
+    }
+
+    @Then("none of the suggestions should contain any of the following terms:")
+    fun suggestedConditionShouldNotAppear(terms: DataTable) {
+        await().atMost(ofSeconds(20)).until { currentSuggestions().isNotEmpty() }
+        currentSuggestions().all { suggestion ->
+            terms.asList().none { it in suggestion }
+        }
     }
 
     private fun currentSuggestions(): List<String> = chatPO().suggestionsInMostRecentMessage()

@@ -45,11 +45,7 @@ data class Conclusion(
      * Conclusions without variables are truncated as plain text.
      */
     fun truncatedText(attributeNameById: (Int) -> String): String {
-        val displayText = if (variables.isNotEmpty()) {
-            substitutePlaceholders(attributeNameById)
-        } else {
-            text
-        }
+        val displayText = textWithAttributeNames(attributeNameById)
 
         if (displayText.length <= 20) return displayText
 
@@ -70,7 +66,8 @@ data class Conclusion(
      * Replace each `${}` token (in order of appearance) with `{attributeName}` using the
      * supplied resolver.
      */
-    private fun substitutePlaceholders(attributeNameById: (Int) -> String): String {
+    fun textWithAttributeNames(attributeNameById: (Int) -> String): String {
+        if (variables.isEmpty()) return text
         val builder = StringBuilder()
         var pos = 0
         var varIndex = 0

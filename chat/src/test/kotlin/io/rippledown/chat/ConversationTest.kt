@@ -55,6 +55,15 @@ class ConversationTest {
         return fc
     }
 
+    private fun malformedFunctionCallResponse(): GenerateContentResponse {
+        val failure =
+            IllegalArgumentException("The response finished unexpectedly with reason MALFORMED_FUNCTION_CALL.")
+        val response = mockk<GenerateContentResponse>()
+        every { response.functionCalls() } throws failure
+        every { response.text() } throws failure
+        return response
+    }
+
     @Test
     fun `starting a conversation should delegate to the chat service`() =
         runTest {
@@ -137,6 +146,36 @@ class ConversationTest {
             coVerify { reasonTransformer.transform(userExpression) }
         }
     }
+
+    @Test
+    fun `should recover when the SDK returns a malformed function call by retrying with a nudge`() =
+        runTest {
+            // Given the start succeeds, then the next send returns a response whose finish reason
+            // causes google-genai's checkFinishReason to throw IllegalArgumentException
+            // (MALFORMED_FUNCTION_CALL). The nudged retry then succeeds.
+            val startResponse = mockResponse(text = "Hello, how can I assist you today?")
+            val recovered = mockResponse(text = "The comment was added.")
+            val messages = mutableListOf<String>()
+            val chat = mockk<Chat>()
+            every { chat.sendMessage(capture(messages)) } answers {
+                when (messages.size) {
+                    1 -> startResponse
+                    2 -> malformedFunctionCallResponse()
+                    else -> recovered
+                }
+            }
+            val conversation = Conversation(object : ChatService {
+                override fun startChat() = chat
+            }, functionCallHandlers)
+            conversation.startConversation()
+
+            // When
+            val response = conversation.response("Add the comment \"Comment 1.\"")
+
+            // Then
+            response shouldBe "The comment was added."
+            messages.last() shouldContain CONTINUE_NUDGE
+        }
 
     @Test
     fun `should recover when the SDK throws on an empty candidate by retrying with a nudge`() =

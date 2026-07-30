@@ -155,6 +155,18 @@ class RESTClient {
         runBlocking { api.buildRule(request) }
     }
 
+    fun buildAssignmentRule(caseName: String, attributeName: String, expression: String, conditions: List<String>) {
+        val request = BuildRuleRequest(caseName, Addition(""), conditions, attributeName, expression)
+        runBlocking { api.buildRule(request) }
+    }
+
+    fun derivedValueFor(caseName: String, attributeName: String): String? {
+        val viewableCase = getProcessedCaseWithName(caseName)
+        val attribute = viewableCase.case.attributes.find { it.name == attributeName }
+            ?: return null
+        return viewableCase.case.latestValue(attribute)
+    }
+
 
     fun createKB(name: String) {
         runBlocking {

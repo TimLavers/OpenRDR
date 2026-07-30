@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
-sealed interface Diff {
+sealed interface Diff : PendingChange {
     fun left(): String
     fun right(): String
 }

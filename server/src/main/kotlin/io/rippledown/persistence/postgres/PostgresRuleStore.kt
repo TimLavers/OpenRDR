@@ -33,6 +33,7 @@ class PostgresRuleStore(private val db: Database): RuleStore {
                 parentId = prototype.parentId
                 conclusionId = prototype.conclusionId
                 conditionIds = prototype.conditionIdsString()
+                assignment = prototype.assignmentString()
             }
             return@transaction persistentRule(pgRule)
         }
@@ -48,6 +49,7 @@ class PostgresRuleStore(private val db: Database): RuleStore {
                     parentId = it.parentId
                     conclusionId = it.conclusionId
                     conditionIds = it.conditionIdsString()
+                    assignment = it.assignmentString()
                 }
             }
         }
@@ -61,16 +63,24 @@ class PostgresRuleStore(private val db: Database): RuleStore {
         }
     }
 
-    private fun persistentRule(pgRule: PGRule) = PersistentRule(pgRule.id.value, pgRule.parentId, pgRule.conclusionId, pgRule.conditionIds)
+    private fun persistentRule(pgRule: PGRule) = PersistentRule(
+        pgRule.id.value,
+        pgRule.parentId,
+        pgRule.conclusionId,
+        pgRule.conditionIds,
+        PersistentRule.assignmentFromString(pgRule.assignment)
+    )
 }
 object PGRules: IntIdTable(name = RULES_TABLE) {
     val parentId = integer("parent").nullable()
     val conclusionId = integer("conclusion").nullable()
     val conditionIds = varchar("conditions", 1024)
+    val assignment = text("assignment").nullable()
 }
 class PGRule(id: EntityID<Int>): IntEntity(id){
     companion object: IntEntityClass<PGRule>(PGRules)
     var parentId by PGRules.parentId
     var conclusionId by PGRules.conclusionId
     var conditionIds by PGRules.conditionIds
+    var assignment by PGRules.assignment
 }

@@ -40,8 +40,7 @@ MUST be the appropriate action JSON object (no prose, no apology, no question).
 ## Step 2 Receive confirmation that the rule session has been started, or else cannot be started
 
 If the rule can be started, you will receive a message from the system with cornerstone case information. This indicates
-the rule session has
-been started:
+the rule session has been started:
 
 ```
 Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, Total: <number of cornerstone cases>

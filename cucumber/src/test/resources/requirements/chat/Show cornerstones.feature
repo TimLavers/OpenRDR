@@ -25,7 +25,7 @@ Feature: Show cornerstones
     And I start the client application
     And select the case Case2
     And I see the case Case2 as the current case
-    And I request that the comment be removed
+    And I request that the only comment be removed
     And the case Case1 is shown as the cornerstone case
     And the chatbot has asked if I want to provide any reasons and I decline
     When the chatbot has asked if want to allow the report change to cornerstone case "Case1" and I confirm
@@ -75,7 +75,7 @@ Feature: Show cornerstones
     And I start the client application
     And select the case Case2
     And I see the case Case2 as the current case
-    And I request that the comment be removed
+    And I request that the only comment be removed
     And the case Case1 is shown as the cornerstone case
     When I provide only the following reason:
       | x contains b |

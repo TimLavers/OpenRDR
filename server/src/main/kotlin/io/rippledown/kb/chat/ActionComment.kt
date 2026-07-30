@@ -21,6 +21,9 @@ data class ActionComment(
     val reasonId: Int? = null,
     val attributeMoved: String? = null,
     val destination: String? = null,
+    val attributeName: String? = null,
+    val valueExpression: String? = null,
+    val replacementValueExpression: String? = null,
     val suggestions: List<String>? = null,
     val variables: List<ChatCommentVariable>? = null,
 ) {
@@ -51,6 +54,9 @@ data class ActionComment(
         if (reasonId != null) asMap["reasonId"] = reasonId
         if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
         if (destination != null) asMap["destination"] = destination
+        if (attributeName != null) asMap["attributeName"] = attributeName
+        if (valueExpression != null) asMap["valueExpression"] = valueExpression
+        if (replacementValueExpression != null) asMap["valueExpression"] = replacementValueExpression
         if (variables != null) asMap["variables"] = variables
 
         val paramMap = mutableMapOf<KParameter, Any>()

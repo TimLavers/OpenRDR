@@ -5,12 +5,12 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.interpretation.*
-import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.findAllByDescriptionPrefix
-import io.rippledown.integration.utils.findComposeDialogThatIsShowing
+import io.rippledown.integration.utils.*
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
+import java.awt.Dimension
+import java.awt.Point
 import java.awt.Rectangle
 import java.awt.Robot
 import java.time.Duration.ofSeconds
@@ -63,7 +63,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         // string doesn't exactly match" (trailing whitespace, newline,
         // etc.). Without this diagnostic the scenario fails with just an
         // Awaitility timeout and no indication of the actual content.
-        val lastObserved = java.util.concurrent.atomic.AtomicReference<String>("<never read>")
+        val lastObserved = java.util.concurrent.atomic.AtomicReference("<never read>")
         try {
             await()
                 .atMost(ofSeconds(30))
@@ -184,6 +184,72 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     fun requireNoConditionsToBeShowing() {
         execute<Set<AccessibleContext>> { contextProvider().findAllByDescriptionPrefix(CONDITION_PREFIX) } shouldHaveSize 0
+    }
+
+    // ── Derived attributes panel ─────────────────────────────────────────────
+
+    fun waitForDerivedValueToBeShown(attributeName: String, expectedValue: String) {
+        waitUntilAsserted {
+            val rowCtx = execute<AccessibleContext?> {
+                contextProvider().find("$DERIVED_VALUE_ROW_PREFIX$attributeName")
+            }
+            rowCtx shouldNotBe null
+            val valueCtx = execute<AccessibleContext?> {
+                rowCtx!!.findLabelByRenderedText(expectedValue)
+            }
+            valueCtx shouldNotBe null
+        }
+    }
+
+    private fun movePointerOverDerivedValueName(attributeName: String) {
+        val nameCtx = execute<AccessibleContext?> {
+            contextProvider().find("$DERIVED_VALUE_NAME_PREFIX$attributeName")
+        } ?: error("Derived value name not found: $attributeName")
+        val component = nameCtx.accessibleComponent
+            ?: error("Derived value name has no accessible component: $attributeName")
+        val location = execute<Point> { component.locationOnScreen }
+        val size = execute<Dimension> { component.size }
+        if (location != null && size != null) {
+            Robot().mouseMove(location.x + size.width / 2, location.y + size.height / 2)
+        }
+    }
+
+    fun waitForDerivedValueFormula(attributeName: String, formula: String) {
+        val normalizedExpected = formula.filter { !it.isWhitespace() }.replace("**", "").replace("^", "")
+        waitUntilAsserted {
+            movePointerOverDerivedValueName(attributeName)
+            val ctx = execute<AccessibleContext?> {
+                contextProvider().find(DERIVED_VALUE_FORMULA_PREFIX)
+            }
+            ctx shouldNotBe null
+            val actual = execute<String> { renderedText(ctx!!) }
+            actual.filter { !it.isWhitespace() } shouldBe normalizedExpected
+        }
+    }
+
+    fun waitForDerivedValueConditions(attributeName: String, conditions: List<String>) {
+        waitUntilAsserted {
+            movePointerOverDerivedValueName(attributeName)
+            conditions.forEach { condition ->
+                val ctx = execute<AccessibleContext?> {
+                    contextProvider().find("$DERIVED_VALUE_CONDITIONS_PREFIX$condition")
+                }
+                ctx shouldNotBe null
+            }
+        }
+    }
+
+    fun waitForDerivedValuesEmptyState() {
+        waitUntilAsserted {
+            val toggleCtx = execute<AccessibleContext?> {
+                contextProvider().find(DERIVED_VALUES_TOGGLE)
+            }
+            toggleCtx shouldNotBe null
+            val emptyCtx = execute<AccessibleContext?> {
+                contextProvider().find(DERIVED_ATTRIBUTES_NONE)
+            }
+            emptyCtx shouldNotBe null
+        }
     }
 
     fun selectExistingCommentToAddClickOK(comment: String) {

@@ -4,8 +4,8 @@ import io.rippledown.model.rule.CornerstoneStatus
 
 /**
  * Builds the message that an action which advances cornerstone review (exempt /
- * next / previous / remove-reason) sends back to the model after the rule
- * engine has recomputed the cornerstones.
+ * next / previous) sends back to the model after the rule engine has recomputed
+ * the cornerstones.
  *
  * In addition to the bare cornerstone status, this prepends a directive in
  * the no-remaining-cornerstones case (`Total == 0`). Without it, the model is
@@ -24,3 +24,20 @@ internal fun CornerstoneStatus.endOfReviewMessage(): String {
             "{\"action\": \"CommitRule\"} now and nothing else. Do NOT ask for more " +
             "reasons and do NOT call getSuggestedConditions."
 }
+
+/**
+ * Builds the message sent back to the model after a reason has been removed
+ * from the rule being built.
+ *
+ * Removing a reason does not advance cornerstone review, so this must not use
+ * [endOfReviewMessage]: with no cornerstones left to review, its commit
+ * directive led the model to commit the rule in the very turn the user removed
+ * a reason, instead of confirming the removal. A user who is taking reasons
+ * back is still editing the rule, whatever they said about further reasons
+ * earlier.
+ */
+internal fun CornerstoneStatus.reasonRemovedMessage(): String =
+    summary() + "\n" +
+            "The reason has been removed from the rule being built. Tell the user " +
+            "it has been removed and ask whether they want to give any more " +
+            "reasons. Do NOT commit the rule in this turn."

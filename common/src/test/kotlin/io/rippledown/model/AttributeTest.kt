@@ -45,6 +45,64 @@ internal class AttributeTest {
         (Attribute(1, "Stuff").hashCode() == Attribute(1, "Nonsense").hashCode()) shouldBe true
     }
 
+    @Test
+    fun `kind is EXTERNAL by default`() {
+        // Given an attribute created without a kind
+        val tsh = Attribute(0, "TSH")
+
+        // Then its kind is EXTERNAL
+        tsh.kind shouldBe AttributeKind.EXTERNAL
+    }
+
+    @Test
+    fun `kind can be specified at construction`() {
+        // When attributes are created with each KB-assigned kind
+        val bmi = Attribute(1, "BMI", AttributeKind.DERIVED)
+        val comment = Attribute(2, "DiabetesStatus", AttributeKind.COMMENT)
+
+        // Then the kinds are as given
+        bmi.kind shouldBe AttributeKind.DERIVED
+        comment.kind shouldBe AttributeKind.COMMENT
+    }
+
+    @Test
+    fun `kind survives serialization`() {
+        // Given attributes of each kind
+        val external = Attribute(1, "TSH")
+        val derived = Attribute(2, "BMI", AttributeKind.DERIVED)
+        val comment = Attribute(3, "DiabetesStatus", AttributeKind.COMMENT)
+
+        // When they are serialized and deserialized
+        // Then the kinds are unchanged
+        serializeDeserialize(external).kind shouldBe AttributeKind.EXTERNAL
+        serializeDeserialize(derived).kind shouldBe AttributeKind.DERIVED
+        serializeDeserialize(comment).kind shouldBe AttributeKind.COMMENT
+    }
+
+    @Test
+    fun `json without a kind deserializes as EXTERNAL`() {
+        // Given json produced before the kind field existed
+        val legacyJson = """{"id":99,"name":"TSH"}"""
+
+        // When it is deserialized
+        val attribute = Json.decodeFromString<Attribute>(legacyJson)
+
+        // Then the attribute is external
+        attribute.kind shouldBe AttributeKind.EXTERNAL
+        attribute.id shouldBe 99
+        attribute.name shouldBe "TSH"
+    }
+
+    @Test
+    fun `equality ignores kind, as it does name`() {
+        // Given two attributes with the same id but different kinds
+        val external = Attribute(1, "Stuff")
+        val derived = Attribute(1, "Stuff", AttributeKind.DERIVED)
+
+        // Then they are equal, since equality is by id alone
+        (external == derived) shouldBe true
+    }
+
     @Test //Attr-2
     fun nameNotBlank() {
         shouldThrow<IllegalStateException> {

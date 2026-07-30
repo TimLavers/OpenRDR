@@ -152,6 +152,20 @@ class ConditionExpressionParser(private val attributeFor: (String) -> Attribute)
             return EpisodicCondition(null, attr, Is(value), Current, text)
         }
 
+        // ATTR > VALUE
+        GT.matchEntire(text)?.let { match ->
+            val attr = attributeFor(match.groupValues[1])
+            val value = match.groupValues[2].toDouble()
+            return EpisodicCondition(null, attr, GreaterThan(value), Current, text)
+        }
+
+        // ATTR < VALUE
+        LT.matchEntire(text)?.let { match ->
+            val attr = attributeFor(match.groupValues[1])
+            val value = match.groupValues[2].toDouble()
+            return EpisodicCondition(null, attr, LessThan(value), Current, text)
+        }
+
         // ATTR ≥ VALUE
         GTE.matchEntire(text)?.let { match ->
             val attr = attributeFor(match.groupValues[1])
@@ -178,6 +192,8 @@ class ConditionExpressionParser(private val attributeFor: (String) -> Attribute)
         private val LOW_BY_AT_MOST = Regex("""(.+) is low by at most (\d+)%""")
         private val HIGH_BY_AT_MOST = Regex("""(.+) is high by at most (\d+)%""")
         private val IS_QUOTED = Regex("""(.+) is "(.+)"""")
+        private val GT = Regex("""(.+) > (.+)""")
+        private val LT = Regex("""(.+) < (.+)""")
         private val GTE = Regex("""(.+) ≥ (.+)""")
         private val LTE = Regex("""(.+) ≤ (.+)""")
     }

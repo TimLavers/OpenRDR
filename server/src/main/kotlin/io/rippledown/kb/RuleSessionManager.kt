@@ -7,16 +7,14 @@ import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
 import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
@@ -31,7 +29,19 @@ class RuleSessionManager(
     val logger = lazyLogger
 
     private var ruleSession: RuleBuildingSession? = null
-    internal var currentDiff: Diff? = null
+
+    /**
+     * The change the session in progress is about to make. A session makes one
+     * change, so this is one field; [currentDiff] and [currentDerivedValueChange]
+     * are read views of it for the code that handles only one kind.
+     */
+    internal var currentChange: PendingChange? = null
+
+    internal val currentDiff: Diff?
+        get() = currentChange as? Diff
+
+    internal val currentDerivedValueChange: DerivedValueChange?
+        get() = currentChange as? DerivedValueChange
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -51,6 +61,7 @@ class RuleSessionManager(
         logger.info("Current conclusions are: ${case.interpretation.conclusionTexts()} ")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
+        checkActionExpressionIsAcyclic(action)
         val alignedAction = action.alignWith(kb.conclusionManager)
         ruleSession = RuleBuildingSession(kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases())
         logger.info("Rule session created")
@@ -63,7 +74,7 @@ class RuleSessionManager(
         variables: List<CommentVariable>
     ): CornerstoneStatus {
         val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
-        currentDiff = Addition(renderedText(conclusion, viewableCase.case))
+        currentChange = Addition(pendingText(conclusion))
         val action = ChangeTreeToAddConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -71,7 +82,7 @@ class RuleSessionManager(
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
         val conclusion = kb.conclusionManager.findByText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentDiff = Removal(renderedText(conclusion, viewableCase.case))
+        currentChange = Removal(renderedText(conclusion, viewableCase.case))
         val action = ChangeTreeToRemoveConclusion(conclusion)
         return startRuleSession(viewableCase.case, action)
     }
@@ -85,12 +96,158 @@ class RuleSessionManager(
         val replacedConclusion = kb.conclusionManager.findByText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
-        currentDiff = Replacement(
+        currentChange = Replacement(
             renderedText(replacedConclusion, viewableCase.case),
-            renderedText(replacementConclusion, viewableCase.case)
+            pendingText(replacementConclusion)
         )
         val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
         return startRuleSession(viewableCase.case, action)
+    }
+
+    fun startRuleSessionToAssignValue(
+        case: RDRCase,
+        attributeName: String,
+        expressionText: String
+    ): CornerstoneStatus {
+        val existingAttribute = kb.attributeManager.byName(attributeName)
+        if (existingAttribute != null && existingAttribute.kind == AttributeKind.EXTERNAL) {
+            error(nameClashWithExistingExternalAttributeMessage(attributeName))
+        }
+        val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
+        val expression = valueExpressionFor(expressionText)
+        val assignment = AssignValue(attribute, expression)
+        return startAssignmentSession(
+            case,
+            DerivedValueAddition(
+                attributeName = attributeName,
+                formula = expression.asText()
+            ),
+            ChangeTreeToAddAssignment(assignment)
+        )
+    }
+
+    fun startRuleSessionToRemoveAssignment(case: RDRCase, attributeName: String): CornerstoneStatus {
+        val assignment = currentAssignmentFor(case, attributeName)
+        return startAssignmentSession(
+            case,
+            DerivedValueRemoval(attributeName),
+            ChangeTreeToRemoveAssignment(assignment)
+        )
+    }
+
+    fun startRuleSessionToReplaceAssignment(
+        case: RDRCase,
+        attributeName: String,
+        replacementExpressionText: String
+    ): CornerstoneStatus {
+        val toBeReplaced = currentAssignmentFor(case, attributeName)
+        val replacementExpression = valueExpressionFor(replacementExpressionText)
+        val replacement = AssignValue(toBeReplaced.attribute, replacementExpression)
+        return startAssignmentSession(
+            case,
+            DerivedValueReplacement(
+                attributeName = attributeName,
+                newFormula = replacementExpression.asText()
+            ),
+            ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
+        )
+    }
+
+    /**
+     * Starts a session that will change a derived attribute, previewing [change]
+     * in the Derived attributes panel while it is in progress. The preview is
+     * set before the session starts so that the returned status carries it, and
+     * rolled back if the session is refused, so that a request that never became
+     * a session leaves nothing behind for the next one to show.
+     */
+    private fun startAssignmentSession(
+        case: RDRCase,
+        change: DerivedValueChange,
+        action: RuleTreeChange
+    ): CornerstoneStatus {
+        currentChange = change
+        return try {
+            startRuleSession(case, action)
+        } catch (e: Throwable) {
+            currentChange = null
+            throw e
+        }
+    }
+
+    override fun startRuleSessionToAssignValue(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        valueExpression: String
+    ): CornerstoneStatus = startRuleSessionToAssignValue(viewableCase.case, attributeName, valueExpression)
+
+    override fun startRuleSessionToRemoveAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String
+    ): CornerstoneStatus =
+        startRuleSessionToRemoveAssignment(viewableCase.case, attributeName)
+
+    override fun startRuleSessionToReplaceAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        replacementValueExpression: String
+    ): CornerstoneStatus =
+        startRuleSessionToReplaceAssignment(viewableCase.case, attributeName, replacementValueExpression)
+
+    private fun dependencyGraph() = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all())
+
+    /**
+     * The message explaining why the given condition cannot be added to the
+     * current rule session, or null if it can: a condition that would make
+     * a derived attribute depend on itself is refused. See "Stratification"
+     * in documentation/design/repeat_inferencing.md.
+     */
+    private fun cycleMessageFor(condition: Condition): String? {
+        val session = ruleSession ?: return null
+        val cycle = dependencyGraph().cycleCreatedBy(session.action, condition) ?: return null
+        return "This condition cannot be used: ${cycleMessage(cycle)}."
+    }
+
+    /**
+     * Refuses an assignment whose value expression alone would create a
+     * dependency cycle, e.g. assigning BMI the value `BMI * 2`.
+     */
+    private fun checkActionExpressionIsAcyclic(action: RuleTreeChange) {
+        val cycle = dependencyGraph().cycleCreatedBy(action, null) ?: return
+        error("This value cannot be assigned: ${cycleMessage(cycle)}.")
+    }
+
+    private fun currentAssignmentFor(case: RDRCase, attributeName: String): AssignValue {
+        val attribute = kb.attributeManager.byName(attributeName)
+            ?: error("No attribute with name \"$attributeName\" exists.")
+        kb.interpret(case)
+        return case.interpretation.assignments().firstOrNull { it.attribute == attribute }
+            ?: error("No value is assigned to \"$attributeName\" for case ${case.name}.")
+    }
+
+    /**
+     * The value expression for the given user-entered text: a quoted string
+     * is a literal, text that parses as arithmetic over attribute names is a
+     * formula, and anything else is a literal.
+     */
+    internal fun valueExpressionFor(expressionText: String): ValueExpression {
+        val trimmed = expressionText.trim()
+        if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return Literal(trimmed.substring(1, trimmed.length - 1))
+        }
+        // Only treat text as a formula if it contains arithmetic operators, so
+        // that plain text like "diabetic" remains a literal. Formulas may
+        // reference attributes that are not yet in the KB; those attributes are
+        // created so the formula can be evaluated against future cases.
+        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()\^]"""))
+        val parsed = if (hasArithmeticOperators) {
+            val attributeFor: (String) -> Attribute = { name ->
+                kb.attributeManager.all()
+                    .firstOrNull { it.name.equals(name, ignoreCase = true) }
+                    ?: kb.attributeManager.getOrCreate(name)
+            }
+            FormulaParser(attributeFor).parse(trimmed)
+        } else null
+        return if (parsed != null) Formula(parsed) else Literal(trimmed)
     }
 
     /**
@@ -99,6 +256,14 @@ class RuleSessionManager(
      */
     private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
         conclusion.render(case) { id -> attributeById(id) }.text
+
+    /**
+     * The text of a comment that is yet to be given by a rule, with each variable shown as
+     * `{attributeName}`. Variables are deliberately not evaluated: the comment is a pending change,
+     * so it is the template, not a value for the current case, that the user is confirming.
+     */
+    private fun pendingText(conclusion: Conclusion): String =
+        conclusion.textWithAttributeNames { id -> attributeById(id)?.name ?: "unknown" }
 
     override fun attributeById(id: Int): Attribute? =
         runCatching { kb.attributeManager.getById(id) }.getOrNull()
@@ -145,7 +310,7 @@ class RuleSessionManager(
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
-        currentDiff = null
+        currentChange = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -170,16 +335,24 @@ class RuleSessionManager(
             }
             existing
         }
+        cycleMessageFor(conditionToUse)?.let { throw IllegalArgumentException(it) }
         ruleSession!!.addCondition(conditionToUse)
     }
 
     override fun commitCurrentRuleSession() {
         checkSession()
+        // Internal invariant: the entry points refuse cycle-creating
+        // conditions, so this should never fire.
+        ruleSession!!.conditions.forEach { condition ->
+            check(cycleMessageFor(condition) == null) {
+                "Cannot commit rule session: ${cycleMessageFor(condition)}"
+            }
+        }
         val rulesAdded = ruleSession!!.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
-        currentDiff = null
+        currentChange = null
         checkRuleSessionHistoryConsistency()
         val casesInfo = CasesInfo(
             caseIds = kb.processedCaseIds(),
@@ -221,8 +394,12 @@ class RuleSessionManager(
     }
 
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
+        // Materialise the case so that derived attributes assigned by existing
+        // rules are visible to the suggestion generators. See step 8a of
+        // documentation/design/repeat_inferencing.md.
+        val materialisedCase = kb.ruleTree.materialise(case)
         val ctx = SuggestionContext(
-            sessionCase = case,
+            sessionCase = materialisedCase,
             attributes = kb.attributeManager.all(),
             action = ruleSession?.action,
             cornerstones = ruleSession?.cornerstoneCases().orEmpty(),
@@ -314,7 +491,10 @@ class RuleSessionManager(
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
-        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff, ruleConditions = conditionTexts)
+        if (cornerstones.isEmpty()) return CornerstoneStatus(
+            pendingChange = currentChange,
+            ruleConditions = conditionTexts
+        )
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
@@ -324,7 +504,13 @@ class RuleSessionManager(
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff, conditionTexts)
+        return CornerstoneStatus(
+            viewableCornerstone,
+            index,
+            cornerstones.size,
+            currentChange,
+            conditionTexts
+        )
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
@@ -336,13 +522,16 @@ class RuleSessionManager(
         val attributeFor: AttributeFor = { kb.attributeManager.getOrCreate(it) }
         val condition = conditionParser.parse(expression, attributeFor)
 
+        // Materialise the case so that derived attributes assigned by existing
+        // rules are visible when validating the typed expression.
+        val materialisedCase = kb.ruleTree.materialise(case)
         //Only return the condition if non-null and holds for the case
-        val caseAttributeNames = case.attributes.map { it.name }.toSet()
+        val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
             ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
-        } else if (!condition.holds(case)) {
+        } else if (!condition.holds(materialisedCase)) {
             val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
                 INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
             } else {
@@ -350,8 +539,13 @@ class RuleSessionManager(
             }
             ConditionParsingResult(errorMessage = message)
         } else {
-            //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-            ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
+            val cycleError = cycleMessageFor(condition)
+            if (cycleError != null) {
+                ConditionParsingResult(errorMessage = cycleError)
+            } else {
+                //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
+                ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
+            }
         }
     }
 
@@ -375,7 +569,7 @@ class RuleSessionManager(
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-        currentDiff = diff
+        currentChange = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
         return when (diff) {
@@ -415,14 +609,23 @@ class RuleSessionManager(
      * Condition expressions are parsed deterministically from human-readable text.
      */
     fun buildRule(request: BuildRuleRequest) {
-        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}")
+        logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}, assignAttribute=${request.assignAttribute}")
         val case = kb.getProcessedCaseByName(request.caseName)
         kb.interpret(case)
         val viewableCase = kb.viewableCase(case)
-        when (val diff = request.diff) {
-            is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
-            is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
-            is Replacement -> startRuleSessionToReplaceComment(viewableCase, diff.originalText, diff.replacementText)
+        val assignAttribute = request.assignAttribute
+        if (assignAttribute != null) {
+            startRuleSessionToAssignValue(viewableCase.case, assignAttribute, request.assignExpression ?: "")
+        } else {
+            when (val diff = request.diff) {
+                is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
+                is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
+                is Replacement -> startRuleSessionToReplaceComment(
+                    viewableCase,
+                    diff.originalText,
+                    diff.replacementText
+                )
+            }
         }
         try {
             val parser = ConditionExpressionParser { kb.attributeManager.getOrCreate(it) }

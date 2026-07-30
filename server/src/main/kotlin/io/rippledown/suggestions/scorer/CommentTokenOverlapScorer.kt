@@ -17,20 +17,32 @@ import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.model.rule.RuleTreeChange
 import io.rippledown.suggestions.SuggestionContext
 
 /**
  * Scores a [SuggestedCondition] by the number of tokens it shares with the
- * comment text of the current rule action.
+ * text of the current rule action.
  *
  * The intent is: when a user types "TSH is high", a candidate
  * `EpisodicCondition(TSH, High, …)` should beat `EpisodicCondition(TSH, Low, …)`
  * even when there is no historical signal — the user just told us which
  * direction matters.
  *
+ * Assignment actions get the same treatment, sourcing their tokens from the
+ * derived attribute being assigned and from the attributes its value
+ * expression references. Assigning `another BMI = weight / height ^ 3` states
+ * just as plainly that Weight and Height are the relevant subjects as a
+ * comment mentioning them by name would; without this the scorer contributed
+ * nothing for assignments and ranking fell through to [OutOfRangeScorer],
+ * which surfaced whichever attribute happened to be flagged in the case
+ * rather than the ones the user had just named.
+ *
  * Token sources:
  *  - **Comment**: lowercase, split on non-alphanumerics, drop a small set of
  *    function words.
+ *  - **Assignment**: the assigned attribute's name plus the names of the
+ *    attributes referenced by its value expression, tokenised the same way.
  *  - **Condition**: the candidate's attribute name plus a small,
  *    hand-curated direction-word vocabulary keyed off the predicate type.
  *    Signature tokens (`Current`, `All`, `AtLeast(n)`, `AtMost(n)`, `No`) are
@@ -53,13 +65,26 @@ internal class CommentTokenOverlapScorer(
     }
 
     private fun computeCommentTokens(): Set<String> {
-        val text = when (val action = ctx.action) {
+        val action = ctx.action ?: return emptySet()
+        val text = when (action) {
             is ChangeTreeToAddConclusion -> action.toBeAdded.text
             is ChangeTreeToReplaceConclusion -> action.replacement.text
             is ChangeTreeToRemoveConclusion -> action.toBeRemoved.text
-            else -> return emptySet()
+            else -> return assignmentTokens(action)
         }
         return tokenise(text)
+    }
+
+    /**
+     * Tokens for an assignment action: the assigned attribute's name plus the
+     * names of every attribute its value expression references. A removal has
+     * no expression, so it contributes the attribute name alone. Any other
+     * change type yields no assigned attribute and so scores 0, as before.
+     */
+    private fun assignmentTokens(action: RuleTreeChange): Set<String> {
+        val assigned = action.assignedAttribute() ?: return emptySet()
+        val referenced = action.expressionReferences().flatMap { tokenise(it.name) }
+        return tokenise(assigned.name) + referenced
     }
 
     companion object {

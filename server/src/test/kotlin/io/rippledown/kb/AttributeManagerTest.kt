@@ -1,9 +1,14 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.persistence.AttributeStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.util.randomString
@@ -105,5 +110,117 @@ class AttributeManagerTest {
         shouldThrow<NoSuchElementException> {
             attributeManager.getById(99)
         }
+    }
+
+    @Test
+    fun `getOrCreate without a kind creates an external attribute`() {
+        // When an attribute is created without specifying a kind
+        val glucose = attributeManager.getOrCreate("Glucose")
+
+        // Then it is external
+        glucose.kind shouldBe AttributeKind.EXTERNAL
+    }
+
+    @Test
+    fun `getOrCreate with a kind creates an attribute of that kind`() {
+        // When attributes are created with each KB-assigned kind
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+        val comment = attributeManager.getOrCreate("DiabetesStatus", AttributeKind.COMMENT)
+
+        // Then the kinds are as requested, in the manager and in the store
+        bmi.kind shouldBe AttributeKind.DERIVED
+        comment.kind shouldBe AttributeKind.COMMENT
+        attributeStore.all() shouldBe setOf(bmi, comment)
+    }
+
+    @Test
+    fun `getOrCreate with a kind passes the kind to the store`() {
+        // Given a manager backed by a mock store
+        val mockStore = mockk<AttributeStore>()
+        val bmi = Attribute(1, "BMI", AttributeKind.DERIVED)
+        every { mockStore.all() } returns emptySet()
+        every { mockStore.create("BMI", AttributeKind.DERIVED) } returns bmi
+        val manager = AttributeManager(mockStore)
+
+        // When a derived attribute is created
+        val created = manager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // Then the store created it with the right kind
+        created shouldBe bmi
+        verify(exactly = 1) { mockStore.create("BMI", AttributeKind.DERIVED) }
+    }
+
+    @Test
+    fun `getOrCreate with a kind returns the existing attribute of that kind`() {
+        // Given a derived attribute
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When it is requested again
+        val again = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // Then the existing attribute is returned
+        again shouldBe bmi
+        attributeManager.all() shouldBe setOf(bmi)
+    }
+
+    @Test
+    fun `getOrCreate with a kind rejects a name in use with a different kind`() {
+        // Given an external attribute
+        attributeManager.getOrCreate("Glucose")
+
+        // When an attribute with the same name but a different kind is requested
+        // Then the request is rejected
+        shouldThrow<IllegalArgumentException> {
+            attributeManager.getOrCreate("Glucose", AttributeKind.DERIVED)
+        }.message shouldBe "An attribute with name Glucose already exists with kind EXTERNAL, not DERIVED."
+    }
+
+    @Test
+    fun `getOrCreate with a kind rejects a name that differs only in case from an existing derived attribute`() {
+        // Given a derived attribute
+        attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When the same name with different case is requested for a derived attribute
+        // Then the request is rejected
+        shouldThrow<IllegalStateException> {
+            attributeManager.getOrCreate("bmi", AttributeKind.DERIVED)
+        }.message shouldBe "An attribute with name \"BMI\" already exists. Choose a different name."
+    }
+
+    @Test
+    fun `getOrCreate with a kind rejects a derived attribute name that matches an external attribute ignoring case`() {
+        // Given an external attribute
+        attributeManager.getOrCreate("Glucose")
+
+        // When a derived attribute with the same name ignoring case is requested
+        // Then the request is rejected
+        shouldThrow<IllegalStateException> {
+            attributeManager.getOrCreate("glucose", AttributeKind.DERIVED)
+        }.message shouldBe "An attribute with name \"Glucose\" already exists. Choose a different name."
+    }
+
+    @Test
+    fun `getOrCreate without a kind returns an existing attribute regardless of its kind`() {
+        // Given a derived attribute
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When it is requested by name only, as condition parsing does
+        val found = attributeManager.getOrCreate("BMI")
+
+        // Then the existing derived attribute is returned
+        found shouldBe bmi
+        found.kind shouldBe AttributeKind.DERIVED
+    }
+
+    @Test
+    fun byName() {
+        // Given an attribute
+        val glucose = attributeManager.getOrCreate("Glucose")
+
+        // When it is looked up by name
+        // Then it is found, and unknown names are not
+        attributeManager.byName("Glucose") shouldBe glucose
+        attributeManager.byName("glucose").shouldBeNull()
+        attributeManager.byName("Whatever").shouldBeNull()
     }
 }

@@ -1,6 +1,7 @@
 package io.rippledown.persistence.inmemory
 
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.persistence.AttributeStore
 
 class InMemoryAttributeStore(attributes: Set<Attribute>): AttributeStore {
@@ -19,10 +20,10 @@ class InMemoryAttributeStore(attributes: Set<Attribute>): AttributeStore {
         attributeSet.add(attribute)
     }
 
-    override fun create(name: String): Attribute {
+    override fun create(name: String, kind: AttributeKind): Attribute {
         val maxById = attributeSet.maxByOrNull { it.id }
         val maxId = maxById?.id ?: 0
-        val newAttribute = Attribute(maxId + 1, name)
+        val newAttribute = Attribute(maxId + 1, name, kind)
         attributeSet.add(newAttribute)
         return newAttribute
     }

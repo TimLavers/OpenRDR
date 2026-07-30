@@ -88,3 +88,14 @@ compose.desktop {
 compose.resources {
     generateResClass = always
 }
+
+// The Compose Desktop runtime image is jlinked from `javaHome` (the JDK Gradle
+// runs on, set above). Its up-to-date check does NOT track that JDK, so if the
+// Gradle daemon later runs on a different JDK the stale runtime is silently
+// reused -- e.g. a Java 20 runtime bundled alongside a Java 21 server jar,
+// causing UnsupportedClassVersionError at demo launch. Register the JDK's
+// identity as a task input so a JDK change forces the runtime to be re-jlinked.
+tasks.matching { it.name.contains("RuntimeImage") }.configureEach {
+    inputs.property("jdkVersion", System.getProperty("java.version"))
+    inputs.property("jdkHome", System.getProperty("java.home"))
+}

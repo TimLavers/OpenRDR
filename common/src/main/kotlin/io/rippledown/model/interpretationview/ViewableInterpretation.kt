@@ -3,6 +3,7 @@ package io.rippledown.model.interpretationview
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RenderedComment
+import io.rippledown.model.rule.AssignValue
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -20,7 +21,9 @@ data class ViewableInterpretation(
     fun caseId() = interpretation.caseId
     fun latestText() = textGivenByRules
     fun conditionsForConclusion(conclusion: Conclusion) = interpretation.conditionsForConclusion(conclusion)
+    fun conditionsForAssignment(assignment: AssignValue) = interpretation.conditionsForAssignment(assignment)
     fun conclusions() = interpretation.conclusions()
+    fun assignments() = interpretation.assignments()
 }
 
 object ViewableInterpretationSerializer : KSerializer<ViewableInterpretation> {

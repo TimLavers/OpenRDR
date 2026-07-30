@@ -7,6 +7,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.chat.ConversationService
+import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.chat.ChatManager.Companion.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
@@ -357,6 +358,50 @@ class ChatManagerTest {
 
             // Then
             coVerify { ruleService.startRuleSessionToAddComment(viewableCase, comment, emptyList()) }
+        }
+
+    @Test
+    fun `should populate suggestions when a comment rule session starts but the model does not request them`() =
+        runTest {
+            // Given a suggested-conditions handler that fills the shared buffer, as the real one does
+            val suggestions = listOf("wave height > 0.5", "wave height is \"2\"")
+            val suggestedConditionsHandler = object : FunctionCallHandler {
+                override suspend fun handle(args: Map<String, Any?>): String {
+                    suggestionsBuffer.suggestions = suggestions
+                    return "delivered"
+                }
+            }
+            chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer, suggestedConditionsHandler)
+            setupLogger()
+
+            // The rule session is inactive until the comment is added, then active thereafter
+            var sessionActive = false
+            every { ruleService.isRuleSessionActive() } answers { sessionActive }
+            every { ruleService.startRuleSessionToAddComment(any(), any(), any()) } answers {
+                sessionActive = true
+                CornerstoneStatus()
+            }
+            every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+            every { ruleService.sendCornerstoneStatus() } returns Unit
+
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(viewableCase) //to set the current case
+
+            // The model adds the comment, then asks for a reason WITHOUT calling getSuggestedConditions
+            val addComment = ActionComment(action = ADD_COMMENT, comment = "Let's surf.").toJsonString()
+            val askForReason = ActionComment(
+                USER_ACTION,
+                message = "Would you like to provide a reason for adding this comment?"
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returnsMany listOf(addComment, askForReason)
+
+            // When
+            val responseToUser = chatManager.response("Add the comment: \"Let's surf.\"")
+
+            // Then - the suggestions are attached deterministically even though the model never asked for them
+            responseToUser.suggestions shouldBe suggestions
         }
 
     @Test

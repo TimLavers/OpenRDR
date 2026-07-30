@@ -1790,7 +1790,7 @@ class KBTest {
         val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        status.diff shouldBe Addition(comment)
+        status.commentDiff shouldBe Addition(comment)
     }
 
     @Test
@@ -1804,7 +1804,7 @@ class KBTest {
         val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        status.diff shouldBe Addition(comment)
+        status.commentDiff shouldBe Addition(comment)
     }
 
     @Test

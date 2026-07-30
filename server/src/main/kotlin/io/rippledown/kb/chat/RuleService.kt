@@ -23,6 +23,18 @@ interface RuleService {
         replacementComment: String,
         variables: List<CommentVariable> = emptyList()
     ): CornerstoneStatus
+    fun startRuleSessionToAssignValue(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        valueExpression: String
+    ): CornerstoneStatus
+
+    fun startRuleSessionToRemoveAssignment(viewableCase: ViewableCase, attributeName: String): CornerstoneStatus
+    fun startRuleSessionToReplaceAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        replacementValueExpression: String
+    ): CornerstoneStatus
     fun exemptCornerstoneCase(): CornerstoneStatus
     fun selectCornerstoneCase(index: Int): CornerstoneStatus
     fun addConditionToCurrentRuleSession(condition: Condition)

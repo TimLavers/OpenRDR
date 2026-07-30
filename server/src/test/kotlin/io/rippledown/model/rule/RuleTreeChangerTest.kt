@@ -25,6 +25,10 @@ internal class RuleTreeChangerTest : RuleTestBase() {
         override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
             return Rule(id++, parent, conclusion, conditions)
         }
+
+        override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule {
+            return Rule(id++, parent, null, conditions, mutableSetOf(), assignment)
+        }
     }
 
     @BeforeTest

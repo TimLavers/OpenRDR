@@ -1,5 +1,6 @@
 package io.rippledown.model
 
+import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleSummary
 import io.rippledown.toJsonString
@@ -21,6 +22,21 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
 
     fun conclusions(): Set<Conclusion> {
         return ruleSummaries.mapNotNull { it.conclusion }.toSet()
+    }
+
+    /**
+     * The derived-attribute assignments made by the rules that fired.
+     */
+    fun assignments(): Set<AssignValue> {
+        return ruleSummaries.mapNotNull { it.assignment }.toSet()
+    }
+
+    fun idsOfRulesAssigning(attribute: Attribute): Set<Int> {
+        return ruleSummaries.filter { it.assignment?.attribute == attribute }.map { it.id }.toSet()
+    }
+
+    fun idsOfRulesMakingAssignment(assignment: AssignValue): Set<Int> {
+        return ruleSummaries.filter { assignment == it.assignment }.map { it.id }.toSet()
     }
 
     fun conclusionTexts(): Set<String> {
@@ -65,5 +81,16 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
         return ruleSummaries
             .first { ruleSummary -> conclusion == ruleSummary.conclusion }
             .conditionTextsFromRoot
+    }
+
+    /**
+     * The condition texts from root for the rule that assigned the given
+     * [AssignValue] to its attribute, or an empty list if no such rule fired.
+     */
+    fun conditionsForAssignment(assignment: AssignValue): List<String> {
+        return ruleSummaries
+            .firstOrNull { ruleSummary -> assignment == ruleSummary.assignment }
+            ?.conditionTextsFromRoot
+            ?: emptyList()
     }
 }
