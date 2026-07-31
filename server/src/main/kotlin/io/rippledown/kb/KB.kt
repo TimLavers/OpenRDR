@@ -4,8 +4,10 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.DefinitionResolver
 import io.rippledown.model.rule.RuleSessionRecorder
+import io.rippledown.model.rule.resolvedFor
 import io.rippledown.persistence.PersistentKB
 
 
@@ -141,8 +143,12 @@ class KB(persistentKB: PersistentKB) {
 
     fun viewableCase(case: RDRCase): ViewableCase {
         val materialised = ruleTree.materialise(case, definitionResolver)
+        // For display, a ByDefinition assignment is shown as the attribute's
+        // stored definition text, so the panel and tooltip show the formula
+        // rather than the sentinel. Inference structures are untouched.
+        val resolvedInterpretation = materialised.interpretation.withResolvedDefinitions(definitionResolver)
         val viewableInterpretation =
-            interpretationViewManager.viewableInterpretation(materialised.interpretation, materialised)
+            interpretationViewManager.viewableInterpretation(resolvedInterpretation, materialised)
         return caseViewManager.getViewableCase(materialised, viewableInterpretation)
     }
 
@@ -156,6 +162,26 @@ class KB(persistentKB: PersistentKB) {
     }
 
     override fun hashCode() = kbInfo.hashCode()
+}
+
+/**
+ * A copy of this interpretation for display, with each ByDefinition
+ * assignment replaced by the attribute's stored definition. An assignment
+ * whose attribute has no stored definition is left as is.
+ */
+internal fun Interpretation.withResolvedDefinitions(resolver: DefinitionResolver): Interpretation {
+    val result = Interpretation(caseId)
+    ruleSummaries.forEach { summary ->
+        val assignment = summary.assignment
+        val resolved = assignment?.expression?.resolvedFor(assignment.attribute, resolver)
+        val resolvedSummary = if (resolved != null && resolved != assignment.expression) {
+            summary.copy(assignment = AssignValue(assignment.attribute, resolved))
+        } else {
+            summary
+        }
+        result.add(resolvedSummary)
+    }
+    return result
 }
 
 internal fun String.normalizeForComparison() =

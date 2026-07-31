@@ -47,6 +47,61 @@ class KBDefinitionResolutionTest {
     }
 
     @Test
+    fun `the derived values panel shows the definition text for a by-definition rule`() {
+        // Given a by-definition BMI rule with a stored definition
+        val weight = kb.attributeManager.getOrCreate("weight")
+        val height = kb.attributeManager.getOrCreate("height")
+        val bmi = kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+        kb.derivedDefinitionManager.store(
+            bmi.id,
+            Formula(
+                Binary(
+                    Operator.DIVIDE,
+                    AttributeValue(weight),
+                    Binary(Operator.TIMES, AttributeValue(height), AttributeValue(height))
+                )
+            )
+        )
+        kb.ruleManager.createRuleAndAddToParent(kb.ruleTree.root, AssignValue(bmi, ByDefinition), emptySet())
+        val case = kb.addProcessedCase(with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "93.0")
+            addValue(height, defaultDate, "1.8")
+            build("Bragg")
+        })
+
+        // When the case is viewed
+        val info = kb.viewableCase(case).derivedValues().single()
+
+        // Then the panel shows the definition text, not "by definition"
+        info.name shouldBe "BMI"
+        info.value shouldBe "28.7"
+        info.formula shouldBe "weight / (height * height)"
+    }
+
+    @Test
+    fun `the derived values panel shows the override text for a concrete override rule`() {
+        // Given a rule with a concrete override expression
+        val weight = kb.attributeManager.getOrCreate("weight")
+        val bmi = kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+        kb.ruleManager.createRuleAndAddToParent(
+            kb.ruleTree.root,
+            AssignValue(bmi, Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0)))),
+            emptySet()
+        )
+        val case = kb.addProcessedCase(with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "93.0")
+            build("Bragg")
+        })
+
+        // When the case is viewed
+        val info = kb.viewableCase(case).derivedValues().single()
+
+        // Then the panel shows the override expression
+        info.formula shouldBe "weight * 2"
+        info.value shouldBe "186"
+    }
+
+    @Test
     fun `editing the definition changes the value on re-interpretation with no rule change`() {
         // Given a by-definition BMI rule with a stored definition
         val weight = kb.attributeManager.getOrCreate("weight")

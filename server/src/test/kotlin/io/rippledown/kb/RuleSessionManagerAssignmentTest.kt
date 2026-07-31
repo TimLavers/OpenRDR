@@ -10,6 +10,7 @@ import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.ByDefinition
 import io.rippledown.model.rule.Formula
 import io.rippledown.model.rule.Literal
 import io.rippledown.persistence.inmemory.InMemoryKB
@@ -122,13 +123,17 @@ class RuleSessionManagerAssignmentTest {
     // --- assign value sessions ---
 
     @Test
-    fun `an assign value session creates a rule that assigns the value`() {
+    fun `an assign value session creates a by-definition rule and stores the definition`() {
         // When an assign-value session is committed
         buildAssignmentRule()
 
-        // Then the assignment is made for cases satisfying the condition
+        // Then the assignment is made for cases satisfying the condition,
+        // with the rule pointing at the attribute's stored definition
         val interpretation = kb.interpret(createCase("A", "12.0"))
-        interpretation.assignments() shouldBe setOf(AssignValue(diabetesStatus(), Literal("diabetic")))
+        interpretation.assignments() shouldBe setOf(AssignValue(diabetesStatus(), ByDefinition))
+        kb.derivedDefinitionManager.definitionFor(diabetesStatus().id) shouldBe Literal("diabetic")
+        kb.viewableCase(kb.addProcessedCase(createCase("A", "12.0"))).case
+            .latestValue(diabetesStatus()) shouldBe "diabetic"
         kb.interpret(createCase("B", "5.0")).assignments() shouldBe emptySet()
     }
 
@@ -158,7 +163,7 @@ class RuleSessionManagerAssignmentTest {
         // Then the assignment is retracted for such cases only
         kb.interpret(createCase("D", "25.0")).assignments() shouldBe emptySet()
         kb.interpret(createCase("E", "12.0")).assignments() shouldBe
-                setOf(AssignValue(diabetesStatus(), Literal("diabetic")))
+                setOf(AssignValue(diabetesStatus(), ByDefinition))
     }
 
     @Test
@@ -172,11 +177,12 @@ class RuleSessionManagerAssignmentTest {
         rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose(), 20.0))
         rsm.commitCurrentRuleSession()
 
-        // Then the replacement applies for such cases only
+        // Then the replacement applies for such cases only, as a concrete
+        // override, while the base rule still assigns by definition
         kb.interpret(createCase("D", "25.0")).assignments() shouldBe
                 setOf(AssignValue(diabetesStatus(), Literal("severely diabetic")))
         kb.interpret(createCase("E", "12.0")).assignments() shouldBe
-                setOf(AssignValue(diabetesStatus(), Literal("diabetic")))
+                setOf(AssignValue(diabetesStatus(), ByDefinition))
     }
 
     // --- cycle prevention ---

@@ -97,6 +97,13 @@ class RuleSessionManager(
         return startRuleSession(viewableCase.case, action)
     }
 
+    /**
+     * Starts a session for a rule assigning the attribute by its definition:
+     * the expression is stored as the attribute's definition, and the rule
+     * simply points at the attribute, so that a later edit of the definition
+     * applies without any rule change. See
+     * documentation/design/editing_derived_attribute_definitions.md.
+     */
     fun startRuleSessionToAssignValue(
         case: RDRCase,
         attributeName: String,
@@ -107,7 +114,12 @@ class RuleSessionManager(
             error(nameClashWithExistingExternalAttributeMessage(attributeName))
         }
         val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
-        val assignment = AssignValue(attribute, valueExpressionFor(expressionText))
+        val expression = valueExpressionFor(expressionText)
+        cycleForDefinition(attribute, expression)?.let {
+            error("This value cannot be assigned: ${cycleMessage(it)}.")
+        }
+        kb.derivedDefinitionManager.store(attribute.id, expression)
+        val assignment = AssignValue(attribute, ByDefinition)
         return startRuleSession(case, ChangeTreeToAddAssignment(assignment))
     }
 
@@ -200,13 +212,22 @@ class RuleSessionManager(
      * through other by-definition rules are detected too.
      */
     internal fun checkDefinitionEditIsAcyclic(attribute: Attribute, newExpression: ValueExpression) {
+        val cycle = cycleForDefinition(attribute, newExpression) ?: return
+        error("This definition cannot be used: ${cycleMessage(cycle)}.")
+    }
+
+    /**
+     * The cycle that giving [attribute] the definition [newExpression] would
+     * create, or null if there would be none. The graph is built as if the
+     * definition were already stored.
+     */
+    private fun cycleForDefinition(attribute: Attribute, newExpression: ValueExpression): List<Attribute>? {
         val editedResolver: DefinitionResolver = {
             if (it.id == attribute.id) newExpression else kb.definitionResolver(it)
         }
         val graph = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), editedResolver)
         val referenced = newExpression.referencedAttributes().filter { it.kind == AttributeKind.DERIVED }.toSet()
-        val cycle = graph.cycleCreatedBy(attribute, referenced) ?: return
-        error("This definition cannot be used: ${cycleMessage(cycle)}.")
+        return graph.cycleCreatedBy(attribute, referenced)
     }
 
     private fun currentAssignmentFor(case: RDRCase, attributeName: String): AssignValue {
