@@ -27,9 +27,10 @@ abstract class RuleTreeChange {
 
     /**
      * The attributes referenced by the value expression that this change
-     * introduces, if any.
+     * introduces, if any. A [ByDefinition] expression's references are those
+     * of the stored definition given by [resolver].
      */
-    open fun expressionReferences(): Set<Attribute> = emptySet()
+    open fun expressionReferences(resolver: DefinitionResolver = NO_DEFINITIONS): Set<Attribute> = emptySet()
 }
 
 class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
@@ -83,7 +84,8 @@ class ChangeTreeToAddAssignment(val toBeAdded: AssignValue) : RuleTreeChange() {
 
     override fun assignedAttribute() = toBeAdded.attribute
 
-    override fun expressionReferences() = toBeAdded.expression.referencedAttributes()
+    override fun expressionReferences(resolver: DefinitionResolver) =
+        toBeAdded.expression.resolvedFor(toBeAdded.attribute, resolver)?.referencedAttributes() ?: emptySet()
 
     override fun toString() = "ChangeTreeToAddAssignment(toBeAdded=$toBeAdded)"
 }
@@ -117,7 +119,8 @@ class ChangeTreeToReplaceAssignment(val toBeReplaced: AssignValue, val replaceme
 
     override fun assignedAttribute() = replacement.attribute
 
-    override fun expressionReferences() = replacement.expression.referencedAttributes()
+    override fun expressionReferences(resolver: DefinitionResolver) =
+        replacement.expression.resolvedFor(replacement.attribute, resolver)?.referencedAttributes() ?: emptySet()
 
     override fun toString() = "ChangeTreeToReplaceAssignment(toBeReplaced=$toBeReplaced replacement=$replacement)"
 }

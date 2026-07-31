@@ -48,7 +48,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      */
     private fun pruneCycleCreating(candidates: Collection<SuggestedCondition>): Collection<SuggestedCondition> {
         if (ctx.action?.assignedAttribute() == null) return candidates
-        val graph = DerivedAttributeDependencyGraph(ctx.ruleTree, ctx.attributes)
+        val graph = DerivedAttributeDependencyGraph(ctx.ruleTree, ctx.attributes, ctx.definitionResolver)
         return candidates.filter { graph.cycleCreatedBy(ctx.action, it.initialSuggestion()) == null }
     }
 

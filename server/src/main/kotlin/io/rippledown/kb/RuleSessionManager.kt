@@ -54,7 +54,9 @@ class RuleSessionManager(
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         checkActionExpressionIsAcyclic(action)
         val alignedAction = action.alignWith(kb.conclusionManager)
-        ruleSession = RuleBuildingSession(kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases())
+        ruleSession = RuleBuildingSession(
+            kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases(), kb.definitionResolver
+        )
         logger.info("Rule session created")
         return cornerstoneStatus(null)
     }
@@ -143,7 +145,8 @@ class RuleSessionManager(
     ): CornerstoneStatus =
         startRuleSessionToReplaceAssignment(viewableCase.case, attributeName, replacementValueExpression)
 
-    private fun dependencyGraph() = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all())
+    private fun dependencyGraph() =
+        DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), kb.definitionResolver)
 
     /**
      * The message explaining why the given condition cannot be added to the
@@ -339,13 +342,14 @@ class RuleSessionManager(
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible to the suggestion generators. See step 8a of
         // documentation/design/repeat_inferencing.md.
-        val materialisedCase = kb.ruleTree.materialise(case)
+        val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
         val ctx = SuggestionContext(
             sessionCase = materialisedCase,
             attributes = kb.attributeManager.all(),
             action = ruleSession?.action,
             cornerstones = ruleSession?.cornerstoneCases().orEmpty(),
             ruleTree = kb.ruleTree,
+            definitionResolver = kb.definitionResolver,
         )
         return ConditionList(ConditionSuggester(ctx).suggestions())
     }
@@ -457,7 +461,7 @@ class RuleSessionManager(
 
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible when validating the typed expression.
-        val materialisedCase = kb.ruleTree.materialise(case)
+        val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
         //Only return the condition if non-null and holds for the case
         val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {

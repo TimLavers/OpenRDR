@@ -2,6 +2,8 @@ package io.rippledown.suggestions
 
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
+import io.rippledown.model.rule.DefinitionResolver
+import io.rippledown.model.rule.NO_DEFINITIONS
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.RuleTreeChange
 
@@ -37,5 +39,6 @@ data class SuggestionContext(
     val attributes: Set<Attribute>,
     val action: RuleTreeChange? = null,
     val cornerstones: List<RDRCase> = emptyList(),
-    val ruleTree: RuleTree = RuleTree()
+    val ruleTree: RuleTree = RuleTree(),
+    val definitionResolver: DefinitionResolver = NO_DEFINITIONS
 )

@@ -4,6 +4,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.model.rule.DefinitionResolver
 import io.rippledown.model.rule.RuleSessionRecorder
 import io.rippledown.persistence.PersistentKB
 
@@ -15,6 +16,14 @@ class KB(persistentKB: PersistentKB) {
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
+    val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore())
+
+    /**
+     * Resolves a derived attribute to its stored definition, so that
+     * ByDefinition rule actions evaluate against the definition store. See
+     * documentation/design/editing_derived_attribute_definitions.md.
+     */
+    val definitionResolver: DefinitionResolver = { attribute -> derivedDefinitionManager.definitionFor(attribute.id) }
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     val interpretationViewManager =
         InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager, attributeManager)
@@ -128,10 +137,10 @@ class KB(persistentKB: PersistentKB) {
         }
     }
 
-    fun interpret(case: RDRCase) = ruleTree.apply(case)
+    fun interpret(case: RDRCase) = ruleTree.apply(case, definitionResolver)
 
     fun viewableCase(case: RDRCase): ViewableCase {
-        val materialised = ruleTree.materialise(case)
+        val materialised = ruleTree.materialise(case, definitionResolver)
         val viewableInterpretation =
             interpretationViewManager.viewableInterpretation(materialised.interpretation, materialised)
         return caseViewManager.getViewableCase(materialised, viewableInterpretation)

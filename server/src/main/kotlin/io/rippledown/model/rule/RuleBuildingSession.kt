@@ -11,7 +11,8 @@ class RuleBuildingSession(
     private val tree: RuleTree,
     val case: RDRCase,
     val action: RuleTreeChange,
-    cornerstones: List<RDRCase>
+    cornerstones: List<RDRCase>,
+    private val resolver: DefinitionResolver = NO_DEFINITIONS
 ) {
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
@@ -36,7 +37,7 @@ class RuleBuildingSession(
         // Get a copy of the rule tree.
         val copyOfTree = tree.copy()
         // Make the change to the copied tree.
-        copyOfTree.apply(case)
+        copyOfTree.apply(case, resolver)
         action.createChanger(copyOfTree, TemporaryRuleFactory()).updateRuleTree(case, emptySet())
 
         // Interpret each cornerstone against the modified tree
@@ -45,10 +46,10 @@ class RuleBuildingSession(
         cornerstones
             .filter { case.name != it.name }
             .forEach {
-                copyOfTree.apply(it)
+                copyOfTree.apply(it, resolver)
                 val conclusionsGivenByModifiedTree = it.interpretation.conclusions()
                 val assignmentsGivenByModifiedTree = it.interpretation.assignments()
-                val materialised = tree.materialise(it)
+                val materialised = tree.materialise(it, resolver)
                 val conclusionsGivenByOriginalTree = it.interpretation.conclusions()
                 val assignmentsGivenByOriginalTree = it.interpretation.assignments()
                 if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree ||
@@ -58,7 +59,7 @@ class RuleBuildingSession(
                     materialisedCornerstones[it] = materialised
                 }
             }
-        materialisedCase = tree.materialise(case)
+        materialisedCase = tree.materialise(case, resolver)
     }
 
     fun cornerstoneCases(): List<RDRCase> {

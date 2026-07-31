@@ -145,6 +145,71 @@ internal class AssignmentRuleTreeChangeTest {
     }
 
     @Test
+    fun `expressionReferences of an add-assignment change are those of its expression`() {
+        // Given a change whose expression references glucose
+        val change = ChangeTreeToAddAssignment(
+            AssignValue(diabetesStatus, Formula(Binary(Operator.TIMES, AttributeValue(glucose), Num(2.0))))
+        )
+
+        // Then the referenced attributes are reported
+        change.expressionReferences() shouldBe setOf(glucose)
+    }
+
+    @Test
+    fun `expressionReferences of a literal assignment change are empty`() {
+        ChangeTreeToAddAssignment(diabetic).expressionReferences() shouldBe emptySet()
+    }
+
+    @Test
+    fun `expressionReferences of a by-definition add-assignment change come from the resolver`() {
+        // Given a change assigning by definition, whose stored definition references glucose
+        val change = ChangeTreeToAddAssignment(AssignValue(diabetesStatus, ByDefinition))
+        val resolver: DefinitionResolver = { attribute ->
+            if (attribute == diabetesStatus) Formula(AttributeValue(glucose)) else null
+        }
+
+        // Then the references are those of the definition, or empty if there is none
+        change.expressionReferences(resolver) shouldBe setOf(glucose)
+        change.expressionReferences() shouldBe emptySet()
+    }
+
+    @Test
+    fun `expressionReferences of a replace-assignment change are those of the replacement`() {
+        // Given a replacement whose expression references glucose, replacing a literal
+        val replacement = AssignValue(diabetesStatus, Formula(AttributeValue(glucose)))
+        val change = ChangeTreeToReplaceAssignment(diabetic, replacement)
+
+        // Then the references are those of the replacement expression
+        change.expressionReferences() shouldBe setOf(glucose)
+    }
+
+    @Test
+    fun `expressionReferences of a by-definition replace-assignment change come from the resolver`() {
+        // Given a replacement assigning by definition, whose stored definition references glucose
+        val change = ChangeTreeToReplaceAssignment(diabetic, AssignValue(diabetesStatus, ByDefinition))
+        val resolver: DefinitionResolver = { attribute ->
+            if (attribute == diabetesStatus) Formula(AttributeValue(glucose)) else null
+        }
+
+        // Then the references are those of the definition, or empty if there is none
+        change.expressionReferences(resolver) shouldBe setOf(glucose)
+        change.expressionReferences() shouldBe emptySet()
+    }
+
+    @Test
+    fun `changes that introduce no expression have no expression references`() {
+        // Given changes that carry no value expression, and a resolver
+        val resolver: DefinitionResolver = { Formula(AttributeValue(glucose)) }
+
+        // Then they have no expression references, resolver or not
+        ChangeTreeToRemoveAssignment(diabetic).expressionReferences(resolver) shouldBe emptySet()
+        ChangeTreeToAddConclusion(Conclusion(1, "Comment.")).expressionReferences(resolver) shouldBe emptySet()
+        ChangeTreeToRemoveConclusion(Conclusion(1, "Comment.")).expressionReferences(resolver) shouldBe emptySet()
+        ChangeTreeToReplaceConclusion(Conclusion(1, "Comment."), Conclusion(2, "Other."))
+            .expressionReferences(resolver) shouldBe emptySet()
+    }
+
+    @Test
     fun `alignWith leaves assignment changes unchanged`() {
         // Given assignment changes
         val add = ChangeTreeToAddAssignment(diabetic)

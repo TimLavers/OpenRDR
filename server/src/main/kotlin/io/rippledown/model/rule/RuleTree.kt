@@ -1,5 +1,6 @@
 package io.rippledown.model.rule
 
+import io.rippledown.model.Attribute
 import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
@@ -9,6 +10,24 @@ import kotlin.random.Random
 fun rootRule(): Rule {
     return Rule(0)
 }
+
+/**
+ * Resolves a derived attribute to its stored value-expression definition,
+ * used to substitute [ByDefinition] rule actions with the concrete
+ * expression before evaluation. See
+ * documentation/design/editing_derived_attribute_definitions.md.
+ */
+typealias DefinitionResolver = (Attribute) -> ValueExpression?
+
+val NO_DEFINITIONS: DefinitionResolver = { null }
+
+/**
+ * This expression with a [ByDefinition] sentinel replaced by the stored
+ * definition of [attribute], or null if there is no stored definition.
+ * A concrete expression resolves to itself.
+ */
+fun ValueExpression.resolvedFor(attribute: Attribute, resolver: DefinitionResolver): ValueExpression? =
+    if (this is ByDefinition) resolver(attribute) else this
 
 open class RuleTree(val root: Rule = rootRule()) {
 
@@ -21,18 +40,18 @@ open class RuleTree(val root: Rule = rootRule()) {
      * time. The case's interpretation is updated in place; [materialise]
      * additionally returns the case with its derived values written.
      */
-    fun apply(kase: RDRCase): Interpretation {
-        materialise(kase)
+    fun apply(kase: RDRCase, resolver: DefinitionResolver = NO_DEFINITIONS): Interpretation {
+        materialise(kase, resolver)
         return kase.interpretation
     }
 
-    fun materialise(kase: RDRCase): RDRCase {
+    fun materialise(kase: RDRCase, resolver: DefinitionResolver = NO_DEFINITIONS): RDRCase {
         val base = kase.withoutDerivedValues()
         var current = base
         while (true) {
             current.resetInterpretation()
             root.childRules().forEach { it.apply(current, current.interpretation) }//don't include the root conclusion
-            val next = materialiseAssignments(base, current)
+            val next = materialiseAssignments(base, current, resolver)
             // Rule evaluation is a pure function of the case data, so if the
             // derived values are unchanged, the interpretation is stable too.
             if (next.hasSameDataAs(current)) return next
@@ -46,15 +65,18 @@ open class RuleTree(val root: Rule = rootRule()) {
      * pass ensures that an assignment retracted in a later pass leaves no
      * stale value. Expressions are evaluated against the case as it stood
      * during the pass, so an expression referencing an attribute assigned
-     * in the same pass resolves on a later pass.
+     * in the same pass resolves on a later pass. A [ByDefinition] action is
+     * first substituted with the attribute's stored definition; if there is
+     * no definition, no assignment is made.
      */
-    private fun materialiseAssignments(base: RDRCase, evaluated: RDRCase): RDRCase {
+    private fun materialiseAssignments(base: RDRCase, evaluated: RDRCase, resolver: DefinitionResolver): RDRCase {
         if (base.numberOfEpisodes() == 0) return base
         var result = base
         evaluated.interpretation.assignments()
             .sortedBy { it.attribute.id } // deterministic write order
             .forEach { assignment ->
-                assignment.expression.evaluate(evaluated)?.let {
+                val expression = assignment.expression.resolvedFor(assignment.attribute, resolver) ?: return@forEach
+                expression.evaluate(evaluated)?.let {
                     result = result.withDerivedValue(assignment.attribute, it)
                 }
             }

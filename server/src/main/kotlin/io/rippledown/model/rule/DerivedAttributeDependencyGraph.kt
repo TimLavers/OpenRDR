@@ -16,8 +16,16 @@ import io.rippledown.model.condition.Condition
  * from the root, or has a value expression referring to A.
  *
  * The graph is computed on demand from the rule tree; it is not persisted.
+ * The [resolver] supplies the stored definitions of derived attributes, so
+ * that rules and actions whose value is given [ByDefinition] contribute the
+ * references of the definition. See
+ * documentation/design/editing_derived_attribute_definitions.md.
  */
-class DerivedAttributeDependencyGraph(ruleTree: RuleTree, knownAttributes: Set<Attribute>) {
+class DerivedAttributeDependencyGraph(
+    ruleTree: RuleTree,
+    knownAttributes: Set<Attribute>,
+    private val resolver: DefinitionResolver = NO_DEFINITIONS
+) {
     private val derivedByName = knownAttributes
         .filter { it.kind == AttributeKind.DERIVED }
         .associateBy { it.name }
@@ -31,7 +39,7 @@ class DerivedAttributeDependencyGraph(ruleTree: RuleTree, knownAttributes: Set<A
      */
     fun cycleCreatedBy(action: RuleTreeChange?, condition: Condition?): List<Attribute>? {
         val assigned = action?.assignedAttribute() ?: return null
-        val referenced = derivedIn(action.expressionReferences()) +
+        val referenced = derivedIn(action.expressionReferences(resolver)) +
                 (condition?.let { derivedAttributesIn(it) } ?: emptySet())
         return cycleCreatedBy(assigned, referenced)
     }
@@ -47,6 +55,14 @@ class DerivedAttributeDependencyGraph(ruleTree: RuleTree, knownAttributes: Set<A
         return pathBackToStart(assigned, edges)
     }
 
+    /**
+     * The cycle through [attribute] in the graph as it stands, or null if
+     * there is none. Used to guard a definition edit: build the graph with
+     * a resolver giving the edited definition, then check for a cycle
+     * through the edited attribute.
+     */
+    fun cycleThrough(attribute: Attribute): List<Attribute>? = pathBackToStart(attribute, dependencies)
+
     private fun buildDependencies(ruleTree: RuleTree): Map<Attribute, Set<Attribute>> {
         val result = mutableMapOf<Attribute, MutableSet<Attribute>>()
         ruleTree.rules().forEach { rule ->
@@ -55,7 +71,11 @@ class DerivedAttributeDependencyGraph(ruleTree: RuleTree, knownAttributes: Set<A
             conditionsOnPathFromRoot(rule).forEach { condition ->
                 dependsOn.addAll(derivedAttributesIn(condition))
             }
-            rule.assignment?.let { dependsOn.addAll(derivedIn(it.expression.referencedAttributes())) }
+            rule.assignment?.let { assignment ->
+                assignment.expression.resolvedFor(assignment.attribute, resolver)?.let {
+                    dependsOn.addAll(derivedIn(it.referencedAttributes()))
+                }
+            }
         }
         return result
     }
