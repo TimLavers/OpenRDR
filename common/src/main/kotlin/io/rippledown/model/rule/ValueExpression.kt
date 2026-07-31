@@ -53,6 +53,28 @@ data class Formula(val expression: Expr) : ValueExpression() {
 }
 
 /**
+ * A sentinel expression indicating that the value assigned to a derived
+ * attribute is given by the attribute's stored definition, rather than by
+ * an expression embedded in the rule action. It is never evaluated
+ * directly: before evaluation it is resolved to the concrete expression
+ * held in the definition store. See
+ * documentation/design/editing_derived_attribute_definitions.md.
+ */
+@Serializable
+@SerialName("ByDefinition")
+object ByDefinition : ValueExpression() {
+    override fun evaluate(case: RDRCase): String? =
+        error("A ByDefinition expression must be resolved to a concrete expression before evaluation.")
+
+    override fun referencedAttributes(): Set<Attribute> =
+        error("A ByDefinition expression must be resolved to a concrete expression before its referenced attributes can be determined.")
+
+    override fun asText() = "by definition"
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = this
+}
+
+/**
  * A node in the arithmetic syntax tree of a [Formula].
  */
 @Serializable
