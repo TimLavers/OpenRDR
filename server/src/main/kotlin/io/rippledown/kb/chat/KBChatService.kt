@@ -116,6 +116,7 @@ object KBChatService {
         "15_cancelling_the_rule.md",
         "16_listing_capabilities.md",
         "17_assigning_derived_values.md",
+        "18_editing_derived_definition.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -145,6 +146,7 @@ object KBChatService {
         "ASSIGN_DERIVED_VALUE" to ASSIGN_DERIVED_VALUE,
         "REMOVE_DERIVED_VALUE" to REMOVE_DERIVED_VALUE,
         "REPLACE_DERIVED_VALUE" to REPLACE_DERIVED_VALUE,
+        "EDIT_DERIVED_DEFINITION" to EDIT_DERIVED_DEFINITION,
         "SHOW_CORNERSTONES" to SHOW_CORNERSTONES,
         "REMOVE" to REMOVE,
         "REPLACE" to REPLACE,
