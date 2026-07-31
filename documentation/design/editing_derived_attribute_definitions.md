@@ -2,9 +2,16 @@
 
 ## Status
 
-**DRAFT — design in progress.** Not yet implemented. This document captures
-the agreed design direction so far; open questions are listed at the end.
+**DESIGN AGREED — ready for implementation.** Not yet implemented. All open questions are resolved (see "Resolved
+questions" at the end).
 See also [repeat_inferencing.md](repeat_inferencing.md), on which this builds.
+
+**Sequencing (agreed):** this work is implemented **before** repeat inferencing Phase 2 (comments become derived
+attributes). The
+`DerivedDefinitionStore` / `ByDefinition` architecture introduced here is the final architecture Phase 2 lands on (a
+comment's text template becomes just another definition, and `ConclusionStore` folds into the definition store), so
+doing this first avoids migrating configured KBs twice. See the Sequencing notes
+in [repeat_inferencing.md](repeat_inferencing.md).
 
 ## The requirement
 
@@ -183,24 +190,40 @@ directly realises "persist derived attributes like we do comments".
   review); a routing scenario that "fix/edit the definition" does not open a
   rule session.
 
-## Open questions (for tomorrow)
+## Resolved questions
 
-1. **Store shape now vs Phase-2 unification.** Build `DerivedDefinitionStore`
-   for data attributes only now, or design the unified attribute-value store
-   (covering comment text + variables) up front?
-2. **`ByDefinition` vs no-expression action.** Is a `ByDefinition`
-   `ValueExpression` the cleanest representation, or should the rule action
-   reference the attribute with no expression at all and always resolve via the
-   definition store?
-3. **Migration/backfill of existing KBs.** Confirm the backfill heuristic
-   (single consistent expression → definition; differing → overrides) and
-   whether any configured test KBs contain `AssignValue` rules that need it.
-4. **Safety on a global edit.** Editing a definition changes values KB-wide.
-   Do we want a lightweight impact summary (e.g. count of affected
-   cornerstones) or a confirmation step, given there is deliberately no
-   cornerstone session?
-5. **Naming vs value edit.** This ticket is the formula/value definition only;
-   renaming a derived attribute is a separate TODO item.
+1. **Store shape: data attributes only now.** `DerivedDefinitionStore` is built for data attributes only; the unified
+   store (covering comment text + variables) is designed in Phase 2, when the survey of `Conclusion` usages provides the
+   information to design it well. Two cheap future-proofing constraints keep the Phase 2 fold-in schema-free:
+  - the definition is persisted as serialized `ValueExpression` JSON in the
+    `expression TEXT` column (the `PersistentRule.assignment` trick), so a future template subtype needs no schema
+    change;
+  - the store interface is kind-agnostic — `store(attributeId, expression)` /
+    `definitionFor(attributeId): ValueExpression?` — with the "must be DERIVED" check enforced in the chat action, not
+    the store. A rename to
+    `AttributeDefinitionStore` in Phase 2 is acceptable churn.
+2. **`ByDefinition` sentinel, with resolve-then-evaluate.** `ByDefinition` is a `ValueExpression` subtype (explicit in
+   the persisted JSON; keeps
+   `AssignValue.expression` non-null; a third sealed-class branch rather than nullability rippling through consumers).
+   `ValueExpression.evaluate(case)`
+   stays pure: it is never called on `ByDefinition` (which `error()`s if it is). Instead `RuleTree.materialise`
+   substitutes `is ByDefinition →
+   resolver(attribute)`, yielding a concrete `Literal`/`Formula` which is then evaluated. The dependency graph and
+   `ViewableCase.derivedValues()` use the same resolver.
+3. **Migration/backfill.** Heuristic confirmed (single consistent expression → definition; genuinely differing →
+   overrides). The configured test KBs are believed to contain no `AssignValue` rules, so the backfill is expected to be
+   a no-op for them — verify when implementing.
+4. **Safety on a global edit: deferred.** An impact summary (e.g. count of affected cornerstones) is wanted, but not
+   now — see Future enhancements.
+5. **Formula/value edit only.** Renaming a derived attribute is out of scope for this ticket — see Future enhancements.
+
+## Future enhancements (not in this ticket)
+
+- **Impact summary on a global edit.** Editing a definition changes values KB-wide with deliberately no cornerstone
+  session; a lightweight impact summary (e.g. how many cornerstones' derived values change) shown before or after the
+  edit would give the user confidence in the change.
+- **Renaming a derived attribute.** Id-referenced, so mechanically safe; needs the name-in-use refusal (as in repeat
+  inferencing step 8c) and a chat action + instruction routing of its own.
 
 ## Where we got to (session note)
 
@@ -208,6 +231,6 @@ directly realises "persist derived attributes like we do comments".
 - Agreed on the **definition-on-the-attribute** model above, mirroring the
   conclusion store, with a `ByDefinition` rule action and per-rule overrides
   retained for RDR refinement.
-- Next session: resolve the open questions (start with 1 and 2), then flesh out
-  the `DerivedDefinitionStore` interface and the `ByDefinition` type as the
-  first concrete code step (TDD, per repeat_inferencing conventions).
+- All open questions resolved (above). Next step: TDD the
+  `DerivedDefinitionStore` interface and the `ByDefinition` type as the first concrete code step, per repeat_inferencing
+  conventions (`.\gradlew.bat :common:test :server:test` after each step).
