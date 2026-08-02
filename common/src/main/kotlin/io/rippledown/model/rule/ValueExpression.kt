@@ -98,6 +98,16 @@ data class CommentTemplate(
         CommentTemplate(text, variables.map { idToAttribute(it.id) })
 
     /**
+     * The template text with each `${}` token replaced by its variable's
+     * name in `{attributeName}` format — the form in which comments with
+     * variables are presented to the LLM. The attribute name is resolved
+     * through [attributeById] where possible (the stored variable may
+     * carry a stale name), falling back to the variable's own name.
+     */
+    fun textWithVariableNames(attributeById: (Int) -> Attribute? = { null }): String =
+        substituteTokens { "{${(attributeById(it.id) ?: it).name}}" }
+
+    /**
      * The comment for the given case, with the ranges of any unresolved
      * variable markers.
      */

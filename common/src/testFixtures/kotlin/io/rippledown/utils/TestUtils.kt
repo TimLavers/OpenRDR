@@ -136,7 +136,11 @@ fun createLargeViewableCaseWithInterpretation(
     }
     val text = interp.conclusionTexts().joinToString(" ")
     val renderedComments = interp.conclusions().map { conclusion ->
-        RenderedComment(text = conclusion.text, unresolvedRanges = emptyList())
+        RenderedComment(
+            text = conclusion.text,
+            unresolvedRanges = emptyList(),
+            conditions = interp.conditionsForConclusion(conclusion)
+        )
     }
     case.viewableInterpretation =
         ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = renderedComments)
@@ -179,7 +183,11 @@ fun createViewableInterpretation(
     val interp = createInterpretation(commentToConditions)
     val text = interp.conclusionTexts().joinToString(" ")
     val renderedComments = interp.conclusions().map { conclusion ->
-        RenderedComment(text = conclusion.text, unresolvedRanges = emptyList())
+        RenderedComment(
+            text = conclusion.text,
+            unresolvedRanges = emptyList(),
+            conditions = interp.conditionsForConclusion(conclusion)
+        )
     }
     return ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = renderedComments)
 }

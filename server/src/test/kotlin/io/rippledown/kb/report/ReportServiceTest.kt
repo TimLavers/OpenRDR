@@ -5,6 +5,8 @@ import io.kotest.matchers.string.shouldContain
 import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.rule.*
 import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -112,5 +114,55 @@ class ReportServiceTest {
         val report = reportService.generate(emptyViewable) { null }
         report.markdown shouldBe ""
         report.generated shouldBe false
+    }
+
+    @Test
+    fun `userContent should include comments given as comment-attribute assignments`() = runTest {
+        // Given a case whose raw interpretation holds an unresolved ByDefinition
+        // comment assignment, and whose viewable interpretation holds the
+        // resolved copy, as produced by KB.viewableCase
+        val viewableCase = viewableCaseWithCommentAssignment(
+            rawExpression = ByDefinition,
+            resolvedExpression = CommentTemplate("Diabetic diet advice given.")
+        )
+
+        // When the LLM user content is built
+        val content = reportService.userContent(viewableCase) { null }
+
+        // Then the resolved comment is included
+        content shouldContain "Diabetic diet advice given."
+    }
+
+    @Test
+    fun `generate should not produce a report when the only comment assignment is unresolved`() = runTest {
+        // Given a case whose comment assignment could not be resolved to a definition
+        val viewableCase = viewableCaseWithCommentAssignment(
+            rawExpression = ByDefinition,
+            resolvedExpression = ByDefinition
+        )
+
+        // When a report is generated
+        val report = reportService.generate(viewableCase) { null }
+
+        // Then there are no comments, so no report
+        report.markdown shouldBe ""
+        report.generated shouldBe false
+    }
+
+    private fun viewableCaseWithCommentAssignment(
+        rawExpression: ValueExpression,
+        resolvedExpression: ValueExpression
+    ): ViewableCase {
+        val caseId = CaseId(1, "Test")
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val rawInterpretation = Interpretation(caseId).apply {
+            add(RuleSummary(id = 1, assignment = AssignValue(c1, rawExpression)))
+        }
+        val resolvedInterpretation = Interpretation(caseId).apply {
+            add(RuleSummary(id = 1, assignment = AssignValue(c1, resolvedExpression)))
+        }
+        val case = RDRCase(caseId, emptyMap(), rawInterpretation)
+        val viewProperties = CaseViewProperties(case.attributes.toList())
+        return ViewableCase(case, viewProperties, ViewableInterpretation(resolvedInterpretation))
     }
 }

@@ -12,7 +12,10 @@ data class CommentVariable(
 @Serializable
 data class RenderedComment(
     val text: String,
-    val unresolvedRanges: List<IntRangeData> = emptyList()
+    val unresolvedRanges: List<IntRangeData> = emptyList(),
+    // The texts of the conditions of the rules that gave the comment, for
+    // display in the comment's tooltip.
+    val conditions: List<String> = emptyList()
 )
 
 @Serializable

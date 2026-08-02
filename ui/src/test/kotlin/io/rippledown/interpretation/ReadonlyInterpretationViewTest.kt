@@ -11,12 +11,10 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
-import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.decoration.BACKGROUND_COLOR
-import io.rippledown.model.Conclusion
 import io.rippledown.model.IntRangeData
 import io.rippledown.model.RenderedComment
 import io.rippledown.model.diff.Addition
@@ -78,8 +76,7 @@ class ReadonlyInterpretationViewTest {
             setContent {
                 ToolTipForNonEmptyInterpretation(
                     commentIndex = -1,
-                    conclusionList = emptyList(),
-                    interpretation = mockk()
+                    interpretation = ViewableInterpretation()
                 )
             }
             //When
@@ -91,21 +88,19 @@ class ReadonlyInterpretationViewTest {
     @Test
     fun `should show tool tip for a non-blank interpretation and non-empty condition list`() = runTest {
         //Given
-        val interpretation = mockk<ViewableInterpretation>()
-        val conclusion = Conclusion(
-            42,
-            "meaning of life"
-        )
         val condition1 = "surf's up"
         val condition2 = "it's sunny"
-        every { interpretation.conditionsForConclusion(conclusion) } returns listOf(condition1, condition2)
+        val interpretation = ViewableInterpretation(
+            renderedComments = listOf(
+                RenderedComment(text = "meaning of life", conditions = listOf(condition1, condition2))
+            )
+        )
 
         with(composeTestRule) {
             //When
             setContent {
                 ToolTipForNonEmptyInterpretation(
                     commentIndex = 0,
-                    conclusionList = listOf(conclusion),
                     interpretation = interpretation
                 )
             }

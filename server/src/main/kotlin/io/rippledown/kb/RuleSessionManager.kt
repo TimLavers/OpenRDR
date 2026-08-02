@@ -559,7 +559,10 @@ class RuleSessionManager(
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
         if (currentCornerstone != null) {
-            index = cornerstones.indexOf(currentCornerstone.case)
+            // Match by case id: the selected cornerstone is a viewable copy with
+            // materialised derived values, so whole-case equality does not hold
+            // against the raw cornerstone cases.
+            index = cornerstones.indexOfFirst { it.caseId == currentCornerstone.case.caseId }
         }
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]

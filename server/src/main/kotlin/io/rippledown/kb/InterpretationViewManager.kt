@@ -24,11 +24,13 @@ class InterpretationViewManager(
         val renderedFromConclusions = orderedConclusions.map { conclusion ->
             conclusion.render(case) { id ->
                 runCatching { attributeProvider.getById(id) }.getOrNull()
-            }
+            }.copy(conditions = interpretation.conditionsForConclusion(conclusion))
         }
         val commentAssignments = commentAssignments(interpretation)
         val texts = orderedConclusions.map { it.text } + commentAssignments.map { it.expression.rawText() }
-        val renderedComments = renderedFromConclusions + commentAssignments.map { it.render(case) }
+        val renderedComments = renderedFromConclusions + commentAssignments.map { assignment ->
+            assignment.render(case).copy(conditions = interpretation.conditionsForAssignment(assignment))
+        }
         return ViewableInterpretation(
             interpretation,
             textGivenByRules = texts.joinToString(COMMENT_SEPARATOR),

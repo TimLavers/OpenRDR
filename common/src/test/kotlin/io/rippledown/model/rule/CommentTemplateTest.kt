@@ -108,6 +108,45 @@ class CommentTemplateTest {
     }
 
     @Test
+    fun `textWithVariableNames for a template with no variables is the text unchanged`() {
+        CommentTemplate("Plain.").textWithVariableNames() shouldBe "Plain."
+    }
+
+    @Test
+    fun `textWithVariableNames substitutes tokens with the variable names in braces`() {
+        // Given a template with variables
+        val template = CommentTemplate("Glucose is \${}, BMI is \${}.", listOf(glucose, bmi))
+
+        // Then its LLM-facing form uses attribute names in braces, unquoted
+        template.textWithVariableNames() shouldBe "Glucose is {Glucose}, BMI is {BMI}."
+    }
+
+    @Test
+    fun `textWithVariableNames resolves attribute names through the resolver`() {
+        // Given a template whose stored variable carries a stale name
+        val staleGlucose = Attribute(1, "Old name")
+        val template = CommentTemplate("Glucose is \${}.", listOf(staleGlucose))
+
+        // When the text is produced with a resolver that knows the current name
+        val text = template.textWithVariableNames { id -> if (id == 1) glucose else null }
+
+        // Then the current name is used
+        text shouldBe "Glucose is {Glucose}."
+    }
+
+    @Test
+    fun `textWithVariableNames falls back to the variable's own name when the resolver fails`() {
+        // Given a template with a variable the resolver does not know
+        val template = CommentTemplate("BMI is \${}.", listOf(bmi))
+
+        // When the text is produced with a resolver that resolves nothing
+        val text = template.textWithVariableNames { null }
+
+        // Then the variable's own name is used
+        text shouldBe "BMI is {BMI}."
+    }
+
+    @Test
     fun `alignAttributes re-points the variable attributes`() {
         // Given a template whose variables are stale copies
         val staleGlucose = Attribute(1, "Old name")

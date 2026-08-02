@@ -42,6 +42,7 @@ class InterpretationViewManagerTest {
         val case = mockk<RDRCase>()
         every { interpretation.conclusions() } returns setOf(conclusion1, conclusion2, conclusion3)
         every { interpretation.assignments() } returns emptySet()
+        every { interpretation.conditionsForConclusion(any()) } returns emptyList()
         every { interpretation.caseId } returns CaseId(42, "Hitch")
         manager.insert(listOf(conclusion3, conclusion1, conclusion2))
 
@@ -63,6 +64,7 @@ class InterpretationViewManagerTest {
         val case = mockk<RDRCase>()
         every { interpretation.conclusions() } returns setOf(conclusion)
         every { interpretation.assignments() } returns emptySet()
+        every { interpretation.conditionsForConclusion(any()) } returns emptyList()
         every { interpretation.caseId } returns CaseId(42, "Hitch")
         manager.insert(listOf(conclusion))
 
@@ -179,6 +181,43 @@ class InterpretationViewManagerTest {
         //Then
         viewable.textGivenByRules shouldBe "Plain comment."
         viewable.renderedComments shouldBe listOf(RenderedComment("Plain comment."))
+    }
+
+    @Test
+    fun `a rendered comment from an assignment carries the conditions of the rule that gave it`() {
+        //Given a comment assignment given by a rule with conditions
+        val assignment = AssignValue(c1, CommentTemplate("Diabetic diet advice given."))
+        val conditions = listOf("Glucose is high", "Age > 40")
+        val interpretation = interpretation(
+            RuleSummary(id = 1, assignment = assignment, conditionTextsFromRoot = conditions)
+        )
+
+        //When
+        val viewable = manager.viewableInterpretation(interpretation, case())
+
+        //Then the rendered comment carries the conditions for its tooltip
+        viewable.renderedComments shouldBe listOf(
+            RenderedComment("Diabetic diet advice given.", conditions = conditions)
+        )
+    }
+
+    @Test
+    fun `a rendered comment from a conclusion carries the conditions of the rule that gave it`() {
+        //Given a conclusion given by a rule with conditions
+        val conclusion = Conclusion(1, "From a conclusion.")
+        manager.insert(listOf(conclusion))
+        val conditions = listOf("Glucose is high")
+        val interpretation = interpretation(
+            RuleSummary(id = 1, conclusion = conclusion, conditionTextsFromRoot = conditions)
+        )
+
+        //When
+        val viewable = manager.viewableInterpretation(interpretation, case())
+
+        //Then the rendered comment carries the conditions for its tooltip
+        viewable.renderedComments shouldBe listOf(
+            RenderedComment("From a conclusion.", conditions = conditions)
+        )
     }
 
     @Test

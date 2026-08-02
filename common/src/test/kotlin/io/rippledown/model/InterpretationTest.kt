@@ -5,9 +5,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.rule.AssignValue
-import io.rippledown.model.rule.Literal
-import io.rippledown.model.rule.Rule
+import io.rippledown.model.rule.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -303,6 +301,50 @@ class InterpretationTest {
         val comments = Json.decodeFromString<Set<String>>(commentsJson)
         // Bot should see {attributeName} format
         comments shouldBe setOf("First comment", "Wave is {Wave}")
+    }
+
+    @Test
+    fun toCommentsShouldIncludeCommentAttributeAssignments() {
+        // Given an interpretation with a literal comment assignment and a template comment assignment
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val c2 = Attribute(11, "C2", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("Plain comment.")))
+        )
+        interpretation.add(
+            RuleSummary(
+                id = 2,
+                assignment = AssignValue(c2, CommentTemplate("Wave is " + VARIABLE_TOKEN, listOf(wave)))
+            )
+        )
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+
+        // When the comments are produced for the LLM
+        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case))
+
+        // Then both comments appear, with template variables in {attributeName} format
+        comments shouldBe setOf("Plain comment.", "Wave is {Wave}")
+    }
+
+    @Test
+    fun toCommentsShouldOmitUnresolvedAndNonCommentAssignments() {
+        // Given an unresolved ByDefinition comment assignment and a derived-value assignment
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val bmi = Attribute(11, "BMI", AttributeKind.DERIVED)
+        interpretation.add(RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition)))
+        interpretation.add(RuleSummary(id = 2, assignment = AssignValue(bmi, Literal("25"))))
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        // When the comments are produced for the LLM
+        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case))
+
+        // Then neither assignment contributes a comment
+        comments shouldBe emptySet()
     }
 
     @Test

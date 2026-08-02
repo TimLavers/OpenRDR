@@ -1,8 +1,6 @@
 package io.rippledown.model
 
-import io.rippledown.model.rule.AssignValue
-import io.rippledown.model.rule.Rule
-import io.rippledown.model.rule.RuleSummary
+import io.rippledown.model.rule.*
 import io.rippledown.toJsonString
 import kotlinx.serialization.Serializable
 
@@ -44,7 +42,7 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
     }
 
     fun toComments(case: RDRCase, attributeById: (Int) -> Attribute? = { null }): String {
-        return conclusions().map { conclusion ->
+        val fromConclusions = conclusions().map { conclusion ->
             if (conclusion.variables.isEmpty()) {
                 conclusion.text
             } else {
@@ -66,7 +64,25 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
                 }
                 result
             }
-        }.toSet().toJsonString()
+        }
+        // Comments given as COMMENT-attribute assignments. A CommentTemplate is
+        // rendered with its variables in {attributeName} format for the LLM; an
+        // unresolved ByDefinition assignment contributes no comment, matching
+        // interpretation.
+        val fromAssignments = assignments()
+            .filter { it.attribute.kind == AttributeKind.COMMENT }
+            .sortedBy { it.attribute.id }
+            .mapNotNull { assignment ->
+                when (val expression = assignment.expression) {
+                    is CommentTemplate -> expression.textWithVariableNames { id ->
+                        attributeById(id) ?: case.attributes.find { it.id == id }
+                    }
+
+                    is Literal -> expression.value
+                    else -> null
+                }
+            }
+        return (fromConclusions + fromAssignments).toSet().toJsonString()
     }
 
     fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<Int> {
