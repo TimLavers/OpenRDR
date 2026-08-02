@@ -534,8 +534,7 @@ internal class KBEndpointTest {
     fun `should set currentDiff to Replacement when starting a rule session via SessionStartRequest`() {
         //Given
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Go to Bondi.")
-        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.startRuleSession(SessionStartRequest(id, Addition("Go to Bondi.")))
         endpoint.commitCurrentRuleSession()
         val diff = Replacement("Go to Bondi.", "Go to Maroubra.")
         val sessionStartRequest = SessionStartRequest(id, diff)
@@ -639,7 +638,7 @@ internal class KBEndpointTest {
         endpoint.buildRule(request)
 
         // Then
-        endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+        commentsForCase(case1.caseId.id!!) shouldBe listOf("TSH ok.")
     }
 
     @Test
@@ -651,7 +650,7 @@ internal class KBEndpointTest {
         endpoint.buildRule(
             BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
         )
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+        commentsForCase(id) shouldBe listOf("TSH ok.")
 
         // When - remove it
         endpoint.buildRule(
@@ -659,7 +658,7 @@ internal class KBEndpointTest {
         )
 
         // Then
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe emptySet()
+        commentsForCase(id) shouldBe emptyList()
     }
 
     @Test
@@ -671,7 +670,7 @@ internal class KBEndpointTest {
         endpoint.buildRule(
             BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
         )
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH ok.")
+        commentsForCase(id) shouldBe listOf("TSH ok.")
 
         // When - replace it
         endpoint.buildRule(
@@ -683,7 +682,7 @@ internal class KBEndpointTest {
         )
 
         // Then
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("TSH normal.")
+        commentsForCase(id) shouldBe listOf("TSH normal.")
     }
 
     @Test
@@ -703,8 +702,11 @@ internal class KBEndpointTest {
         endpoint.buildRule(request)
 
         // Then
-        endpoint.case(case1.caseId.id!!).interpretation.conclusionTexts() shouldBe setOf("Both ok.")
+        commentsForCase(case1.caseId.id!!) shouldBe listOf("Both ok.")
     }
+
+    private fun commentsForCase(id: Long): List<String> =
+        endpoint.viewableCase(id).viewableInterpretation.renderedComments.map { it.text }
 
     @Test
     fun `caseReport should delegate to ReportService`() = runTest {

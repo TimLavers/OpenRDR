@@ -7,6 +7,7 @@ import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion
 import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.AstigmatismName
 import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.PrescriptionName
 import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.TearProductionName
+import io.rippledown.model.AttributeKind
 import kotlin.test.Test
 
 class ContactLensesSampleBuilderTest: SampleBuilderTest() {
@@ -26,21 +27,20 @@ class ContactLensesSampleBuilderTest: SampleBuilderTest() {
         checkCases()
         endpoint.kb.ruleTree.size() shouldBe 6
         val cases = endpoint.kb.allProcessedCases()
-        fun interpretationForCase(index: Int): String {
-            val interpretation = endpoint.kb.interpret(cases[index])
-            interpretation.conclusionTexts().size shouldBe 1
-            return interpretation.conclusionTexts().first()
-        }
-        endpoint.kb.interpret(cases[0]).conclusionTexts().size shouldBe 0
-        interpretationForCase(1) shouldBe "soft"
-        endpoint.kb.interpret(cases[2]).conclusionTexts().size shouldBe 0
-        interpretationForCase(3) shouldBe "hard"
+        fun commentsForCase(index: Int): List<String> =
+            endpoint.kb.viewableCase(cases[index]).viewableInterpretation.renderedComments.map { it.text }
+        commentsForCase(0) shouldBe emptyList()
+        commentsForCase(1) shouldBe listOf("soft")
+        commentsForCase(2) shouldBe emptyList()
+        commentsForCase(3) shouldBe listOf("hard")
 
         endpoint.description() shouldBe CONTACT_LENSES_DESCRIPTION
     }
 
     private fun checkAttributes() {
-        val attributesInOrder = endpoint.kb.caseViewManager.allInOrder().map { it.name }
+        // Comment attributes are created by the rules; the case view order of the external attributes is unchanged.
+        val attributesInOrder = endpoint.kb.caseViewManager.allInOrder()
+            .filter { it.kind == AttributeKind.EXTERNAL }.map { it.name }
         attributesInOrder shouldBe listOf(AgeName, PrescriptionName, AstigmatismName, TearProductionName)
     }
 

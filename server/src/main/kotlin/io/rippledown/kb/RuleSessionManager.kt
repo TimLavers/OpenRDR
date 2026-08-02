@@ -65,19 +65,33 @@ class RuleSessionManager(
         viewableCase: ViewableCase,
         comment: String,
         variables: List<CommentVariable>
+    ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables)
+
+    /**
+     * Comments are comment attributes: adding one gets or creates the
+     * attribute whose definition is the comment's text, and builds a rule
+     * assigning it by definition. See "Phase 2 — comments become derived
+     * attributes" in documentation/design/repeat_inferencing.md.
+     */
+    internal fun startRuleSessionToAddComment(
+        case: RDRCase,
+        comment: String,
+        variables: List<CommentVariable> = emptyList()
     ): CornerstoneStatus {
-        val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
-        currentDiff = Addition(renderedText(conclusion, viewableCase.case))
-        val action = ChangeTreeToAddConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
+        val template = commentTemplate(comment, variables)
+        val attribute = commentAttributeFor(template)
+        currentDiff = Addition(template.render(case).text)
+        return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
 
-    override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
-        val conclusion = kb.conclusionManager.findByText(comment)
+    override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus =
+        startRuleSessionToRemoveComment(viewableCase.case, comment)
+
+    internal fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
+        val attribute = commentAttributeForText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentDiff = Removal(renderedText(conclusion, viewableCase.case))
-        val action = ChangeTreeToRemoveConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
+        currentDiff = Removal(renderedComment(attribute, case))
+        return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
     }
 
     override fun startRuleSessionToReplaceComment(
@@ -85,17 +99,59 @@ class RuleSessionManager(
         replacedComment: String,
         replacementComment: String,
         variables: List<CommentVariable>
+    ): CornerstoneStatus =
+        startRuleSessionToReplaceComment(viewableCase.case, replacedComment, replacementComment, variables)
+
+    /**
+     * Each comment text has its own attribute, so the replacement is a new
+     * (or existing) attribute for the replacement text: the replacing rule
+     * assigns it, and leaf-most suppression retracts the original. See
+     * "Phase 2" in documentation/design/repeat_inferencing.md.
+     */
+    internal fun startRuleSessionToReplaceComment(
+        case: RDRCase,
+        replacedComment: String,
+        replacementComment: String,
+        variables: List<CommentVariable> = emptyList()
     ): CornerstoneStatus {
-        val replacedConclusion = kb.conclusionManager.findByText(replacedComment)
+        val replacedAttribute = commentAttributeForText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
-        val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
-        currentDiff = Replacement(
-            renderedText(replacedConclusion, viewableCase.case),
-            renderedText(replacementConclusion, viewableCase.case)
+        val replacementTemplate = commentTemplate(replacementComment, variables)
+        val replacementAttribute = commentAttributeFor(replacementTemplate)
+        currentDiff = Replacement(renderedComment(replacedAttribute, case), replacementTemplate.render(case).text)
+        return startRuleSession(
+            case,
+            ChangeTreeToReplaceAssignment(
+                AssignValue(replacedAttribute, ByDefinition),
+                AssignValue(replacementAttribute, ByDefinition)
+            )
         )
-        val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
-        return startRuleSession(viewableCase.case, action)
     }
+
+    private fun commentTemplate(comment: String, variables: List<CommentVariable>) =
+        CommentTemplate(comment, variables.map { kb.attributeManager.getById(it.attributeId) })
+
+    /**
+     * The comment attribute whose definition is the given template,
+     * created if necessary.
+     */
+    private fun commentAttributeFor(template: CommentTemplate): Attribute =
+        kb.attributeManager.commentAttributes()
+            .firstOrNull { kb.derivedDefinitionManager.definitionFor(it.id) == template }
+            ?: kb.attributeManager.createCommentAttribute()
+                .also { kb.derivedDefinitionManager.store(it.id, template) }
+
+    /**
+     * The comment attribute whose definition has the given (internal-form)
+     * text, or null if none exists.
+     */
+    private fun commentAttributeForText(text: String): Attribute? =
+        kb.attributeManager.commentAttributes().firstOrNull {
+            (kb.derivedDefinitionManager.definitionFor(it.id) as? CommentTemplate)?.text == text
+        }
+
+    private fun renderedComment(attribute: Attribute, case: RDRCase): String =
+        (kb.derivedDefinitionManager.definitionFor(attribute.id) as? CommentTemplate)?.render(case)?.text ?: ""
 
     /**
      * Starts a session for a rule assigning the attribute by its definition:
@@ -570,17 +626,13 @@ class RuleSessionManager(
         currentDiff = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
-        return when (diff) {
-            is Addition -> startRuleSession(case, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(diff.right())))
-            is Removal -> startRuleSession(case, ChangeTreeToRemoveConclusion(kb.conclusionManager.getOrCreate(diff.left())))
-            is Replacement -> startRuleSession(
-                case,
-                ChangeTreeToReplaceConclusion(
-                    kb.conclusionManager.getOrCreate(diff.left()),
-                    kb.conclusionManager.getOrCreate(diff.right())
-                )
-            )
+        val status = when (diff) {
+            is Addition -> startRuleSessionToAddComment(case, diff.right())
+            is Removal -> startRuleSessionToRemoveComment(case, diff.left())
+            is Replacement -> startRuleSessionToReplaceComment(case, diff.left(), diff.right())
         }
+        currentDiff = diff
+        return status
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
@@ -595,11 +647,11 @@ class RuleSessionManager(
         }
         commitCurrentRuleSession()
         logger.info("rule session committed")
-        val updatedInterpretation = kb.interpret(case.case)
-        case.viewableInterpretation =
-            kb.interpretationViewManager.viewableInterpretation(updatedInterpretation, case.case)
-        logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
-        return case
+        // Rebuild the viewable case so that the new rule's effects are shown,
+        // with by-definition assignments resolved for display.
+        val updated = kb.viewableCase(case.case)
+        logger.info("Updated interpretation after committing the rule: ${updated.viewableInterpretation}")
+        return updated
     }
 
     /**

@@ -3,6 +3,7 @@ package io.rippledown.kb.sample.zoo
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.sample.SampleBuilderTest
+import io.rippledown.model.AttributeKind
 import kotlin.test.Test
 
 class ZooSampleBuilderTest: SampleBuilderTest() {
@@ -23,9 +24,9 @@ class ZooSampleBuilderTest: SampleBuilderTest() {
         endpoint.kb.ruleTree.size() shouldBe 18
         val cases = endpoint.kb.allProcessedCases()
         fun interpretationForCase(index: Int): String {
-            val interpretation = endpoint.kb.interpret(cases[index])
-            interpretation.conclusionTexts().size shouldBe 1
-            return interpretation.conclusionTexts().first()
+            val comments = endpoint.kb.viewableCase(cases[index]).viewableInterpretation.renderedComments
+            comments.size shouldBe 1
+            return comments.first().text
         }
         interpretationForCase(0) shouldBe "mammal"
         interpretationForCase(1) shouldBe "mammal"
@@ -34,7 +35,9 @@ class ZooSampleBuilderTest: SampleBuilderTest() {
     }
 
     private fun checkAttributes() {
-        val attributesInOrder = endpoint.kb.caseViewManager.allInOrder().map { it.name }
+        // Comment attributes are created by the rules; the case view order of the external attributes is unchanged.
+        val attributesInOrder = endpoint.kb.caseViewManager.allInOrder()
+            .filter { it.kind == AttributeKind.EXTERNAL }.map { it.name }
         attributesInOrder shouldBe listOf(
             "hair",
             "feathers",

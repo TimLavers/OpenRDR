@@ -567,7 +567,13 @@ leaving `AssignConclusion` in place until step 16.
     Remove the conclusion ordering machinery — `conclusionOrderStore()` on
     `PersistentKB`, `PostgresConclusionOrderStore`, and the
     `OrderedEntityManager` base of `InterpretationViewManager` (resolved
-    decision 4: ordering is not significant).
+    decision 4: ordering is not significant). *(Resolved 2 Aug 2026: one comment attribute per comment text.)*
+    "Replace this comment with X" mints a new comment attribute for X:
+    the replacing rule assigns the new attribute, and leaf-most suppression retracts the parent's — one rule, no
+    explicit retraction. This preserves the invariant that a comment attribute's definition is its text, so a future
+    "change this comment's wording everywhere" is exactly the definition-edit flow used for derived formulas. A
+    conditional per-case wording override of the *same*
+    attribute was considered and rejected: it would make "the comment's text" ambiguous.
 16. **Retire `AssignConclusion`.** Only after 12–15 are green: delete
     `AssignConclusion`, `Conclusion`, `ConclusionManager`,
     `ConclusionProvider`, the conclusion store, and `Rule.conclusion`

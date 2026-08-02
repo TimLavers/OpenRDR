@@ -59,9 +59,9 @@ internal class RuleBuildingTest {
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."
         with(kbEndpoint) {
-            startRuleSessionToAddConclusion(id, kbEndpoint.getOrCreateConclusion(comment1))
+            startRuleSession(SessionStartRequest(id, Addition(comment1)))
             commitCurrentRuleSession()
-            startRuleSessionToAddConclusion(id, kbEndpoint.getOrCreateConclusion(comment2))
+            startRuleSession(SessionStartRequest(id, Addition(comment2)))
             commitCurrentRuleSession()
             viewableCase(id).latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }

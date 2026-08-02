@@ -907,8 +907,7 @@ class RuleSessionManagerTest {
     fun `should start a rule session for a Removal via SessionStartRequest`() {
         // Given
         val storedCase = kb.addProcessedCase(createCase("Case1"))
-        val conclusion = kb.conclusionManager.getOrCreate("Go.")
-        rsm.startRuleSession(storedCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(storedCase, "Go.")
         rsm.commitCurrentRuleSession()
         kb.interpret(storedCase)
         val diff = Removal("Go.")
@@ -926,8 +925,7 @@ class RuleSessionManagerTest {
     fun `should start a rule session for a Replacement via SessionStartRequest`() {
         // Given
         val storedCase = kb.addProcessedCase(createCase("Case1"))
-        val conclusion = kb.conclusionManager.getOrCreate("Go.")
-        rsm.startRuleSession(storedCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(storedCase, "Go.")
         rsm.commitCurrentRuleSession()
         kb.interpret(storedCase)
         val diff = Replacement("Go.", "Stop.")
@@ -969,7 +967,7 @@ class RuleSessionManagerTest {
 
         // Then
         rsm.isRuleSessionActive() shouldBe false
-        result.viewableInterpretation.interpretation.conclusionTexts() shouldBe setOf("Go.")
+        result.viewableInterpretation.renderedComments.map { it.text } shouldBe listOf("Go.")
     }
 
     // --- buildRule(BuildRuleRequest) ---
@@ -991,8 +989,8 @@ class RuleSessionManagerTest {
 
         // Then
         val reinterpreted = kb.addProcessedCase(createCase("Case2", value = "1.0"))
-        kb.interpret(reinterpreted)
-        reinterpreted.interpretation.conclusionTexts() shouldBe setOf("Glucose ok.")
+        kb.viewableCase(reinterpreted).viewableInterpretation
+            .renderedComments.map { it.text } shouldBe listOf("Glucose ok.")
     }
 
     // --- moveAttributeTo ---
