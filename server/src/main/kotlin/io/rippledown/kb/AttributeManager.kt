@@ -54,6 +54,25 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
         }
     }
 
+    /**
+     * Create a comment attribute with an auto-generated name: `C1`, `C2`, …,
+     * using the smallest index whose name is not already in use by an
+     * attribute of any kind (ignoring case, consistent with the naming rules
+     * for KB-assigned attributes). See "Phase 2 — comments become derived
+     * attributes" in documentation/design/repeat_inferencing.md.
+     */
+    fun createCommentAttribute(): Attribute {
+        val namesInUse = nameToAttribute.keys.map { it.lowercase() }.toSet()
+        val index = generateSequence(1) { it + 1 }.first { "c$it" !in namesInUse }
+        return getOrCreate("C$index", AttributeKind.COMMENT)
+    }
+
+    /**
+     * All the comment attributes.
+     */
+    fun commentAttributes(): Set<Attribute> =
+        nameToAttribute.values.filter { it.kind == AttributeKind.COMMENT }.toSet()
+
     fun byName(name: String): Attribute? = nameToAttribute[name]
 
     fun all(): Set<Attribute> {
