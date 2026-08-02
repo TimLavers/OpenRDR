@@ -20,6 +20,26 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
         }
     }
 
+    @When("I request that the definition of the derived attribute {string} be changed to {string}")
+    fun requestDefinitionEdit(attributeName: String, expression: String) {
+        with(chatDefs) {
+            waitForBotQuestion()
+            enterChatTextAndSend("The $attributeName formula is wrong, change its definition to $expression")
+        }
+    }
+
+    @When("I request that the derived value {string} be replaced with {string} for reason {string}")
+    fun requestDerivedValueReplacement(attributeName: String, value: String, reason: String) {
+        with(chatDefs) {
+            waitForBotQuestion()
+            enterChatTextAndSend("For this case, replace the value of the derived attribute \"$attributeName\" with $value")
+            waitForBotSuggestions()
+            enterChatTextAndSend(reason)
+            decline() //no more reasons
+            waitForBotToSayDone()
+        }
+    }
+
     @Then("the derived value {string} should be {string}")
     fun derivedValueShouldBe(attributeName: String, expectedValue: String) {
         val actual = restClient().derivedValueFor(currentCaseName(), attributeName)
