@@ -45,6 +45,36 @@ class PostgresConclusionStoreTest: PostgresStoreTest() {
     }
 
     @Test
+    fun `clear removes all conclusions and their variables`() {
+        // Given stored conclusions, one with variables
+        store.create(teaComment)
+        store.create("Glucose is \${}.", listOf(CommentVariable(1)))
+
+        // When the store is cleared
+        store.clear()
+
+        // Then it is empty, clearing again is a no-op, and the clear survives a reload
+        store.all() shouldBe emptySet()
+        store.clear()
+        store.all() shouldBe emptySet()
+        reload()
+        store.all() shouldBe emptySet()
+    }
+
+    @Test
+    fun `conclusions can be created after a clear`() {
+        // Given a cleared store
+        store.create(teaComment)
+        store.clear()
+
+        // When a conclusion is created
+        val created = store.create(coffeeComment)
+
+        // Then it is stored
+        store.all() shouldBe setOf(created)
+    }
+
+    @Test
     fun `can create long conclusions`() {
         val longComment = RandomStringUtils.random(2048)
         val created = store.create(longComment)

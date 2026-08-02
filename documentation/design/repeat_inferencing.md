@@ -520,31 +520,35 @@ leaving `AssignConclusion` in place until step 16.
       attributes.
     - `${}` comment-variable support moves to the assigned value: the
       rendering currently done via `Conclusion`/`Interpretation.toComments`
-      is re-implemented for `Literal` values of `COMMENT` attributes.
-      Preserve the existing rendering semantics exactly — the tests in
-      the comments cucumber features
-      (`cucumber/src/test/resources/requirements/comments/`) pin them.
-13. **Migration of configured KBs.** Configured KBs are in zip files under
-    `server/src/test/resources`. Convert these to the new format as a one-off
-    migration before step 16 lands, and reconfigure them.
-
-- On KB load (and KB import), each existing conclusion
-    is converted to a `COMMENT` attribute plus assignment:
-    - for each `Conclusion` in the conclusion store, create a `COMMENT`
-      attribute (auto-named) whose assigned value is the conclusion text;
-    - each rule whose `conclusionId` references it becomes a rule with an
-      `AssignValue` on that attribute (update `PersistentRule`:
-      `conclusionId` becomes unused);
-    - one-way and idempotent: migrated KBs have an empty conclusion
-      store, so re-running is a no-op; exports after migration use the
-      new form only.
-    - No in-code SQL migration: the conversion is at the manager level
-      (read old stores, write new form). Removal of the obsolete tables
-      is a documented one-off (`DROP TABLE conclusions;`,
+      is re-implemented as a dedicated `ValueExpression` subtype,
+      `CommentTemplate(text, variables)` — id-based attribute references (rename-safe, like `AttributeValue`), rendering
+      semantics preserved exactly. *(Implemented 2 Aug 2026.)* The tests in the comments cucumber features
+      (`cucumber/src/test/resources/requirements/comments/`) pin the semantics.
+13. **Migration of configured KBs.** *(Resolved 2 Aug 2026: a one-off conversion, not load-time migration logic.)* The
+    only KBs in the old format are those in this project — the zip files under
+    `server/src/test/resources` and the zoo KB under
+    `server/src/main/resources`; there are no external databases to convert. So the conversion is a well-tested one-off
+    applied to those fixtures before step 16 lands, after which the migrator is deleted rather than carried in the KB
+    load path forever.
+    - Each conclusion is converted to a `COMMENT` attribute plus assignment:
+        - for each `Conclusion` in the conclusion store, create a
+          `COMMENT` attribute (auto-named) whose stored definition is a
+          `CommentTemplate` of the conclusion text and variables;
+        - each rule whose `conclusionId` references it becomes a rule with `AssignValue(attribute, ByDefinition)`
+          (update
+          `PersistentRule`: `conclusionId` becomes unused);
+        - one-way and idempotent: migrated KBs have an empty conclusion store, so re-running is a no-op; exports after
+          migration use the new form only.
+    - No in-code SQL migration: the conversion is at the store level (read old stores, write new form) via
+      `RuleStore.update` and
+      `ConclusionStore.clear`. Removal of the obsolete tables is a documented one-off (`DROP TABLE conclusions;`,
+      `DROP TABLE conclusion_variables;`,
       `DROP TABLE conclusion_indexes;`) once step 16 lands.
+    - After step 16, KB load/import `check`s that the conclusion store is empty — one cheap guard against any stray old
+      export, in place of a permanent migration subsystem.
     - Tests: a KB built with conclusion rules (e.g. via the sample KBs in
-      `server/src/main/kotlin/io/rippledown/kb/sample/`) interprets every
-      case identically before and after migration.
+      `server/src/main/kotlin/io/rippledown/kb/sample/`) interprets every case identically before and after migration,
+      comparing rendered comment texts (including unresolved-variable markers).
 
 14. **Chat naming flow.** "Add the comment …" creates the comment
     attribute; the LLM proposes a semantic name with `C1`-style fallback;

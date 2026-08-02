@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 const val CONCLUSIONS_TABLE = "conclusions"
@@ -72,6 +73,13 @@ class PostgresConclusionStore(private val db: Database): ConclusionStore {
                 }
             }
         }
+
+    override fun clear() {
+        transaction(db) {
+            PGConclusionVariables.deleteAll()
+            PGConclusions.deleteAll()
+        }
+    }
 
     override fun load(conclusions: Set<Conclusion>) {
         require(all().isEmpty()) {
