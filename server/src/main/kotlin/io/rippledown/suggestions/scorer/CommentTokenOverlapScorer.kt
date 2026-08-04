@@ -14,9 +14,16 @@ import io.rippledown.model.condition.structural.CaseStructurePredicate
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.ChangeTreeToAddAssignment
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.ChangeTreeToRemoveAssignment
 import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
+import io.rippledown.model.rule.ChangeTreeToReplaceAssignment
 import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
+import io.rippledown.model.rule.CommentTemplate
+import io.rippledown.model.rule.Literal
+import io.rippledown.model.rule.resolvedFor
 import io.rippledown.suggestions.SuggestionContext
 
 /**
@@ -57,9 +64,28 @@ internal class CommentTokenOverlapScorer(
             is ChangeTreeToAddConclusion -> action.toBeAdded.text
             is ChangeTreeToReplaceConclusion -> action.replacement.text
             is ChangeTreeToRemoveConclusion -> action.toBeRemoved.text
+            is ChangeTreeToAddAssignment -> commentTextFor(action.toBeAdded)
+            is ChangeTreeToReplaceAssignment -> commentTextFor(action.replacement)
+            is ChangeTreeToRemoveAssignment -> commentTextFor(action.toBeRemoved)
             else -> return emptySet()
-        }
+        } ?: return emptySet()
         return tokenise(text)
+    }
+
+    /**
+     * Extracts the comment text from an [AssignValue] whose expression is a
+     * [CommentTemplate] (either directly or via a [ByDefinition] sentinel
+     * resolved through the context's definition resolver). Returns null for
+     * non-comment assignments (e.g. derived-value formulas), so the scorer
+     * degrades to other signals for those actions.
+     */
+    private fun commentTextFor(assignment: AssignValue): String? {
+        val expr = assignment.expression.resolvedFor(assignment.attribute, ctx.definitionResolver) ?: return null
+        return when (expr) {
+            is CommentTemplate -> expr.text
+            is Literal -> expr.value
+            else -> null
+        }
     }
 
     companion object {

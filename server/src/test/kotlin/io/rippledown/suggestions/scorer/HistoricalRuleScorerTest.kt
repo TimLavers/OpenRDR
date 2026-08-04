@@ -2,6 +2,7 @@ package io.rippledown.suggestions.scorer
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.*
@@ -343,5 +344,127 @@ class HistoricalRuleScorerTest {
         //Then exact predicate match is required for non-editable candidates
         scorer.score(suggestionFor(tshHigh)) shouldBe 1
         scorer.score(suggestionFor(tshLow)) shouldBe 0
+    }
+
+    // -----------------------------------------------------------------
+    // Assignment-based actions (Phase 2: comments are comment attributes)
+    // -----------------------------------------------------------------
+
+    private val commentAttr = Attribute(100, "C1", AttributeKind.COMMENT)
+    private val otherCommentAttr = Attribute(101, "C2", AttributeKind.COMMENT)
+
+    private fun ruleTreeWithAssignment(vararg rules: Rule): RuleTree {
+        val root = Rule(0)
+        rules.forEach { root.addChild(it) }
+        return RuleTree(root)
+    }
+
+    /**
+     * A historical rule that assigns the same comment attribute as the
+     * action's target must be found by the scorer, so its conditions
+     * contribute to the historical signal.
+     */
+    @Test
+    fun `assignment add action matches historical rules by target attribute id`() {
+        //Given a historical rule assigning commentAttr with tshHigh
+        val historical = Rule(
+            1, null, null, setOf(tshHigh),
+            assignment = AssignValue(commentAttr, ByDefinition)
+        )
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToAddAssignment(AssignValue(commentAttr, ByDefinition)),
+            ruleTree = ruleTreeWithAssignment(historical),
+        )
+
+        //When
+        val scorer = HistoricalRuleScorer(ctx)
+
+        //Then the matching condition scores 1, unrelated conditions score 0
+        scorer.score(suggestionFor(tshHigh)) shouldBe 1
+        scorer.score(suggestionFor(tshLow)) shouldBe 0
+    }
+
+    /**
+     * A rule assigning a *different* comment attribute must not be matched,
+     * so its conditions don't leak into the signal for the current comment.
+     */
+    @Test
+    fun `assignment add action does not match rules with a different comment attribute`() {
+        //Given a rule for a different comment attribute
+        val unrelated = Rule(
+            1, null, null, setOf(tshHigh),
+            assignment = AssignValue(otherCommentAttr, ByDefinition)
+        )
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToAddAssignment(AssignValue(commentAttr, ByDefinition)),
+            ruleTree = ruleTreeWithAssignment(unrelated),
+        )
+
+        //When
+        val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
+
+        //Then no historical signal
+        score shouldBe 0
+    }
+
+    /**
+     * Replace uses the *replacement* attribute as the target, matching the
+     * convention from the conclusion-based scorer.
+     */
+    @Test
+    fun `assignment replace action uses the replacement attribute as target`() {
+        //Given one rule for the replacement attribute and one for the original
+        val usingTshHigh = Rule(
+            1, null, null, setOf(tshHigh),
+            assignment = AssignValue(commentAttr, ByDefinition)
+        )
+        val usingMcvHigh = Rule(
+            2, null, null, setOf(mcvHigh),
+            assignment = AssignValue(otherCommentAttr, ByDefinition)
+        )
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh, mcv),
+            action = ChangeTreeToReplaceAssignment(
+                AssignValue(otherCommentAttr, ByDefinition),
+                AssignValue(commentAttr, ByDefinition)
+            ),
+            ruleTree = ruleTreeWithAssignment(usingTshHigh, usingMcvHigh),
+        )
+
+        //When
+        val scorer = HistoricalRuleScorer(ctx)
+
+        //Then only the rule keyed off the replacement attribute contributes
+        scorer.score(suggestionFor(tshHigh)) shouldBe 1
+        scorer.score(suggestionFor(mcvHigh)) shouldBe 0
+    }
+
+    /**
+     * Remove uses the attribute being removed as the target.
+     */
+    @Test
+    fun `assignment remove action scores conditions that gated the removed comment`() {
+        //Given a historical rule that assigned the to-be-removed comment attribute
+        val historical = Rule(
+            1, null, null, setOf(tshHigh),
+            assignment = AssignValue(commentAttr, ByDefinition)
+        )
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToRemoveAssignment(AssignValue(commentAttr, ByDefinition)),
+            ruleTree = ruleTreeWithAssignment(historical),
+        )
+
+        //When
+        val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
+
+        //Then the historical condition is surfaced
+        score shouldBe 1
     }
 }

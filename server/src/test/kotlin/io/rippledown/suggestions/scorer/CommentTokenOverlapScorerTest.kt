@@ -2,6 +2,7 @@ package io.rippledown.suggestions.scorer
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
@@ -13,10 +14,7 @@ import io.rippledown.model.condition.series.Decreasing
 import io.rippledown.model.condition.series.Increasing
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.case
+import io.rippledown.model.rule.*
 import io.rippledown.suggestions.SuggestionContext
 import kotlin.test.Test
 import io.rippledown.model.condition.episodic.signature.AtLeast as AtLeastSignature
@@ -376,5 +374,105 @@ class CommentTokenOverlapScorerTest {
         //Then extendedHigh {tsh, high} ∩ comment = {tsh} (1) — "normal" is
         //deliberately not in the high-range vocabulary
         scorer.score(extendedHigh) shouldBe 1
+    }
+
+    // -----------------------------------------------------------------
+    // Assignment-based actions (Phase 2: comments are comment attributes)
+    // -----------------------------------------------------------------
+
+    private val commentAttr = Attribute(100, "C1", AttributeKind.COMMENT)
+    private val otherCommentAttr = Attribute(101, "C2", AttributeKind.COMMENT)
+
+    /**
+     * A ChangeTreeToAddAssignment with a CommentTemplate expression must
+     * extract the template text for tokenisation, just as the conclusion-based
+     * action extracts the conclusion text.
+     */
+    @Test
+    fun `assignment add action with comment template scores against template text`() {
+        //Given an add-assignment action whose comment template text is "TSH is high"
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToAddAssignment(
+                AssignValue(commentAttr, CommentTemplate("TSH is high"))
+            ),
+        )
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then High matches both attribute and direction (2), Low matches only attribute (1)
+        scorer.score(nonEdit(EpisodicCondition(tsh, High, Current))) shouldBe 2
+        scorer.score(nonEdit(EpisodicCondition(tsh, Low, Current))) shouldBe 1
+    }
+
+    /**
+     * A ChangeTreeToReplaceAssignment scores against the *replacement*
+     * template, not the original — matching the conclusion-based convention.
+     */
+    @Test
+    fun `assignment replace action scores against replacement template text`() {
+        //Given a replace-assignment whose replacement template is "TSH is high"
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToReplaceAssignment(
+                AssignValue(otherCommentAttr, CommentTemplate("TSH is low")),
+                AssignValue(commentAttr, CommentTemplate("TSH is high"))
+            ),
+        )
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then High matches the replacement text (2), Low matches only attribute (1)
+        scorer.score(nonEdit(EpisodicCondition(tsh, High, Current))) shouldBe 2
+        scorer.score(nonEdit(EpisodicCondition(tsh, Low, Current))) shouldBe 1
+    }
+
+    /**
+     * A ChangeTreeToRemoveAssignment scores against the template being removed.
+     */
+    @Test
+    fun `assignment remove action scores against the removed template text`() {
+        //Given a remove-assignment whose template text is "TSH is high"
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToRemoveAssignment(
+                AssignValue(commentAttr, CommentTemplate("TSH is high"))
+            ),
+        )
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then the candidate matching that comment scores 2
+        scorer.score(nonEdit(EpisodicCondition(tsh, High, Current))) shouldBe 2
+    }
+
+    /**
+     * A non-comment assignment (e.g. a derived-value formula) must produce no
+     * tokens, so the scorer degrades to other signals for those actions.
+     */
+    @Test
+    fun `assignment add action with non-comment expression scores 0`() {
+        //Given an add-assignment for a DERIVED attribute with a Literal expression
+        val derivedAttr = Attribute(200, "BMI", AttributeKind.DERIVED)
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh),
+            action = ChangeTreeToAddAssignment(
+                AssignValue(derivedAttr, CommentTemplate("25.0"))
+            ),
+        )
+
+        //When
+        val scorer = CommentTokenOverlapScorer(ctx)
+
+        //Then no comment tokens are extracted (CommentTemplate text "25.0" has
+        //no overlap with tsh/high), so the score is 0
+        scorer.score(nonEdit(EpisodicCondition(tsh, High, Current))) shouldBe 0
     }
 }
