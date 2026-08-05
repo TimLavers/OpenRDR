@@ -105,6 +105,10 @@ class KB(persistentKB: PersistentKB) {
         val case = createRDRCase(externalCase)
         val stored = caseManager.add(case)
         interpret(stored)
+        // Resolve ByDefinition assignments to their stored definitions so that
+        // callers reading the interpretation directly (e.g. the interpreter API
+        // endpoint) see CommentTemplate/Literal expressions, not sentinels.
+        stored.interpretation.resolveDefinitions(definitionResolver)
         return stored
     }
 

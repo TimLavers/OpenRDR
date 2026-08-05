@@ -208,7 +208,7 @@ class Defs {
         val attributeNameToValue = mutableMapOf<String, String>()
         dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
         val received = labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
-        received.interpretation.conclusionTexts() shouldBe setOf(comment)
+        received.interpretation.commentTexts(received) shouldBe setOf(comment)
     }
 
     @Given("case {word} is provided with the following values, reference ranges and units:")
