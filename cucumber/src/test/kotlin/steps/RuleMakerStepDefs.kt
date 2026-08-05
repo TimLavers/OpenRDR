@@ -326,6 +326,6 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @Then("the model should ask me to finish or cancel the current rule")
     fun `require response to finish or cancel the current rule`() {
-        chatDefs.waitForBotText("finish", "cancel")
+        chatDefs.waitForBotTextToContainAnyOf("finish", "cancel")
     }
 }
