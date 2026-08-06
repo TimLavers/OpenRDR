@@ -554,7 +554,10 @@ class RuleSessionManager(
         checkSession()
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
-        if (cornerstones.isEmpty()) return CornerstoneStatus(diff = currentDiff, ruleConditions = conditionTexts)
+        if (cornerstones.isEmpty()) return CornerstoneStatus(
+            pendingChange = currentDiff,
+            ruleConditions = conditionTexts
+        )
 
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
