@@ -6,9 +6,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import io.rippledown.utils.checkSerializationIsThreadSafe
@@ -45,7 +43,7 @@ class CornerstoneStatusTest {
                 "cornerstoneToReview": null,
                 "indexOfCornerstoneToReview": -1,
                 "numberOfCornerstones": 0,
-                "diff": null,
+                "pendingChange": null,
                 "ruleConditions": []
             }
         """.trimIndent()
@@ -60,7 +58,7 @@ class CornerstoneStatusTest {
             cornerstoneToReview = viewableCase,
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
-            diff = Addition("Go to Bondi.")
+            pendingChange = Addition("Go to Bondi.")
         )
 
         //When
@@ -68,14 +66,14 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.diff shouldBe Addition("Go to Bondi.")
+        deserialized.commentDiff shouldBe Addition("Go to Bondi.")
     }
 
     @Test
     fun `should serialize and deserialize with a Removal diff`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Removal("Go to Bondi.")
+            pendingChange = Removal("Go to Bondi.")
         )
 
         //When
@@ -83,14 +81,14 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.diff shouldBe Removal("Go to Bondi.")
+        deserialized.commentDiff shouldBe Removal("Go to Bondi.")
     }
 
     @Test
     fun `should serialize and deserialize with a Replacement diff`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Replacement("Go to Bondi.", "Go to Maroubra.")
+            pendingChange = Replacement("Go to Bondi.", "Go to Maroubra.")
         )
 
         //When
@@ -98,16 +96,18 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.diff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
+        deserialized.commentDiff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
     }
 
     @Test
-    fun `should default diff to null`() {
+    fun `should default pendingChange to null`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus()
 
         //Then
-        cornerstoneStatus.diff shouldBe null
+        cornerstoneStatus.pendingChange shouldBe null
+        cornerstoneStatus.commentDiff shouldBe null
+        cornerstoneStatus.derivedValueDiff shouldBe null
     }
 
     @Test
@@ -153,7 +153,7 @@ class CornerstoneStatusTest {
     fun `should serialize and deserialize with rule conditions and Addition diff`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Addition("Go to Bondi."),
+            pendingChange = Addition("Go to Bondi."),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
         )
 
@@ -162,7 +162,7 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.diff shouldBe Addition("Go to Bondi.")
+        deserialized.commentDiff shouldBe Addition("Go to Bondi.")
         deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
     }
 
@@ -170,7 +170,7 @@ class CornerstoneStatusTest {
     fun `should serialize and deserialize with rule conditions and Removal diff`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Removal("Go to Bondi."),
+            pendingChange = Removal("Go to Bondi."),
             ruleConditions = listOf("UV > 5.0")
         )
 
@@ -179,7 +179,7 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.diff shouldBe Removal("Go to Bondi.")
+        deserialized.commentDiff shouldBe Removal("Go to Bondi.")
         deserialized.ruleConditions shouldBe listOf("UV > 5.0")
     }
 
@@ -187,7 +187,7 @@ class CornerstoneStatusTest {
     fun `should serialize and deserialize with rule conditions and Replacement diff`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Replacement("Go to Bondi.", "Go to Maroubra."),
+            pendingChange = Replacement("Go to Bondi.", "Go to Maroubra."),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
         )
 
@@ -196,7 +196,7 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.diff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
+        deserialized.commentDiff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
         deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
     }
 
@@ -209,7 +209,7 @@ class CornerstoneStatusTest {
             cornerstoneToReview = viewableCase,
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
-            diff = Addition("Go to Bondi."),
+            pendingChange = Addition("Go to Bondi."),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
         )
 
@@ -224,7 +224,7 @@ class CornerstoneStatusTest {
     @Test
     fun checkJsonWithRuleConditions() {
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Addition("Go to Bondi."),
+            pendingChange = Addition("Go to Bondi."),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
         )
 
@@ -233,7 +233,7 @@ class CornerstoneStatusTest {
                 "cornerstoneToReview": null,
                 "indexOfCornerstoneToReview": -1,
                 "numberOfCornerstones": 0,
-                "diff": {
+                "pendingChange": {
                     "type": "io.rippledown.model.diff.Addition",
                     "addedText": "Go to Bondi."
                 },
@@ -248,8 +248,98 @@ class CornerstoneStatusTest {
     @Test
     fun `should be thread safe with rule conditions`() {
         val cornerstoneStatus = CornerstoneStatus(
-            diff = Addition("Go to Bondi."),
+            pendingChange = Addition("Go to Bondi."),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
+        )
+        checkSerializationIsThreadSafe(cornerstoneStatus)
+    }
+
+    @Test
+    fun `should default derivedValueDiff to null`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus()
+
+        //Then
+        cornerstoneStatus.derivedValueDiff shouldBe null
+    }
+
+    @Test
+    fun `should serialize and deserialize with a derived value addition`() {
+        //Given
+        val change = DerivedValueAddition("BMI", "weight / height ^ 2")
+        val cornerstoneStatus = CornerstoneStatus(pendingChange = change)
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.derivedValueDiff shouldBe change
+    }
+
+    @Test
+    fun `should serialize and deserialize with a derived value removal`() {
+        //Given
+        val cornerstoneStatus = CornerstoneStatus(pendingChange = DerivedValueRemoval("BMI"))
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.derivedValueDiff shouldBe DerivedValueRemoval("BMI")
+    }
+
+    @Test
+    fun `should serialize and deserialize with a derived value replacement`() {
+        //Given
+        val change = DerivedValueReplacement("BMI", "weight / height ^ 3")
+        val cornerstoneStatus = CornerstoneStatus(pendingChange = change)
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+        deserialized.derivedValueDiff shouldBe change
+    }
+
+    @Test
+    fun `should serialize and deserialize a derived value change with a cornerstone and conditions`() {
+        //Given
+        val rdrCase = createCase("Case1")
+        val viewableCase = ViewableCase(rdrCase, caseViewProperties())
+        val cornerstoneStatus = CornerstoneStatus(
+            cornerstoneToReview = viewableCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 1,
+            ruleConditions = listOf("Weight is high"),
+            pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
+        )
+
+        //When
+        val deserialized = serializeDeserialize(cornerstoneStatus)
+
+        //Then
+        deserialized shouldBe cornerstoneStatus
+    }
+
+    @Test
+    fun `a derived value change and a comment diff are independent`() {
+        //Given a status carrying only a derived value change
+        val cornerstoneStatus = CornerstoneStatus(
+            pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
+        )
+
+        //Then the comment view of it is null, so the Comments panel previews nothing
+        cornerstoneStatus.commentDiff shouldBe null
+        serializeDeserialize(cornerstoneStatus).commentDiff shouldBe null
+    }
+
+    @Test
+    fun `should be thread safe with a derived value change`() {
+        val cornerstoneStatus = CornerstoneStatus(
+            pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
         )
         checkSerializationIsThreadSafe(cornerstoneStatus)
     }

@@ -27,7 +27,7 @@ class DerivedValueRowTest {
         )
 
         with(composeTestRule) {
-            setContent { DerivedValueRow(info) }
+            setContent { DerivedValueRow(DerivedValueRowState(info)) }
 
             onNodeWithText(info.value).assertIsDisplayed()
             onNodeWithContentDescription("$DERIVED_VALUE_NAME_PREFIX${info.name}")

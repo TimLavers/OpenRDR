@@ -1,10 +1,13 @@
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import io.mockk.mockk
+import io.rippledown.constants.interpretation.COMMENTS_INFO_ICON
+import io.rippledown.constants.interpretation.COMMENTS_NONE
 import io.rippledown.constants.interpretation.COMMENTS_TOGGLE
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.utils.createViewableInterpretation
@@ -105,6 +108,182 @@ class InterpretationViewTest {
             waitForIdle()
 
             onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show comments panel heading and empty state when there are no comments`() = runTest {
+        val interpretation = createViewableInterpretation(mapOf())
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_TOGGLE).assertIsDisplayed()
+            onNodeWithContentDescription(COMMENTS_NONE).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should not show empty state when there are comments`() = runTest {
+        val interpretation = createViewableInterpretation(
+            mapOf("Best surf in the world!" to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_NONE).assertDoesNotExist()
+            onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should keep the interpretation text field present and empty when there are no comments`() = runTest {
+        val interpretation = createViewableInterpretation(mapOf())
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertTextEquals("")
+        }
+    }
+
+    @Test
+    fun `should hide empty state when comments panel is collapsed`() = runTest {
+        val interpretation = createViewableInterpretation(mapOf())
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_NONE).assertIsDisplayed()
+
+            onNodeWithContentDescription(COMMENTS_TOGGLE).performClick()
+            waitForIdle()
+
+            onNodeWithContentDescription(COMMENTS_NONE).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should show empty state again when collapsed comments panel is expanded`() = runTest {
+        val interpretation = createViewableInterpretation(mapOf())
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_TOGGLE).performClick()
+            waitForIdle()
+            onNodeWithContentDescription(COMMENTS_TOGGLE).performClick()
+            waitForIdle()
+
+            onNodeWithContentDescription(COMMENTS_NONE).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the info icon when there are comments`() = runTest {
+        val interpretation = createViewableInterpretation(
+            mapOf("Best surf in the world!" to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_INFO_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the info icon when there are no comments`() = runTest {
+        val interpretation = createViewableInterpretation(mapOf())
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_INFO_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the info icon when the panel is collapsed`() = runTest {
+        val interpretation = createViewableInterpretation(
+            mapOf("Best surf in the world!" to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_TOGGLE).performClick()
+            waitForIdle()
+
+            onNodeWithContentDescription(COMMENTS_INFO_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the info icon when the panel is expanded`() = runTest {
+        val interpretation = createViewableInterpretation(
+            mapOf("Best surf in the world!" to listOf())
+        )
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_INFO_ICON).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show the info icon when panel is collapsed and there are no comments`() = runTest {
+        val interpretation = createViewableInterpretation(mapOf())
+        with(composeTestRule) {
+            setContent {
+                InterpretationView(
+                    interpretation = interpretation,
+                    handler = handler
+                )
+            }
+
+            onNodeWithContentDescription(COMMENTS_TOGGLE).performClick()
+            waitForIdle()
+
+            onNodeWithContentDescription(COMMENTS_INFO_ICON).assertIsDisplayed()
         }
     }
 }

@@ -61,6 +61,15 @@ class ChatDefs {
         waitForBotText("?")
     }
 
+    /**
+     * Wait until the bot is ready for a new request: either it has asked a
+     * question (e.g. the opening greeting) or it has just completed the
+     * previous action (its "done" message does not end with a question).
+     */
+    fun waitForBotQuestionOrCompletedAction() {
+        waitForBotTextToContainAnyOf("?", CHAT_BOT_DONE_MESSAGE)
+    }
+
     @Then("the chatbot has asked if I would like to add a comment")
     fun requireBotQuestionToAddAComment() {
         waitForBotText(WOULD_YOU_LIKE, ADD_A_COMMENT)
@@ -72,7 +81,13 @@ class ChatDefs {
     }
 
     fun waitForBotSuggestions() {
-        waitForSuggestionText("1.")
+        // Require the suggestions to be newer than the user's last message so
+        // that a list left over from an earlier rule session in the same
+        // conversation cannot satisfy the wait (chained-rule scenarios).
+        await().atMost(ofSeconds(90)).until {
+            chatPO().suggestionsAreForLatestRequest() &&
+                    chatPO().mostRecentSuggestionRowContainsTerms(listOf("1."))
+        }
     }
 
     @And("the chatbot has asked if I want to provide any (more )reasons and I decline")
@@ -207,7 +222,22 @@ class ChatDefs {
         }
     }
 
-    private fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
+    /**
+     * Enter a condition into a rule session that is already under way. Unlike [provideTheseReasons]
+     * this does not require the suggestion list to be newer than the user's most recent message,
+     * because the user may have said something else since the suggestions appeared (e.g. asking to
+     * see the next cornerstone case).
+     */
+    fun addConditionToCurrentRuleSession(condition: String) {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().numberOfSuggestionRows() > 0
+        }
+        val suggestionsBefore = chatPO().numberOfSuggestionRows()
+        enterChatTextAndSend(condition)
+        waitForBotResponseToReason(suggestionsBefore, chatPO().numberOfChatMessages())
+    }
+
+    fun waitForBotResponseToReason(previousSuggestionCount: Int, messageCountAfterSend: Int) {
         await().atMost(ofSeconds(90)).until {
             chatPO().numberOfSuggestionRows() > previousSuggestionCount ||
                     chatPO().numberOfChatMessages() > messageCountAfterSend
@@ -228,28 +258,21 @@ class ChatDefs {
         if (waitForBotQuestionFirst) {
             waitForBotQuestion()
         }
-        waitForBotQuestion()
         addCommentWithoutConfirmation(comment)
         waitForBotSuggestions()
         decline()
         waitForBotQuestionToAllowReportChangeToCornerstoneThenConfirm()
-        waitForBotSuggestions()
-        decline()
         waitForBotToSayDone()
     }
 
     @And("I request that the comment {string} be added")
     fun requestCommentBeAdded(comment: String) {
-        waitForBotQuestion()
-        if (commentContainsVariable(comment)) {
-            addCommentThenConfirm(comment)
-        } else {
-            addCommentWithoutConfirmation(comment)
-        }
-        //the model should always prompt for confirmation if the comment contains a variable
+        waitForBotQuestionOrCompletedAction()
+        // The model is instructed to ask for confirmation when the comment
+        // contains a variable, and occasionally asks for other comments too;
+        // addCommentThenConfirm confirms only if the model actually asks.
+        addCommentThenConfirm(comment)
     }
-
-    private fun commentContainsVariable(comment: String) = comment.contains("{")
 
     @And("I request that the comment {string} be added without being prompted")
     fun requestCommentBeAddedWithoutPrompt(comment: String) {
@@ -265,9 +288,11 @@ class ChatDefs {
         // The model is instructed to ask for confirmation when a comment contains a variable, but it
         // occasionally proceeds straight to the rule session (showing suggestions). Only confirm if it
         // actually asks, otherwise the "yes" arrives after the suggestions and is misread as a condition.
-        // Detect the suggestion list directly rather than relying on the model's exact wording.
+        // Detect the suggestion list directly rather than relying on the model's exact wording, and
+        // require it to be newer than the add-comment request so a list left over from an earlier rule
+        // session cannot satisfy the wait.
         await().atMost(ofSeconds(60)).until {
-            chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) || chatPO().numberOfSuggestionRows() > 0
+            chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) || chatPO().suggestionsAreForLatestRequest()
         }
         if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
             confirm()
@@ -295,7 +320,7 @@ class ChatDefs {
 
     @And("I request that the derived attribute {string} be added with (formula )(value ){string}")
     fun requestDerivedAttributeBeAdded(attributeName: String, formula: String) {
-        waitForBotQuestion()
+        waitForBotQuestionOrCompletedAction()
         enterChatTextAndSend("Add derived attribute $attributeName with formula $formula")
     }
 
@@ -368,14 +393,23 @@ class ChatDefs {
 
     @When("I ask the chatbot to show the next cornerstone case")
     fun askToShowNextCornerstoneCase() {
-        waitForBotQuestion()
+        waitForBotToBeReadyForCornerstoneNavigation()
         enterChatTextAndSend("show me the next cornerstone case")
     }
 
     @When("I ask the chatbot to show the previous cornerstone case")
     fun askToShowPreviousCornerstoneCase() {
-        waitForBotQuestion()
+        waitForBotToBeReadyForCornerstoneNavigation()
         enterChatTextAndSend("show me the previous cornerstone case")
+    }
+
+    /**
+     * Cornerstone navigation can be requested either when the bot has asked a question
+     * or while it is offering suggested conditions in a rule session (in which case its
+     * most recent message is not a question).
+     */
+    fun waitForBotToBeReadyForCornerstoneNavigation() {
+        waitForBotTextToContainAnyOf("?", SUGGESTION, "1.")
     }
 
     @Then("the chatbot has mentioned the cornerstone case {string}")
@@ -398,7 +432,7 @@ class ChatDefs {
     @Then("the chat should explain that the name {string} already exists")
     fun chatExplainsNameAlreadyExists(name: String) {
         waitForBotText(name)
-        waitForBotTextToContainAnyOf("already exists", "already used")
+        waitForBotTextToContainAnyOf("already exists", "already used", "already given", "replace")
     }
 
     @Then("the capabilities shown include:")

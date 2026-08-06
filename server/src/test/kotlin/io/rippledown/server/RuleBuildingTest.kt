@@ -35,7 +35,7 @@ internal class RuleBuildingTest {
         val id = supplyCaseFromFile("Case1", kbEndpoint).caseId.id!!
         val diff = Addition("Go to Bondi")
         val cornerstoneStatus = kbEndpoint.startRuleSession(SessionStartRequest(id, diff))
-        cornerstoneStatus shouldBe CornerstoneStatus(diff = diff)
+        cornerstoneStatus shouldBe CornerstoneStatus(pendingChange = diff)
     }
 
     @Test

@@ -52,6 +52,17 @@ class HandleResponseTest {
         return response
     }
 
+    private fun malformedFunctionCallResponse(): GenerateContentResponse {
+        val response = mockk<GenerateContentResponse>()
+        val failure =
+            IllegalArgumentException("The response finished unexpectedly with reason MALFORMED_FUNCTION_CALL.")
+        every { response.functionCalls() } throws failure
+        every { response.text() } throws failure
+        every { response.candidates() } returns null
+        every { response.usageMetadata() } returns null
+        return response
+    }
+
     private fun functionCall(name: String, args: Map<String, Any> = emptyMap()): FunctionCall {
         val fc = mockk<FunctionCall>()
         every { fc.name() } returns Optional.of(name)
@@ -268,6 +279,53 @@ class HandleResponseTest {
 
         // Then
         result shouldBe "No function call or text response"
+    }
+
+    // --- Responses that finished for a reason that makes their content inaccessible ---
+
+    @Test
+    fun `should retry when the response finished with a malformed function call`() = runTest {
+        // Given
+        val retryResponse = mockResponse(text = "Recovered after malformed function call.")
+        val conversation = createConversation(retryResponse)
+
+        // When
+        val result = conversation.handleResponse(malformedFunctionCallResponse())
+
+        // Then
+        result shouldBe "Recovered after malformed function call."
+    }
+
+    @Test
+    fun `should exhaust retries and return fallback when every response is malformed`() = runTest {
+        // Given
+        val malformedRetries = (1..MAX_EMPTY_RESPONSE_RETRIES).map { malformedFunctionCallResponse() }
+        val conversation = createConversation(*malformedRetries.toTypedArray())
+
+        // When
+        val result = conversation.handleResponse(malformedFunctionCallResponse())
+
+        // Then
+        result shouldBe "No function call or text response"
+    }
+
+    @Test
+    fun `should retry when the response to function results is malformed`() = runTest {
+        // Given
+        val retryResponse = mockResponse(text = "Recovered after malformed follow-up.")
+        val conversation = createConversation(malformedFunctionCallResponse(), retryResponse)
+        val response = mockResponse(
+            functionCalls = listOf(
+                functionCall(TRANSFORM_REASON, mapOf(REASON_PARAMETER to "x is high"))
+            )
+        )
+
+        // When
+        val result = conversation.handleResponse(response)
+
+        // Then
+        result shouldBe "Recovered after malformed follow-up."
+        handledFunctions shouldBe listOf("x is high")
     }
 
     // --- Function calls followed by empty response ---

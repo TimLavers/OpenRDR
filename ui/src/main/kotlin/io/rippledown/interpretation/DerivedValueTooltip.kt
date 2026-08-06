@@ -2,10 +2,9 @@ package io.rippledown.interpretation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -20,9 +19,9 @@ import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
 
 @Composable
-internal fun DerivedValueTooltip(info: DerivedValueInfo) {
+internal fun DerivedValueTooltip(info: DerivedValueInfo, showFormula: Boolean = true) {
     Column {
-        if (!info.formula.isLiteralValue(info.value)) {
+        if (showFormula && !info.formula.isLiteralValue(info.value)) {
             Text(
                 text = formulaAnnotatedString(info.formula),
                 modifier = Modifier.padding(4.dp)
@@ -39,7 +38,7 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo) {
     }
 }
 
-private val powerRegex = """[*][*][ \t]*([0-9]+(?:[.][0-9]+)?)""".toRegex()
+private val powerRegex = """(?:[*][*]|\^)[ \t]*([0-9]+(?:[.][0-9]+)?)""".toRegex()
 
 internal fun formulaAnnotatedString(formula: String) = buildAnnotatedString {
     var cursor = 0
@@ -50,7 +49,6 @@ internal fun formulaAnnotatedString(formula: String) = buildAnnotatedString {
             SpanStyle(
                 baselineShift = BaselineShift.Superscript,
                 fontSize = 0.85.em,
-                color = Color.Gray,
                 fontStyle = FontStyle.Italic
             )
         ) {
@@ -59,7 +57,7 @@ internal fun formulaAnnotatedString(formula: String) = buildAnnotatedString {
         cursor = match.range.last + 1
     }
     append(formula.substring(cursor))
-    addStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Color.Gray), 0, length)
+    addStyle(SpanStyle(fontStyle = FontStyle.Italic), 0, length)
 }
 
 private fun String.isLiteralValue(value: String) = this == "\"$value\""

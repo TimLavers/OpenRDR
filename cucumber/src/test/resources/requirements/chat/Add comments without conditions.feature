@@ -45,4 +45,4 @@ Feature: Add comments without conditions
     And select the case Case2
     And the interpretation should be "Let's surf."
     When I add another comment "Bring flippers.", allowing the report change to the cornerstone case
-    Then the report should be "Let's surf. Bring flippers."
+    Then the interpretation should be "Let's surf. Bring flippers."

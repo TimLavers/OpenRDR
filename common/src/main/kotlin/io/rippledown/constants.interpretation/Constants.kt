@@ -73,6 +73,23 @@ const val DERIVED_VALUE_NAME_PREFIX = "DERIVED_VALUE_NAME_"
 const val DERIVED_VALUE_FORMULA_PREFIX = "DERIVED_VALUE_FORMULA_"
 const val DERIVED_VALUE_CONDITIONS_PREFIX = "DERIVED_VALUE_CONDITIONS_"
 
-
-
-
+// The value cell of a derived attribute row. The prefix used encodes whether the
+// rule session in progress is about to add, remove or replace the value, so that
+// the highlighting, which is invisible to the semantics tree, can be asserted.
+const val DERIVED_VALUE_VALUE_PREFIX = "DERIVED_VALUE_VALUE_"
+const val DERIVED_VALUE_PENDING_ADD_PREFIX = "DERIVED_VALUE_PENDING_ADD_"
+const val DERIVED_VALUE_PENDING_REMOVE_PREFIX = "DERIVED_VALUE_PENDING_REMOVE_"
+const val DERIVED_VALUE_PENDING_REPLACE_PREFIX = "DERIVED_VALUE_PENDING_REPLACE_"
+const val DERIVED_ATTRIBUTES_NONE = "DERIVED_ATTRIBUTES_NONE"
+const val DERIVED_ATTRIBUTES_NONE_TEXT = "None for this case"
+const val COMMENTS_NONE = "COMMENTS_NONE"
+const val COMMENTS_NONE_TEXT = "None for this case"
+const val COMMENTS_INFO_ICON = "COMMENTS_INFO_ICON"
+const val COMMENTS_HELP = "COMMENTS_HELP"
+const val COMMENTS_HELP_TEXT =
+    "These are sentences added to the case using rules and used to generate the report"
+const val DERIVED_ATTRIBUTES_INFO_ICON = "DERIVED_ATTRIBUTES_INFO_ICON"
+const val DERIVED_ATTRIBUTES_HELP = "DERIVED_ATTRIBUTES_HELP"
+const val DERIVED_ATTRIBUTES_HELP_TEXT =
+    "These are attributes which have values added to a case using rules. To create one, ask the chat, e.g. " +
+            "Assign the formula \"weight / height ^2\" to the derived attribute \"BMI\"."

@@ -69,9 +69,9 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
         interpretationViewPO().waitForDerivedValueConditions(attributeName, conditions.asList())
     }
 
-    @Then("the derived attributes panel should be hidden")
-    fun derivedAttributesPanelShouldBeHidden() {
-        interpretationViewPO().requireDerivedValuesPanelToBeHidden()
+    @Then("the derived attributes panel should show that there are none for the case")
+    fun derivedAttributesPanelShouldShowEmptyState() {
+        interpretationViewPO().waitForDerivedValuesEmptyState()
     }
 
     private fun currentCaseName(): String = caseViewPO().nameShown() ?: error("No case name is currently shown")

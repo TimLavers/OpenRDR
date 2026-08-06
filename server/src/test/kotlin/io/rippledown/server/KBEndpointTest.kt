@@ -557,7 +557,7 @@ internal class KBEndpointTest {
         val status = endpoint.startRuleSession(sessionStartRequest)
 
         //Then
-        status.diff shouldBe diff
+        status.commentDiff shouldBe diff
     }
 
     @Test

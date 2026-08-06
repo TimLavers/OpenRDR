@@ -9,6 +9,10 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.structural.IsPresentInCase
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.DerivedValueAddition
+import io.rippledown.model.diff.DerivedValueRemoval
+import io.rippledown.model.diff.DerivedValueReplacement
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.ByDefinition
 import io.rippledown.model.rule.Formula
@@ -313,5 +317,276 @@ class RuleSessionManagerAssignmentTest {
         shouldThrow<IllegalStateException> {
             rsm.startRuleSessionToRemoveAssignment(createCase("A", "5.0"), "Diabetes status")
         }.message shouldBe "No value is assigned to \"Diabetes status\" for case A."
+    }
+
+    // --- the pending derived value change previewed by the Derived attributes panel ---
+
+    /**
+     * A case with the attributes a BMI formula references. Omitting [heightValue]
+     * gives a case the formula cannot be evaluated against.
+     */
+    private fun bmiCase(name: String = "A", heightValue: String? = "1.8"): RDRCase {
+        val weight = kb.attributeManager.getOrCreate("weight")
+        val height = kb.attributeManager.getOrCreate("height")
+        return with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "93.0")
+            if (heightValue != null) addValue(height, defaultDate, heightValue)
+            build(name)
+        }
+    }
+
+    @Test
+    fun `there is no pending derived value change before any session is started`() {
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `assigning a formula previews the formula, not its value for the case`() {
+        // Given a case with the attributes the formula references
+        val case = bmiCase()
+
+        // When an assign-value session is started
+        rsm.startRuleSessionToAssignValue(case, "BMI", "weight / (height * height)")
+
+        // Then the change previews the definition the rule will give the
+        // attribute: no rule assigns a value to the case yet
+        rsm.currentDerivedValueChange shouldBe DerivedValueAddition(
+            attributeName = "BMI",
+            formula = "weight / (height * height)"
+        )
+    }
+
+    @Test
+    fun `assigning a formula that cannot be evaluated previews the formula just the same`() {
+        // Given a case missing an attribute the formula references
+        kb.attributeManager.getOrCreate("height")
+        val case = bmiCase(heightValue = null)
+
+        // When an assign-value session is started
+        rsm.startRuleSessionToAssignValue(case, "BMI", "weight / (height * height)")
+
+        // Then the preview is the same, since it never depended on the case
+        rsm.currentDerivedValueChange shouldBe DerivedValueAddition(
+            attributeName = "BMI",
+            formula = "weight / (height * height)"
+        )
+    }
+
+    @Test
+    fun `assigning a literal previews its quoted formula`() {
+        // When an assign-value session is started with a literal
+        rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
+
+        // Then the definition is the quoted literal
+        rsm.currentDerivedValueChange shouldBe DerivedValueAddition(
+            attributeName = "Diabetes status",
+            formula = "\"diabetic\""
+        )
+    }
+
+    @Test
+    fun `removing an assignment previews a removal`() {
+        // Given a KB with an assignment rule
+        buildAssignmentRule()
+
+        // When a remove-assignment session is started
+        rsm.startRuleSessionToRemoveAssignment(createCase("C", "25.0"), "Diabetes status")
+
+        // Then the change names the attribute whose value will be retracted
+        rsm.currentDerivedValueChange shouldBe DerivedValueRemoval("Diabetes status")
+    }
+
+    @Test
+    fun `replacing an assignment previews the new formula`() {
+        // Given a KB with an assignment rule
+        buildAssignmentRule()
+
+        // When a replace-assignment session is started
+        rsm.startRuleSessionToReplaceAssignment(createCase("C", "25.0"), "Diabetes status", "\"severely diabetic\"")
+
+        // Then the change previews the definition the rule would give instead
+        rsm.currentDerivedValueChange shouldBe DerivedValueReplacement(
+            attributeName = "Diabetes status",
+            newFormula = "\"severely diabetic\""
+        )
+    }
+
+    @Test
+    fun `replacing with a formula previews the new formula`() {
+        // Given a rule assigning BMI by formula
+        val case = bmiCase()
+        rsm.startRuleSessionToAssignValue(case, "BMI", "weight / (height * height)")
+        rsm.addConditionToCurrentRuleSession(
+            greaterThanOrEqualTo(null, kb.attributeManager.getOrCreate("weight"), 1.0)
+        )
+        rsm.commitCurrentRuleSession()
+        val caseB = bmiCase("B")
+        kb.interpret(caseB)
+
+        // When the assignment is replaced by another formula
+        rsm.startRuleSessionToReplaceAssignment(caseB, "BMI", "weight / height")
+
+        // Then the preview carries the new formula, unevaluated
+        rsm.currentDerivedValueChange shouldBe DerivedValueReplacement(
+            attributeName = "BMI",
+            newFormula = "weight / height"
+        )
+    }
+
+    @Test
+    fun `the pending derived value change is cleared when the session is cancelled`() {
+        // Given an assign-value session in progress
+        rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
+        rsm.currentDerivedValueChange shouldNotBe null
+
+        // When the session is cancelled
+        rsm.cancelRuleSession()
+
+        // Then the preview is gone
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `the pending derived value change is cleared when the session is committed`() {
+        // Given an assign-value session in progress
+        rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
+        rsm.addConditionToCurrentRuleSession(highGlucose())
+
+        // When the session is committed
+        rsm.commitCurrentRuleSession()
+
+        // Then the preview is gone
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `the pending removal is cleared when its session is cancelled`() {
+        // Given a remove-assignment session in progress
+        buildAssignmentRule()
+        rsm.startRuleSessionToRemoveAssignment(createCase("C", "25.0"), "Diabetes status")
+
+        // When the session is cancelled
+        rsm.cancelRuleSession()
+
+        // Then the preview is gone
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `the pending replacement is cleared when its session is cancelled`() {
+        // Given a replace-assignment session in progress
+        buildAssignmentRule()
+        rsm.startRuleSessionToReplaceAssignment(createCase("C", "25.0"), "Diabetes status", "\"severe\"")
+
+        // When the session is cancelled
+        rsm.cancelRuleSession()
+
+        // Then the preview is gone
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `a refused assign value session leaves no stale preview behind`() {
+        // Given a derived attribute
+        kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When a session that would create a cycle is refused
+        shouldThrow<IllegalStateException> {
+            rsm.startRuleSessionToAssignValue(createCase("A"), "BMI", "BMI * 2")
+        }
+
+        // Then no preview is left for a session that never started
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `a comment session sets a diff and no derived value change`() {
+        // Given a processed case
+        val case = kb.addProcessedCase(createCase("A"))
+
+        // When a comment session is started
+        rsm.startRuleSessionToAddComment(kb.viewableCase(case), "Go to Bondi.")
+
+        // Then only the comment preview is set, so the Derived attributes panel
+        // shows nothing pending
+        rsm.currentDiff shouldBe Addition("Go to Bondi.")
+        rsm.currentDerivedValueChange.shouldBeNull()
+    }
+
+    @Test
+    fun `an assign value session sets a derived value change and no diff`() {
+        // When an assign-value session is started
+        rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
+
+        // Then only the derived value preview is set, so the Comments panel shows
+        // nothing pending
+        rsm.currentDiff.shouldBeNull()
+        rsm.currentDerivedValueChange shouldNotBe null
+    }
+
+    @Test
+    fun `a remove assignment session sets no diff`() {
+        // Given a KB with an assignment rule
+        buildAssignmentRule()
+
+        // When a remove-assignment session is started
+        rsm.startRuleSessionToRemoveAssignment(createCase("C", "25.0"), "Diabetes status")
+
+        // Then the Comments panel is given nothing to preview
+        rsm.currentDiff.shouldBeNull()
+    }
+
+    @Test
+    fun `a replace assignment session sets no diff`() {
+        // Given a KB with an assignment rule
+        buildAssignmentRule()
+
+        // When a replace-assignment session is started
+        rsm.startRuleSessionToReplaceAssignment(createCase("C", "25.0"), "Diabetes status", "\"severe\"")
+
+        // Then the Comments panel is given nothing to preview
+        rsm.currentDiff.shouldBeNull()
+    }
+
+    // --- the change as carried to the client ---
+
+    @Test
+    fun `the cornerstone status carries the pending derived value change when there are no cornerstones`() {
+        // Given an assign-value session on a KB with no cornerstones
+        rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
+
+        // Then the status sent to the client carries the preview
+        val status = rsm.cornerstoneStatus()
+        status.cornerstoneToReview.shouldBeNull()
+        status.derivedValueDiff shouldBe DerivedValueAddition(
+            attributeName = "Diabetes status",
+            formula = "\"diabetic\""
+        )
+    }
+
+    @Test
+    fun `the cornerstone status carries the pending derived value change alongside a cornerstone`() {
+        // Given a committed rule, so there is a cornerstone to review
+        buildAssignmentRule()
+        kb.addProcessedCase(createCase("Cornerstone", "12.0"))
+        rsm.startRuleSessionToAssignValue(createCase("A", "13.0"), "Risk level", "\"high\"")
+
+        // Then the status carries the preview along with the cornerstone
+        rsm.cornerstoneStatus().derivedValueDiff shouldBe DerivedValueAddition(
+            attributeName = "Risk level",
+            formula = "\"high\""
+        )
+    }
+
+    @Test
+    fun `the cornerstone status carries the rule conditions for the pending row tooltip`() {
+        // Given an assign-value session with a condition added
+        rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
+        rsm.addConditionToCurrentRuleSession(highGlucose())
+
+        // Then the status carries both, which is what the pending row's tooltip needs
+        val status = rsm.cornerstoneStatus()
+        status.derivedValueDiff shouldNotBe null
+        status.ruleConditions shouldBe listOf(highGlucose().asText())
     }
 }

@@ -278,7 +278,7 @@ internal class ValueExpressionTest {
         // Then ** is interpreted as squared
         parsed.evaluate(case(weight to "93.0", height to "2.0")) shouldBe "23.25"
         parsed.referencedAttributes() shouldBe setOf(weight, height)
-        parsed.asText() shouldBe "weight / height ** 2"
+        parsed.asText() shouldBe "weight / height ^ 2"
     }
 
     @Test
@@ -289,7 +289,51 @@ internal class ValueExpressionTest {
         // Then ** is interpreted as squared
         parsed.evaluate(case(weight to "2")) shouldBe "8"
         parsed.referencedAttributes() shouldBe setOf(weight)
-        parsed.asText() shouldBe "weight ** 3"
+        parsed.asText() shouldBe "weight ^ 3"
+    }
+
+    @Test
+    fun `should parse caret as exponentiation to the power of 2`() {
+        // When a formula uses ^ for exponentiation
+        val parsed = parseValueExpression("weight / height ^ 2", attributeFor) as Formula
+
+        // Then ^ is interpreted as squared
+        parsed.evaluate(case(weight to "93.0", height to "2.0")) shouldBe "23.25"
+        parsed.referencedAttributes() shouldBe setOf(weight, height)
+        parsed.asText() shouldBe "weight / height ^ 2"
+    }
+
+    @Test
+    fun `should parse caret as exponentiation to the power of 3`() {
+        // When a formula uses ^ for exponentiation
+        val parsed = parseValueExpression("weight ^ 3", attributeFor) as Formula
+
+        // Then ^ is interpreted as cubed
+        parsed.evaluate(case(weight to "2")) shouldBe "8"
+        parsed.referencedAttributes() shouldBe setOf(weight)
+        parsed.asText() shouldBe "weight ^ 3"
+    }
+
+    @Test
+    fun `should ignore spaces around the caret`() {
+        // When a formula uses ^ for exponentiation
+        val parsed = parseValueExpression("weight^3", attributeFor) as Formula
+
+        // Then ^ is interpreted as cubed
+        parsed.evaluate(case(weight to "2")) shouldBe "8"
+        parsed.referencedAttributes() shouldBe setOf(weight)
+        parsed.asText() shouldBe "weight ^ 3"
+    }
+
+    @Test
+    fun `should parse float with exponentiation`() {
+        // When a formula uses ^ for exponentiation
+        val parsed = parseValueExpression("weight^3.14159", attributeFor) as Formula
+
+        // Then ^ is interpreted as cubed
+        parsed.evaluate(case(weight to "2")) shouldBe "8.825"
+        parsed.referencedAttributes() shouldBe setOf(weight)
+        parsed.asText() shouldBe "weight ^ 3.142"
     }
 
     @Test

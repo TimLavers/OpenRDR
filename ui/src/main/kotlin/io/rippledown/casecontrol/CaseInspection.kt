@@ -27,6 +27,7 @@ import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.interpretation.ReportView
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.diff.DerivedValueChange
 import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -45,7 +46,8 @@ fun CaseInspection(
     reportGenerated: Boolean = true,
     isLoadingReport: Boolean = false,
     onReportToggle: (Boolean) -> Unit = {},
-    showReport: Boolean = true
+    showReport: Boolean = true,
+    derivedValueChange: DerivedValueChange? = null
 ) {
     val columnWidths = ColumnWidths(case.numberOfColumns)
     // Header dates row and attribute body share a single horizontal scroll
@@ -143,7 +145,9 @@ fun CaseInspection(
                 }
                 DerivedValuesPanel(
                     derivedValues = case.derivedValues(),
-                    columnWidths = columnWidths
+                    columnWidths = columnWidths,
+                    change = derivedValueChange,
+                    ruleConditions = ruleConditions
                 )
                 InterpretationView(
                     interpretation = case.viewableInterpretation,

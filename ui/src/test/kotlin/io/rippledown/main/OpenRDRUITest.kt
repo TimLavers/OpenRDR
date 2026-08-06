@@ -606,7 +606,7 @@ class OpenRDRUITest {
 
             //When
             runOnIdle {
-                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Addition("Go to Bondi.")))
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(pendingChange = Addition("Go to Bondi.")))
             }
             waitForIdle()
 
@@ -636,7 +636,7 @@ class OpenRDRUITest {
 
             //When
             runOnIdle {
-                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Removal(bondiComment)))
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(pendingChange = Removal(bondiComment)))
             }
             waitForIdle()
 
@@ -669,7 +669,7 @@ class OpenRDRUITest {
             //When
             runOnIdle {
                 updateCornerstoneStatus!!.invoke(
-                    CornerstoneStatus(diff = Replacement(bondiComment, maroubraComment))
+                    CornerstoneStatus(pendingChange = Replacement(bondiComment, maroubraComment))
                 )
             }
             waitForIdle()
@@ -698,7 +698,7 @@ class OpenRDRUITest {
             }
             waitForCaseToBeShowing("case A")
             runOnIdle {
-                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = Addition("Go to Bondi.")))
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(pendingChange = Addition("Go to Bondi.")))
             }
             waitForIdle()
             requireInterpretation("Go to Bondi.")
@@ -733,7 +733,7 @@ class OpenRDRUITest {
 
             //When
             runOnIdle {
-                updateCornerstoneStatus!!.invoke(CornerstoneStatus(diff = null))
+                updateCornerstoneStatus!!.invoke(CornerstoneStatus(pendingChange = null))
             }
             waitForIdle()
 

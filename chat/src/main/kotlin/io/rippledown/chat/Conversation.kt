@@ -81,23 +81,45 @@ class Conversation(
         }
 
     internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
-        var currentResponse = response
-        while (currentResponse.functionCalls()?.isNotEmpty() == true) {
-            val functionResults = currentResponse.functionCalls()!!.map { executeFunction(it) }
-            currentResponse = sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}")
+        var currentResponse = usableOrNull(response)
+        while (true) {
+            val functionCalls = currentResponse?.functionCalls() ?: emptyList()
+            if (functionCalls.isEmpty()) break
+            val functionResults = functionCalls.map { executeFunction(it) }
+            currentResponse =
+                usableOrNull(sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}"))
         }
-        val text = currentResponse.text()?.stripEnclosingJson()
+        val text = currentResponse?.text()?.stripEnclosingJson()
         if (text != null) {
             return text
         }
-        logEmptyResponse(currentResponse)
+        logEmptyResponse(currentResponse ?: response)
         if (emptyResponseRetries < MAX_EMPTY_RESPONSE_RETRIES) {
             logger.info("Retrying after empty response (attempt ${emptyResponseRetries + 1} of $MAX_EMPTY_RESPONSE_RETRIES)...")
-            currentResponse = sendMessageHandlingEmptyContent(CONTINUE_NUDGE)
-            return handleResponse(currentResponse, emptyResponseRetries + 1)
+            return handleResponse(sendMessageHandlingEmptyContent(CONTINUE_NUDGE), emptyResponseRetries + 1)
         }
         return "No function call or text response"
     }
+
+    /**
+     * Return [response] if its content can be read, or null if the turn finished for a reason that makes the
+     * content inaccessible.
+     *
+     * When Gemini ends a turn with a finish reason such as `MALFORMED_FUNCTION_CALL`, google-genai's
+     * `GenerateContentResponse.checkFinishReason` throws [IllegalArgumentException] from both `functionCalls()`
+     * and `text()`, so there is nothing to hand back to the caller. The SDK does not add such a response to the
+     * curated history, so the chat is still usable: returning null lets the caller fall through to the
+     * empty-response retry, which nudges the model into producing a well-formed turn instead of failing the
+     * whole user message (which would leave any rule session in progress stranded).
+     */
+    private fun usableOrNull(response: GenerateContentResponse): GenerateContentResponse? =
+        try {
+            response.functionCalls()
+            response
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Gemini response content is inaccessible; treating it as an empty response", e)
+            null
+        }
 
     private fun logEmptyResponse(response: GenerateContentResponse) {
         logger.warn("Model returned no text and no function calls. Response details: candidates=${response.candidates()}, usageMetadata=${response.usageMetadata()}")

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownPadding
 import io.rippledown.chat.TypingIndicator
 import io.rippledown.constants.interpretation.*
 import org.intellij.markdown.MarkdownElementTypes
@@ -187,6 +188,15 @@ fun ReportView(
                                             paragraph = TextStyle(fontSize = 12.sp),
                                             list = TextStyle(fontSize = 12.sp),
                                             bullet = TextStyle(fontSize = 12.sp)
+                                        ),
+                                        // The renderer's default 4.dp above and below every
+                                        // list item leaves 8.dp between consecutive bullets,
+                                        // which reads as separate paragraphs rather than one
+                                        // list. 1.dp each keeps the items grouped while still
+                                        // separating them.
+                                        padding = markdownPadding(
+                                            listItemTop = 1.dp,
+                                            listItemBottom = 1.dp
                                         ),
                                         // Render bold (out-of-range) values in the same red used
                                         // by the case view, so the flagged-value cue is consistent

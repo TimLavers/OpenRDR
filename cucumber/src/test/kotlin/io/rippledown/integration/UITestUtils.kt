@@ -15,7 +15,7 @@ fun pause(millis: Long) {
     Thread.sleep(millis)
 }
 
-fun waitUntilAsserted(seconds: Long = 60, assertion: ThrowingRunnable) {
+fun waitUntilAsserted(seconds: Long = 10, assertion: ThrowingRunnable) {
     // ignoreExceptions() so that transient errors thrown while the Compose
     // accessibility tree catches up (e.g. NPEs from `find(...)!!` page-object
     // lookups) are treated as poll failures rather than fatally aborting the

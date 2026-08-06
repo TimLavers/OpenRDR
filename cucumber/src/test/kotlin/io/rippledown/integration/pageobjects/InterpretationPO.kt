@@ -63,7 +63,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         // string doesn't exactly match" (trailing whitespace, newline,
         // etc.). Without this diagnostic the scenario fails with just an
         // Awaitility timeout and no indication of the actual content.
-        val lastObserved = java.util.concurrent.atomic.AtomicReference<String>("<never read>")
+        val lastObserved = java.util.concurrent.atomic.AtomicReference("<never read>")
         try {
             await()
                 .atMost(ofSeconds(30))
@@ -215,7 +215,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     }
 
     fun waitForDerivedValueFormula(attributeName: String, formula: String) {
-        val normalizedExpected = formula.filter { !it.isWhitespace() }.replace("**", "")
+        val normalizedExpected = formula.filter { !it.isWhitespace() }.replace("**", "").replace("^", "")
         waitUntilAsserted {
             movePointerOverDerivedValueName(attributeName)
             val ctx = execute<AccessibleContext?> {
@@ -239,12 +239,16 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun requireDerivedValuesPanelToBeHidden() {
+    fun waitForDerivedValuesEmptyState() {
         waitUntilAsserted {
-            val ctx = execute<AccessibleContext?> {
+            val toggleCtx = execute<AccessibleContext?> {
                 contextProvider().find(DERIVED_VALUES_TOGGLE)
             }
-            ctx shouldBe null
+            toggleCtx shouldNotBe null
+            val emptyCtx = execute<AccessibleContext?> {
+                contextProvider().find(DERIVED_ATTRIBUTES_NONE)
+            }
+            emptyCtx shouldNotBe null
         }
     }
 

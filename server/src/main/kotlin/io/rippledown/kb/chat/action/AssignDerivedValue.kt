@@ -21,6 +21,17 @@ class AssignDerivedValue(
         }
         val sessionCase = currentCase ?: throw IllegalStateException("No current case")
 
+        // If the attribute already has a value for this case, the user may have
+        // meant to replace it. Ask rather than guess, so that they are never
+        // shown a change they did not ask for.
+        val existingValue = sessionCase.derivedValues()
+            .firstOrNull { it.name.equals(attributeName, ignoreCase = true) }
+        if (existingValue != null) {
+            return ChatResponse(
+                alreadyAssignedForCaseMessage(existingValue.name, existingValue.value, valueExpression)
+            )
+        }
+
         val existingAttribute = ruleService.attributeForName(attributeName)
         if (existingAttribute != null && existingAttribute.kind != AttributeKind.EXTERNAL) {
             if (existingAttribute.name.equals(attributeName, ignoreCase = true)) {
@@ -47,6 +58,19 @@ class AssignDerivedValue(
 
 fun nameClashWithExistingDerivedAttributeMessage(existingAttributeName: String): String =
     "A derived attribute named \"${existingAttributeName}\" already exists.\nPlease choose a different name."
+
+/**
+ * Asked when the user requests an assignment to a derived attribute that already
+ * has a value for the current case. Naming the current value and the expression
+ * requested lets the user answer with a simple yes.
+ */
+fun alreadyAssignedForCaseMessage(
+    attributeName: String,
+    currentValue: String,
+    requestedExpression: String
+): String =
+    "\"$attributeName\" is already given for this case, with the value \"$currentValue\".\n" +
+            "Do you want to replace it with \"$requestedExpression\"?"
 
 fun nameClashWithExistingExternalAttributeMessage(existingAttributeName: String): String =
     "An externally supplied attribute named \"${existingAttributeName}\" already exists.\nPlease choose a different name."

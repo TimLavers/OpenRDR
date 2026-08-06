@@ -113,7 +113,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @When("I add the condition {string}")
     fun addTheCondition(text: String) {
-        chatDefs.provideTheseReasons(listOf(text))
+        chatDefs.addConditionToCurrentRuleSession(text)
     }
 
     @Then("the suggestions showing (should )include:")

@@ -10,13 +10,16 @@ import io.rippledown.server.KBEndpoint
 const val DEMO_SAMPLE_DESCRIPTION = """
     # Demo KB
 
-A small demonstration KB used to show two OpenRDR features:
+A small demonstration KB used to show OpenRDR features:
 
   1. Building a rule whose condition is expressed in a non-English
      language (Spanish), via the **Lindsay** waiting case.
   2. Reviewing a cornerstone case when adding a comment, via the
      **Jane** cornerstone case which shares Lindsay's attributes
      (Glucose, Pregnant, Age) but with different values.
+  3. Derived attributes, repeat inferencing and the AI-generated report,
+     via the **Taylor** waiting case (HbA1c out of range; Height and Weight
+     for a BMI formula).
 """
 
 /**
@@ -31,6 +34,7 @@ class DemoSampleBuilder(private val kbe: KBEndpoint) {
         kbe.setDescription(DEMO_SAMPLE_DESCRIPTION)
         addLindsayWaitingCase()
         addJaneCornerstoneCase()
+        addTaylorWaitingCase()
     }
 
     /**
@@ -77,5 +81,42 @@ class DemoSampleBuilder(private val kbe: KBEndpoint) {
         builder.addValue(pregnant, defaultDate, "N")
         builder.addValue(age, defaultDate, "35")
         kbe.kb.addCornerstoneCase(builder.build("Jane"))
+    }
+
+    /**
+     * Taylor: a waiting case for the derived-attributes demo (see
+     * `packaging/README-demo.txt`). HbA1c is out of range so that
+     * suggestion prioritisation surfaces it when building the
+     * "Diabetes status" rule; Height and Weight give BMI
+     * 98 / (1.78 * 1.78) = 30.93, just over the obesity threshold of 30;
+     * Age and Sex are included so the formula can be extended (e.g. BMR)
+     * if the demo wants a gender-dependent example.
+     */
+    private fun addTaylorWaitingCase() {
+        val attributes = kbe.kb.attributeManager
+        val builder = RDRCaseBuilder()
+        val hba1c = attributes.getOrCreate("HbA1c")
+        val height = attributes.getOrCreate("Height")
+        val weight = attributes.getOrCreate("Weight")
+        val age = attributes.getOrCreate("Age")
+        val sex = attributes.getOrCreate("Sex")
+        builder.addResult(
+            hba1c,
+            defaultDate,
+            Result(Value("7.8"), ReferenceRange("4.0", "6.0"), " %")
+        )
+        builder.addResult(
+            height,
+            defaultDate,
+            Result(Value("1.78"), null, " m")
+        )
+        builder.addResult(
+            weight,
+            defaultDate,
+            Result(Value("98"), null, " kg")
+        )
+        builder.addValue(age, defaultDate, "54")
+        builder.addValue(sex, defaultDate, "F")
+        kbe.kb.addProcessedCase(builder.build("Taylor"))
     }
 }
