@@ -14,16 +14,7 @@ import io.rippledown.model.condition.structural.CaseStructurePredicate
 import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
-import io.rippledown.model.rule.AssignValue
-import io.rippledown.model.rule.ChangeTreeToAddAssignment
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveAssignment
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceAssignment
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.CommentTemplate
-import io.rippledown.model.rule.Literal
-import io.rippledown.model.rule.resolvedFor
+import io.rippledown.model.rule.*
 import io.rippledown.suggestions.SuggestionContext
 
 /**
@@ -59,33 +50,38 @@ internal class CommentTokenOverlapScorer(
         return commentTokens.intersect(candidateTokens).size
     }
 
-    private fun computeCommentTokens(): Set<String> {
-        val text = when (val action = ctx.action) {
-            is ChangeTreeToAddConclusion -> action.toBeAdded.text
-            is ChangeTreeToReplaceConclusion -> action.replacement.text
-            is ChangeTreeToRemoveConclusion -> action.toBeRemoved.text
-            is ChangeTreeToAddAssignment -> commentTextFor(action.toBeAdded)
-            is ChangeTreeToReplaceAssignment -> commentTextFor(action.replacement)
-            is ChangeTreeToRemoveAssignment -> commentTextFor(action.toBeRemoved)
-            else -> return emptySet()
-        } ?: return emptySet()
-        return tokenise(text)
+    private fun computeCommentTokens(): Set<String> = when (val action = ctx.action) {
+        is ChangeTreeToAddConclusion -> tokenise(action.toBeAdded.text)
+        is ChangeTreeToReplaceConclusion -> tokenise(action.replacement.text)
+        is ChangeTreeToRemoveConclusion -> tokenise(action.toBeRemoved.text)
+        is ChangeTreeToAddAssignment -> assignmentTokens(action.toBeAdded, includeExpression = true)
+        is ChangeTreeToReplaceAssignment -> assignmentTokens(action.replacement, includeExpression = true)
+        is ChangeTreeToRemoveAssignment -> assignmentTokens(action.toBeRemoved, includeExpression = false)
+        else -> emptySet()
     }
 
     /**
-     * Extracts the comment text from an [AssignValue] whose expression is a
-     * [CommentTemplate] (either directly or via a [ByDefinition] sentinel
-     * resolved through the context's definition resolver). Returns null for
-     * non-comment assignments (e.g. derived-value formulas), so the scorer
-     * degrades to other signals for those actions.
+     * Tokens for an assignment action. A [CommentTemplate] expression's text is
+     * the signal (the comment attribute name C1, C2… carries no clinical
+     * meaning). For other expressions — derived-value formulas and literals —
+     * the assigned attribute's name and the formula's referenced attributes are
+     * the signal. When [includeExpression] is false (removals), only the
+     * comment template text or the assigned attribute name contributes.
      */
-    private fun commentTextFor(assignment: AssignValue): String? {
-        val expr = assignment.expression.resolvedFor(assignment.attribute, ctx.definitionResolver) ?: return null
-        return when (expr) {
-            is CommentTemplate -> expr.text
-            is Literal -> expr.value
-            else -> null
+    private fun assignmentTokens(assignment: AssignValue, includeExpression: Boolean): Set<String> {
+        val expr = assignment.expression.resolvedFor(assignment.attribute, ctx.definitionResolver)
+        if (expr is CommentTemplate) {
+            return if (includeExpression) tokenise(expr.textWithVariableNames()) else tokenise(expr.text)
         }
+        val tokens = tokenise(assignment.attribute.name).toMutableSet()
+        if (includeExpression) {
+            when (expr) {
+                is Formula -> expr.referencedAttributes().forEach { tokens.addAll(tokenise(it.name)) }
+                is Literal -> tokens.addAll(tokenise(expr.value))
+                else -> {}
+            }
+        }
+        return tokens
     }
 
     companion object {

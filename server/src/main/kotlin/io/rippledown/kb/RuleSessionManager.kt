@@ -90,7 +90,7 @@ class RuleSessionManager(
     ): CornerstoneStatus {
         val template = commentTemplate(comment, variables)
         val attribute = commentAttributeFor(template)
-        currentChange = Addition(template.render(case).text)
+        currentChange = Addition(template.textWithVariableNames())
         return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -128,7 +128,8 @@ class RuleSessionManager(
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementTemplate = commentTemplate(replacementComment, variables)
         val replacementAttribute = commentAttributeFor(replacementTemplate)
-        currentChange = Replacement(renderedComment(replacedAttribute, case), replacementTemplate.render(case).text)
+        currentChange =
+            Replacement(renderedComment(replacedAttribute, case), replacementTemplate.textWithVariableNames())
         return startRuleSession(
             case,
             ChangeTreeToReplaceAssignment(
