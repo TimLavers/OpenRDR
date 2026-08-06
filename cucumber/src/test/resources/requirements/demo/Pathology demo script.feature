@@ -1,3 +1,4 @@
+@delay_after_cuke
 Feature: Demo script — derived attributes, repeat inferencing and the AI report
   This scenario is the step-by-step script for demo scenario 3 in
   packaging/README-demo.txt, run against the same data as the seeded "Taylor"

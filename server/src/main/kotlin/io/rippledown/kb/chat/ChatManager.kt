@@ -96,7 +96,7 @@ class ChatManager(
             return processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
         } catch (e: Exception) {
             logger.error("Failed to process ActionComment: $response", e)
-            return ChatResponse("System error. See server.log: '$response'")
+            return ChatResponse("$SYSTEM_ERROR_PREFIX: '$response'")
         }
     }
 
@@ -179,7 +179,6 @@ class ChatManager(
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
-        const val AI_UNAVAILABLE_MESSAGE = "The AI assistant is temporarily unavailable. Please try again later."
         const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
         const val DEFAULT_TIP_EXAMPLE_ATTRIBUTE = "TSH"
 

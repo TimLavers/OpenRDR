@@ -22,6 +22,13 @@ const val CHAT_BOT_PLACEHOLDER = "Your response..."
 const val CHAT_BOT_DONE_MESSAGE = "Done"
 const val START_ACTION = "start"
 
+// Terminal bot responses: the conversation cannot make further progress after
+// either of these, so anything waiting on the bot must give up at once rather
+// than time out. Shared here because modules that only see the chat panel (the
+// UI and the cucumber suite) need to recognise them.
+const val AI_UNAVAILABLE_MESSAGE = "The AI assistant is temporarily unavailable. Please try again later."
+const val SYSTEM_ERROR_PREFIX = "System error. See server.log"
+
 // A distinctive word that the once-per-session "you can insert case values into a comment" tip must contain.
 const val COMMENT_VARIABLE_TIP_KEYWORD = "braces"
 

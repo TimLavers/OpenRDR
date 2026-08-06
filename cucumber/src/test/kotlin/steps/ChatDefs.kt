@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.constants.chat.*
 import io.rippledown.constants.rule.UNDERSTAND
 import org.awaitility.Awaitility.await
+import org.awaitility.core.ConditionTimeoutException
 import java.time.Duration.ofSeconds
 
 
@@ -84,7 +85,7 @@ class ChatDefs {
         // Require the suggestions to be newer than the user's last message so
         // that a list left over from an earlier rule session in the same
         // conversation cannot satisfy the wait (chained-rule scenarios).
-        await().atMost(ofSeconds(90)).until {
+        awaitBotResponse("suggested conditions for the latest request") {
             chatPO().suggestionsAreForLatestRequest() &&
                     chatPO().mostRecentSuggestionRowContainsTerms(listOf("1."))
         }
@@ -128,26 +129,55 @@ class ChatDefs {
 
     @Then("the chatbot response contains the following terms:")
     fun requireChatbotResponseToContain(terms: DataTable) {
-        await().atMost(ofSeconds(90)).until {
+        awaitBotResponse("a bot message containing all of ${terms.asList()}") {
             chatPO().mostRecentBotRowContainsTerms(terms.asList())
         }
     }
 
     fun waitForBotText(vararg terms: String) {
-        await().atMost(ofSeconds(90)).until {
+        awaitBotResponse("a bot message containing all of ${terms.toList()}") {
             chatPO().mostRecentBotRowContainsTerms(terms.toList())
         }
     }
 
     fun waitForBotTextToContainAnyOf(vararg terms: String) {
-        await().atMost(ofSeconds(90)).until {
+        awaitBotResponse("a bot message containing any of ${terms.toList()}") {
             chatPO().mostRecentBotRowContainsAnyOfTheTerms(terms.toList())
         }
     }
 
     fun waitForSuggestionText(vararg terms: String) {
-        await().atMost(ofSeconds(90)).until {
+        awaitBotResponse("a suggestion containing all of ${terms.toList()}") {
             chatPO().mostRecentSuggestionRowContainsTerms(terms.toList())
+        }
+    }
+
+    /**
+     * Wait for [condition], but give up as soon as the bot reports a failure it
+     * cannot recover from (the AI being unavailable, or a server error).
+     *
+     * Without this, a transient LLM failure - e.g. a Gemini call that hangs and
+     * is abandoned after its own 90s timeout - leaves a message in the chat that
+     * can never satisfy the wait. The wait then burns its full budget and
+     * reports only that a lambda "was not fulfilled", which points at the
+     * feature under test rather than at the real cause. [expectation] names what
+     * was being waited for so the failure says so directly.
+     */
+    private fun awaitBotResponse(expectation: String, condition: () -> Boolean) {
+        try {
+            await().atMost(ofSeconds(90)).until {
+                chatPO().terminalFailureText() != null || condition()
+            }
+        } catch (e: ConditionTimeoutException) {
+            throw AssertionError("Timed out after 90s waiting for $expectation.", e)
+        }
+        val failure = chatPO().terminalFailureText()
+        if (failure != null && !condition()) {
+            throw AssertionError(
+                "The chatbot reported a failure it cannot recover from while waiting for " +
+                        "$expectation. Bot said: \"$failure\". This is an AI/server failure, not a " +
+                        "failure of the behaviour under test - see the saved server.log for the cause."
+            )
         }
     }
 
