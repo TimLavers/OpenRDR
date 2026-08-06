@@ -14,10 +14,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
-import io.rippledown.model.diff.Addition
-import io.rippledown.model.diff.Diff
-import io.rippledown.model.diff.Removal
-import io.rippledown.model.diff.Replacement
+import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
 import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
@@ -32,7 +29,20 @@ class RuleSessionManager(
     val logger = lazyLogger
 
     private var ruleSession: RuleBuildingSession? = null
-    internal var currentDiff: Diff? = null
+
+    /**
+     * The change the session in progress is about to make. A session makes one
+     * change, so this is one field; [currentDiff] and [currentDerivedValueChange]
+     * are read views of it for the code that handles only one kind.
+     */
+    internal var currentChange: PendingChange? = null
+
+    internal val currentDiff: Diff?
+        get() = currentChange as? Diff
+
+    internal val currentDerivedValueChange: DerivedValueChange?
+        get() = currentChange as? DerivedValueChange
+
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -80,7 +90,7 @@ class RuleSessionManager(
     ): CornerstoneStatus {
         val template = commentTemplate(comment, variables)
         val attribute = commentAttributeFor(template)
-        currentDiff = Addition(template.render(case).text)
+        currentChange = Addition(template.render(case).text)
         return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -90,7 +100,7 @@ class RuleSessionManager(
     internal fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
         val attribute = commentAttributeForText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentDiff = Removal(renderedComment(attribute, case))
+        currentChange = Removal(renderedComment(attribute, case))
         return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -118,7 +128,7 @@ class RuleSessionManager(
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementTemplate = commentTemplate(replacementComment, variables)
         val replacementAttribute = commentAttributeFor(replacementTemplate)
-        currentDiff = Replacement(renderedComment(replacedAttribute, case), replacementTemplate.render(case).text)
+        currentChange = Replacement(renderedComment(replacedAttribute, case), replacementTemplate.render(case).text)
         return startRuleSession(
             case,
             ChangeTreeToReplaceAssignment(
@@ -176,12 +186,20 @@ class RuleSessionManager(
         }
         kb.derivedDefinitionManager.store(attribute.id, expression)
         val assignment = AssignValue(attribute, ByDefinition)
-        return startRuleSession(case, ChangeTreeToAddAssignment(assignment))
+        return startAssignmentSession(
+            case,
+            DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
+            ChangeTreeToAddAssignment(assignment)
+        )
     }
 
     fun startRuleSessionToRemoveAssignment(case: RDRCase, attributeName: String): CornerstoneStatus {
         val assignment = currentAssignmentFor(case, attributeName)
-        return startRuleSession(case, ChangeTreeToRemoveAssignment(assignment))
+        return startAssignmentSession(
+            case,
+            DerivedValueRemoval(attributeName),
+            ChangeTreeToRemoveAssignment(assignment)
+        )
     }
 
     fun startRuleSessionToReplaceAssignment(
@@ -190,8 +208,13 @@ class RuleSessionManager(
         replacementExpressionText: String
     ): CornerstoneStatus {
         val toBeReplaced = currentAssignmentFor(case, attributeName)
-        val replacement = AssignValue(toBeReplaced.attribute, valueExpressionFor(replacementExpressionText))
-        return startRuleSession(case, ChangeTreeToReplaceAssignment(toBeReplaced, replacement))
+        val replacementExpression = valueExpressionFor(replacementExpressionText)
+        val replacement = AssignValue(toBeReplaced.attribute, replacementExpression)
+        return startAssignmentSession(
+            case,
+            DerivedValueReplacement(attributeName = attributeName, newFormula = replacementExpression.asText()),
+            ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
+        )
     }
 
     override fun startRuleSessionToAssignValue(
@@ -212,6 +235,27 @@ class RuleSessionManager(
         replacementValueExpression: String
     ): CornerstoneStatus =
         startRuleSessionToReplaceAssignment(viewableCase.case, attributeName, replacementValueExpression)
+
+    /**
+     * Starts a session that will change a derived attribute, previewing [change]
+     * in the Derived attributes panel while it is in progress. The preview is
+     * set before the session starts so that the returned status carries it, and
+     * rolled back if the session is refused, so that a request that never became
+     * a session leaves nothing behind for the next one to show.
+     */
+    private fun startAssignmentSession(
+        case: RDRCase,
+        change: DerivedValueChange,
+        action: RuleTreeChange
+    ): CornerstoneStatus {
+        currentChange = change
+        return try {
+            startRuleSession(case, action)
+        } catch (e: Throwable) {
+            currentChange = null
+            throw e
+        }
+    }
 
     private fun dependencyGraph() =
         DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), kb.definitionResolver)
@@ -372,7 +416,7 @@ class RuleSessionManager(
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
-        currentDiff = null
+        currentChange = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -414,7 +458,7 @@ class RuleSessionManager(
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
-        currentDiff = null
+        currentChange = null
         checkRuleSessionHistoryConsistency()
         val casesInfo = CasesInfo(
             caseIds = kb.processedCaseIds(),
@@ -555,7 +599,7 @@ class RuleSessionManager(
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
-            pendingChange = currentDiff,
+            pendingChange = currentChange,
             ruleConditions = conditionTexts
         )
 
@@ -570,7 +614,7 @@ class RuleSessionManager(
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentDiff, conditionTexts)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentChange, conditionTexts)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
@@ -629,7 +673,7 @@ class RuleSessionManager(
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-        currentDiff = diff
+        currentChange = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
         val status = when (diff) {
@@ -637,7 +681,7 @@ class RuleSessionManager(
             is Removal -> startRuleSessionToRemoveComment(case, diff.left())
             is Replacement -> startRuleSessionToReplaceComment(case, diff.left(), diff.right())
         }
-        currentDiff = diff
+        currentChange = diff
         return status
     }
 
