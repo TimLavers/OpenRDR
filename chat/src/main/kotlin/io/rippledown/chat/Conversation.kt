@@ -74,20 +74,22 @@ class Conversation(
      */
     private fun sendMessageHandlingEmptyContent(message: String): GenerateContentResponse =
         try {
-            callWithTimeout { chat.sendMessage(message) }
+            callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage(message) }
         } catch (e: NoSuchElementException) {
             logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
-            callWithTimeout { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+            callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
         }
 
     internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
+        logTokenCounts(response, "Turn")
         var currentResponse = usableOrNull(response)
         while (true) {
             val functionCalls = currentResponse?.functionCalls() ?: emptyList()
             if (functionCalls.isEmpty()) break
             val functionResults = functionCalls.map { executeFunction(it) }
-            currentResponse =
-                usableOrNull(sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}"))
+            val next = sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}")
+            logTokenCounts(next, "Turn after function results")
+            currentResponse = usableOrNull(next)
         }
         val text = currentResponse?.text()?.stripEnclosingJson()
         if (text != null) {
@@ -126,13 +128,50 @@ class Conversation(
     }
 
     /**
-     * Logs input and output token counts from a response, or estimates if unavailable.
+     * Log the token counts for a completed turn.
+     *
+     * `prompt` grows with the conversation, so it shows how much history each
+     * turn is carrying; `candidates` is what the model actually generated, so a
+     * sudden jump there is the signature of a runaway generation. Logged for
+     * every turn so the trend up to a slow or hung call can be read off the log.
+     *
+     * Note this can only ever report on calls that returned - a call that hangs
+     * until it is abandoned produces no usage metadata at all.
      */
     private fun logTokenCounts(response: GenerateContentResponse, context: String) {
-        logger.info("$context - tokens: ${response.usageMetadata()}")
+        val usage = try {
+            response.usageMetadata().orElse(null)
+        } catch (e: Exception) {
+            logger.info("$context - tokens: unavailable (${e.message})")
+            return
+        }
+        if (usage == null) {
+            logger.info("$context - tokens: unavailable")
+            return
+        }
+        val prompt = usage.promptTokenCount().orElse(null)
+        val candidates = usage.candidatesTokenCount().orElse(null)
+        val total = usage.totalTokenCount().orElse(null)
+        logger.info("$context - tokens: prompt=$prompt, candidates=$candidates, total=$total")
     }
 
     companion object {
+        /**
+         * Per-turn timeout for a chat send.
+         *
+         * A user is waiting on every one of these, so the cap is well below
+         * [callWithTimeout]'s batch-oriented default, for the same reason that
+         * `ReportService` caps its own interactive call. Turns normally complete
+         * in one to three seconds, so this is ample headroom: a call still
+         * running after 30s has hung rather than merely slowed, and waiting
+         * longer only delays telling the user so.
+         *
+         * Keeping it comfortably under any client-side wait also matters for
+         * diagnosis. When the two budgets are equal the client gives up first
+         * and blames whatever it was waiting for, hiding the real cause.
+         */
+        const val SEND_TIMEOUT_MS = 30_000L
+
         const val MAX_EMPTY_RESPONSE_RETRIES = 2
         const val CONTINUE_NUDGE = "Please continue with the appropriate response."
         const val REASON_PARAMETER = "reason"
