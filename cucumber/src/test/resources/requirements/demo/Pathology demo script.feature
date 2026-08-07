@@ -60,14 +60,11 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
       | BMI > 30 |
     Then the interpretation report should be "Obesity. BMI 30.93. Weight reduction."
 
-    When I request that the comment "Diabetic. Dietary review." be added
-    And I provide only the following reason:
-      | Diabetes status is "diabetic" |
-
-    # A third comment, on the raw out-of-range HbA1c, so that consolidating
+    # Another comment, on the raw out-of-range HbA1c, so that consolidating
     # the follow-ups is visibly non-trivial.
-    When I request that the comment "HbA1c above target. Repeat in 3 months." be added
-    And I provide only the following reason:
+    When I request that the comment "Diabetic. Dietary review. HbA1c above target. Repeat in 3 months." be added
+    And I provide only the following reasons:
+      | Diabetes status is "diabetic" |
       | HbA1c is high |
 
     # Act 4 — the AI report. It must do more than echo the comments: it

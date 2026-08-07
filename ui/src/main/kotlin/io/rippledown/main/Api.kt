@@ -355,6 +355,9 @@ class Api(
             setKBParameter()
             setCaseIdParameter(caseId)
             setBody(message)
+            timeout {
+                requestTimeoutMillis = 90_000
+            }
         }
         decodeChatResponseOrEmpty(response)
     } catch (_: Throwable) {

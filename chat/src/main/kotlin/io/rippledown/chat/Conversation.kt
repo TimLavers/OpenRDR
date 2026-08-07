@@ -4,9 +4,11 @@ import com.google.genai.Chat
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
 import io.rippledown.llm.callWithTimeout
+import io.rippledown.llm.geminiApiCallCount
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
+import java.util.concurrent.TimeoutException
 
 interface ConversationService {
     suspend fun startConversation(): String = ""
@@ -72,13 +74,26 @@ class Conversation(
      * re-sending the identical input would deterministically reproduce the empty turn, so the retry
      * appends an explicit nudge to vary the input and elicit a non-empty response.
      */
-    private fun sendMessageHandlingEmptyContent(message: String): GenerateContentResponse =
-        try {
-            callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage(message) }
-        } catch (e: NoSuchElementException) {
-            logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
-            callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+    private fun sendMessageHandlingEmptyContent(message: String): GenerateContentResponse {
+        var lastException: Exception? = null
+        repeat(MAX_TIMEOUT_RETRIES + 1) { attempt ->
+            try {
+                return callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage(message) }
+            } catch (e: NoSuchElementException) {
+                logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
+                return callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+            } catch (e: RuntimeException) {
+                if (e.cause !is TimeoutException) throw e
+                lastException = e
+                if (attempt < MAX_TIMEOUT_RETRIES) {
+                    val delayMs = TIMEOUT_RETRY_DELAY_MS * (attempt + 1)
+                    logger.warn("Gemini API call timed out (attempt ${attempt + 1} of $MAX_TIMEOUT_RETRIES); retrying in ${delayMs}ms")
+                    Thread.sleep(delayMs)
+                }
+            }
         }
+        throw lastException ?: RuntimeException("Unexpected: exhausted retries without exception")
+    }
 
     internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
         logTokenCounts(response, "Turn")
@@ -152,7 +167,8 @@ class Conversation(
         val prompt = usage.promptTokenCount().orElse(null)
         val candidates = usage.candidatesTokenCount().orElse(null)
         val total = usage.totalTokenCount().orElse(null)
-        logger.info("$context - tokens: prompt=$prompt, candidates=$candidates, total=$total")
+        val n = geminiApiCallCount.get()
+        logger.info("$context (API call #$n) - tokens: prompt=$prompt, candidates=$candidates, total=$total")
     }
 
     companion object {
@@ -167,12 +183,16 @@ class Conversation(
          * longer only delays telling the user so.
          *
          * Keeping it comfortably under any client-side wait also matters for
-         * diagnosis. When the two budgets are equal the client gives up first
-         * and blames whatever it was waiting for, hiding the real cause.
+         * diagnosis. With one retry the server's worst case is 30s + 5s + 30s
+         * = 65s; the client's chat-message timeout (90s) outlasts that so the
+         * server's own "AI unavailable" response reaches the user instead of
+         * the client masking it with a generic failure.
          */
         const val SEND_TIMEOUT_MS = 30_000L
 
         const val MAX_EMPTY_RESPONSE_RETRIES = 2
+        const val MAX_TIMEOUT_RETRIES = 1
+        const val TIMEOUT_RETRY_DELAY_MS = 5_000L
         const val CONTINUE_NUDGE = "Please continue with the appropriate response."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"
