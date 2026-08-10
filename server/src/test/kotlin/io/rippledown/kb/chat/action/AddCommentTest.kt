@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.constants.chat.commentNamedMessage
 import io.rippledown.kb.chat.ChatCommentVariable
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
@@ -162,6 +163,65 @@ class AddCommentTest {
 
         //Then
         coVerify { ruleService.sendCornerstoneStatus() }
+    }
+
+    @Test
+    fun `should pass the name proposed for the comment to the rule service`() = runTest {
+        //Given
+        val commentToAdd = "The patient is diabetic."
+        val action = AddComment(commentToAdd, attributeName = "Diabetes advice")
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery {
+            ruleService.startRuleSessionToAddComment(currentCase, commentToAdd, emptyList(), "Diabetes advice")
+        } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns "Diabetes advice"
+        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Why?")
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify {
+            ruleService.startRuleSessionToAddComment(currentCase, commentToAdd, emptyList(), "Diabetes advice")
+        }
+    }
+
+    @Test
+    fun `should tell the user the name given to the comment`() = runTest {
+        //Given
+        val commentToAdd = "The patient is diabetic."
+        val action = AddComment(commentToAdd, attributeName = "Diabetes advice")
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any(), any()) } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns "Diabetes advice"
+        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Why should this comment be given?")
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then the name, and that it can be changed, precede the model's question
+        response.text shouldBe
+                "${commentNamedMessage("Diabetes advice")}\n\nWhy should this comment be given?"
+    }
+
+    @Test
+    fun `should not mention a name when the session has no comment attribute`() = runTest {
+        //Given
+        val action = AddComment("The patient is diabetic.")
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any(), any()) } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns null
+        val responseFromModel = ChatResponse("Why should this comment be given?")
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        response shouldBe responseFromModel
     }
 
     @Test

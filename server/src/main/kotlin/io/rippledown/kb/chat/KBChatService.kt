@@ -117,6 +117,7 @@ object KBChatService {
         "16_listing_capabilities.md",
         "17_assigning_derived_values.md",
         "18_editing_derived_definition.md",
+        "19_naming_and_renaming.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -170,6 +171,7 @@ object KBChatService {
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
         "SHOW_LAST_RULE_FOR_UNDO" to SHOW_LAST_RULE_FOR_UNDO,
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
+        "RENAME_ATTRIBUTE" to RENAME_ATTRIBUTE,
         "REMOVE_REASON" to REMOVE_REASON,
         "CANCEL_RULE" to CANCEL_RULE,
         "SELECT_SUGGESTION" to SELECT_SUGGESTED_CONDITION,

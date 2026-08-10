@@ -10,6 +10,7 @@ import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Formula
 import io.rippledown.model.rule.FormulaParser
 import io.rippledown.model.rule.Literal
+import io.rippledown.persistence.PersistentRule
 import io.rippledown.persistence.RuleStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
 import io.rippledown.persistence.inmemory.InMemoryConclusionStore
@@ -34,7 +35,7 @@ class RuleManagerAssignmentTest {
         conclusionManager = ConclusionManager(InMemoryConclusionStore())
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
         ruleStore = InMemoryRuleStore()
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
 
         glucose = attributeManager.getOrCreate("Glucose")
         diabetesStatus = attributeManager.getOrCreate("Diabetes status", AttributeKind.DERIVED)
@@ -64,7 +65,7 @@ class RuleManagerAssignmentTest {
         val rule = ruleManager.createRuleAndAddToParent(ruleManager.ruleTree().root, assignment, setOf(highGlucose))
 
         // When the rule tree is rebuilt from the store
-        val rebuiltManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        val rebuiltManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
 
         // Then the assignment is restored
         val rebuiltRule = rebuiltManager.ruleTree().ruleForId(rule.id)
@@ -85,10 +86,34 @@ class RuleManagerAssignmentTest {
         val rule = ruleManager.createRuleAndAddToParent(ruleManager.ruleTree().root, assignment, emptySet())
 
         // When the rule tree is rebuilt from the store
-        val rebuiltManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        val rebuiltManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
 
         // Then the formula assignment is restored
         rebuiltManager.ruleTree().ruleForId(rule.id).assignment shouldBe assignment
+    }
+
+    @Test
+    fun `a restored assignment shows the attribute's current name after a rename`() {
+        // Given a stored rule whose assignment holds the name the attribute had when it was stored,
+        // as it does when the rule is read back from a database
+        val staleAttribute = Attribute(diabetesStatus.id, "Diabetes status", AttributeKind.DERIVED)
+        val stored = ruleStore.create(
+            PersistentRule(
+                null,
+                ruleManager.ruleTree().root.id,
+                null,
+                emptySet(),
+                AssignValue(staleAttribute, Literal("diabetic"))
+            )
+        )
+
+        // When the attribute has since been renamed and the rule tree is rebuilt from the store
+        attributeManager.rename(diabetesStatus, "Diabetes")
+        val rebuiltManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
+
+        // Then the restored assignment carries the current name
+        val restored = rebuiltManager.ruleTree().ruleForId(stored.id!!).assignment
+        restored?.attribute?.name shouldBe "Diabetes"
     }
 
     @Test
@@ -100,7 +125,7 @@ class RuleManagerAssignmentTest {
         val stopper = ruleManager.createRuleAndAddToParent(assigning, null, emptySet())
 
         // When the rule tree is rebuilt from the store
-        val rebuiltManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        val rebuiltManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
 
         // Then the structure is restored
         val rebuiltStopper = rebuiltManager.ruleTree().ruleForId(stopper.id)

@@ -42,7 +42,7 @@ class RuleManagerTest {
         conclusionManager = ConclusionManager(InMemoryConclusionStore())
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
         ruleStore = InMemoryRuleStore()
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
 
         glucose = attributeManager.getOrCreate("Glucose")
         tsh = attributeManager.getOrCreate("TSH")
@@ -74,7 +74,7 @@ class RuleManagerTest {
         coffeeRule.conditions shouldBe setOf(normalGlucose, highTSH)
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 2
         val rebuiltCoffeeRule = ruleManager.ruleTree().root.childRules().single()
         rebuiltCoffeeRule.parent shouldBe ruleManager.ruleTree().root
@@ -94,7 +94,7 @@ class RuleManagerTest {
         ruleManager.ruleTree().size() shouldBe 1
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 1
     }
 
@@ -114,7 +114,7 @@ class RuleManagerTest {
         }
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 3
     }
 
@@ -132,7 +132,7 @@ class RuleManagerTest {
         noCoffeeRule.conditions shouldBe setOf(lowTSH)
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 3
         val rebuiltCoffeeRule = ruleManager.ruleTree().root.childRules().single()
         val rebuiltNoCoffeeRule = rebuiltCoffeeRule.childRules().single()
@@ -157,7 +157,7 @@ class RuleManagerTest {
         champagneRule.conditions shouldBe emptySet()
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 3
         val rebuiltCoffeeRule = ruleManager.ruleTree().root.childRules().single()
         val rebuiltChampagneRule = rebuiltCoffeeRule.childRules().single()
@@ -184,7 +184,7 @@ class RuleManagerTest {
         ruleStore.create(PersistentRule(null, null, teaConclusion.id, emptySet()))
 
         shouldThrow<IllegalArgumentException> {
-            RuleManager(conclusionManager, conditionManager, ruleStore)
+            RuleManager(conclusionManager, conditionManager, attributeManager, ruleStore)
         }.message shouldBe "Rule tree could not be rebuilt as more than one rule lacks a parent."
     }
 }

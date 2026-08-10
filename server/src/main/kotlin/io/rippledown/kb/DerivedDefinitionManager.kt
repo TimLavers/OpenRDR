@@ -10,8 +10,11 @@ import io.rippledown.persistence.DerivedDefinitionStore
  * definition picks up the change, with no rule mutation. See
  * documentation/design/editing_derived_attribute_definitions.md.
  */
-class DerivedDefinitionManager(private val definitionStore: DerivedDefinitionStore) {
-    private val definitions = definitionStore.all().toMutableMap()
+class DerivedDefinitionManager(
+    private val definitionStore: DerivedDefinitionStore,
+    private val attributeProvider: AttributeProvider
+) {
+    private val definitions = definitionStore.all().mapValues { aligned(it.value) }.toMutableMap()
 
     fun definitionFor(attributeId: Int): ValueExpression? = definitions[attributeId]
 
@@ -21,4 +24,14 @@ class DerivedDefinitionManager(private val definitionStore: DerivedDefinitionSto
     }
 
     fun all(): Map<Int, ValueExpression> = definitions.toMap()
+
+    /**
+     * The stored expression with its attributes replaced by those held by the
+     * attribute manager, so that a definition stored before an attribute was
+     * renamed reads with the attribute's current name. An expression
+     * referring to an attribute the manager does not know is left as stored.
+     */
+    private fun aligned(expression: ValueExpression) =
+        runCatching { expression.alignAttributes { id -> attributeProvider.getById(id) } }
+            .getOrDefault(expression)
 }

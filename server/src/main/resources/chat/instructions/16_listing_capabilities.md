@@ -21,6 +21,7 @@ not actually output the ** characters. Do not use any markdown formatting
 - see **suggested** reasons for building a rule
 - **undo** the last rule
 - **reorder** the attributes
+- **rename** a comment or a derived attribute
 - **cancel** the rule you are currently building
 
 Keep the response concise and offer to help the user start one of these operations.

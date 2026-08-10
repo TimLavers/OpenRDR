@@ -32,6 +32,15 @@ const val SYSTEM_ERROR_PREFIX = "System error. See server.log"
 // A distinctive word that the once-per-session "you can insert case values into a comment" tip must contain.
 const val COMMENT_VARIABLE_TIP_KEYWORD = "braces"
 
+/**
+ * The message telling the user the name of the comment attribute created for
+ * a comment they have just asked for, and that they can change it. Comments
+ * are named so that they can be referred to; see step 14 of
+ * documentation/design/repeat_inferencing.md.
+ */
+fun commentNamedMessage(name: String) =
+    "This comment is named \"$name\". You can rename it at any time."
+
 const val ADD_COMMENT = "AddComment"
 const val REMOVE_COMMENT = "RemoveComment"
 const val REPLACE_COMMENT = "ReplaceComment"
@@ -48,6 +57,7 @@ const val PREVIOUS_CORNERSTONE = "PreviousCornerstone"
 const val UNDO_LAST_RULE = "UndoLastRule"
 const val SHOW_LAST_RULE_FOR_UNDO = "ShowLastRuleForUndo"
 const val MOVE_ATTRIBUTE = "MoveAttribute"
+const val RENAME_ATTRIBUTE = "RenameAttribute"
 const val SHOW_CORNERSTONES = "ShowCornerstones"
 const val RULE_SESSION_COMPLETED = "RuleSessionCompleted"
 const val CASES_INFO_PREFIX = "CasesInfo:"

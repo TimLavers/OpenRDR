@@ -3,7 +3,9 @@ package io.rippledown.kb.chat.action
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.constants.chat.commentNamedMessage
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
@@ -110,4 +112,73 @@ class ReplaceCommentTest {
         response shouldBe responseFromModel
     }
 
+    @Test
+    fun `should pass the name proposed for the replacement comment to the rule service`() = runTest {
+        //Given
+        val comment = "The patient is well."
+        val replacementComment = "The patient is diabetic."
+        val action = ReplaceComment(comment, replacementComment, attributeName = "Diabetes advice")
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery {
+            ruleService.startRuleSessionToReplaceComment(
+                currentCase,
+                comment,
+                replacementComment,
+                emptyList(),
+                "Diabetes advice"
+            )
+        } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns "Diabetes advice"
+        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Why?")
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify {
+            ruleService.startRuleSessionToReplaceComment(
+                currentCase,
+                comment,
+                replacementComment,
+                emptyList(),
+                "Diabetes advice"
+            )
+        }
+    }
+
+    @Test
+    fun `should tell the user the name given to the replacement comment`() = runTest {
+        //Given
+        val action = ReplaceComment("The patient is well.", "The patient is diabetic.", attributeName = "Diabetes")
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery { ruleService.startRuleSessionToReplaceComment(any(), any(), any(), any(), any()) } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns "Diabetes"
+        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Why should this comment be given?")
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then the name, and that it can be changed, precede the model's question
+        response.text shouldBe "${commentNamedMessage("Diabetes")}\n\nWhy should this comment be given?"
+    }
+
+    @Test
+    fun `should not mention a name when the session has no comment attribute`() = runTest {
+        //Given
+        val action = ReplaceComment("The patient is well.", "The patient is diabetic.")
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery { ruleService.startRuleSessionToReplaceComment(any(), any(), any(), any(), any()) } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns null
+        val responseFromModel = ChatResponse("Why should this comment be given?")
+        coEvery { modelResponder.response(any<String>()) } returns responseFromModel
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        response shouldBe responseFromModel
+    }
 }

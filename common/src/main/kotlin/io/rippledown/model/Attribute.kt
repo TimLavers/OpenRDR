@@ -3,8 +3,15 @@ package io.rippledown.model
 import kotlinx.serialization.Serializable
 
 // ORD1
+/**
+ * An attribute is identified by its [id], so its [name] can be changed
+ * without affecting anything that refers to it. The name is renamed in
+ * place (see `AttributeManager.rename`) so that every holder of the
+ * attribute sees the new name; holders that were deserialized separately
+ * are aligned with the attribute manager when a knowledge base is loaded.
+ */
 @Serializable
-data class Attribute(val id: Int, val name: String, val kind: AttributeKind = AttributeKind.EXTERNAL) {
+data class Attribute(val id: Int, var name: String, val kind: AttributeKind = AttributeKind.EXTERNAL) {
     init {
         check(name.isNotEmpty()) {
             "Attribute names cannot be blank."

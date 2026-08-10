@@ -12,6 +12,7 @@ import io.rippledown.persistence.RuleStore
 class RuleManager(
     private val conclusionManager: ConclusionManager,
     private val conditionManager: ConditionManager,
+    private val attributeProvider: AttributeProvider,
     private val ruleStore: RuleStore
 ) : RuleFactory {
 
@@ -101,7 +102,19 @@ class RuleManager(
             conclusion,
             conditions,
             mutableSetOf(),
-            persistentRule.assignment
+            aligned(persistentRule.assignment)
         )
+    }
+
+    /**
+     * The stored assignment with its attributes replaced by those held by the
+     * attribute manager, so that a rule built before an attribute was renamed
+     * shows the attribute's current name. An assignment referring to an
+     * attribute the manager does not know is left as it was stored.
+     */
+    private fun aligned(assignment: AssignValue?): AssignValue? {
+        if (assignment == null) return null
+        return runCatching { assignment.alignAttributes { id -> attributeProvider.getById(id) } }
+            .getOrDefault(assignment)
     }
 }

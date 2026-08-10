@@ -43,6 +43,49 @@ internal class RuleActionTest {
     }
 
     @Test
+    fun `alignAttributes replaces the assigned attribute`() {
+        // Given an assignment holding an attribute with a name it no longer has
+        val stale = AssignValue(Attribute(10, "Diabetes", AttributeKind.DERIVED), Literal("diabetic"))
+
+        // When it is aligned with the attributes of the knowledge base
+        val aligned = stale.alignAttributes { id -> if (id == 10) diabetesStatus else error("Unknown id $id") }
+
+        // Then the assignment carries the current attribute, and nothing else changes
+        aligned.attribute.name shouldBe "Diabetes status"
+        aligned shouldBe stale // attributes are equal by id
+        aligned.expression shouldBe Literal("diabetic")
+    }
+
+    @Test
+    fun `alignAttributes replaces the attributes referenced by the expression`() {
+        // Given an assignment whose formula refers to an attribute with a name it no longer has
+        val stale = AssignValue(diabetesStatus, Formula(AttributeValue(Attribute(2, "Gluc"))))
+
+        // When it is aligned with the attributes of the knowledge base
+        val aligned = stale.alignAttributes { id ->
+            when (id) {
+                2 -> glucose
+                10 -> diabetesStatus
+                else -> error("Unknown id $id")
+            }
+        }
+
+        // Then the formula reads with the current name
+        aligned.expression.asText() shouldBe "Glucose"
+        aligned.expression.referencedAttributes() shouldBe setOf(glucose)
+    }
+
+    @Test
+    fun `alignAttributes leaves an assignment whose attributes are already current unchanged`() {
+        // When an assignment holding current attributes is aligned
+        val aligned = diabetic.alignAttributes { id -> if (id == 10) diabetesStatus else error("Unknown id $id") }
+
+        // Then it is unchanged
+        aligned shouldBe diabetic
+        aligned.attribute.name shouldBe "Diabetes status"
+    }
+
+    @Test
     fun `a rule cannot both give a conclusion and assign a value`() {
         // When a rule is constructed with both a conclusion and an assignment
         // Then it is rejected

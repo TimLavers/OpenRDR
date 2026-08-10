@@ -14,15 +14,33 @@ interface RuleService {
     fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,
         comment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
+        proposedAttributeName: String? = null
     ): CornerstoneStatus
     fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
     fun startRuleSessionToReplaceComment(
         viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
+        proposedAttributeName: String? = null
     ): CornerstoneStatus
+
+    /**
+     * The name of the comment attribute that the session in progress will
+     * assign, or null if no session is in progress or it is not about adding
+     * or replacing a comment. Comments are named so that they can be referred
+     * to, so the name is told to the user when the comment is accepted. See
+     * step 14 of documentation/design/repeat_inferencing.md.
+     */
+    fun nameOfCommentAttributeInSession(): String?
+
+    /**
+     * Rename a KB-assigned attribute (a comment or a derived attribute),
+     * which changes its name only: everything that refers to it does so by
+     * id. Returns a summary of the change.
+     */
+    fun renameAttribute(currentName: String, newName: String): String
     fun startRuleSessionToAssignValue(
         viewableCase: ViewableCase,
         attributeName: String,

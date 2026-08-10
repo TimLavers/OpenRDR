@@ -25,7 +25,7 @@ fun migrateConclusionsToCommentAttributes(persistentKB: PersistentKB) {
     if (conclusions.isEmpty()) return
 
     val attributeManager = AttributeManager(persistentKB.attributeStore())
-    val definitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore())
+    val definitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
     val conclusionIdToAttribute = conclusions.associate { conclusion ->
         val attribute = attributeManager.createCommentAttribute()
         val variables = conclusion.variables.map { attributeManager.getById(it.attributeId) }

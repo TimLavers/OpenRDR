@@ -43,6 +43,12 @@ class RuleSessionManager(
     internal val currentDerivedValueChange: DerivedValueChange?
         get() = currentChange as? DerivedValueChange
 
+    /**
+     * The comment attribute that the session in progress will assign, held so
+     * that the user can be told its name when the comment is accepted.
+     */
+    private var commentAttributeInSession: Attribute? = null
+
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -74,23 +80,28 @@ class RuleSessionManager(
     override fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,
         comment: String,
-        variables: List<CommentVariable>
-    ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables)
+        variables: List<CommentVariable>,
+        proposedAttributeName: String?
+    ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables, proposedAttributeName)
 
     /**
      * Comments are comment attributes: adding one gets or creates the
      * attribute whose definition is the comment's text, and builds a rule
-     * assigning it by definition. See "Phase 2 — comments become derived
-     * attributes" in documentation/design/repeat_inferencing.md.
+     * assigning it by definition. A new attribute is named
+     * [proposedAttributeName] if that is usable, and otherwise auto-named.
+     * See "Phase 2 — comments become derived attributes" in
+     * documentation/design/repeat_inferencing.md.
      */
     internal fun startRuleSessionToAddComment(
         case: RDRCase,
         comment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
+        proposedAttributeName: String? = null
     ): CornerstoneStatus {
         val template = commentTemplate(comment, variables)
-        val attribute = commentAttributeFor(template)
+        val attribute = commentAttributeFor(template, proposedAttributeName)
         currentChange = Addition(template.textWithVariableNames())
+        commentAttributeInSession = attribute
         return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -101,6 +112,7 @@ class RuleSessionManager(
         val attribute = commentAttributeForText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
         currentChange = Removal(renderedComment(attribute, case))
+        commentAttributeInSession = null
         return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -108,9 +120,16 @@ class RuleSessionManager(
         viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<CommentVariable>
+        variables: List<CommentVariable>,
+        proposedAttributeName: String?
     ): CornerstoneStatus =
-        startRuleSessionToReplaceComment(viewableCase.case, replacedComment, replacementComment, variables)
+        startRuleSessionToReplaceComment(
+            viewableCase.case,
+            replacedComment,
+            replacementComment,
+            variables,
+            proposedAttributeName
+        )
 
     /**
      * Each comment text has its own attribute, so the replacement is a new
@@ -122,14 +141,16 @@ class RuleSessionManager(
         case: RDRCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
+        proposedAttributeName: String? = null
     ): CornerstoneStatus {
         val replacedAttribute = commentAttributeForText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementTemplate = commentTemplate(replacementComment, variables)
-        val replacementAttribute = commentAttributeFor(replacementTemplate)
+        val replacementAttribute = commentAttributeFor(replacementTemplate, proposedAttributeName)
         currentChange =
             Replacement(renderedComment(replacedAttribute, case), replacementTemplate.textWithVariableNames())
+        commentAttributeInSession = replacementAttribute
         return startRuleSession(
             case,
             ChangeTreeToReplaceAssignment(
@@ -144,13 +165,17 @@ class RuleSessionManager(
 
     /**
      * The comment attribute whose definition is the given template,
-     * created if necessary.
+     * created if necessary, in which case it is named [proposedAttributeName]
+     * if that is usable. An existing attribute keeps the name it has.
      */
-    private fun commentAttributeFor(template: CommentTemplate): Attribute =
+    private fun commentAttributeFor(template: CommentTemplate, proposedAttributeName: String? = null): Attribute =
         kb.attributeManager.commentAttributes()
             .firstOrNull { kb.derivedDefinitionManager.definitionFor(it.id) == template }
-            ?: kb.attributeManager.createCommentAttribute()
+            ?: kb.attributeManager.createCommentAttribute(proposedAttributeName)
                 .also { kb.derivedDefinitionManager.store(it.id, template) }
+
+    override fun nameOfCommentAttributeInSession(): String? =
+        if (ruleSession == null) null else commentAttributeInSession?.name
 
     /**
      * The comment attribute whose definition has the given (internal-form)
@@ -308,6 +333,25 @@ class RuleSessionManager(
     }
 
     /**
+     * Renames a comment or derived attribute. Renaming is not part of rule
+     * building — it is allowed whether or not a session is in progress — and
+     * changes the attribute's name only, since everything refers to it by id.
+     * External attributes cannot be renamed until the alias map of step 20 of
+     * documentation/design/repeat_inferencing.md exists, because a case
+     * arriving with the old name would create a new attribute.
+     */
+    override fun renameAttribute(currentName: String, newName: String): String {
+        val attribute = attributeForName(currentName)
+            ?: error("No attribute with name \"$currentName\" exists.")
+        check(attribute.kind.isAssignedByKB()) {
+            "\"${attribute.name}\" is not a comment or a derived attribute, so it cannot be renamed."
+        }
+        val oldName = attribute.name
+        val renamed = kb.attributeManager.rename(attribute, newName)
+        return "Renamed \"$oldName\" to \"${renamed.name}\"."
+    }
+
+    /**
      * Refuses a definition edit that would make the attribute depend on
      * itself. The graph is built as if the edit had been made, so cycles
      * through other by-definition rules are detected too.
@@ -418,6 +462,7 @@ class RuleSessionManager(
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
         currentChange = null
+        commentAttributeInSession = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -460,6 +505,7 @@ class RuleSessionManager(
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
         currentChange = null
+        commentAttributeInSession = null
         checkRuleSessionHistoryConsistency()
         val casesInfo = CasesInfo(
             caseIds = kb.processedCaseIds(),

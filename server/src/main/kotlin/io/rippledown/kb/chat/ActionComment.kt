@@ -22,6 +22,7 @@ data class ActionComment(
     val attributeMoved: String? = null,
     val destination: String? = null,
     val attributeName: String? = null,
+    val newName: String? = null,
     val valueExpression: String? = null,
     val replacementValueExpression: String? = null,
     val suggestions: List<String>? = null,
@@ -55,6 +56,7 @@ data class ActionComment(
         if (attributeMoved != null) asMap["attributeMoved"] = attributeMoved
         if (destination != null) asMap["destination"] = destination
         if (attributeName != null) asMap["attributeName"] = attributeName
+        if (newName != null) asMap["newName"] = newName
         if (valueExpression != null) asMap["valueExpression"] = valueExpression
         if (replacementValueExpression != null) asMap["valueExpression"] = replacementValueExpression
         if (variables != null) asMap["variables"] = variables

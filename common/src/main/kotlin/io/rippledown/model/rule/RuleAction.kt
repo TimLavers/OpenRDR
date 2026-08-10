@@ -28,4 +28,12 @@ data class AssignValue(val attribute: Attribute, val expression: ValueExpression
     }
 
     fun asText() = "${attribute.name} = ${expression.asText()}"
+
+    /**
+     * This assignment with its attributes replaced by those held by the
+     * knowledge base, so that a persisted assignment does not carry a stale
+     * attribute name after the attribute has been renamed.
+     */
+    fun alignAttributes(idToAttribute: (Int) -> Attribute) =
+        AssignValue(idToAttribute(attribute.id), expression.alignAttributes(idToAttribute))
 }

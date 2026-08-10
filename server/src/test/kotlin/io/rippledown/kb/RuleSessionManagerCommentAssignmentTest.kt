@@ -82,6 +82,87 @@ class RuleSessionManagerCommentAssignmentTest {
     }
 
     @Test
+    fun `a new comment attribute takes the name proposed for it`() {
+        // When an add-comment session proposes a name
+        rsm.startRuleSessionToAddComment(
+            createCase("A"),
+            "Diabetic diet advice given.",
+            proposedAttributeName = "Diabetes advice"
+        )
+
+        // Then the comment attribute has that name, and the session reports it
+        kb.attributeManager.byName("Diabetes advice")?.kind shouldBe AttributeKind.COMMENT
+        kb.attributeManager.byName("C1").shouldBeNull()
+        rsm.nameOfCommentAttributeInSession() shouldBe "Diabetes advice"
+    }
+
+    @Test
+    fun `an unusable proposed name falls back to the auto-generated name`() {
+        // Given an attribute with the name the model will propose
+        kb.attributeManager.getOrCreate("Diabetes advice")
+
+        // When an add-comment session proposes that name
+        rsm.startRuleSessionToAddComment(
+            createCase("A"),
+            "Diabetic diet advice given.",
+            proposedAttributeName = "Diabetes advice"
+        )
+
+        // Then the comment attribute is auto-named, and the session reports that name
+        kb.attributeManager.byName("C1")?.kind shouldBe AttributeKind.COMMENT
+        rsm.nameOfCommentAttributeInSession() shouldBe "C1"
+    }
+
+    @Test
+    fun `a comment attribute that already exists keeps its name`() {
+        // Given a committed comment rule, whose attribute has been named
+        buildAddCommentRule("Diabetic diet advice given.")
+        kb.attributeManager.rename(kb.attributeManager.byName("C1")!!, "Diabetes advice")
+
+        // When the same comment is added to another case, with a different name proposed
+        rsm.startRuleSessionToAddComment(
+            createCase("C", "5.0"),
+            "Diabetic diet advice given.",
+            proposedAttributeName = "Diet"
+        )
+
+        // Then the existing attribute is reused, keeping its name
+        kb.attributeManager.commentAttributes().size shouldBe 1
+        rsm.nameOfCommentAttributeInSession() shouldBe "Diabetes advice"
+    }
+
+    @Test
+    fun `the replacement comment attribute takes the name proposed for it`() {
+        // Given a committed comment rule
+        buildAddCommentRule("Diabetic diet advice given.")
+
+        // When the comment is replaced, with a name proposed for the replacement
+        rsm.startRuleSessionToReplaceComment(
+            createCase("A"),
+            "Diabetic diet advice given.",
+            "Dietary review is recommended.",
+            proposedAttributeName = "Dietary review"
+        )
+
+        // Then the new attribute has that name, and the session reports it
+        kb.attributeManager.byName("Dietary review")?.kind shouldBe AttributeKind.COMMENT
+        rsm.nameOfCommentAttributeInSession() shouldBe "Dietary review"
+    }
+
+    @Test
+    fun `no comment name is reported when the session removes a comment, or when there is no session`() {
+        // Given a committed comment rule
+        buildAddCommentRule("Diabetic diet advice given.")
+
+        // Then no name is reported when no session is in progress
+        rsm.nameOfCommentAttributeInSession().shouldBeNull()
+
+        // And none is reported for a session that removes a comment
+        rsm.startRuleSessionToRemoveComment(createCase("A"), "Diabetic diet advice given.")
+        rsm.nameOfCommentAttributeInSession().shouldBeNull()
+    }
+
+    @Test
     fun `comment variables are carried into the definition and rendered for the case`() {
         // When a comment with a variable is added
         buildAddCommentRule("Glucose is \${} today.", listOf(CommentVariable(glucose().id)))

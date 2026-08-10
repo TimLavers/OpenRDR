@@ -8,10 +8,18 @@ import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
+/**
+ * Starts a rule session to replace a comment. Each comment text has its own
+ * attribute, so the replacement is named too: [attributeName] is the concise
+ * name the model proposes for it, and the server falls back to an
+ * auto-generated name. See step 14 of
+ * documentation/design/repeat_inferencing.md.
+ */
 class ReplaceComment(
     val comment: String,
     val replacementComment: String,
-    val variables: List<ChatCommentVariable> = emptyList()
+    val variables: List<ChatCommentVariable> = emptyList(),
+    val attributeName: String? = null
 ) : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
@@ -39,9 +47,11 @@ class ReplaceComment(
             sessionCase,
             internalReplacedComment,
             internalReplacementComment,
-            resolvedVariables
+            resolvedVariables,
+            attributeName
         )
         ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.summary())
+        val response = modelResponder.response(cornerstoneStatus.summary())
+        return response.withCommentName(ruleService.nameOfCommentAttributeInSession())
     }
 }

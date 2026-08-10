@@ -72,9 +72,13 @@ For the current case, the list of comments given by rules is as follows:
   {
     "action": "{{ADD_COMMENT}}",
     "comment": "Normal glucose results.",
+    "attributeName": "Normal glucose",
     "reasons": []
   }
   ```
+
+- Every `{{ADD_COMMENT}}` and `{{REPLACE_COMMENT}}` action must also carry an `attributeName`: a very concise name for
+  the comment, as described in "Naming comments, and renaming comments and derived attributes".
 
 - This rule is **language-agnostic**. The delimiter is the double quote, not the language of the text
   between the quotes. If the user writes `Add the comment: "La paciente presenta diabetes gestacional."`

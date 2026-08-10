@@ -13,6 +13,7 @@ The names `{{ADD_COMMENT}}`, `{{REMOVE_COMMENT}}`, `{{REPLACE_COMMENT}}`,
 `{{EXEMPT_CORNERSTONE}}`, `{{NEXT_CORNERSTONE}}`,
 `{{PREVIOUS_CORNERSTONE}}`, `{{SHOW_CORNERSTONES}}`,
 `{{SHOW_LAST_RULE_FOR_UNDO}}`, `{{MOVE_ATTRIBUTE}}`,
+`{{RENAME_ATTRIBUTE}}`,
 `{{REMOVE_REASON}}`, `{{USER_ACTION}}` and `{{DEBUG_ACTION}}` are
 **JSON action values**, not function names. NEVER invoke any of them
 through the function-calling API. ALWAYS emit them as the value of
