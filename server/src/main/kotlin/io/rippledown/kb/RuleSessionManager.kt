@@ -1,5 +1,7 @@
 package io.rippledown.kb
 
+import io.rippledown.constants.chat.cannotRenameMessage
+import io.rippledown.constants.chat.renamedMessage
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
@@ -344,11 +346,11 @@ class RuleSessionManager(
         val attribute = attributeForName(currentName)
             ?: error("No attribute with name \"$currentName\" exists.")
         check(attribute.kind.isAssignedByKB()) {
-            "\"${attribute.name}\" is not a comment or a derived attribute, so it cannot be renamed."
+            cannotRenameMessage(attribute.name)
         }
         val oldName = attribute.name
         val renamed = kb.attributeManager.rename(attribute, newName)
-        return "Renamed \"$oldName\" to \"${renamed.name}\"."
+        return renamedMessage(oldName, renamed.name)
     }
 
     /**

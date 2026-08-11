@@ -465,6 +465,45 @@ class ChatDefs {
         waitForBotTextToContainAnyOf("already exists", "already used", "already given", "replace")
     }
 
+    @When("I request that the attribute {string} be renamed to {string}")
+    fun requestAttributeBeRenamed(currentName: String, newName: String) {
+        waitForBotQuestionOrCompletedAction()
+        enterChatTextAndSend("Rename the attribute \"$currentName\" to \"$newName\"")
+    }
+
+    @When("I request that the comment just added be renamed to {string}")
+    fun requestCommentJustAddedBeRenamed(newName: String) {
+        // The name of the comment is chosen by the model, so the request refers to
+        // the comment rather than naming it: the model knows the name, having just
+        // been told it by the system.
+        enterChatTextAndSend("Rename that comment to \"$newName\"")
+    }
+
+    @Then("the chatbot tells me the name of the comment and that it can be renamed")
+    fun waitForBotToNameTheComment() {
+        waitForBotText(COMMENT_IS_NAMED, CAN_BE_RENAMED)
+    }
+
+    @Then("the chatbot does not tell me the name of the comment")
+    fun requireBotNotToNameTheComment() {
+        chatPO().mostRecentBotRowDoesNotContainTheTerm(COMMENT_IS_NAMED)
+    }
+
+    @Then("the chatbot confirms that {string} has been renamed to {string}")
+    fun waitForBotToConfirmRename(currentName: String, newName: String) {
+        waitForBotText(RENAMED, currentName, newName)
+    }
+
+    @Then("the chatbot confirms a rename to {string}")
+    fun waitForBotToConfirmRenameTo(newName: String) {
+        waitForBotText(RENAMED, newName)
+    }
+
+    @Then("the chatbot explains that the attribute {string} cannot be renamed")
+    fun waitForBotToRefuseRename(name: String) {
+        waitForBotText(name, CANNOT_BE_RENAMED)
+    }
+
     @Then("the capabilities shown include:")
     fun capabilitiesShownInclude(dataTable: DataTable) {
         waitForBotText(*dataTable.asList().toTypedArray())

@@ -13,6 +13,7 @@ import io.rippledown.model.rule.ByDefinition
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
+import io.rippledown.utils.serializeDeserialize
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -77,6 +78,15 @@ class RenameAttributeTest {
         val viewableCase = kb.viewableCase(case)
         viewableCase.case.latestValue(bmi) shouldBe "28.7"
         viewableCase.case.attributes.first { it.id == bmi.id }.name shouldBe "Body mass index"
+
+        // And so does the derived values panel, which is what the user sees
+        viewableCase.derivedValues().map { it.name } shouldBe listOf("Body mass index")
+        viewableCase.derivedValues().map { it.value } shouldBe listOf("28.7")
+
+        // And the case survives the trip to the client, which shows the panel
+        val asSentToClient = serializeDeserialize(viewableCase)
+        asSentToClient.derivedValues().map { it.name } shouldBe listOf("Body mass index")
+        asSentToClient.derivedValues().map { it.value } shouldBe listOf("28.7")
     }
 
     @Test

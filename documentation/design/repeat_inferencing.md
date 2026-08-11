@@ -579,6 +579,15 @@ leaving `AssignConclusion` in place until step 16.
       the KB is loaded: `AssignValue.alignAttributes`
       in `RuleManager`, and `ValueExpression.alignAttributes` in
       `DerivedDefinitionManager`.
+    - The client had to be told that a rename is a change: an `Attribute` is equal to another with the same id whatever
+      its name, so a refreshed case whose only change is a renamed attribute is structurally equal to the case it
+      replaces, and the default `mutableStateOf` policy discarded it, leaving the old name on screen. `OpenRDRUI` holds
+      the current case with
+      `neverEqualPolicy()`.
+    - Cukes: `cucumber/.../requirements/chat/Naming and renaming.feature`. The messages are matched through the
+      `COMMENT_IS_NAMED`, `CAN_BE_RENAMED`,
+      `RENAMED` and `CANNOT_BE_RENAMED` constants, because the name itself is chosen by the model.
+      `gradlew :cucumber:cucumberDryRun` checks every step of every feature is defined, without a server or the LLM.
     - Instructions: new `19_naming_and_renaming.md`, referenced from
       `3_defining_the_report_change.md`; `RENAME_ATTRIBUTE` added to
       `13_json_format_guidelines.md` and `16_listing_capabilities.md`.

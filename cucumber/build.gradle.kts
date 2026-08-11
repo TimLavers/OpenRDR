@@ -136,6 +136,17 @@ tasks.register<JavaExec>("cucumberSingleTest") {
     dependsOn(prerequisiteTasks)
 }
 
+/**
+ * Checks that every step of every feature is defined, without starting the
+ * server, the client or the LLM. Use it after editing features or step
+ * definitions: `gradlew :cucumber:cucumberDryRun`.
+ */
+tasks.register<JavaExec>("cucumberDryRun") {
+    setupExec()
+    args = listOf("--glue", "steps", "--dry-run", pathToRequirements)
+    dependsOn("testClasses")
+}
+
 tasks.register<JavaExec>("cucumberFolderTest") {
     setupExec()
     val folder by extra {

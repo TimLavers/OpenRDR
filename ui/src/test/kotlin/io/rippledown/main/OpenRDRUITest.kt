@@ -1,10 +1,7 @@
 package io.rippledown.main
 
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performClick
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -17,20 +14,27 @@ import io.rippledown.chat.requireChatMessagesShowing
 import io.rippledown.chat.requireChatPanelIsDisplayed
 import io.rippledown.chat.typeChatMessageAndClickSend
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
+import io.rippledown.constants.interpretation.DERIVED_VALUE_ROW_PREFIX
+import io.rippledown.constants.interpretation.DERIVED_VALUE_VALUE_PREFIX
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.interpretation.requireInterpretation
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.KBInfo
+import io.rippledown.model.*
+import io.rippledown.model.caseview.CaseViewProperties
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
+import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.report.CaseReport
+import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.Literal
+import io.rippledown.model.rule.RuleSummary
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.createViewableCaseWithInterpretation
+import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -38,6 +42,7 @@ import org.junit.Rule
 import kotlin.test.Test
 
 
+@OptIn(ExperimentalTestApi::class)
 class OpenRDRUITest {
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -194,6 +199,56 @@ class OpenRDRUITest {
         }
     }
 
+
+    @Test
+    fun `should show the new name of a renamed attribute when the case is refreshed`() = runTest {
+        // An Attribute is equal to another with the same id whatever its name, so a
+        // case whose only change is a renamed attribute is structurally equal to the
+        // case it replaces. Under the default state policy the refresh would be
+        // discarded and the old name would stay on screen.
+        val caseName = "case a"
+        val id = 1L
+        val caseId = CaseId(id = id, name = caseName)
+        coEvery { api.getCase(id) } returns caseWithDerivedValueNamed("BMI", caseName, id)
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        with(composeTestRule) {
+            //Given
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing(caseName)
+            onNodeWithContentDescription("$DERIVED_VALUE_ROW_PREFIX${"BMI"}").assertIsDisplayed()
+
+            //When the attribute is renamed and the case refreshed
+            coEvery { api.getCase(id) } returns caseWithDerivedValueNamed("Body mass index", caseName, id)
+            typeChatMessageAndClickSend("rename BMI to Body mass index")
+
+            //Then the new name is shown
+            waitUntilAtLeastOneExists(hasContentDescription("${DERIVED_VALUE_ROW_PREFIX}Body mass index"))
+            onNodeWithContentDescription("${DERIVED_VALUE_VALUE_PREFIX}Body mass index").assertTextEquals("21.97")
+        }
+    }
+
+    /**
+     * A case with a single derived value, whose attribute has the given [name].
+     * The attribute id is the same whatever the name, as it is when the user
+     * renames the attribute.
+     */
+    private fun caseWithDerivedValueNamed(name: String, caseName: String, id: Long): ViewableCase {
+        val bmi = Attribute(2, name, AttributeKind.DERIVED)
+        val builder = RDRCaseBuilder()
+        builder.addValue(Attribute(1, "weight"), defaultDate, "65")
+        builder.addValue(bmi, defaultDate, "21.97")
+        val rdrCase = builder.build(caseName, id)
+        val interpretation = Interpretation(rdrCase.caseId).apply {
+            add(RuleSummary(id = 1, assignment = AssignValue(bmi, Literal("21.97"))))
+        }
+        return ViewableCase(
+            rdrCase,
+            CaseViewProperties(listOf(Attribute(1, "weight"), bmi)),
+            ViewableInterpretation(interpretation = interpretation)
+        )
+    }
 
     @Test
     fun `should show case list for several cases`() = runTest {
