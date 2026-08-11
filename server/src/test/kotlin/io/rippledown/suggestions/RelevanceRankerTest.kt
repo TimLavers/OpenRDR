@@ -2,6 +2,7 @@ package io.rippledown.suggestions
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -10,10 +11,7 @@ import io.rippledown.model.condition.episodic.predicate.High
 import io.rippledown.model.condition.episodic.predicate.Low
 import io.rippledown.model.condition.episodic.predicate.Normal
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.Rule
-import io.rippledown.model.rule.RuleTree
-import io.rippledown.model.rule.case
+import io.rippledown.model.rule.*
 import kotlin.test.Test
 
 class RelevanceRankerTest {
@@ -146,5 +144,34 @@ class RelevanceRankerTest {
 
         //Then candidates are ordered by descending historical score
         ranked.map { it.initialSuggestion() } shouldBe listOf(tshHigh, mcvHigh, tshLow)
+    }
+
+    /**
+     * Comment-overlap from an assignment-based action (Phase 2 comment
+     * attributes) must rank a matching candidate above an alphabetically
+     * earlier unrelated one, just as the conclusion-based action does.
+     */
+    @Test
+    fun `comment overlap from assignment action beats alphabetic tiebreak`() {
+        //Given an add-assignment action whose comment template is "TSH is high"
+        val commentAttr = Attribute(100, "C1", AttributeKind.COMMENT)
+        val ctx = SuggestionContext(
+            sessionCase = sessionCase,
+            attributes = setOf(tsh, mcv),
+            action = ChangeTreeToAddAssignment(
+                AssignValue(commentAttr, CommentTemplate("TSH is high"))
+            ),
+        )
+        val candidates = listOf(suggestionFor(mcvHigh), suggestionFor(tshHigh))
+        //Sanity: alphabetically mcvHigh sorts before tshHigh
+        candidates.map { it.initialSuggestion().asText() }.sorted()
+            .first() shouldBe mcvHigh.asText()
+
+        //When
+        val ranked = RelevanceRanker(ctx).rank(candidates)
+
+        //Then tshHigh wins on comment overlap (tsh + high = 2), despite the
+        //alphabetic disadvantage
+        ranked.first().initialSuggestion() shouldBe tshHigh
     }
 }

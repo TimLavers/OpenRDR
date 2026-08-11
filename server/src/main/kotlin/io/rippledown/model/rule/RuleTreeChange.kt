@@ -1,10 +1,7 @@
 package io.rippledown.model.rule
 
 import io.rippledown.kb.ConclusionProvider
-import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RuleFactory
+import io.rippledown.model.*
 
 internal fun ConclusionProvider.getAlignedConclusion(provided: Conclusion): Conclusion {
     val conclusionInFactory = getOrCreate(provided.text, provided.variables)
@@ -27,9 +24,10 @@ abstract class RuleTreeChange {
 
     /**
      * The attributes referenced by the value expression that this change
-     * introduces, if any.
+     * introduces, if any. A [ByDefinition] expression's references are those
+     * of the stored definition given by [resolver].
      */
-    open fun expressionReferences(): Set<Attribute> = emptySet()
+    open fun expressionReferences(resolver: DefinitionResolver = NO_DEFINITIONS): Set<Attribute> = emptySet()
 }
 
 class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
@@ -83,7 +81,8 @@ class ChangeTreeToAddAssignment(val toBeAdded: AssignValue) : RuleTreeChange() {
 
     override fun assignedAttribute() = toBeAdded.attribute
 
-    override fun expressionReferences() = toBeAdded.expression.referencedAttributes()
+    override fun expressionReferences(resolver: DefinitionResolver) =
+        toBeAdded.expression.resolvedFor(toBeAdded.attribute, resolver)?.referencedAttributes() ?: emptySet()
 
     override fun toString() = "ChangeTreeToAddAssignment(toBeAdded=$toBeAdded)"
 }
@@ -103,7 +102,16 @@ class ChangeTreeToRemoveAssignment(val toBeRemoved: AssignValue) : RuleTreeChang
 
 class ChangeTreeToReplaceAssignment(val toBeReplaced: AssignValue, val replacement: AssignValue) : RuleTreeChange() {
     init {
-        require(toBeReplaced.attribute == replacement.attribute) {
+        // A derived value is replaced on its own attribute. Comments are the
+        // exception: each comment text has its own attribute, so replacing a
+        // comment assigns a different attribute, with leaf-most suppression
+        // retracting the original. See "Phase 2" in
+        // documentation/design/repeat_inferencing.md.
+        require(
+            toBeReplaced.attribute == replacement.attribute ||
+                    (toBeReplaced.attribute.kind == AttributeKind.COMMENT &&
+                            replacement.attribute.kind == AttributeKind.COMMENT)
+        ) {
             "An assignment can only be replaced by an assignment to the same attribute."
         }
     }
@@ -117,7 +125,8 @@ class ChangeTreeToReplaceAssignment(val toBeReplaced: AssignValue, val replaceme
 
     override fun assignedAttribute() = replacement.attribute
 
-    override fun expressionReferences() = replacement.expression.referencedAttributes()
+    override fun expressionReferences(resolver: DefinitionResolver) =
+        replacement.expression.resolvedFor(replacement.attribute, resolver)?.referencedAttributes() ?: emptySet()
 
     override fun toString() = "ChangeTreeToReplaceAssignment(toBeReplaced=$toBeReplaced replacement=$replacement)"
 }

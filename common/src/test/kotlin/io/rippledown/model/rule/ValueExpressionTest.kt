@@ -1,5 +1,6 @@
 package io.rippledown.model.rule
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
@@ -191,6 +192,49 @@ internal class ValueExpressionTest {
 
         // Then the referenced attributes are the aligned instances
         aligned.referencedAttributes().map { it.id }.toSet() shouldBe setOf(101, 102)
+    }
+
+    @Test
+    fun `a by-definition expression cannot be evaluated directly`() {
+        // Given the by-definition sentinel
+        // When it is evaluated without having been resolved
+        // Then evaluation fails: it must first be resolved to the attribute's stored definition
+        shouldThrow<IllegalStateException> {
+            ByDefinition.evaluate(case(weight to "93.0"))
+        }.message shouldBe "A ByDefinition expression must be resolved to a concrete expression before evaluation."
+    }
+
+    @Test
+    fun `a by-definition expression does not report referenced attributes directly`() {
+        // Given the by-definition sentinel
+        // When its referenced attributes are requested without it having been resolved
+        // Then the request fails: references come from the attribute's stored definition
+        shouldThrow<IllegalStateException> {
+            ByDefinition.referencedAttributes()
+        }.message shouldBe "A ByDefinition expression must be resolved to a concrete expression before its referenced attributes can be determined."
+    }
+
+    @Test
+    fun `a by-definition expression has a fixed text form`() {
+        ByDefinition.asText() shouldBe "by definition"
+    }
+
+    @Test
+    fun `a by-definition expression is unchanged by attribute alignment`() {
+        // Given the by-definition sentinel
+        // When attributes are aligned
+        // Then it is unchanged (it references no attributes itself)
+        ByDefinition.alignAttributes { error("Should not be called") } shouldBe ByDefinition
+    }
+
+    @Test
+    fun `a by-definition expression serializes`() {
+        // Given the by-definition sentinel as a ValueExpression
+        val byDefinition: ValueExpression = ByDefinition
+
+        // When it is serialized and deserialized
+        // Then it is unchanged
+        serializeDeserialize(byDefinition) shouldBe ByDefinition
     }
 
     @Test

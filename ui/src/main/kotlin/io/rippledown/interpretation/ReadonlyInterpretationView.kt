@@ -13,7 +13,6 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
-import io.rippledown.model.Conclusion
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
@@ -32,7 +31,6 @@ fun ReadonlyInterpretationView(
     modifier: Modifier,
     handler: ReadonlyInterpretationViewHandler
 ) {
-    val conclusionList = interpretation.conclusions().toList()
     var comments by remember {
         mutableStateOf(interpretation.renderedComments.map { it.text })
     }
@@ -60,7 +58,7 @@ fun ReadonlyInterpretationView(
             } else if (isOverDiffText && ruleConditions.isNotEmpty()) {
                 ConditionTooltip(ruleConditions)
             } else {
-                ToolTipForNonEmptyInterpretation(commentIndex, conclusionList, interpretation)
+                ToolTipForNonEmptyInterpretation(commentIndex, interpretation)
             }
         },
         content = {
@@ -117,11 +115,11 @@ fun UnresolvedVariableTooltip() {
 @Composable
 fun ToolTipForNonEmptyInterpretation(
     commentIndex: Int,
-    conclusionList: List<Conclusion>,
     interpretation: ViewableInterpretation
 ) {
-    val showToolTip = commentIndex != -1 && commentIndex < conclusionList.size
+    val renderedComments = interpretation.renderedComments
+    val showToolTip = commentIndex != -1 && commentIndex < renderedComments.size
     if (showToolTip) {
-        ConditionTooltip(interpretation.conditionsForConclusion(conclusionList[commentIndex]))
+        ConditionTooltip(renderedComments[commentIndex].conditions)
     }
 }

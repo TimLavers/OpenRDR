@@ -213,6 +213,89 @@ class AttributeManagerTest {
     }
 
     @Test
+    fun `a comment attribute is created with the auto-generated name C1`() {
+        // When a comment attribute is created without a name
+        val comment = attributeManager.createCommentAttribute()
+
+        // Then it is a COMMENT attribute named C1, in the manager and the store
+        comment.name shouldBe "C1"
+        comment.kind shouldBe AttributeKind.COMMENT
+        attributeManager.byName("C1") shouldBe comment
+        attributeStore.all() shouldBe setOf(comment)
+    }
+
+    @Test
+    fun `successive comment attributes are auto-named with increasing indexes`() {
+        // When several comment attributes are created
+        val c1 = attributeManager.createCommentAttribute()
+        val c2 = attributeManager.createCommentAttribute()
+        val c3 = attributeManager.createCommentAttribute()
+
+        // Then they are named C1, C2, C3
+        c1.name shouldBe "C1"
+        c2.name shouldBe "C2"
+        c3.name shouldBe "C3"
+    }
+
+    @Test
+    fun `auto-naming uses the smallest unused index`() {
+        // Given a comment attribute explicitly named C2
+        attributeManager.getOrCreate("C2", AttributeKind.COMMENT)
+
+        // When comment attributes are auto-named
+        val first = attributeManager.createCommentAttribute()
+        val second = attributeManager.createCommentAttribute()
+
+        // Then the gaps are filled first
+        first.name shouldBe "C1"
+        second.name shouldBe "C3"
+    }
+
+    @Test
+    fun `auto-naming skips names used by attributes of any kind`() {
+        // Given an external attribute named C1 and a derived attribute named C2
+        attributeManager.getOrCreate("C1")
+        attributeManager.getOrCreate("C2", AttributeKind.DERIVED)
+
+        // When a comment attribute is auto-named
+        val comment = attributeManager.createCommentAttribute()
+
+        // Then the used names are skipped
+        comment.name shouldBe "C3"
+    }
+
+    @Test
+    fun `auto-naming skips names used by existing attributes ignoring case`() {
+        // Given an external attribute named c1
+        attributeManager.getOrCreate("c1")
+
+        // When a comment attribute is auto-named
+        val comment = attributeManager.createCommentAttribute()
+
+        // Then the case-insensitive clash is avoided
+        comment.name shouldBe "C2"
+    }
+
+    @Test
+    fun `commentAttributes returns only the COMMENT attributes`() {
+        // Given attributes of each kind
+        attributeManager.getOrCreate("Glucose")
+        attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+        val c1 = attributeManager.createCommentAttribute()
+        val c2 = attributeManager.createCommentAttribute()
+
+        // When the comment attributes are requested
+        // Then only the COMMENT attributes are returned
+        attributeManager.commentAttributes() shouldBe setOf(c1, c2)
+    }
+
+    @Test
+    fun `commentAttributes is empty when there are none`() {
+        attributeManager.getOrCreate("Glucose")
+        attributeManager.commentAttributes() shouldBe emptySet()
+    }
+
+    @Test
     fun byName() {
         // Given an attribute
         val glucose = attributeManager.getOrCreate("Glucose")

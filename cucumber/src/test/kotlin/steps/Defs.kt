@@ -5,6 +5,7 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
 import io.cucumber.java.After
 import io.cucumber.java.Before
+import io.cucumber.java.BeforeStep
 import io.cucumber.java.Scenario
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
@@ -65,6 +66,16 @@ class Defs {
         saveServerLogsOnFailure(scenario)
         cleanup()
         println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
+    }
+
+    @BeforeStep
+    fun rateLimitStepDelay(scenario: Scenario) {
+        val delaySecs = scenario.sourceTagNames.firstNotNullOfOrNull { tag ->
+            Regex("rate_limit_(\\d+)s?").find(tag)?.groupValues?.get(1)?.toLongOrNull()
+        }
+        if (delaySecs != null) {
+            Thread.sleep(delaySecs * 1_000)
+        }
     }
 
     @After("@delay_after_cuke")
@@ -208,7 +219,7 @@ class Defs {
         val attributeNameToValue = mutableMapOf<String, String>()
         dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
         val received = labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
-        received.interpretation.conclusionTexts() shouldBe setOf(comment)
+        received.interpretation.commentTexts(received) shouldBe setOf(comment)
     }
 
     @Given("case {word} is provided with the following values, reference ranges and units:")

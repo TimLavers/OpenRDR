@@ -4,9 +4,11 @@ import com.google.genai.Chat
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
 import io.rippledown.llm.callWithTimeout
+import io.rippledown.llm.geminiApiCallCount
 import io.rippledown.llm.retry
 import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
+import java.util.concurrent.TimeoutException
 
 interface ConversationService {
     suspend fun startConversation(): String = ""
@@ -72,22 +74,37 @@ class Conversation(
      * re-sending the identical input would deterministically reproduce the empty turn, so the retry
      * appends an explicit nudge to vary the input and elicit a non-empty response.
      */
-    private fun sendMessageHandlingEmptyContent(message: String): GenerateContentResponse =
-        try {
-            callWithTimeout { chat.sendMessage(message) }
-        } catch (e: NoSuchElementException) {
-            logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
-            callWithTimeout { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+    private fun sendMessageHandlingEmptyContent(message: String): GenerateContentResponse {
+        var lastException: Exception? = null
+        repeat(MAX_TIMEOUT_RETRIES + 1) { attempt ->
+            try {
+                return callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage(message) }
+            } catch (e: NoSuchElementException) {
+                logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
+                return callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+            } catch (e: RuntimeException) {
+                if (e.cause !is TimeoutException) throw e
+                lastException = e
+                if (attempt < MAX_TIMEOUT_RETRIES) {
+                    val delayMs = TIMEOUT_RETRY_DELAY_MS * (attempt + 1)
+                    logger.warn("Gemini API call timed out (attempt ${attempt + 1} of $MAX_TIMEOUT_RETRIES); retrying in ${delayMs}ms")
+                    Thread.sleep(delayMs)
+                }
+            }
         }
+        throw lastException ?: RuntimeException("Unexpected: exhausted retries without exception")
+    }
 
     internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
+        logTokenCounts(response, "Turn")
         var currentResponse = usableOrNull(response)
         while (true) {
             val functionCalls = currentResponse?.functionCalls() ?: emptyList()
             if (functionCalls.isEmpty()) break
             val functionResults = functionCalls.map { executeFunction(it) }
-            currentResponse =
-                usableOrNull(sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}"))
+            val next = sendMessageHandlingEmptyContent("Function results: ${functionResults.joinToString(", ")}")
+            logTokenCounts(next, "Turn after function results")
+            currentResponse = usableOrNull(next)
         }
         val text = currentResponse?.text()?.stripEnclosingJson()
         if (text != null) {
@@ -126,14 +143,56 @@ class Conversation(
     }
 
     /**
-     * Logs input and output token counts from a response, or estimates if unavailable.
+     * Log the token counts for a completed turn.
+     *
+     * `prompt` grows with the conversation, so it shows how much history each
+     * turn is carrying; `candidates` is what the model actually generated, so a
+     * sudden jump there is the signature of a runaway generation. Logged for
+     * every turn so the trend up to a slow or hung call can be read off the log.
+     *
+     * Note this can only ever report on calls that returned - a call that hangs
+     * until it is abandoned produces no usage metadata at all.
      */
     private fun logTokenCounts(response: GenerateContentResponse, context: String) {
-        logger.info("$context - tokens: ${response.usageMetadata()}")
+        val usage = try {
+            response.usageMetadata().orElse(null)
+        } catch (e: Exception) {
+            logger.info("$context - tokens: unavailable (${e.message})")
+            return
+        }
+        if (usage == null) {
+            logger.info("$context - tokens: unavailable")
+            return
+        }
+        val prompt = usage.promptTokenCount().orElse(null)
+        val candidates = usage.candidatesTokenCount().orElse(null)
+        val total = usage.totalTokenCount().orElse(null)
+        val n = geminiApiCallCount.get()
+        logger.info("$context (API call #$n) - tokens: prompt=$prompt, candidates=$candidates, total=$total")
     }
 
     companion object {
+        /**
+         * Per-turn timeout for a chat send.
+         *
+         * A user is waiting on every one of these, so the cap is well below
+         * [callWithTimeout]'s batch-oriented default, for the same reason that
+         * `ReportService` caps its own interactive call. Turns normally complete
+         * in one to three seconds, so this is ample headroom: a call still
+         * running after 30s has hung rather than merely slowed, and waiting
+         * longer only delays telling the user so.
+         *
+         * Keeping it comfortably under any client-side wait also matters for
+         * diagnosis. With one retry the server's worst case is 30s + 5s + 30s
+         * = 65s; the client's chat-message timeout (90s) outlasts that so the
+         * server's own "AI unavailable" response reaches the user instead of
+         * the client masking it with a generic failure.
+         */
+        const val SEND_TIMEOUT_MS = 30_000L
+
         const val MAX_EMPTY_RESPONSE_RETRIES = 2
+        const val MAX_TIMEOUT_RETRIES = 1
+        const val TIMEOUT_RETRY_DELAY_MS = 5_000L
         const val CONTINUE_NUDGE = "Please continue with the appropriate response."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"

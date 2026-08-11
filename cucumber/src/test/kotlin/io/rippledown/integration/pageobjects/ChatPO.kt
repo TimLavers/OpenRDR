@@ -4,6 +4,8 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.chat.ChatTestHook.snapshot
+import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
+import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.renderedText
 import io.rippledown.voice.CHAT_MIC_BUTTON
@@ -240,6 +242,22 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
     fun numberOfChatMessages(): Int = snapshot().messageList.size
 
     fun messageList() = snapshot().messageList
+
+    /**
+     * The bot's most recent message if it reports a failure that the
+     * conversation cannot recover from - the AI being unavailable (e.g. a
+     * Gemini call that timed out) or a server-side error - or null otherwise.
+     *
+     * Waits use this to give up at once: neither message is ever followed by
+     * the text a wait is looking for, so continuing to poll only burns the
+     * timeout and then reports the wrong cause.
+     */
+    fun terminalFailureText(): String? {
+        val text = snapshot().mostRecentBotText ?: return null
+        val isTerminal = listOf(AI_UNAVAILABLE_MESSAGE, SYSTEM_ERROR_PREFIX)
+            .any { text.contains(it, ignoreCase = true) }
+        return if (isTerminal) text else null
+    }
 }
 
 

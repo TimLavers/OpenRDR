@@ -2,9 +2,12 @@ package io.rippledown.kb.chat
 
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
-import io.rippledown.model.Result
+import io.rippledown.model.*
+import io.rippledown.model.interpretationview.ViewableInterpretation
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.ByDefinition
+import io.rippledown.model.rule.CommentTemplate
+import io.rippledown.model.rule.RuleSummary
 import io.rippledown.utils.AttributeWithValue
 import io.rippledown.utils.createCaseWithInterpretation
 import io.rippledown.utils.createViewableCase
@@ -35,6 +38,26 @@ class KBChatServiceTest {
 
         // Then
         comments.forEach { systemPrompt shouldContain it }
+    }
+
+    @Test
+    fun `system instruction should contain comments given as comment-attribute assignments`() {
+        // Given a case whose raw interpretation holds an unresolved ByDefinition
+        // comment assignment, and whose viewable interpretation holds the
+        // resolved copy, as produced by KB.viewableCase
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val case = createCaseWithInterpretation("Test Case")
+        case.case.interpretation.add(RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition)))
+        val resolved = Interpretation(case.case.caseId).apply {
+            add(RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("Surf's up."))))
+        }
+        case.viewableInterpretation = ViewableInterpretation(resolved)
+
+        // When
+        val systemPrompt = KBChatService.systemPrompt(case)
+
+        // Then
+        systemPrompt shouldContain "Surf's up."
     }
 
     @Test

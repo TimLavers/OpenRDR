@@ -42,6 +42,7 @@ class RuleSessionManager(
 
     internal val currentDerivedValueChange: DerivedValueChange?
         get() = currentChange as? DerivedValueChange
+
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -63,7 +64,9 @@ class RuleSessionManager(
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         checkActionExpressionIsAcyclic(action)
         val alignedAction = action.alignWith(kb.conclusionManager)
-        ruleSession = RuleBuildingSession(kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases())
+        ruleSession = RuleBuildingSession(
+            kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases(), kb.definitionResolver
+        )
         logger.info("Rule session created")
         return cornerstoneStatus(null)
     }
@@ -72,19 +75,33 @@ class RuleSessionManager(
         viewableCase: ViewableCase,
         comment: String,
         variables: List<CommentVariable>
+    ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables)
+
+    /**
+     * Comments are comment attributes: adding one gets or creates the
+     * attribute whose definition is the comment's text, and builds a rule
+     * assigning it by definition. See "Phase 2 — comments become derived
+     * attributes" in documentation/design/repeat_inferencing.md.
+     */
+    internal fun startRuleSessionToAddComment(
+        case: RDRCase,
+        comment: String,
+        variables: List<CommentVariable> = emptyList()
     ): CornerstoneStatus {
-        val conclusion = kb.conclusionManager.getOrCreate(comment, variables)
-        currentChange = Addition(pendingText(conclusion))
-        val action = ChangeTreeToAddConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
+        val template = commentTemplate(comment, variables)
+        val attribute = commentAttributeFor(template)
+        currentChange = Addition(template.textWithVariableNames())
+        return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
 
-    override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus {
-        val conclusion = kb.conclusionManager.findByText(comment)
+    override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus =
+        startRuleSessionToRemoveComment(viewableCase.case, comment)
+
+    internal fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
+        val attribute = commentAttributeForText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentChange = Removal(renderedText(conclusion, viewableCase.case))
-        val action = ChangeTreeToRemoveConclusion(conclusion)
-        return startRuleSession(viewableCase.case, action)
+        currentChange = Removal(renderedComment(attribute, case))
+        return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
     }
 
     override fun startRuleSessionToReplaceComment(
@@ -92,18 +109,68 @@ class RuleSessionManager(
         replacedComment: String,
         replacementComment: String,
         variables: List<CommentVariable>
+    ): CornerstoneStatus =
+        startRuleSessionToReplaceComment(viewableCase.case, replacedComment, replacementComment, variables)
+
+    /**
+     * Each comment text has its own attribute, so the replacement is a new
+     * (or existing) attribute for the replacement text: the replacing rule
+     * assigns it, and leaf-most suppression retracts the original. See
+     * "Phase 2" in documentation/design/repeat_inferencing.md.
+     */
+    internal fun startRuleSessionToReplaceComment(
+        case: RDRCase,
+        replacedComment: String,
+        replacementComment: String,
+        variables: List<CommentVariable> = emptyList()
     ): CornerstoneStatus {
-        val replacedConclusion = kb.conclusionManager.findByText(replacedComment)
+        val replacedAttribute = commentAttributeForText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
-        val replacementConclusion = kb.conclusionManager.getOrCreate(replacementComment, variables)
-        currentChange = Replacement(
-            renderedText(replacedConclusion, viewableCase.case),
-            pendingText(replacementConclusion)
+        val replacementTemplate = commentTemplate(replacementComment, variables)
+        val replacementAttribute = commentAttributeFor(replacementTemplate)
+        currentChange =
+            Replacement(renderedComment(replacedAttribute, case), replacementTemplate.textWithVariableNames())
+        return startRuleSession(
+            case,
+            ChangeTreeToReplaceAssignment(
+                AssignValue(replacedAttribute, ByDefinition),
+                AssignValue(replacementAttribute, ByDefinition)
+            )
         )
-        val action = ChangeTreeToReplaceConclusion(replacedConclusion, replacementConclusion)
-        return startRuleSession(viewableCase.case, action)
     }
 
+    private fun commentTemplate(comment: String, variables: List<CommentVariable>) =
+        CommentTemplate(comment, variables.map { kb.attributeManager.getById(it.attributeId) })
+
+    /**
+     * The comment attribute whose definition is the given template,
+     * created if necessary.
+     */
+    private fun commentAttributeFor(template: CommentTemplate): Attribute =
+        kb.attributeManager.commentAttributes()
+            .firstOrNull { kb.derivedDefinitionManager.definitionFor(it.id) == template }
+            ?: kb.attributeManager.createCommentAttribute()
+                .also { kb.derivedDefinitionManager.store(it.id, template) }
+
+    /**
+     * The comment attribute whose definition has the given (internal-form)
+     * text, or null if none exists.
+     */
+    private fun commentAttributeForText(text: String): Attribute? =
+        kb.attributeManager.commentAttributes().firstOrNull {
+            (kb.derivedDefinitionManager.definitionFor(it.id) as? CommentTemplate)?.text == text
+        }
+
+    private fun renderedComment(attribute: Attribute, case: RDRCase): String =
+        (kb.derivedDefinitionManager.definitionFor(attribute.id) as? CommentTemplate)?.render(case)?.text ?: ""
+
+    /**
+     * Starts a session for a rule assigning the attribute by its definition:
+     * the expression is stored as the attribute's definition, and the rule
+     * simply points at the attribute, so that a later edit of the definition
+     * applies without any rule change. See
+     * documentation/design/editing_derived_attribute_definitions.md.
+     */
     fun startRuleSessionToAssignValue(
         case: RDRCase,
         attributeName: String,
@@ -115,13 +182,14 @@ class RuleSessionManager(
         }
         val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
         val expression = valueExpressionFor(expressionText)
-        val assignment = AssignValue(attribute, expression)
+        cycleForDefinition(attribute, expression)?.let {
+            error("This value cannot be assigned: ${cycleMessage(it)}.")
+        }
+        kb.derivedDefinitionManager.store(attribute.id, expression)
+        val assignment = AssignValue(attribute, ByDefinition)
         return startAssignmentSession(
             case,
-            DerivedValueAddition(
-                attributeName = attributeName,
-                formula = expression.asText()
-            ),
+            DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
             ChangeTreeToAddAssignment(assignment)
         )
     }
@@ -145,13 +213,29 @@ class RuleSessionManager(
         val replacement = AssignValue(toBeReplaced.attribute, replacementExpression)
         return startAssignmentSession(
             case,
-            DerivedValueReplacement(
-                attributeName = attributeName,
-                newFormula = replacementExpression.asText()
-            ),
+            DerivedValueReplacement(attributeName = attributeName, newFormula = replacementExpression.asText()),
             ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
         )
     }
+
+    override fun startRuleSessionToAssignValue(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        valueExpression: String
+    ): CornerstoneStatus = startRuleSessionToAssignValue(viewableCase.case, attributeName, valueExpression)
+
+    override fun startRuleSessionToRemoveAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String
+    ): CornerstoneStatus =
+        startRuleSessionToRemoveAssignment(viewableCase.case, attributeName)
+
+    override fun startRuleSessionToReplaceAssignment(
+        viewableCase: ViewableCase,
+        attributeName: String,
+        replacementValueExpression: String
+    ): CornerstoneStatus =
+        startRuleSessionToReplaceAssignment(viewableCase.case, attributeName, replacementValueExpression)
 
     /**
      * Starts a session that will change a derived attribute, previewing [change]
@@ -174,26 +258,8 @@ class RuleSessionManager(
         }
     }
 
-    override fun startRuleSessionToAssignValue(
-        viewableCase: ViewableCase,
-        attributeName: String,
-        valueExpression: String
-    ): CornerstoneStatus = startRuleSessionToAssignValue(viewableCase.case, attributeName, valueExpression)
-
-    override fun startRuleSessionToRemoveAssignment(
-        viewableCase: ViewableCase,
-        attributeName: String
-    ): CornerstoneStatus =
-        startRuleSessionToRemoveAssignment(viewableCase.case, attributeName)
-
-    override fun startRuleSessionToReplaceAssignment(
-        viewableCase: ViewableCase,
-        attributeName: String,
-        replacementValueExpression: String
-    ): CornerstoneStatus =
-        startRuleSessionToReplaceAssignment(viewableCase.case, attributeName, replacementValueExpression)
-
-    private fun dependencyGraph() = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all())
+    private fun dependencyGraph() =
+        DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), kb.definitionResolver)
 
     /**
      * The message explaining why the given condition cannot be added to the
@@ -214,6 +280,55 @@ class RuleSessionManager(
     private fun checkActionExpressionIsAcyclic(action: RuleTreeChange) {
         val cycle = dependencyGraph().cycleCreatedBy(action, null) ?: return
         error("This value cannot be assigned: ${cycleMessage(cycle)}.")
+    }
+
+    /**
+     * Edits the stored definition of a derived attribute in place — the
+     * comment-editing pattern applied to data attributes. Every ByDefinition
+     * rule picks up the change on the next interpretation; no rule is
+     * mutated and no cornerstone review is run. See
+     * documentation/design/editing_derived_attribute_definitions.md.
+     */
+    override fun editDerivedAttributeDefinition(attributeName: String, valueExpression: String): String {
+        check(ruleSession == null) { "Session already in progress." }
+        val attribute = attributeForName(attributeName)
+            ?: error("No attribute with name \"$attributeName\" exists.")
+        check(attribute.kind == AttributeKind.DERIVED) {
+            "\"${attribute.name}\" is not a derived attribute, so it does not have a definition to edit."
+        }
+        val newExpression = valueExpressionFor(valueExpression)
+        checkDefinitionEditIsAcyclic(attribute, newExpression)
+        val oldExpression = kb.derivedDefinitionManager.definitionFor(attribute.id)
+        kb.derivedDefinitionManager.store(attribute.id, newExpression)
+        return if (oldExpression == null) {
+            "Defined \"${attribute.name}\" as ${newExpression.asText()}."
+        } else {
+            "Changed the definition of \"${attribute.name}\" from ${oldExpression.asText()} to ${newExpression.asText()}."
+        }
+    }
+
+    /**
+     * Refuses a definition edit that would make the attribute depend on
+     * itself. The graph is built as if the edit had been made, so cycles
+     * through other by-definition rules are detected too.
+     */
+    internal fun checkDefinitionEditIsAcyclic(attribute: Attribute, newExpression: ValueExpression) {
+        val cycle = cycleForDefinition(attribute, newExpression) ?: return
+        error("This definition cannot be used: ${cycleMessage(cycle)}.")
+    }
+
+    /**
+     * The cycle that giving [attribute] the definition [newExpression] would
+     * create, or null if there would be none. The graph is built as if the
+     * definition were already stored.
+     */
+    private fun cycleForDefinition(attribute: Attribute, newExpression: ValueExpression): List<Attribute>? {
+        val editedResolver: DefinitionResolver = {
+            if (it.id == attribute.id) newExpression else kb.definitionResolver(it)
+        }
+        val graph = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), editedResolver)
+        val referenced = newExpression.referencedAttributes().filter { it.kind == AttributeKind.DERIVED }.toSet()
+        return graph.cycleCreatedBy(attribute, referenced)
     }
 
     private fun currentAssignmentFor(case: RDRCase, attributeName: String): AssignValue {
@@ -238,7 +353,7 @@ class RuleSessionManager(
         // that plain text like "diabetic" remains a literal. Formulas may
         // reference attributes that are not yet in the KB; those attributes are
         // created so the formula can be evaluated against future cases.
-        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()\^]"""))
+        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()]"""))
         val parsed = if (hasArithmeticOperators) {
             val attributeFor: (String) -> Attribute = { name ->
                 kb.attributeManager.all()
@@ -256,14 +371,6 @@ class RuleSessionManager(
      */
     private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
         conclusion.render(case) { id -> attributeById(id) }.text
-
-    /**
-     * The text of a comment that is yet to be given by a rule, with each variable shown as
-     * `{attributeName}`. Variables are deliberately not evaluated: the comment is a pending change,
-     * so it is the template, not a value for the current case, that the user is confirming.
-     */
-    private fun pendingText(conclusion: Conclusion): String =
-        conclusion.textWithAttributeNames { id -> attributeById(id)?.name ?: "unknown" }
 
     override fun attributeById(id: Int): Attribute? =
         runCatching { kb.attributeManager.getById(id) }.getOrNull()
@@ -397,13 +504,14 @@ class RuleSessionManager(
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible to the suggestion generators. See step 8a of
         // documentation/design/repeat_inferencing.md.
-        val materialisedCase = kb.ruleTree.materialise(case)
+        val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
         val ctx = SuggestionContext(
             sessionCase = materialisedCase,
             attributes = kb.attributeManager.all(),
             action = ruleSession?.action,
             cornerstones = ruleSession?.cornerstoneCases().orEmpty(),
             ruleTree = kb.ruleTree,
+            definitionResolver = kb.definitionResolver,
         )
         return ConditionList(ConditionSuggester(ctx).suggestions())
     }
@@ -499,18 +607,15 @@ class RuleSessionManager(
         //if no cornerstone has been selected yet, or the selected cornerstone is no longer in the list of cornerstones, return the first one
         var index = 0
         if (currentCornerstone != null) {
-            index = cornerstones.indexOf(currentCornerstone.case)
+            // Match by case id: the selected cornerstone is a viewable copy with
+            // materialised derived values, so whole-case equality does not hold
+            // against the raw cornerstone cases.
+            index = cornerstones.indexOfFirst { it.caseId == currentCornerstone.case.caseId }
         }
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(
-            viewableCornerstone,
-            index,
-            cornerstones.size,
-            currentChange,
-            conditionTexts
-        )
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentChange, conditionTexts)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
@@ -524,7 +629,7 @@ class RuleSessionManager(
 
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible when validating the typed expression.
-        val materialisedCase = kb.ruleTree.materialise(case)
+        val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
         //Only return the condition if non-null and holds for the case
         val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {
@@ -572,17 +677,13 @@ class RuleSessionManager(
         currentChange = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
-        return when (diff) {
-            is Addition -> startRuleSession(case, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(diff.right())))
-            is Removal -> startRuleSession(case, ChangeTreeToRemoveConclusion(kb.conclusionManager.getOrCreate(diff.left())))
-            is Replacement -> startRuleSession(
-                case,
-                ChangeTreeToReplaceConclusion(
-                    kb.conclusionManager.getOrCreate(diff.left()),
-                    kb.conclusionManager.getOrCreate(diff.right())
-                )
-            )
+        val status = when (diff) {
+            is Addition -> startRuleSessionToAddComment(case, diff.right())
+            is Removal -> startRuleSessionToRemoveComment(case, diff.left())
+            is Replacement -> startRuleSessionToReplaceComment(case, diff.left(), diff.right())
         }
+        currentChange = diff
+        return status
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
@@ -597,11 +698,11 @@ class RuleSessionManager(
         }
         commitCurrentRuleSession()
         logger.info("rule session committed")
-        val updatedInterpretation = kb.interpret(case.case)
-        case.viewableInterpretation =
-            kb.interpretationViewManager.viewableInterpretation(updatedInterpretation, case.case)
-        logger.info("Updated interpretation after committing the rule: $updatedInterpretation")
-        return case
+        // Rebuild the viewable case so that the new rule's effects are shown,
+        // with by-definition assignments resolved for display.
+        val updated = kb.viewableCase(case.case)
+        logger.info("Updated interpretation after committing the rule: ${updated.viewableInterpretation}")
+        return updated
     }
 
     /**

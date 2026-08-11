@@ -9,7 +9,6 @@ import io.mockk.mockk
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.*
-import io.rippledown.kb.chat.ChatManager.Companion.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE

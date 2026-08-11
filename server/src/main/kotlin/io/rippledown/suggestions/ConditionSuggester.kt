@@ -18,6 +18,7 @@ import io.rippledown.model.condition.structural.IsAbsentFromCase
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.condition.structural.IsSingleEpisodeCase
 import io.rippledown.model.rule.DerivedAttributeDependencyGraph
+import io.rippledown.suggestions.scorer.targetAttributeId
 import io.rippledown.suggestions.scorer.targetConclusionId
 
 typealias SuggestionFunction = (Attribute, Result?) -> SuggestedCondition?
@@ -48,7 +49,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      */
     private fun pruneCycleCreating(candidates: Collection<SuggestedCondition>): Collection<SuggestedCondition> {
         if (ctx.action?.assignedAttribute() == null) return candidates
-        val graph = DerivedAttributeDependencyGraph(ctx.ruleTree, ctx.attributes)
+        val graph = DerivedAttributeDependencyGraph(ctx.ruleTree, ctx.attributes, ctx.definitionResolver)
         return candidates.filter { graph.cycleCreatedBy(ctx.action, it.initialSuggestion()) == null }
     }
 
@@ -72,12 +73,15 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
     private fun historicalConditionSuggestions(
         alreadyGenerated: Collection<SuggestedCondition>,
     ): List<SuggestedCondition> {
-        val targetConclusionId = ctx.action?.targetConclusionId() ?: return emptyList()
+        val targetConclusionId = ctx.action?.targetConclusionId()
+        val targetAttrId = ctx.action?.targetAttributeId()
+        if (targetConclusionId == null && targetAttrId == null) return emptyList()
         val existing = alreadyGenerated.map { it.initialSuggestion() }
         val seen = mutableListOf<Condition>()
         val results = mutableListOf<SuggestedCondition>()
         ctx.ruleTree.rulesMatching { rule ->
-            rule.conclusion?.id == targetConclusionId
+            (targetConclusionId != null && rule.conclusion?.id == targetConclusionId) ||
+                    (targetAttrId != null && rule.assignment?.attribute?.id == targetAttrId)
         }.forEach { rule ->
             rule.conditions.forEach { condition ->
                 if (!condition.holds(sessionCase)) return@forEach

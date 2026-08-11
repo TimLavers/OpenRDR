@@ -165,6 +165,76 @@ internal class DerivedAttributeDependencyGraphTest {
     }
 
     @Test
+    fun `a by-definition rule's dependencies come from the stored definition`() {
+        // Given a rule assigning A by definition, whose stored definition references B
+        val rule = ruleFactory.createRuleAndAddToParent(
+            tree.root, AssignValue(a, ByDefinition), emptySet()
+        )
+        tree.root.addChild(rule)
+        val resolver: DefinitionResolver = { attribute ->
+            if (attribute == a) Formula(AttributeValue(b)) else null
+        }
+        val graph = DerivedAttributeDependencyGraph(tree, setOf(glucose, a, b, c), resolver)
+
+        // Then an assignment of B conditioned on A would create a cycle
+        graph.cycleCreatedBy(b, setOf(a)) shouldBe listOf(b, a, b)
+    }
+
+    @Test
+    fun `a by-definition rule with no stored definition contributes no expression dependencies`() {
+        // Given a rule assigning A by definition, with no stored definition
+        val rule = ruleFactory.createRuleAndAddToParent(
+            tree.root, AssignValue(a, ByDefinition), emptySet()
+        )
+        tree.root.addChild(rule)
+
+        // Then the graph builds without error and there is no dependency of A on B
+        graph().cycleCreatedBy(b, setOf(a)).shouldBeNull()
+    }
+
+    @Test
+    fun `an action assigning by definition takes its references from the resolver`() {
+        // Given A depends on B through a condition
+        assignmentRule(a, isPresent(b, nextConditionId++))
+
+        // When an action assigns B by definition, with a stored definition referencing A
+        val action = ChangeTreeToAddAssignment(AssignValue(b, ByDefinition))
+        val resolver: DefinitionResolver = { attribute ->
+            if (attribute == b) Formula(AttributeValue(a)) else null
+        }
+
+        // Then the action creates a cycle, and without a definition it does not
+        DerivedAttributeDependencyGraph(tree, setOf(glucose, a, b, c), resolver)
+            .cycleCreatedBy(action, null) shouldBe listOf(b, a, b)
+        graph().cycleCreatedBy(action, null).shouldBeNull()
+    }
+
+    @Test
+    fun `cycleThrough detects a cycle introduced by a definition edit`() {
+        // Given a rule assigning A by definition, and a rule assigning B conditioned on A
+        val byDefinitionRule = ruleFactory.createRuleAndAddToParent(
+            tree.root, AssignValue(a, ByDefinition), emptySet()
+        )
+        tree.root.addChild(byDefinitionRule)
+        assignmentRule(b, isPresent(a, nextConditionId++))
+
+        // When A's definition is edited to reference B, the graph built with the
+        // edited resolver has a cycle through A
+        val editedResolver: DefinitionResolver = { attribute ->
+            if (attribute == a) Formula(AttributeValue(b)) else null
+        }
+        DerivedAttributeDependencyGraph(tree, setOf(glucose, a, b, c), editedResolver)
+            .cycleThrough(a) shouldBe listOf(a, b, a)
+
+        // And a harmless edit has no cycle
+        val harmlessResolver: DefinitionResolver = { attribute ->
+            if (attribute == a) Formula(AttributeValue(glucose)) else null
+        }
+        DerivedAttributeDependencyGraph(tree, setOf(glucose, a, b, c), harmlessResolver)
+            .cycleThrough(a).shouldBeNull()
+    }
+
+    @Test
     fun `cycle message names the cycle`() {
         cycleMessage(listOf(a, b, a)) shouldBe "it would make \"A\" depend on itself (A → B → A)"
     }

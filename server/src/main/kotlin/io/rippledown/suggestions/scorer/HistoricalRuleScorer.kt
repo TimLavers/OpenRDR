@@ -2,10 +2,7 @@ package io.rippledown.suggestions.scorer
 
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.SuggestedCondition
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
-import io.rippledown.model.rule.RuleTreeChange
+import io.rippledown.model.rule.*
 import io.rippledown.suggestions.SuggestionContext
 
 /**
@@ -53,9 +50,12 @@ internal class HistoricalRuleScorer(
      * conditions inherited along the path — those are Phase 3 territory).
      */
     private fun computeHistoricalConditions(): List<List<Condition>> {
-        val targetConclusionId = ctx.action?.targetConclusionId() ?: return emptyList()
+        val targetConclusionId = ctx.action?.targetConclusionId()
+        val targetAttrId = ctx.action?.targetAttributeId()
+        if (targetConclusionId == null && targetAttrId == null) return emptyList()
         return ctx.ruleTree.rulesMatching { rule ->
-            rule.conclusion?.id == targetConclusionId
+            (targetConclusionId != null && rule.conclusion?.id == targetConclusionId) ||
+                    (targetAttrId != null && rule.assignment?.attribute?.id == targetAttrId)
         }.map { it.conditions.toList() }
     }
 }
@@ -65,10 +65,26 @@ internal class HistoricalRuleScorer(
  * reusing). Add / Replace both resolve to the comment being *added* to the
  * case; Remove resolves to the comment being removed so we surface the
  * conditions that previously gated it in.
+ *
+ * Returns null for assignment-based actions — those use
+ * [targetAttributeId] instead, since comments are now comment attributes.
  */
 internal fun RuleTreeChange.targetConclusionId(): Int? = when (this) {
     is ChangeTreeToAddConclusion -> toBeAdded.id
     is ChangeTreeToReplaceConclusion -> replacement.id
     is ChangeTreeToRemoveConclusion -> toBeRemoved.id
+    else -> null
+}
+
+/**
+ * The comment-attribute id this action is targeting. For Add it is the
+ * attribute being assigned; for Replace it is the *replacement* attribute
+ * (the new comment); for Remove it is the attribute being retracted. Returns
+ * null for conclusion-based actions.
+ */
+internal fun RuleTreeChange.targetAttributeId(): Int? = when (this) {
+    is ChangeTreeToAddAssignment -> toBeAdded.attribute.id
+    is ChangeTreeToReplaceAssignment -> replacement.attribute.id
+    is ChangeTreeToRemoveAssignment -> toBeRemoved.attribute.id
     else -> null
 }

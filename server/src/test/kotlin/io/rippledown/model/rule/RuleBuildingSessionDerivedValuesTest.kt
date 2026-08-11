@@ -64,6 +64,30 @@ internal class RuleBuildingSessionDerivedValuesTest {
     }
 
     @Test
+    fun `a condition on a by-definition derived value can be added when a resolver is supplied`() {
+        // Given a tree whose assignment rule gives the derived value by definition
+        tree = RuleTree()
+        val assigning = Rule(
+            1, null, null,
+            setOf(greaterThanOrEqualTo(100, glucose, 11.0)), mutableSetOf(),
+            AssignValue(diabetesStatus, ByDefinition)
+        )
+        tree.root.addChild(assigning)
+        val resolver: DefinitionResolver = { attribute ->
+            if (attribute == diabetesStatus) Literal("diabetic") else null
+        }
+
+        // When a session with the resolver adds a condition on the derived value
+        val case = case("A", "12.0")
+        val session =
+            RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddConclusion(advice), listOf(), resolver)
+        session.addCondition(isCondition(200, diabetesStatus, "diabetic"))
+
+        // Then it is accepted
+        session.conditions shouldBe mutableSetOf(isCondition(200, diabetesStatus, "diabetic"))
+    }
+
+    @Test
     fun `conditions on derived values are evaluated against materialised cornerstones`() {
         // Given a session with two conflicting cornerstones, one of which
         // is assigned the derived value by the tree

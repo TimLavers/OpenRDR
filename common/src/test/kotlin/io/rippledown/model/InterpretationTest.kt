@@ -5,9 +5,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.isCondition
-import io.rippledown.model.rule.AssignValue
-import io.rippledown.model.rule.Literal
-import io.rippledown.model.rule.Rule
+import io.rippledown.model.rule.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -306,6 +304,50 @@ class InterpretationTest {
     }
 
     @Test
+    fun toCommentsShouldIncludeCommentAttributeAssignments() {
+        // Given an interpretation with a literal comment assignment and a template comment assignment
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val c2 = Attribute(11, "C2", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("Plain comment.")))
+        )
+        interpretation.add(
+            RuleSummary(
+                id = 2,
+                assignment = AssignValue(c2, CommentTemplate("Wave is " + VARIABLE_TOKEN, listOf(wave)))
+            )
+        )
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+
+        // When the comments are produced for the LLM
+        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case))
+
+        // Then both comments appear, with template variables in {attributeName} format
+        comments shouldBe setOf("Plain comment.", "Wave is {Wave}")
+    }
+
+    @Test
+    fun toCommentsShouldOmitUnresolvedAndNonCommentAssignments() {
+        // Given an unresolved ByDefinition comment assignment and a derived-value assignment
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val bmi = Attribute(11, "BMI", AttributeKind.DERIVED)
+        interpretation.add(RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition)))
+        interpretation.add(RuleSummary(id = 2, assignment = AssignValue(bmi, Literal("25"))))
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        // When the comments are produced for the LLM
+        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case))
+
+        // Then neither assignment contributes a comment
+        comments shouldBe emptySet()
+    }
+
+    @Test
     fun `conditionsForAssignment returns condition texts for a rule that assigned a value`() {
         // Given an interpretation with a rule that assigns a derived value
         val glucose = Attribute(attributeId++, "Glucose", AttributeKind.EXTERNAL)
@@ -382,5 +424,202 @@ class InterpretationTest {
     private fun checkSingleConclusion(interpretation: Interpretation, conclusion: Conclusion) {
         interpretation.conclusions().size shouldBe 1
         interpretation.conclusions() shouldContain conclusion
+    }
+
+    // -----------------------------------------------------------------
+    // commentTexts()
+    // -----------------------------------------------------------------
+
+    @Test
+    fun `commentTexts returns empty set for empty interpretation`() {
+        val interpretation = Interpretation(caseId)
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe emptySet()
+    }
+
+    @Test
+    fun `commentTexts returns plain conclusion text`() {
+        val interpretation = Interpretation(caseId)
+        val conclusion = Conclusion(1, "Normal glucose results.")
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("Normal glucose results.")
+    }
+
+    @Test
+    fun `commentTexts returns conclusion text with variables in attributeName format`() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val sun = Attribute(2, "Sun")
+        val template = "The wave quality is " + VARIABLE_TOKEN + " and the air temperature is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
+        val conclusion = Conclusion(1, template, variables)
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+            addValue(sun, 0, "hot")
+        }.build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("The wave quality is {Wave} and the air temperature is {Sun}")
+    }
+
+    @Test
+    fun `commentTexts resolves variable names via attributeById when absent from case`() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val sun = Attribute(2, "Sun")
+        val template = "The wave is " + VARIABLE_TOKEN + " and the sun is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
+        val conclusion = Conclusion(1, template, variables)
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+        val attributeById = { id: Int -> listOf(wave, sun).find { it.id == id } }
+
+        interpretation.commentTexts(case, attributeById) shouldBe setOf("The wave is {Wave} and the sun is {Sun}")
+    }
+
+    @Test
+    fun `commentTexts falls back to unknown when attribute cannot be resolved`() {
+        val interpretation = Interpretation(caseId)
+        val template = "The sun is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(99))
+        val conclusion = Conclusion(1, template, variables)
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("The sun is {unknown}")
+    }
+
+    @Test
+    fun `commentTexts returns CommentTemplate assignment text`() {
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("Plain comment.")))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("Plain comment.")
+    }
+
+    @Test
+    fun `commentTexts returns CommentTemplate assignment with variables in attributeName format`() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(
+                id = 1,
+                assignment = AssignValue(c1, CommentTemplate("Wave is " + VARIABLE_TOKEN, listOf(wave)))
+            )
+        )
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("Wave is {Wave}")
+    }
+
+    @Test
+    fun `commentTexts returns Literal assignment value`() {
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(c1, Literal("A literal comment.")))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("A literal comment.")
+    }
+
+    @Test
+    fun `commentTexts omits unresolved ByDefinition comment assignments`() {
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe emptySet()
+    }
+
+    @Test
+    fun `commentTexts excludes non-comment assignments`() {
+        val interpretation = Interpretation(caseId)
+        val bmi = Attribute(11, "BMI", AttributeKind.DERIVED)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(bmi, Literal("25")))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe emptySet()
+    }
+
+    @Test
+    fun `commentTexts returns both conclusion texts and comment assignment texts`() {
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(Rule(0, null, Conclusion(1, "From conclusion"), emptySet()))
+        interpretation.add(
+            RuleSummary(id = 2, assignment = AssignValue(c1, CommentTemplate("From assignment")))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("From conclusion", "From assignment")
+    }
+
+    @Test
+    fun `commentTexts returns multiple comment assignments sorted by attribute id`() {
+        val interpretation = Interpretation(caseId)
+        val c2 = Attribute(20, "C2", AttributeKind.COMMENT)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(
+            RuleSummary(id = 1, assignment = AssignValue(c2, CommentTemplate("Second comment")))
+        )
+        interpretation.add(
+            RuleSummary(id = 2, assignment = AssignValue(c1, CommentTemplate("First comment")))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("First comment", "Second comment")
+    }
+
+    @Test
+    fun `commentTexts deduplicates identical texts from conclusion and assignment`() {
+        val interpretation = Interpretation(caseId)
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        interpretation.add(Rule(0, null, Conclusion(1, "Same text"), emptySet()))
+        interpretation.add(
+            RuleSummary(id = 2, assignment = AssignValue(c1, CommentTemplate("Same text")))
+        )
+        val case = RDRCaseBuilder().build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("Same text")
+    }
+
+    @Test
+    fun `commentTexts handles mixed conclusions with variables and comment assignments`() {
+        val interpretation = Interpretation(caseId)
+        val wave = Attribute(1, "Wave")
+        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+        val conclusion = Conclusion(1, "First comment")
+        val template = "Wave is " + VARIABLE_TOKEN
+        val variables = listOf(CommentVariable(wave.id))
+        val conclusion2 = Conclusion(2, template, variables)
+        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        interpretation.add(Rule(1, null, conclusion2, emptySet()))
+        interpretation.add(
+            RuleSummary(id = 3, assignment = AssignValue(c1, CommentTemplate("Third comment")))
+        )
+        val case = RDRCaseBuilder().apply {
+            addValue(wave, 0, "excellent")
+        }.build("Test", 1)
+
+        interpretation.commentTexts(case) shouldBe setOf("First comment", "Wave is {Wave}", "Third comment")
     }
 }

@@ -30,4 +30,15 @@ class InMemoryRuleStore: RuleStore {
     override fun removeById(ruleId: Int) {
         rules.removeIf { it.id == ruleId }
     }
+
+    override fun update(persistentRule: PersistentRule) {
+        require(persistentRule.id != null) {
+            "Cannot update a rule that has no id."
+        }
+        require(rules.any { it.id == persistentRule.id }) {
+            "Cannot update a rule that is not in the store."
+        }
+        rules.removeIf { it.id == persistentRule.id }
+        rules.add(persistentRule)
+    }
 }

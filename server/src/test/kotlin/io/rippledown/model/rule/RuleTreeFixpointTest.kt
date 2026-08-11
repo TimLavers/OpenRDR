@@ -228,6 +228,70 @@ internal class RuleTreeFixpointTest {
     }
 
     @Test
+    fun `a by-definition assignment resolves against the stored definition`() {
+        // Given an unconditional rule assigning BMI by definition, and a resolver holding the BMI formula
+        val tree = RuleTree()
+        tree.withRule(assignment = AssignValue(bmi, ByDefinition))
+        val resolver: DefinitionResolver = { attribute -> if (attribute == bmi) bmiFormula() else null }
+
+        // When the case is materialised with the resolver
+        val materialised = tree.materialise(case(weight to "93.0", height to "1.8"), resolver)
+
+        // Then the definition's value is assigned
+        materialised.latestValue(bmi) shouldBe "28.7"
+    }
+
+    @Test
+    fun `a by-definition assignment with no stored definition assigns nothing`() {
+        // Given a rule assigning BMI by definition, but no definition for it
+        val tree = RuleTree()
+        tree.withRule(assignment = AssignValue(bmi, ByDefinition))
+
+        // When the case is materialised with a resolver that has no definition
+        val materialised = tree.materialise(case(weight to "93.0", height to "1.8")) { null }
+
+        // Then no assignment is made and no error is thrown
+        materialised.latestValue(bmi).shouldBeNull()
+        materialised.attributes.contains(bmi) shouldBe false
+    }
+
+    @Test
+    fun `editing the definition changes the assigned value on re-interpretation`() {
+        // Given a rule assigning BMI by definition
+        val tree = RuleTree()
+        tree.withRule(assignment = AssignValue(bmi, ByDefinition))
+        val case = case(weight to "93.0", height to "1.8")
+
+        // When the case is materialised before and after the definition is edited
+        val before = tree.materialise(case) { bmiFormula() }
+        val editedDefinition = Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0)))
+        val after = tree.materialise(case) { editedDefinition }
+
+        // Then the value reflects the edited definition, with no rule change
+        before.latestValue(bmi) shouldBe "28.7"
+        after.latestValue(bmi) shouldBe "186"
+    }
+
+    @Test
+    fun `a concrete override in a child rule beats the by-definition parent`() {
+        // Given a by-definition rule with a conditioned child carrying a concrete override
+        val tree = RuleTree()
+        val byDefinitionRule = tree.withRule(assignment = AssignValue(bmi, ByDefinition))
+        val override = AssignValue(bmi, Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0))))
+        val child = Rule(
+            nextRuleId++, null, null,
+            setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(), override
+        )
+        byDefinitionRule.addChild(child)
+
+        // When a case satisfying the child's condition is materialised
+        val materialised = tree.materialise(case(weight to "93.0", height to "1.8", glucose to "12.0")) { bmiFormula() }
+
+        // Then the leaf-most rule's concrete expression wins over the definition
+        materialised.latestValue(bmi) shouldBe "186"
+    }
+
+    @Test
     fun `interpretation is idempotent`() {
         // Given a tree with chained assignment rules
         val tree = RuleTree()
