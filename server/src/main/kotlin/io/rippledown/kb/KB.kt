@@ -27,8 +27,7 @@ class KB(persistentKB: PersistentKB) {
      */
     val definitionResolver: DefinitionResolver = { attribute -> derivedDefinitionManager.definitionFor(attribute.id) }
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    val interpretationViewManager =
-        InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager, attributeManager)
+    val interpretationViewManager = InterpretationViewManager(attributeManager)
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
     internal val ruleManager =
         RuleManager(conclusionManager, conditionManager, attributeManager, persistentKB.ruleStore())

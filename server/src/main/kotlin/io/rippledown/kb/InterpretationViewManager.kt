@@ -3,24 +3,27 @@ package io.rippledown.kb
 import io.rippledown.model.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
-import io.rippledown.persistence.OrderStore
 
 interface ConclusionProvider : EntityProvider<Conclusion> {
     fun getOrCreate(text: String, variables: List<CommentVariable>): Conclusion
 }
 
+/**
+ * Comment ordering is not significant (resolved decision 4 of
+ * documentation/design/repeat_inferencing.md), so comments are shown in
+ * id order, which merely makes a case's report deterministic. The
+ * conclusions of a knowledge base that has not yet been converted to
+ * comment attributes are shown ahead of any assignments.
+ */
 class InterpretationViewManager(
-    conclusionOrderStore: OrderStore,
-    conclusionProvider: ConclusionProvider,
     private val attributeProvider: EntityProvider<io.rippledown.model.Attribute>
-) :
-    OrderedEntityManager<Conclusion>(conclusionOrderStore, conclusionProvider) {
+) {
 
     fun viewableInterpretation(interpretation: Interpretation, case: RDRCase): ViewableInterpretation {
         require(interpretation.caseId.id != null) {
             "Cannot create a viewable interpretation if the case does not have an id."
         }
-        val orderedConclusions = inOrder(interpretation.conclusions())
+        val orderedConclusions = interpretation.conclusions().sortedBy { it.id }
         val renderedFromConclusions = orderedConclusions.map { conclusion ->
             conclusion.render(case) { id ->
                 runCatching { attributeProvider.getById(id) }.getOrNull()
@@ -40,8 +43,7 @@ class InterpretationViewManager(
 
     /**
      * The comment-attribute assignments in the interpretation, in
-     * attribute id order (comment ordering is not significant; this makes
-     * the report deterministic). An unresolved ByDefinition assignment
+     * attribute id order. An unresolved ByDefinition assignment
      * contributes no comment, matching interpretation, where a missing
      * definition makes no assignment. See "Phase 2 — comments become
      * derived attributes" in documentation/design/repeat_inferencing.md.

@@ -598,8 +598,11 @@ leaving `AssignConclusion` in place until step 16.
     to be backed by comment-attribute assignments rather than conclusions.
     Remove the conclusion ordering machinery — `conclusionOrderStore()` on
     `PersistentKB`, `PostgresConclusionOrderStore`, and the
-    `OrderedEntityManager` base of `InterpretationViewManager` (resolved
-    decision 4: ordering is not significant). *(Resolved 2 Aug 2026: one comment attribute per comment text.)*
+    `OrderedEntityManager` base of `InterpretationViewManager` (resolved decision 4: ordering is not significant). *(
+    Done: comments are shown in id order — conclusions, which only a KB not yet converted has, ahead of assignments.
+    `OrderedEntityManager` remains, as attribute ordering in the case view is significant.
+    `DROP TABLE conclusion_indexes;` joins the documented one-offs of step 13.)* *(Resolved 2 Aug 2026: one comment
+    attribute per comment text.)*
     "Replace this comment with X" mints a new comment attribute for X:
     the replacing rule assigns the new attribute, and leaf-most suppression retracts the parent's — one rule, no
     explicit retraction. This preserves the invariant that a comment attribute's definition is its text, so a future

@@ -7,8 +7,6 @@ import io.mockk.mockk
 import io.rippledown.model.*
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
-import io.rippledown.persistence.inmemory.InMemoryConclusionStore
-import io.rippledown.persistence.inmemory.InMemoryOrderStore
 import io.rippledown.persistence.inmemory.InMemoryVerifiedTextStore
 import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
@@ -20,37 +18,29 @@ class InterpretationViewManagerTest {
 
     @BeforeTest
     fun init() {
-        val conclusionManager = ConclusionManager(InMemoryConclusionStore())
         val attributeManager = AttributeManager(InMemoryAttributeStore())
-        val orderStore = InMemoryOrderStore()
         verifiedTextStore = InMemoryVerifiedTextStore()
-        manager = InterpretationViewManager(orderStore, conclusionManager, attributeManager)
+        manager = InterpretationViewManager(attributeManager)
     }
 
     @Test
-    fun `should be no ordering when the interpretation view manager is created from an empty conclusion manager`() {
-        manager.allInOrder() shouldBe emptyList()
-    }
-
-    @Test
-    fun `should set the text given by rules according to the conclusion ordering`() {
-        //Given
+    fun `conclusions are shown in id order`() {
+        //Given conclusions whose ids are not the order they are held in
         val conclusion1 = Conclusion(1, "a")
         val conclusion2 = Conclusion(2, "b")
         val conclusion3 = Conclusion(3, "c")
         val interpretation = mockk<Interpretation>()
         val case = mockk<RDRCase>()
-        every { interpretation.conclusions() } returns setOf(conclusion1, conclusion2, conclusion3)
+        every { interpretation.conclusions() } returns setOf(conclusion3, conclusion1, conclusion2)
         every { interpretation.assignments() } returns emptySet()
         every { interpretation.conditionsForConclusion(any()) } returns emptyList()
         every { interpretation.caseId } returns CaseId(42, "Hitch")
-        manager.insert(listOf(conclusion3, conclusion1, conclusion2))
 
         //When
         val viewableInterpretation = manager.viewableInterpretation(interpretation, case)
 
         //Then
-        viewableInterpretation.textGivenByRules shouldBe "c a b"
+        viewableInterpretation.textGivenByRules shouldBe "a b c"
     }
 
     @Test
@@ -66,7 +56,6 @@ class InterpretationViewManagerTest {
         every { interpretation.assignments() } returns emptySet()
         every { interpretation.conditionsForConclusion(any()) } returns emptyList()
         every { interpretation.caseId } returns CaseId(42, "Hitch")
-        manager.insert(listOf(conclusion))
 
         //When
         val viewableInterpretation = manager.viewableInterpretation(interpretation, case)
@@ -118,10 +107,9 @@ class InterpretationViewManagerTest {
     }
 
     @Test
-    fun `comment assignments follow the ordered conclusions`() {
+    fun `comment assignments follow the conclusions`() {
         //Given an interpretation with a conclusion and a comment assignment
         val conclusion = Conclusion(1, "From a conclusion.")
-        manager.insert(listOf(conclusion))
         val interpretation = interpretation(
             RuleSummary(id = 1, conclusion = conclusion),
             RuleSummary(id = 2, assignment = AssignValue(c2, CommentTemplate("From an assignment.")))
@@ -205,7 +193,6 @@ class InterpretationViewManagerTest {
     fun `a rendered comment from a conclusion carries the conditions of the rule that gave it`() {
         //Given a conclusion given by a rule with conditions
         val conclusion = Conclusion(1, "From a conclusion.")
-        manager.insert(listOf(conclusion))
         val conditions = listOf("Glucose is high")
         val interpretation = interpretation(
             RuleSummary(id = 1, conclusion = conclusion, conditionTextsFromRoot = conditions)
