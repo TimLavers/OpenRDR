@@ -1,7 +1,7 @@
 package io.rippledown.model.rule.dsl
 
-import io.rippledown.kb.ConclusionProvider
 import io.rippledown.model.Attribute
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.ConditionFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.containsText
@@ -9,38 +9,39 @@ import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.RuleTree
 import kotlin.random.Random
 
-fun ruleTree(conclusionFactory: ConclusionProvider, init: AbstractRuleTemplate.() -> Unit): RootTemplate {
-    val n = RootTemplate(conclusionFactory)
+fun ruleTree(commentFactory: CommentFactory, init: AbstractRuleTemplate.() -> Unit): RootTemplate {
+    val n = RootTemplate(commentFactory)
     n.init()
     return n
 }
 
-open class AbstractRuleTemplate(val conclusionFactory: ConclusionProvider) {
+open class AbstractRuleTemplate(val commentFactory: CommentFactory) {
 
-    protected lateinit var conclusionText: String
+    protected lateinit var commentText: String
     var id = Random.nextInt()
     protected var isStopping: Boolean = false
     protected val conditions = mutableSetOf<Condition>()
     protected val childRules = mutableListOf<RuleTemplate>()
 
     open fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
-        val r = RuleTemplate(conclusionFactory)
+        val r = RuleTemplate(commentFactory)
         r.init()
         childRules.add(r)
     }
 
     open fun rule(): Rule {
-        val result = if (isStopping) Rule(id, null, null, conditions) else Rule(id, null, createConclusion(), conditions)
+        val assignment = if (isStopping) null else createComment()
+        val result = Rule(id, null, conditions, mutableSetOf(), assignment)
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }
 
-    fun createConclusion() = conclusionFactory.getOrCreate(conclusionText)
+    fun createComment() = commentFactory.comment(commentText)
 }
 
-class RootTemplate(conclusionFactory: ConclusionProvider) : AbstractRuleTemplate(conclusionFactory) {
+class RootTemplate(commentFactory: CommentFactory) : AbstractRuleTemplate(commentFactory) {
     override fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
-        val r = RuleTemplate(conclusionFactory)
+        val r = RuleTemplate(commentFactory)
         r.init()
         childRules.add(r)
     }
@@ -50,29 +51,29 @@ class RootTemplate(conclusionFactory: ConclusionProvider) : AbstractRuleTemplate
     }
 
     override fun rule(): Rule {
-        val result = Rule(Random.nextInt(),null, createConclusion(), conditions)
+        val result = Rule(Random.nextInt(), null, conditions, mutableSetOf(), createComment())
         childRules.forEach { result.addChild(it.rule()) }
         return result
     }
 
     init {
-        conclusionText = "ROOT"
+        commentText = "ROOT"
     }
 }
 
-class RuleTemplate(conclusionFactory: ConclusionProvider) : AbstractRuleTemplate(conclusionFactory) {
+class RuleTemplate(commentFactory: CommentFactory) : AbstractRuleTemplate(commentFactory) {
     override fun child(init: RuleTemplate.() -> RuleTemplate) = apply {
-        val r = RuleTemplate(conclusionFactory)
+        val r = RuleTemplate(commentFactory)
         r.init()
         childRules.add(r)
     }
 
-    fun conclusion(init: RuleTemplate.() -> String) = apply {
-        conclusionText = init()
+    fun comment(init: RuleTemplate.() -> String) = apply {
+        commentText = init()
     }
 
     operator fun String.unaryPlus() {
-        conclusionText = this
+        commentText = this
     }
 
     fun stop() = apply {
@@ -85,6 +86,7 @@ class RuleTemplate(conclusionFactory: ConclusionProvider) : AbstractRuleTemplate
         conditions.add(r.condition())
     }
 }
+
 class CONDITION_TEMPLATE(private val conditionFactory: ConditionFactory) {
     lateinit var attribute: Attribute
     lateinit var constant: String

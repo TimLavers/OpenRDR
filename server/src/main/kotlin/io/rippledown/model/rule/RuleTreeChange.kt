@@ -1,18 +1,11 @@
 package io.rippledown.model.rule
 
-import io.rippledown.kb.ConclusionProvider
-import io.rippledown.model.*
-
-internal fun ConclusionProvider.getAlignedConclusion(provided: Conclusion): Conclusion {
-    val conclusionInFactory = getOrCreate(provided.text, provided.variables)
-    require(conclusionInFactory.id == provided.id) {
-        "Conclusion in factory is $conclusionInFactory, conclusion provided is $provided, which do not match."
-    }
-    return conclusionInFactory
-}
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RuleFactory
 
 abstract class RuleTreeChange {
-    abstract fun alignWith(conclusionFactory: ConclusionProvider): RuleTreeChange
     abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
     abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger
 
@@ -30,50 +23,7 @@ abstract class RuleTreeChange {
     open fun expressionReferences(resolver: DefinitionResolver = NO_DEFINITIONS): Set<Attribute> = emptySet()
 }
 
-class ChangeTreeToAddConclusion(val toBeAdded: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionProvider): ChangeTreeToAddConclusion {
-        val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeAdded)
-        return ChangeTreeToAddConclusion(conclusionInFactory)
-    }
-
-    override fun isApplicable(tree: RuleTree, case: RDRCase) = !tree.apply(case).conclusions().contains(toBeAdded)
-
-    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = AddConclusionRuleTreeChanger(tree, ruleFactory, toBeAdded)
-
-    override fun toString() = "ChangeTreeToAddConclusion(toBeAdded=$toBeAdded)"
-}
-
-open class ChangeTreeToRemoveConclusion(val toBeRemoved: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionProvider): ChangeTreeToRemoveConclusion {
-        val conclusionInFactory = conclusionFactory.getAlignedConclusion(toBeRemoved)
-        return ChangeTreeToRemoveConclusion(conclusionInFactory)
-    }
-
-    override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeRemoved)
-
-    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = RemoveConclusionRuleTreeChanger(tree, ruleFactory, toBeRemoved)
-
-    override fun toString() = "ChangeTreeToRemoveConclusion(toBeRemoved=$toBeRemoved)"
-}
-
-class ChangeTreeToReplaceConclusion(val toBeReplaced: Conclusion, val replacement: Conclusion) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionProvider): ChangeTreeToReplaceConclusion {
-        val toBeReplacedFactoryInstance = conclusionFactory.getAlignedConclusion(toBeReplaced)
-        val replacementFactoryInstance = conclusionFactory.getAlignedConclusion(replacement)
-        return ChangeTreeToReplaceConclusion(toBeReplacedFactoryInstance, replacementFactoryInstance)
-    }
-
-    override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).conclusions().contains(toBeReplaced)
-
-    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) = ReplaceConclusionRuleTreeChanger(tree, ruleFactory, toBeReplaced, replacement)
-
-    override fun toString() = "ChangeTreeToReplaceConclusion(toBeReplaced=$toBeReplaced replacement=$replacement)"
-}
-
 class ChangeTreeToAddAssignment(val toBeAdded: AssignValue) : RuleTreeChange() {
-    // Assignments do not involve conclusions, so there is nothing to align.
-    override fun alignWith(conclusionFactory: ConclusionProvider) = this
-
     override fun isApplicable(tree: RuleTree, case: RDRCase) = !tree.apply(case).assignments().contains(toBeAdded)
 
     override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) =
@@ -88,8 +38,6 @@ class ChangeTreeToAddAssignment(val toBeAdded: AssignValue) : RuleTreeChange() {
 }
 
 class ChangeTreeToRemoveAssignment(val toBeRemoved: AssignValue) : RuleTreeChange() {
-    override fun alignWith(conclusionFactory: ConclusionProvider) = this
-
     override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).assignments().contains(toBeRemoved)
 
     override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) =
@@ -115,8 +63,6 @@ class ChangeTreeToReplaceAssignment(val toBeReplaced: AssignValue, val replaceme
             "An assignment can only be replaced by an assignment to the same attribute."
         }
     }
-
-    override fun alignWith(conclusionFactory: ConclusionProvider) = this
 
     override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).assignments().contains(toBeReplaced)
 

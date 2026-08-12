@@ -6,13 +6,19 @@ import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.kb.report.ReportService
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.report.CaseReport
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.BuildRuleRequest
+import io.rippledown.model.rule.RuleRequest
+import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UpdateCornerstoneRequest
 import java.io.File
 import kotlin.io.path.createTempDirectory
 
@@ -49,18 +55,6 @@ class KBEndpoint(
         val file = File(tempDir, "${kb.kbInfo}.zip")
         file.writeBytes(bytes)
         return file
-    }
-
-    fun startRuleSessionToAddConclusion(caseId: Long, conclusion: Conclusion) {
-        ruleSessionManager().startRuleSession(case(caseId), ChangeTreeToAddConclusion(conclusion))
-    }
-
-    fun startRuleSessionToRemoveConclusion(caseId: Long, conclusion: Conclusion) {
-        ruleSessionManager().startRuleSession(case(caseId), ChangeTreeToRemoveConclusion(conclusion))
-    }
-
-    fun startRuleSessionToReplaceConclusion(caseId: Long, toGo: Conclusion, replacement: Conclusion) {
-        ruleSessionManager().startRuleSession(case(caseId), ChangeTreeToReplaceConclusion(toGo, replacement))
     }
 
     fun cancelRuleSession() = ruleSessionManager().cancelRuleSession()
@@ -118,10 +112,6 @@ class KBEndpoint(
     fun getOrCreateAttribute(name: String) = kb.attributeManager.getOrCreate(name)
 
     fun setAttributeOrder(attributesInOrder: List<Attribute>) = kb.caseViewManager.set(attributesInOrder)
-
-    fun getOrCreateConclusion(text: String) = kb.conclusionManager.getOrCreate(text)
-
-    fun allConclusions() = kb.conclusionManager.all()
 
     fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
 

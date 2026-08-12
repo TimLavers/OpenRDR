@@ -4,15 +4,13 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.RuleSessionManager
+import io.rippledown.kb.commentsFor
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.Result
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.greaterThanOrEqualTo
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
-import io.rippledown.model.rule.ChangeTreeToRemoveConclusion
-import io.rippledown.model.rule.ChangeTreeToReplaceConclusion
 import io.rippledown.persistence.inmemory.InMemoryKB
 
 const val addedConditionBeforeSessionStarted = "Rule session not started."
@@ -69,10 +67,9 @@ class BuildTemplate {
         return template
     }
 
-    fun requireInterpretation(caseName: String, vararg expectedConclusions: String) {
+    fun requireInterpretation(caseName: String, vararg expectedComments: String) {
         val case = kb.getProcessedCaseByName(caseName)
-        kb.interpret(case)
-        case.interpretation.conclusions().map { it.text }.toSet() shouldBe expectedConclusions.toSet()
+        kb.commentsFor(case) shouldBe expectedComments.toSet()
     }
 
     fun undoLastRuleSession() {
@@ -89,7 +86,7 @@ class SessionTemplate(val kb: KB, val rsm: RuleSessionManager) {
     }
 
     infix fun String.replaces(x: String) {
-        replaceConclusion(x, this)
+        replaceComment(x, this)
     }
 
     fun condition(c: String) {
@@ -108,26 +105,15 @@ class SessionTemplate(val kb: KB, val rsm: RuleSessionManager) {
     }
 
     operator fun String.unaryPlus() {
-        addConclusion(this)
-    }
-
-    private fun addConclusion(conclusion: String) {
-        val action = ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(conclusion))
-        rsm.startRuleSession(case, action)
+        rsm.startRuleSessionToAddComment(case, this)
     }
 
     operator fun String.unaryMinus() {
-        removeConclusion(this)
+        rsm.startRuleSessionToRemoveComment(case, this)
     }
 
-    private fun removeConclusion(conclusion: String) {
-        val action = ChangeTreeToRemoveConclusion(kb.conclusionManager.getOrCreate(conclusion))
-        rsm.startRuleSession(case, action)
-    }
-
-    private fun replaceConclusion(conclusion: String, replacement: String) {
-        val action = ChangeTreeToReplaceConclusion(kb.conclusionManager.getOrCreate(conclusion), kb.conclusionManager.getOrCreate(replacement))
-        rsm.startRuleSession(case, action)
+    private fun replaceComment(comment: String, replacement: String) {
+        rsm.startRuleSessionToReplaceComment(case, comment, replacement)
     }
 
     fun commit() {

@@ -2,8 +2,12 @@ package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.KBInfo
 import io.rippledown.model.condition.isLow
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.ByDefinition
+import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.model.rule.RuleSessionRecord
 import io.rippledown.persistence.PersistentKB
 import io.rippledown.persistence.PersistentRule
@@ -63,13 +67,14 @@ class PostgresKBTest {
     }
 
     @Test
-    fun conclusionStore() {
-        val text = "Raining today!"
-        val conclusion = glucoseKB.conclusionStore().create(text)
-        glucoseKB.conclusionStore().all() shouldBe setOf(conclusion)
+    fun derivedDefinitionStore() {
+        val comment = glucoseKB.attributeStore().create("C1", AttributeKind.COMMENT)
+        val definition = CommentTemplate("Raining today!")
+        glucoseKB.derivedDefinitionStore().store(comment.id, definition)
+        glucoseKB.derivedDefinitionStore().all() shouldBe mapOf(comment.id to definition)
 
         glucoseKB = PostgresKB(glucoseInfo.id)
-        glucoseKB.conclusionStore().all() shouldBe setOf(conclusion)
+        glucoseKB.derivedDefinitionStore().all() shouldBe mapOf(comment.id to definition)
     }
 
     @Test
@@ -98,12 +103,13 @@ class PostgresKBTest {
         val glucose = glucoseKB.attributeStore().create("Glucose")
         val templateCondition = isLow(null, glucose)
         val createdCondition = glucoseKB.conditionStore().create(templateCondition)
-        val conclusion = glucoseKB.conclusionStore().create("Glucose conclusion.")
-        val persistentRule = PersistentRule(null, 0, conclusion.id, setOf(createdCondition.id!!))
+        val comment = glucoseKB.attributeStore().create("C1", AttributeKind.COMMENT)
+        val assignment = AssignValue(comment, ByDefinition)
+        val persistentRule = PersistentRule(null, 0, setOf(createdCondition.id!!), assignment)
         val created = glucoseKB.ruleStore().create(persistentRule)
         created.id shouldNotBe null
         created.parentId shouldBe 0
-        created.conclusionId shouldBe conclusion.id
+        created.assignment shouldBe assignment
         created.conditionIds shouldBe setOf(createdCondition.id!!)
 
         glucoseKB = PostgresKB(glucoseInfo.id)

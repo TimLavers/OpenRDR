@@ -14,7 +14,6 @@ internal class RuleActionTest {
     private val glucose = Attribute(2, "Glucose")
     private val diabetesStatus = Attribute(10, "Diabetes status", AttributeKind.DERIVED)
     private val diabetic = AssignValue(diabetesStatus, Literal("diabetic"))
-    private val conclusion = Conclusion(1, "Diabetic diet advice given.")
 
     @Test
     fun `a value can only be assigned to a KB-assigned attribute`() {
@@ -32,13 +31,11 @@ internal class RuleActionTest {
 
     @Test
     fun serialization() {
-        // Given actions of each kind
-        val give: RuleAction = AssignConclusion(conclusion)
+        // Given an action
         val assign: RuleAction = diabetic
 
-        // When they are serialized and deserialized
-        // Then they are unchanged
-        serializeDeserialize(give) shouldBe give
+        // When it is serialized and deserialized
+        // Then it is unchanged
         serializeDeserialize(assign) shouldBe assign
     }
 
@@ -86,31 +83,20 @@ internal class RuleActionTest {
     }
 
     @Test
-    fun `a rule cannot both give a conclusion and assign a value`() {
-        // When a rule is constructed with both a conclusion and an assignment
-        // Then it is rejected
-        shouldThrow<IllegalArgumentException> {
-            Rule(1, null, conclusion, emptySet(), mutableSetOf(), diabetic)
-        }.message shouldBe "A rule cannot both give a conclusion and assign a value."
-    }
-
-    @Test
-    fun `the action of a rule is its assignment, its conclusion, or nothing`() {
-        // Given rules with an assignment, a conclusion, and neither
-        val assigning = Rule(1, null, null, emptySet(), mutableSetOf(), diabetic)
-        val concluding = Rule(2, null, conclusion)
-        val stopping = Rule(3, null, null)
+    fun `the action of a rule is its assignment, or nothing`() {
+        // Given a rule with an assignment and a rule with none
+        val assigning = Rule(1, null, emptySet(), mutableSetOf(), diabetic)
+        val stopping = Rule(3, null)
 
         // Then the actions are as expected
         assigning.action shouldBe diabetic
-        concluding.action shouldBe AssignConclusion(conclusion)
         stopping.action.shouldBeNull()
     }
 
     @Test
     fun `a fired assignment rule contributes its assignment to the interpretation`() {
         // Given an assignment rule whose condition holds for a case
-        val rule = Rule(1, null, null, setOf(containsText(1, notes, "diab")), mutableSetOf(), diabetic)
+        val rule = Rule(1, null, setOf(containsText(1, notes, "diab")), mutableSetOf(), diabetic)
         val case = with(RDRCaseBuilder()) {
             addValue(notes, defaultDate, "diabetes suspected")
             build("Fermi")
@@ -123,14 +109,13 @@ internal class RuleActionTest {
         // Then the interpretation carries the assignment
         interpretation.assignments() shouldBe setOf(diabetic)
         interpretation.idsOfRulesAssigning(diabetesStatus) shouldBe setOf(1)
-        interpretation.conclusions() shouldBe emptySet()
     }
 
     @Test
     fun `a child rule with no action retracts its parent's assignment`() {
         // Given an assignment rule with a stopping child whose condition holds
-        val rule = Rule(1, null, null, setOf(containsText(1, notes, "diab")), mutableSetOf(), diabetic)
-        val stopper = Rule(2, null, null, setOf(containsText(2, notes, "resolved")))
+        val rule = Rule(1, null, setOf(containsText(1, notes, "diab")), mutableSetOf(), diabetic)
+        val stopper = Rule(2, null, setOf(containsText(2, notes, "resolved")))
         rule.addChild(stopper)
         val case = with(RDRCaseBuilder()) {
             addValue(notes, defaultDate, "diabetes resolved")
@@ -149,12 +134,12 @@ internal class RuleActionTest {
     fun `action summaries for assignment rules`() {
         // Given an assignment rule, a retraction child and a replacement child
         val root = Rule(0)
-        val assigning = Rule(1, null, null, emptySet(), mutableSetOf(), diabetic)
+        val assigning = Rule(1, null, emptySet(), mutableSetOf(), diabetic)
         root.addChild(assigning)
-        val retracting = Rule(2, null, null)
+        val retracting = Rule(2, null)
         assigning.addChild(retracting)
         val replacement = AssignValue(diabetesStatus, Literal("pre-diabetic"))
-        val replacing = Rule(3, null, null, emptySet(), mutableSetOf(), replacement)
+        val replacing = Rule(3, null, emptySet(), mutableSetOf(), replacement)
         assigning.addChild(replacing)
 
         // Then the action summaries describe the assignments
@@ -167,7 +152,7 @@ internal class RuleActionTest {
     @Test
     fun `rule copy preserves the assignment`() {
         // Given an assignment rule
-        val rule = Rule(1, null, null, emptySet(), mutableSetOf(), diabetic)
+        val rule = Rule(1, null, emptySet(), mutableSetOf(), diabetic)
 
         // When it is copied
         val copy = rule.copy()
@@ -180,7 +165,7 @@ internal class RuleActionTest {
     @Test
     fun `rule summary serialization carries the assignment`() {
         // Given the summary of an assignment rule
-        val summary = Rule(1, null, null, emptySet(), mutableSetOf(), diabetic).summary()
+        val summary = Rule(1, null, emptySet(), mutableSetOf(), diabetic).summary()
 
         // When it is serialized and deserialized
         val recovered = serializeDeserialize(summary)

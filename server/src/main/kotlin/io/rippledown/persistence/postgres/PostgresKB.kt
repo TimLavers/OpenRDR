@@ -37,7 +37,6 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val db: Database = Database.connect({ConnectionProvider.connection(dbName)})
     private val attributeStore = PostgresAttributeStore(db)
     private val attributeOrderStore = PostgresAttributeOrderStore(db)
-    private val conclusionStore = PostgresConclusionStore(db)
     private val derivedDefinitionStore = PostgresDerivedDefinitionStore(db)
     private val conditionStore = PostgresConditionStore(db)
     private val ruleStore = PostgresRuleStore(db)
@@ -61,8 +60,6 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     override fun attributeStore() = attributeStore
 
     override fun attributeOrderStore() = attributeOrderStore
-
-    override fun conclusionStore() = conclusionStore
 
     override fun derivedDefinitionStore() = derivedDefinitionStore
 

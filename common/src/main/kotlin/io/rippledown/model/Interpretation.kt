@@ -18,10 +18,6 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
         ruleSummaries.add(rule.summary())
     }
 
-    fun conclusions(): Set<Conclusion> {
-        return ruleSummaries.mapNotNull { it.conclusion }.toSet()
-    }
-
     /**
      * The derived-attribute assignments made by the rules that fired.
      */
@@ -37,39 +33,15 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
         return ruleSummaries.filter { assignment == it.assignment }.map { it.id }.toSet()
     }
 
-    fun conclusionTexts(): Set<String> {
-        return conclusions().map { it.text }.toSet()
-    }
-
     /**
-     * All comment texts produced by the rules that fired, whether they are
-     * stored as conclusions (pre-Phase 2) or as COMMENT-attribute assignments
-     * (Phase 2+). A [CommentTemplate] assignment contributes its template text
+     * All comment texts produced by the rules that fired, in attribute id
+     * order. A [CommentTemplate] assignment contributes its template text
      * with variables in `{attributeName}` format; a [Literal] assignment
      * contributes its value; an unresolved [ByDefinition] assignment contributes
      * nothing. The [attributeById] resolver is used to render variable names.
      */
-    fun commentTexts(case: RDRCase, attributeById: (Int) -> Attribute? = { null }): Set<String> {
-        val fromConclusions = conclusions().map { conclusion ->
-            if (conclusion.variables.isEmpty()) {
-                conclusion.text
-            } else {
-                var result = conclusion.text
-                var position = 0
-                for (variable in conclusion.variables) {
-                    val tokenIndex = result.indexOf(VARIABLE_TOKEN, position)
-                    if (tokenIndex != -1) {
-                        val attribute = attributeById(variable.attributeId)
-                            ?: case.attributes.find { it.id == variable.attributeId }
-                        val attributeName = attribute?.name ?: "unknown"
-                        result = result.replaceRange(tokenIndex, tokenIndex + VARIABLE_TOKEN.length, "{$attributeName}")
-                        position = tokenIndex + attributeName.length + 2
-                    }
-                }
-                result
-            }
-        }
-        val fromAssignments = assignments()
+    fun commentTexts(case: RDRCase, attributeById: (Int) -> Attribute? = { null }): Set<String> =
+        assignments()
             .filter { it.attribute.kind == AttributeKind.COMMENT }
             .sortedBy { it.attribute.id }
             .mapNotNull { assignment ->
@@ -77,19 +49,15 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
                     is CommentTemplate -> expression.textWithVariableNames { id ->
                         attributeById(id) ?: case.attributes.find { it.id == id }
                     }
+
                     is Literal -> expression.value
                     else -> null
                 }
             }
-        return (fromConclusions + fromAssignments).toSet()
-    }
+            .toSet()
 
     fun toComments(case: RDRCase, attributeById: (Int) -> Attribute? = { null }): String =
         commentTexts(case, attributeById).toJsonString()
-
-    fun idsOfRulesGivingConclusion(conclusion: Conclusion): Set<Int> {
-        return ruleSummaries.filter { conclusion == it.conclusion }.map { it.id }.toSet()
-    }
 
     fun reset() {
         ruleSummaries.clear()
@@ -114,12 +82,6 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
             ruleSummaries.remove(summary)
             ruleSummaries.add(summary.copy(assignment = AssignValue(assignment.attribute, resolved)))
         }
-    }
-
-    fun conditionsForConclusion(conclusion: Conclusion): List<String> {
-        return ruleSummaries
-            .first { ruleSummary -> conclusion == ruleSummary.conclusion }
-            .conditionTextsFromRoot
     }
 
     /**

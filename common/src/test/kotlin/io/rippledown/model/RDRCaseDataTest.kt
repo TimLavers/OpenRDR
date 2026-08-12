@@ -2,8 +2,10 @@ package io.rippledown.model
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.condition.containsText
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.model.rule.Rule
-import io.rippledown.utils.*
+import io.rippledown.utils.daysAgo
 import kotlin.test.Test
 
 class RDRCaseDataTest {
@@ -105,10 +107,10 @@ class RDRCaseDataTest {
     fun `cases with the same data but different interpretations are identical`() {
         val dataMap = mapOf(e1 to r1, e2 to r2, e3 to r3, e4 to r4)
         val case1 = makeCase(dataMap)
-        val conclusion = Conclusion(9, "Tea is good.")
-        val root = Rule(0, null, null, emptySet(), mutableSetOf())
+        val comment = AssignValue(Attribute(9, "C1", AttributeKind.COMMENT), CommentTemplate("Tea is good."))
+        val root = Rule(0, null, emptySet(), mutableSetOf())
         val conditions = setOf(containsText(100, tsh, "0.667"))
-        val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
+        val rule = Rule(1, root, conditions, mutableSetOf(), comment)
         case1.interpretation.add(rule)
         val case2 = makeCase(dataMap)
         case1.hasSameDataAs(case2) shouldBe true

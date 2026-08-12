@@ -1,22 +1,17 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * What a rule does when it fires. Two kinds for now:
- * [AssignConclusion] wraps the existing conclusion behaviour, and
- * [AssignValue] assigns the result of a [ValueExpression] to a derived
- * attribute. See documentation/design/repeat_inferencing.md.
+ * What a rule does when it fires: [AssignValue] assigns the result of a
+ * [ValueExpression] to a KB-assigned attribute, which is how both comments
+ * and derived values are given. See
+ * documentation/design/repeat_inferencing.md.
  */
 @Serializable
 sealed class RuleAction
-
-@Serializable
-@SerialName("AssignConclusion")
-data class AssignConclusion(val conclusion: Conclusion) : RuleAction()
 
 @Serializable
 @SerialName("AssignValue")

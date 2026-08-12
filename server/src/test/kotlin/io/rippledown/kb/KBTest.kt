@@ -55,8 +55,7 @@ class KBTest {
     fun `should call web socket manager when sending cornerstone status`() = runTest {
         //Given
         val sessionCase = createCase("Case1")
-        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
-        val ccStatus = rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        val ccStatus = rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
 
         //When
         rsm.sendCornerstoneStatus()
@@ -73,7 +72,7 @@ class KBTest {
         kb.addCornerstoneCase(createCase("Case3"))
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         rsm.selectCornerstone(1)
@@ -91,7 +90,7 @@ class KBTest {
         val cc3 = kb.addCornerstoneCase(createCase("Case3"))
         val vcc3 = kb.viewableCase(cc3)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         rsm.selectCornerstone(2)
@@ -109,7 +108,7 @@ class KBTest {
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case3"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         rsm.sendCornerstoneStatus()
@@ -126,7 +125,7 @@ class KBTest {
         val cc3 = kb.addCornerstoneCase(createCase("Case3"))
         val vcc3 = kb.viewableCase(cc3)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When - select second, then select third
         rsm.selectCornerstone(1)
@@ -145,7 +144,7 @@ class KBTest {
         kb.addCornerstoneCase(createCase("Case3"))
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         rsm.selectCornerstone(1)
@@ -164,7 +163,7 @@ class KBTest {
         kb.addCornerstoneCase(createCase("Case2"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val status = rsm.cornerstoneStatus()
@@ -183,7 +182,7 @@ class KBTest {
         val cc3 = kb.addCornerstoneCase(createCase("Case3"))
         val vcc3 = kb.viewableCase(cc3)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         rsm.selectCornerstone(0)
@@ -204,7 +203,7 @@ class KBTest {
         kb.addCornerstoneCase(createCase("Case3"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When - select last, then select first
         rsm.selectCornerstone(2)
@@ -221,8 +220,7 @@ class KBTest {
     fun `should call web socket manager when sending rule session completed`() = runTest {
         //Given
         val sessionCase = createCase("Case1")
-        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
 
         //When
         rsm.sendRuleSessionCompleted()
@@ -256,31 +254,31 @@ class KBTest {
     @Test
     fun `processed cases are interpreted`() {
         // Given
-        val conclusionToAdd = "Whatever"
-        buildRuleToAddAComment(kb, conclusionToAdd)
+        val commentToAdd = "Whatever"
+        buildRuleToAddAComment(kb, commentToAdd)
         val externalCase = createExternalCase("Case1", "g1")
 
         // When
         val processed = kb.processCase(externalCase)
 
         // Then
-        processed.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
+        kb.commentsFor(processed) shouldBe setOf(commentToAdd)
     }
 
     @Test
     fun `getProcessedCase should return the case with a blank interpretation`() {
         // Given
-        val conclusionToAdd = "Whatever"
-        buildRuleToAddAComment(kb, conclusionToAdd)
+        val commentToAdd = "Whatever"
+        buildRuleToAddAComment(kb, commentToAdd)
         val externalCase = createExternalCase("Case", "g")
         val processed = kb.processCase(externalCase)
-        processed.interpretation.conclusionTexts() shouldBe setOf(conclusionToAdd)
+        kb.commentsFor(processed) shouldBe setOf(commentToAdd)
 
         // When
         val retrieved = kb.getProcessedCase(processed.caseId.id!!)!!
 
         // Then
-        retrieved.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.commentsFor(retrieved) shouldBe emptySet()
     }
 
     @Test
@@ -425,11 +423,13 @@ class KBTest {
     }
 
     @Test
-    fun conclusionManager() {
-        kb.conclusionManager.all() shouldBe emptySet()
+    fun `a comment attribute is created for a comment, and holds its text as its definition`() {
+        kb.attributeManager.commentAttributes() shouldBe emptySet()
 
-        val created = kb.conclusionManager.getOrCreate("Whatever")
-        kb.conclusionManager.getById(created.id) shouldBeSameInstanceAs created
+        buildRuleToAddAComment(kb, "Whatever")
+
+        val created = kb.attributeManager.commentAttributes().single()
+        kb.derivedDefinitionManager.definitionFor(created.id) shouldBe CommentTemplate("Whatever")
     }
 
     @Test
@@ -488,16 +488,14 @@ class KBTest {
         val comment = "Whatever."
         buildRuleToAddAComment(kb, comment)
         val case = createCase("Case1", value = "1.0")
-        case.interpretation.conclusions() shouldBe emptySet()
-        kb.interpret(case)
-        case.interpretation.conclusions().map { it.text } shouldBe listOf(comment)
+        case.interpretation.assignments() shouldBe emptySet()
+        kb.commentsFor(case) shouldBe setOf(comment)
     }
 
     private fun buildRuleToAddAComment(kb: KB, comment: String) {
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val sessionCase = kb.getCornerstoneCaseByName("Case1")
-        val conclusion = kb.conclusionManager.getOrCreate(comment)
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(sessionCase, comment)
         rsm.commitCurrentRuleSession()
     }
 
@@ -530,9 +528,9 @@ class KBTest {
     @Test
     fun `description for rule that adds a comment`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.commentsFor(sessionCase) shouldBe emptySet()
         val commentText = "The Brindabellas are a range of beautiful mountains to the south east of Canberra."
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate(commentText)))
+        rsm.startRuleSessionToAddComment(sessionCase, commentText)
         rsm.commitCurrentRuleSession()
         with(rsm.descriptionOfMostRecentRule()) {
             description shouldBe "$RULE_TO_ADD_COMMENT\n${commentText.substring(0, 20)}..."
@@ -543,13 +541,13 @@ class KBTest {
     @Test
     fun `description for rule that removes a comment`() {
         val case1 = createCase("Case1", value = "1.0")
-        case1.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.commentsFor(case1) shouldBe emptySet()
         val commentText = "Lake Burley-Griffin is not renowned as somewhere to go swimming."
-        val comment = kb.conclusionManager.getOrCreate(commentText)
-        rsm.startRuleSession(case1, ChangeTreeToAddConclusion(comment))
+        rsm.startRuleSessionToAddComment(case1, commentText)
         rsm.commitCurrentRuleSession()
         val case2 = createCase("Case2", value = "2.0")
-        rsm.startRuleSession(case2, ChangeTreeToRemoveConclusion(comment))
+        kb.interpret(case2)
+        rsm.startRuleSessionToRemoveComment(case2, commentText)
         rsm.commitCurrentRuleSession()
         with(rsm.descriptionOfMostRecentRule()) {
             description shouldBe "$RULE_TO_REMOVE_COMMENT\n${commentText.substring(0, 20)}..."
@@ -560,15 +558,14 @@ class KBTest {
     @Test
     fun `description for rule that replaces a comment with another comment`() {
         val case1 = createCase("Case1", value = "1.0")
-        case1.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.commentsFor(case1) shouldBe emptySet()
         val commentText = "The National Portrait Gallery is well worth a visit."
-        val comment = kb.conclusionManager.getOrCreate(commentText)
-        rsm.startRuleSession(case1, ChangeTreeToAddConclusion(comment))
+        rsm.startRuleSessionToAddComment(case1, commentText)
         rsm.commitCurrentRuleSession()
         val case2 = createCase("Case2", value = "2.0")
+        kb.interpret(case2)
         val replacementText = "The National Library is a good place for studying."
-        val replacement = kb.conclusionManager.getOrCreate(replacementText)
-        rsm.startRuleSession(case2, ChangeTreeToReplaceConclusion(comment, replacement))
+        rsm.startRuleSessionToReplaceComment(case2, commentText, replacementText)
         rsm.commitCurrentRuleSession()
         with(rsm.descriptionOfMostRecentRule()) {
             val expected = """
@@ -844,10 +841,9 @@ class KBTest {
     @Test
     fun `cannot start a rule session if one is already started`() {
         val sessionCase = createCase("Case1")
-        val conclusion = kb.conclusionManager.getOrCreate("Whatever.")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         shouldThrow<IllegalStateException> {
-            rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Stuff.")))
+            rsm.startRuleSessionToAddComment(sessionCase, "Stuff.")
         }.message shouldBe "Session already in progress."
     }
 
@@ -855,33 +851,37 @@ class KBTest {
     fun `cannot start a rule session if action is not applicable to session case`() {
         val sessionCase = createCase("Case1", value = "1.0")
         val otherCase = createCase("Case2", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         rsm.commitCurrentRuleSession()
         kb.interpret(otherCase)
-        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.") // sanity
+        kb.commentsFor(otherCase) shouldBe setOf("Whatever.") // sanity
 
         shouldThrow<IllegalStateException> {
-            rsm.startRuleSession(otherCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
-        }.message shouldBe "Action ChangeTreeToAddConclusion(toBeAdded=Conclusion(id=1, text=Whatever., variables=[])) is not applicable to case Case2"
+            rsm.startRuleSessionToAddComment(otherCase, "Whatever.")
+        }.message shouldBe "Action ChangeTreeToAddAssignment(toBeAdded=${
+            AssignValue(
+                kb.attributeManager.commentAttributes().single(), ByDefinition
+            )
+        }) is not applicable to case Case2"
     }
 
     @Test
     fun startRuleSession() {
         val sessionCase = createCase("Case1")
         kb.interpret(sessionCase)
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commentsFor(sessionCase) shouldBe emptySet()
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         rsm.commitCurrentRuleSession()
         kb.interpret(sessionCase)
-        sessionCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.")
+        kb.commentsFor(sessionCase) shouldBe setOf("Whatever.")
     }
 
     @Test
     fun conflictingCases() {
         val sessionCase = createCase("Case1", value = "1.0")
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commentsFor(sessionCase) shouldBe emptySet()
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         rsm.conflictingCasesInCurrentRuleSession().map { rdrCase -> rdrCase.name }.toSet() shouldBe setOf("Case2")
     }
 
@@ -889,8 +889,8 @@ class KBTest {
     fun addCondition() {
         val sessionCase = createCase("Case1", value = "1.0")
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2", value = "2.0"))
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commentsFor(sessionCase) shouldBe emptySet()
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         rsm.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.2))
         rsm.conflictingCasesInCurrentRuleSession().size shouldBe 0
     }
@@ -901,8 +901,8 @@ class KBTest {
         val sessionCase = createCase("Case1", value = "1.0")
         val cornerstoneCase = createViewableCase("Case2", caseId = 1, CaseType.Cornerstone)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(cornerstoneCase.case)
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commentsFor(sessionCase) shouldBe emptySet()
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         val condition = lessThanOrEqualTo(null, glucose(), 1.2)
         rsm.addConditionToCurrentRuleSession(condition)
         rsm.conflictingCasesInCurrentRuleSession().size shouldBe 0
@@ -920,30 +920,30 @@ class KBTest {
     fun commitSession() {
         val sessionCase = createCase("Case1", value = "1.0")
         val otherCase = createCase("Case2", value = "2.0")
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commentsFor(sessionCase) shouldBe emptySet()
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         kb.interpret(otherCase)
         // Rule not yet added...
-        otherCase.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.commentsFor(otherCase) shouldBe emptySet()
         rsm.commitCurrentRuleSession()
         // Rule now added...
         kb.interpret(otherCase)
-        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.")
+        kb.commentsFor(otherCase) shouldBe setOf("Whatever.")
     }
 
     @Test
     fun undoLastRuleSession() {
         val sessionCase = createCase("Case1", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         rsm.commitCurrentRuleSession()
 
         val otherCase = createCase("Case2", value = "2.0")
         kb.interpret(otherCase)
-        otherCase.interpretation.conclusionTexts() shouldBe setOf("Whatever.") // Sanity
+        kb.commentsFor(otherCase) shouldBe setOf("Whatever.") // Sanity
 
         rsm.undoLastRuleSession()
         kb.interpret(otherCase)
-        otherCase.interpretation.conclusionTexts() shouldBe emptySet()
+        kb.commentsFor(otherCase) shouldBe emptySet()
     }
 
     @Test
@@ -966,8 +966,7 @@ class KBTest {
             addValue(sodium, defaultDate, "140")
             build("Session")
         }
-        val conclusion = kb.conclusionManager.getOrCreate("Glucose looks high.")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(sessionCase, "Glucose looks high.")
 
         //When
         val suggestions = rsm.conditionHintsForCase(sessionCase).suggestions
@@ -997,8 +996,7 @@ class KBTest {
             addValue(sodium, defaultDate, "140")
             build("Historical")
         }
-        val conclusion = kb.conclusionManager.getOrCreate("Routine review.")
-        rsm.startRuleSession(historicalCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(historicalCase, "Routine review.")
         rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose, 5.0))
         rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, sodium, 100.0))
         rsm.commitCurrentRuleSession()
@@ -1010,14 +1008,14 @@ class KBTest {
             addValue(potassium, defaultDate, "4.0")
             build("Session")
         }
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        rsm.startRuleSessionToAddComment(sessionCase, "Routine review.")
         val texts = rsm.conditionHintsForCase(sessionCase).suggestions.map { it.asText() }
 
         //Then the historical "Glucose >= 5.0" condition surfaces above the
         //unrelated Potassium suggestions. The candidate is generated by
         //the suggester for the session case (Glucose=5.0) and scored up by
         //the historical scorer because a committed rule used an equivalent
-        //condition for the same target conclusion.
+        //condition for the same comment attribute.
         val historicalIdx = texts.indexOfFirst {
             it.contains("Glucose", ignoreCase = true) && it.contains("5.0")
         }
@@ -1070,22 +1068,31 @@ class KBTest {
     }
 
     @Test // Conc-4
-    fun `conclusions are aligned when building rules`() {
-        val conclusionToAdd = kb.conclusionManager.getOrCreate("Whatever")
-        val copyOfConclusion = conclusionToAdd.copy()
+    fun `a comment given twice reuses the one comment attribute`() {
+        //Given a rule giving a comment
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val sessionCase = kb.getCornerstoneCaseByName("Case1")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(copyOfConclusion))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever")
         rsm.commitCurrentRuleSession()
-        kb.interpret(sessionCase)
-        sessionCase.interpretation.conclusions().single() shouldBeSameInstanceAs conclusionToAdd
+        val attribute = kb.attributeManager.commentAttributes().single()
+
+        //When a rule giving the same comment is built for another case
+        val otherCase = createCase("Case2", value = "2.0")
+        kb.interpret(otherCase)
+        rsm.startRuleSessionToAddComment(otherCase, "Whatever")
+        rsm.commitCurrentRuleSession()
+
+        //Then no second attribute is minted, and both cases get the comment
+        kb.attributeManager.commentAttributes().single() shouldBe attribute
+        kb.commentsFor(sessionCase) shouldBe setOf("Whatever")
+        kb.commentsFor(otherCase) shouldBe setOf("Whatever")
     }
 
     @Test
     fun `the session case should be stored as the cornerstone case when the rule is committed`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        sessionCase.interpretation.conclusionTexts() shouldBe emptySet()
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        kb.commentsFor(sessionCase) shouldBe emptySet()
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         kb.allCornerstoneCases() shouldHaveSize 0
         rsm.commitCurrentRuleSession()
         kb.allCornerstoneCases() shouldHaveSize 1
@@ -1183,7 +1190,7 @@ class KBTest {
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case3", value = "3.0")
 
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
         withClue("sanity check") {
             rsm.cornerstoneStatus(vcc1) shouldBe currentCCStatus
@@ -1199,7 +1206,7 @@ class KBTest {
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case3", value = "3.0")
 
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 1)
         withClue("sanity check") {
             rsm.cornerstoneStatus(vcc1) shouldBe currentCCStatus
@@ -1218,7 +1225,7 @@ class KBTest {
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", value = "4.0")
 
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
         withClue("sanity check") {
             rsm.cornerstoneStatus(vcc1) shouldBe currentCCStatus
@@ -1237,7 +1244,7 @@ class KBTest {
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Case4", value = "4.0")
 
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val currentCCStatus = CornerstoneStatus(vcc1, 0, 3)
         withClue("sanity check") {
             rsm.cornerstoneStatus(vcc1) shouldBe currentCCStatus
@@ -1258,7 +1265,7 @@ class KBTest {
         val sessionCase = createCase("Case4", value = "4.0")
 
         //When add a condition that is true for cc1 and the current cornerstone cc2
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //Assume that the user has skipped to the 2nd cornerstone
         val originalCCStatus = CornerstoneStatus(vcc2, 1, 3)
@@ -1288,7 +1295,7 @@ class KBTest {
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Case4", value = "4.0")
 
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val currentCCStatus = CornerstoneStatus(vcc2, 1, 3) //the user has skipped to the 2nd cornerstone
         withClue("sanity check") {
             rsm.cornerstoneStatus(vcc2) shouldBe currentCCStatus
@@ -1304,10 +1311,7 @@ class KBTest {
     @Test
     fun `should return no cornerstones when the rule session has just started if there aren't any cornerstones`() {
         val sessionCase = createCase("Case4", value = "4.0")
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val ccStatus = rsm.cornerstoneStatus(null)
         ccStatus shouldBe CornerstoneStatus()
     }
@@ -1320,10 +1324,7 @@ class KBTest {
         val vcc1 = kb.viewableCase(cc1)
 
         val sessionCase = createCase("Case4", value = "4.0")
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val ccStatus = rsm.cornerstoneStatus(null)
         ccStatus shouldBe CornerstoneStatus(vcc1, 0, 3)
     }
@@ -1337,10 +1338,7 @@ class KBTest {
         val vcc2 = kb.viewableCase(cc2)
 
         val sessionCase = createCase("Case4", value = "4.0")
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val ccStatus = rsm.cornerstoneStatus(vcc2)
         ccStatus shouldBe CornerstoneStatus(vcc2, 1, 3)
     }
@@ -1357,10 +1355,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         parsedCondition.userExpression() shouldBe userExpression
 
         //When
@@ -1387,10 +1382,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         parsedCondition.userExpression() shouldBe userExpression
 
         //When
@@ -1413,10 +1405,7 @@ class KBTest {
         val case = createCase("Case", attribute = x, value = value)
         val userExpression = "x equates to $value"
 
-        rsm.startRuleSession(
-            case,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever."))
-        )
+        rsm.startRuleSessionToAddComment(case, "Whatever.")
 
         //When
         val conditionParsingResult = rsm.conditionForExpression(userExpression)
@@ -1441,10 +1430,7 @@ class KBTest {
         val case = createCase("Case", attribute = x, value = value)
         val userExpression = "x contains b"
 
-        rsm.startRuleSession(
-            case,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever."))
-        )
+        rsm.startRuleSessionToAddComment(case, "Whatever.")
 
         //When
         val conditionParsingResult = rsm.conditionForExpression(userExpression)
@@ -1469,10 +1455,7 @@ class KBTest {
         val sessionCase = createCase("Case", attribute = waves, value = height, range = ReferenceRange("1", "2"))
         val userExpression = "elevated waves"
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val returnedCondition = rsm.conditionForExpression(userExpression).condition!!
@@ -1494,10 +1477,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val result = rsm.conditionForExpression(userExpression)
@@ -1519,10 +1499,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val returnedCondition = rsm.conditionForExpression(userExpression).condition
@@ -1544,10 +1521,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val result = rsm.conditionForExpression(userExpression)
@@ -1569,10 +1543,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val result = rsm.conditionForExpression(userExpression)
@@ -1594,10 +1565,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns parsedCondition
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val result = rsm.conditionForExpression(userExpression)
@@ -1618,10 +1586,7 @@ class KBTest {
         every { conditionParser.parse(any(), any()) } returns null
         rsm.setConditionParser(conditionParser)
 
-        rsm.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val returnedCondition = rsm.conditionForExpression(userExpression).condition
@@ -1651,10 +1616,7 @@ class KBTest {
 
         //When
         session.startConversation(viewableCase)
-        rsm.startRuleSession(
-            viewableCase.case,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi."))
-        )
+        rsm.startRuleSessionToAddComment(viewableCase.case, "Go to Bondi.")
         val modelResponder = mockk<ModelResponder>(relaxed = true)
         val reasonTransformer =
             session.chatSessionManager.createReasonTransformer(viewableCase, ruleService, modelResponder)
@@ -1677,14 +1639,14 @@ class KBTest {
     @Test
     fun `currentRuleSessionConditionTexts should return empty set when rule session has no conditions`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         rsm.currentRuleSessionConditionTexts() shouldBe emptySet()
     }
 
     @Test
     fun `currentRuleSessionConditionTexts should return condition texts after adding conditions`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         val condition = lessThanOrEqualTo(null, glucose(), 1.2)
         rsm.addConditionToCurrentRuleSession(condition)
         rsm.currentRuleSessionConditionTexts() shouldBe setOf(condition.asText())
@@ -1693,7 +1655,7 @@ class KBTest {
     @Test
     fun `currentRuleSessionConditionTexts should return texts of all added conditions`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Whatever.")
         val condition1 = lessThanOrEqualTo(null, glucose(), 1.2)
         val condition2 = greaterThanOrEqualTo(null, glucose(), 0.5)
         rsm.addConditionToCurrentRuleSession(condition1)
@@ -1810,7 +1772,7 @@ class KBTest {
     @Test
     fun `cornerstoneStatus should have empty ruleConditions when no conditions have been added and there are no cornerstones`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val ccStatus = rsm.cornerstoneStatus(null)
         ccStatus.ruleConditions shouldBe emptyList()
     }
@@ -1820,7 +1782,7 @@ class KBTest {
         val cc1 = kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         kb.viewableCase(cc1)
         val sessionCase = createCase("Case2", value = "2.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val ccStatus = rsm.cornerstoneStatus(null)
         ccStatus.ruleConditions shouldBe emptyList()
     }
@@ -1828,7 +1790,7 @@ class KBTest {
     @Test
     fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are no cornerstones`() {
         val sessionCase = createCase("Case1", value = "1.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val condition = lessThanOrEqualTo(null, glucose(), 1.2)
         rsm.addConditionToCurrentRuleSession(condition)
         val ccStatus = rsm.cornerstoneStatus(null)
@@ -1839,7 +1801,7 @@ class KBTest {
     fun `cornerstoneStatus should include ruleConditions after conditions have been added and there are cornerstones`() {
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case1", value = "1.0"))
         val sessionCase = createCase("Case2", value = "2.0")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
         val condition = lessThanOrEqualTo(null, glucose(), 2.5) //true for session case, true for cornerstone
         rsm.addConditionToCurrentRuleSession(condition)
         val ccStatus = rsm.cornerstoneStatus(null)

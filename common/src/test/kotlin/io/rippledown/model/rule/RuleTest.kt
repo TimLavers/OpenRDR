@@ -4,234 +4,109 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldEndWith
-import io.rippledown.model.CommentVariable
-import io.rippledown.model.Conclusion
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import kotlin.test.Test
 
 internal class RuleTest : RuleTestBase() {
-    private val resolver: (Int) -> String = { _ -> "unknown" }
-    private val conclusion1 = Conclusion(1, "First conclusion")
-    private val conclusion2 = Conclusion(2, "Second conclusion")
-    private val conclusion3 = Conclusion(3, "Third conclusion")
+    private val comment1 = comment("First comment")
+    private val comment2 = comment("Second comment")
+    private val comment3 = comment("Third comment")
+
+    /**
+     * The comment text of an assignment, which is how the knowledge base
+     * describes a comment rule to the user.
+     */
+    private val describe: (AssignValue) -> String = { (it.expression as CommentTemplate).text }
 
     @Test
     fun `action summary for root rule`() {
-        val rule = Rule(100, null, null)
+        val rule = Rule(100, null)
         rule.actionSummary() shouldBe ""
     }
 
     @Test
-    fun `action summary for rule adding a conclusion`() {
-        val rule = Rule(100, null, null, setOf(createCondition("a")))
-        val childRule = Rule(200, null, conclusion2, setOf(createCondition("b")))
+    fun `action summary for a rule that adds a comment`() {
+        val rule = Rule(100, null, setOf(createCondition("a")))
+        val childRule = Rule(200, null, setOf(createCondition("b")), mutableSetOf(), comment2)
         rule.addChild(childRule)
-        childRule.actionSummary() shouldBe "$RULE_TO_ADD_COMMENT\n${conclusion2.truncatedText(resolver)}"
+        childRule.actionSummary(describe) shouldBe "$RULE_TO_ADD_COMMENT\nSecond comment"
     }
 
     @Test
-    fun `action summary for rule removing a conclusion`() {
-        val rule = Rule(100, null, conclusion1, setOf(createCondition("a")))
-        val childRule = Rule(200, null, null, setOf(createCondition("b")))
+    fun `action summary for a rule that removes a comment`() {
+        val rule = Rule(100, null, setOf(createCondition("a")), mutableSetOf(), comment1)
+        val childRule = Rule(200, null, setOf(createCondition("b")))
         rule.addChild(childRule)
-        childRule.actionSummary() shouldBe "$RULE_TO_REMOVE_COMMENT\n${conclusion1.truncatedText(resolver)}"
+        childRule.actionSummary(describe) shouldBe "$RULE_TO_REMOVE_COMMENT\nFirst comment"
     }
 
     @Test
-    fun `action summary for rule replacing a conclusion`() {
-        val rule = Rule(100, null, conclusion1, setOf(createCondition("a")))
-        val childRule = Rule(200, null, conclusion2, setOf(createCondition("b")))
+    fun `action summary for a rule that replaces a comment`() {
+        val rule = Rule(100, null, setOf(createCondition("a")), mutableSetOf(), comment1)
+        val childRule = Rule(200, null, setOf(createCondition("b")), mutableSetOf(), comment2)
         rule.addChild(childRule)
         val expected = """
             $RULE_TO_REPLACE_COMMENT
-            ${conclusion1.truncatedText(resolver)}
+            First comment
             $WITH
-            ${conclusion2.truncatedText(resolver)}
+            Second comment
         """.trimIndent()
-        childRule.actionSummary() shouldBe expected
+        childRule.actionSummary(describe) shouldBe expected
     }
 
     @Test
-    fun `action summary truncates text`() {
-        val longText = "This is a long conclusion."
-        val longConclusion = Conclusion(1, longText)
-        val root = Rule(90, null, null)
-        val rule = Rule(100, null, longConclusion, setOf(createCondition("a")))
-        root.addChild(rule)
-        rule.actionSummary() shouldEndWith longConclusion.truncatedText(resolver)
-        val longerText = "The previous conclusion was not long enough."
-        val longerConclusion = Conclusion(2, longerText)
-
-        val replacer = Rule(110, null, longerConclusion )
-        rule.addChild(replacer)
-        replacer.actionSummary() shouldContain longConclusion.truncatedText(resolver)
-        replacer.actionSummary() shouldContain longerConclusion.truncatedText(resolver)
-
-        val remover = Rule(120, null, null)
-        replacer.addChild(remover)
-        replacer.actionSummary() shouldEndWith longerConclusion.truncatedText(resolver)
-    }
-
-    // ==================== actionSummary with conclusionRenderer Tests ====================
-
-    @Test
-    fun `action summary with renderer uses custom renderer for add rule`() {
-        val conclusionWithVar = Conclusion(1, "The wave is ${'$'}{}", listOf(CommentVariable(10)))
-        val root = Rule(90, null, null)
-        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
+    fun `action summary describes an assignment to a derived attribute as a value`() {
+        //Given a rule assigning a derived attribute
+        val bmi = Attribute(1, "BMI", AttributeKind.DERIVED)
+        val assignment = AssignValue(bmi, Literal("30.2"))
+        val root = Rule(90, null)
+        val rule = Rule(100, null, setOf(createCondition("a")), mutableSetOf(), assignment)
         root.addChild(rule)
 
-        val renderer: (Conclusion) -> String = { c -> c.truncatedText { id -> if (id == 10) "Wave" else "unknown" } }
-        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nThe wave is {Wave}"
+        //Then the value wording is used, not the comment wording
+        rule.actionSummary() shouldBe "$RULE_TO_ASSIGN_VALUE\nBMI = \"30.2\""
     }
 
     @Test
-    fun `action summary with renderer uses custom renderer for remove rule`() {
-        val conclusionWithVar = Conclusion(1, "The wave is ${'$'}{}", listOf(CommentVariable(10)))
-        val root = Rule(90, null, conclusionWithVar)
-        val rule = Rule(100, null, null, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        val renderer: (Conclusion) -> String = { c -> c.truncatedText { id -> if (id == 10) "Wave" else "unknown" } }
-        rule.actionSummary(renderer) shouldBe "$RULE_TO_REMOVE_COMMENT\nThe wave is {Wave}"
+    fun `action summary uses the assignment text by default`() {
+        val rule = Rule(100, null, setOf(createCondition("a")))
+        val childRule = Rule(200, null, setOf(createCondition("b")), mutableSetOf(), comment2)
+        rule.addChild(childRule)
+        childRule.actionSummary() shouldBe "$RULE_TO_ADD_COMMENT\n${comment2.asText()}"
     }
 
     @Test
-    fun `action summary with renderer uses custom renderer for replace rule`() {
-        val oldConclusion = Conclusion(1, "Old ${'$'}{} value", listOf(CommentVariable(10)))
-        val newConclusion = Conclusion(2, "New ${'$'}{} value", listOf(CommentVariable(20)))
-        val root = Rule(90, null, oldConclusion)
-        val rule = Rule(100, null, newConclusion, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        val renderer: (Conclusion) -> String = { c ->
-            c.truncatedText { id ->
-                when (id) {
-                    10 -> "Wave"; 20 -> "Sun"; else -> "unknown"
-                }
-            }
-        }
-        val expected = """
-            $RULE_TO_REPLACE_COMMENT
-            Old {Wave} value
-            $WITH
-            New {Sun} value
-        """.trimIndent()
-        rule.actionSummary(renderer) shouldBe expected
-    }
-
-    @Test
-    fun `action summary with renderer and unresolved attribute shows unknown`() {
-        val conclusionWithVar = Conclusion(1, "Value: ${'$'}{}", listOf(CommentVariable(999)))
-        val root = Rule(90, null, null)
-        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        val renderer: (Conclusion) -> String = { c -> c.truncatedText { _ -> "unknown" } }
-        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nValue: {unknown}"
-    }
-
-    @Test
-    fun `action summary with renderer and no variables uses default truncation`() {
-        val plainConclusion = Conclusion(1, "Normal results.")
-        val root = Rule(90, null, null)
-        val rule = Rule(100, null, plainConclusion, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        val renderer: (Conclusion) -> String = { c -> c.truncatedText { _ -> "unknown" } }
-        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nNormal results."
-    }
-
-    @Test
-    fun `action summary with renderer and multiple variables in replace rule`() {
-        val oldConclusion =
-            Conclusion(1, "Quality: ${'$'}{}, temp: ${'$'}{}", listOf(CommentVariable(1), CommentVariable(2)))
-        val newConclusion =
-            Conclusion(2, "Wave: ${'$'}{}, sun: ${'$'}{}", listOf(CommentVariable(3), CommentVariable(4)))
-        val root = Rule(90, null, oldConclusion)
-        val rule = Rule(100, null, newConclusion, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        val renderer: (Conclusion) -> String = { c ->
-            c.truncatedText { id ->
-                when (id) {
-                    1 -> "Wave"; 2 -> "Sun"; 3 -> "Quality"; 4 -> "Heat"; else -> "unknown"
-                }
-            }
-        }
-        val expected = """
-            $RULE_TO_REPLACE_COMMENT
-            Quality: {Wave}, tem...
-            $WITH
-            Wave: {Quality}, sun...
-        """.trimIndent()
-        rule.actionSummary(renderer) shouldBe expected
-    }
-
-    @Test
-    fun `action summary with renderer for root rule still returns empty`() {
-        val root = Rule(90, null, null)
-        val renderer: (Conclusion) -> String = { c -> c.truncatedText { _ -> "Whatever" } }
-        root.actionSummary(renderer) shouldBe ""
-    }
-
-    @Test
-    fun `action summary with renderer truncates long substituted text`() {
-        val conclusionWithVar = Conclusion(
-            1,
-            "The wave quality is ${'$'}{} and the air temperature is ${'$'}{}",
-            listOf(CommentVariable(1), CommentVariable(2))
-        )
-        val root = Rule(90, null, null)
-        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        val renderer: (Conclusion) -> String = { c ->
-            c.truncatedText { id ->
-                when (id) {
-                    1 -> "Wave"; 2 -> "Sun"; else -> "unknown"
-                }
-            }
-        }
-        rule.actionSummary(renderer) shouldBe "$RULE_TO_ADD_COMMENT\nThe wave quality is ..."
-    }
-
-    @Test
-    fun `action summary without renderer uses unknown for conclusion with variables`() {
-        val conclusionWithVar = Conclusion(1, "The wave is ${'$'}{}", listOf(CommentVariable(1)))
-        val root = Rule(90, null, null)
-        val rule = Rule(100, null, conclusionWithVar, setOf(createCondition("a")))
-        root.addChild(rule)
-
-        // Default renderer uses "unknown" for all attribute ids
-        // "The wave is {unknown}" is 21 chars, truncates to 20
-        rule.actionSummary() shouldBe "$RULE_TO_ADD_COMMENT\nThe wave is {unknown..."
+    fun `action summary for a stopping rule under the root is empty`() {
+        val root = Rule(90, null)
+        val stopping = Rule(100, null, setOf(createCondition("a")))
+        root.addChild(stopping)
+        stopping.actionSummary() shouldBe ""
     }
 
     @Test
     fun `adding a child in the constructor should set the parent`() {
-        val child = Rule(10, null, conclusion2, setOf())
-        val rule = Rule(1, null, conclusion1, setOf(), mutableSetOf(child))
+        val child = Rule(10, null, setOf(), mutableSetOf(), comment2)
+        val rule = Rule(1, null, setOf(), mutableSetOf(child), comment1)
         child.parent shouldBe rule
     }
 
     @Test
     fun `adding a child should set the parent`() {
-        val child = Rule(10, null, conclusion2, setOf())
-        val rule = Rule(1, null, conclusion1, setOf())
+        val child = Rule(10, null, setOf(), mutableSetOf(), comment2)
+        val rule = Rule(1, null, setOf(), mutableSetOf(), comment1)
         rule.addChild(child)
         child.parent shouldBe rule
     }
 
     @Test
     fun `remove a child leaf rule`() {
-        val root = Rule(10, null, null)
-        val rule12 = Rule(12, root, conclusion1, setOf())
+        val root = Rule(10, null)
+        val rule12 = Rule(12, root, setOf(), mutableSetOf(), comment1)
         root.addChild(rule12)
-        val rule13 = Rule(13, root, conclusion2, setOf())
+        val rule13 = Rule(13, root, setOf(), mutableSetOf(), comment2)
         rule12.addChild(rule13)
-        val rule14 = Rule(14, root, conclusion2, setOf())
+        val rule14 = Rule(14, root, setOf(), mutableSetOf(), comment2)
         rule12.addChild(rule14)
 
         shouldThrow<Exception> {
@@ -249,41 +124,41 @@ internal class RuleTest : RuleTestBase() {
     }
 
     @Test
-    fun `should be structurally equal if same conditions conclusion and parent even if different children`() {
-        val child1 = Rule(11, null, conclusion2, setOf())
-        val child2 = Rule(12, null, conclusion2, setOf())
-        val rule1 = Rule(1, null, conclusion1, setOf(), mutableSetOf(child1))
-        val rule2 = Rule(2, null, conclusion1, setOf(), mutableSetOf(child2))
+    fun `should be structurally equal if same conditions assignment and parent even if different children`() {
+        val child1 = Rule(11, null, setOf(), mutableSetOf(), comment2)
+        val child2 = Rule(12, null, setOf(), mutableSetOf(), comment2)
+        val rule1 = Rule(1, null, setOf(), mutableSetOf(child1), comment1)
+        val rule2 = Rule(2, null, setOf(), mutableSetOf(child2), comment1)
         rule1 shouldNotBe rule2
         rule1.structurallyEqual(rule2) shouldBe true
     }
 
     @Test
     fun `should be structurally equal if identical`() {
-        val rule1 = Rule(1, null, conclusion1, setOf())
+        val rule1 = Rule(1, null, setOf(), mutableSetOf(), comment1)
         rule1 shouldBe rule1
         rule1.structurallyEqual(rule1) shouldBe true
     }
 
     @Test
-    fun `should be structurally equal if identical and null conclusion`() {
-        val rule1 = Rule(2, null, null, setOf())
+    fun `should be structurally equal if identical and no assignment`() {
+        val rule1 = Rule(2, null, setOf())
         rule1 shouldBe rule1
         rule1.structurallyEqual(rule1) shouldBe true
     }
 
     @Test
     fun `should not be structurally equal if different conditions`() {
-        val rule1 = Rule(1, null, conclusion1, setOf(createCondition("a")))
-        val rule2 = Rule(1, null, conclusion1, setOf())
+        val rule1 = Rule(1, null, setOf(createCondition("a")), mutableSetOf(), comment1)
+        val rule2 = Rule(1, null, setOf(), mutableSetOf(), comment1)
         rule1.structurallyEqual(rule2) shouldBe false
         rule2.structurallyEqual(rule1) shouldBe false
     }
 
     @Test
     fun `should not be structurally equal to a root rule`() {
-        val root = Rule(0, null, null, setOf())
-        val rule = Rule(1, root, conclusion1, setOf(createCondition("a")))
+        val root = Rule(0, null, setOf())
+        val rule = Rule(1, root, setOf(createCondition("a")), mutableSetOf(), comment1)
         root shouldNotBe rule
         rule.structurallyEqual(root) shouldBe false
         rule shouldNotBe root
@@ -291,9 +166,9 @@ internal class RuleTest : RuleTestBase() {
     }
 
     @Test
-    fun `should not be structurally equal if different conclusion`() {
-        val rule1 = Rule(1, null, conclusion1)
-        val rule2 = Rule(2, null, conclusion2)
+    fun `should not be structurally equal if different assignment`() {
+        val rule1 = Rule(1, null, setOf(), mutableSetOf(), comment1)
+        val rule2 = Rule(2, null, setOf(), mutableSetOf(), comment2)
         rule1 shouldNotBe rule2
         rule1.structurallyEqual(rule2) shouldBe false
         rule2.structurallyEqual(rule1) shouldBe false
@@ -301,10 +176,10 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun `should not be structurally equal if different parents`() {
-        val parent1 = Rule(1, null, conclusion1)
-        val parent2 = Rule(2, null, conclusion2)
-        val rule1 = Rule(11, null, conclusion1)
-        val rule2 = Rule(12, null, conclusion1)
+        val parent1 = Rule(1, null, setOf(), mutableSetOf(), comment1)
+        val parent2 = Rule(2, null, setOf(), mutableSetOf(), comment2)
+        val rule1 = Rule(11, null, setOf(), mutableSetOf(), comment1)
+        val rule2 = Rule(12, null, setOf(), mutableSetOf(), comment1)
         parent1.addChild(rule1)
         parent2.addChild(rule2)
         rule1 shouldNotBe rule2
@@ -314,26 +189,26 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun `conditions are satisfied if empty`() {
-        val rule = Rule(1, null, conclusion1)
+        val rule = Rule(1, null, setOf(), mutableSetOf(), comment1)
         rule.conditionsSatisfied(glucoseOnlyCase()) shouldBe true
     }
 
     @Test
     fun `single condition which is true for case`() {
-        val rule = Rule(1, null, conclusion1, setOf(createCondition("vark")))
+        val rule = Rule(1, null, setOf(createCondition("vark")), mutableSetOf(), comment1)
         rule.conditionsSatisfied(clinicalNotesCase("aardvark")) shouldBe true
     }
 
     @Test
     fun `single condition which is false for case`() {
-        val rule = Rule(1, null, conclusion1, setOf(createCondition("vark")))
+        val rule = Rule(1, null, setOf(createCondition("vark")), mutableSetOf(), comment1)
         rule.conditionsSatisfied(clinicalNotesCase("aardwolf")) shouldBe false
     }
 
     @Test
     fun `any condition false means rule does not apply`() {
         val conditions = setOf(createCondition("a"), createCondition("b"), createCondition("c"), createCondition("d"))
-        val rule = Rule(1, null, conclusion1, conditions)
+        val rule = Rule(1, null, conditions, mutableSetOf(), comment1)
         rule.conditionsSatisfied(clinicalNotesCase("abc")) shouldBe false
         rule.conditionsSatisfied(clinicalNotesCase("abd")) shouldBe false
         rule.conditionsSatisfied(clinicalNotesCase("cbd")) shouldBe false
@@ -343,7 +218,7 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun `rule applies if all true`() {
         val conditions = setOf(createCondition("a"), createCondition("b"), createCondition("c"), createCondition("d"))
-        val rule = Rule(1, null, conclusion1, conditions)
+        val rule = Rule(1, null, conditions, mutableSetOf(), comment1)
         rule.conditionsSatisfied(clinicalNotesCase("abcd")) shouldBe true
         rule.conditionsSatisfied(clinicalNotesCase("bcda")) shouldBe true
         rule.conditionsSatisfied(clinicalNotesCase("xdcba")) shouldBe true
@@ -354,30 +229,30 @@ internal class RuleTest : RuleTestBase() {
         val condA = createCondition("a")
         val condB = createCondition("b")
         val conditions = setOf(condA, condB)
-        val rule1 = Rule(1, null, null, conditions)
-        rule1.summary().conclusion shouldBe null
+        val rule1 = Rule(1, null, conditions)
+        rule1.summary().assignment shouldBe null
         rule1.summary().conditions.size shouldBe 2
         rule1.summary().conditions shouldContain condA
         rule1.summary().conditions shouldContain condB
 
-        val rule2 = Rule(2, null, conclusion1, conditions)
-        rule2.summary().conclusion shouldBe conclusion1
-        rule1.summary().conditions.size shouldBe 2
-        rule1.summary().conditions shouldContain condA
-        rule1.summary().conditions shouldContain condB
+        val rule2 = Rule(2, null, conditions, mutableSetOf(), comment1)
+        rule2.summary().assignment shouldBe comment1
+        rule2.summary().conditions.size shouldBe 2
+        rule2.summary().conditions shouldContain condA
+        rule2.summary().conditions shouldContain condB
     }
 
     @Test
     fun `summary should contain conditions from root`() {
         val conditions1 = setOf(createCondition("a"), createCondition("b"))
-        val rule1 = Rule(1, null, null, conditions1)
+        val rule1 = Rule(1, null, conditions1)
         rule1.summary().conditionTextsFromRoot shouldBe listOf(
             createCondition("a"),
             createCondition("b")
         ).map { it.asText() }
 
         val conditions2 = setOf(createCondition("x"), createCondition("y"))
-        val rule2 = Rule(2, rule1, conclusion2, conditions2)
+        val rule2 = Rule(2, rule1, conditions2, mutableSetOf(), comment2)
         rule2.summary().conditionTextsFromRoot shouldBe listOf(
             createCondition("a"),
             createCondition("b"),
@@ -391,18 +266,18 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun `rule with no children that applies to case`() {
         val conditions = setOf(createCondition("a"))
-        val rule = Rule(1, null, conclusion1, conditions)
+        val rule = Rule(1, null, conditions, mutableSetOf(), comment1)
         val kase = clinicalNotesCase("ab")
 
         val result = rule.apply(kase, interpretation)
         result shouldBe true
-        checkInterpretation(conclusion1)
+        checkInterpretation(comment1)
     }
 
     @Test
     fun `rule that does not apply to case and has no children`() {
         val conditions = setOf(createCondition("a"))
-        val rule = Rule(1, null, conclusion1, conditions)
+        val rule = Rule(1, null, conditions, mutableSetOf(), comment1)
 
         val result = rule.apply(clinicalNotesCase("bc"), interpretation)
         result shouldBe false
@@ -414,20 +289,20 @@ internal class RuleTest : RuleTestBase() {
         val rule = setupRuleWithOneChild()
         val result = rule.apply(clinicalNotesCase("ac"), interpretation)
         result shouldBe true
-        checkInterpretation(conclusion1)
+        checkInterpretation(comment1)
     }
 
     @Test
     fun `rule applies to case and so does child`() {
         val conditions = setOf(createCondition("a"))
-        val rule = Rule(1, null, conclusion1, conditions)
+        val rule = Rule(1, null, conditions, mutableSetOf(), comment1)
         val childConditions = setOf(createCondition("b"))
-        val childRule = Rule(3, null, conclusion2, childConditions)
+        val childRule = Rule(3, null, childConditions, mutableSetOf(), comment2)
         rule.addChild(childRule)
 
         val result = rule.apply(clinicalNotesCase("ab"), interpretation)
         result shouldBe true
-        checkInterpretation(conclusion2)
+        checkInterpretation(comment2)
     }
 
     @Test
@@ -453,7 +328,7 @@ internal class RuleTest : RuleTestBase() {
         val rule = setupRuleWithTwoChildren()
         val result = rule.apply(clinicalNotesCase("a"), interpretation)
         result shouldBe true
-        checkInterpretation(conclusion1)
+        checkInterpretation(comment1)
     }
 
     @Test
@@ -461,7 +336,7 @@ internal class RuleTest : RuleTestBase() {
         val rule = setupRuleWithTwoChildren()
         val result = rule.apply(clinicalNotesCase("ab"), interpretation)
         result shouldBe true
-        checkInterpretation(conclusion2)
+        checkInterpretation(comment2)
     }
 
     @Test
@@ -469,33 +344,33 @@ internal class RuleTest : RuleTestBase() {
         val rule = setupRuleWithTwoChildren()
         val result = rule.apply(clinicalNotesCase("abc"), interpretation)
         result shouldBe true
-        checkInterpretation(conclusion2, conclusion3)
+        checkInterpretation(comment2, comment3)
     }
 
     @Test
     fun addRuleTest() {
         val grandChildConditions = setOf(createCondition("a"), createCondition("c"))
-        val grandChild = Rule(12, null, conclusion3, grandChildConditions)
+        val grandChild = Rule(12, null, grandChildConditions, mutableSetOf(), comment3)
         val childConditions = setOf(createCondition("b"))
-        val childRule = Rule(13, null, conclusion2, childConditions)
+        val childRule = Rule(13, null, childConditions, mutableSetOf(), comment2)
         childRule.addChild(grandChild)
-        childRule.conditions shouldBe childRule.conditions
-        childRule.conclusion shouldBe childRule.conclusion
+        childRule.conditions shouldBe childConditions
+        childRule.assignment shouldBe comment2
         val rootConditions = setOf(createCondition("a"), createCondition("b"))
-        val root = Rule(45, null, conclusion1, rootConditions)
+        val root = Rule(45, null, rootConditions, mutableSetOf(), comment1)
         root.addChild(childRule)
-        root.conclusion shouldBe root.conclusion
-        root.conditions shouldBe root.conditions
+        root.assignment shouldBe comment1
+        root.conditions shouldBe rootConditions
         root.childRules() shouldContain (childRule)
         val result = root.apply(clinicalNotesCase("abc"), interpretation)
         result shouldBe true
-        checkInterpretation(conclusion3)
+        checkInterpretation(comment3)
     }
 
     @Test
     fun visitTest() {
         val conditions = setOf(createCondition("a"))
-        val rule = Rule(1, null, conclusion1, conditions)
+        val rule = Rule(1, null, conditions, mutableSetOf(), comment1)
         val visited = mutableSetOf<Rule>()
         val action: ((Rule) -> (Unit)) = {
             visited.add(it)
@@ -508,12 +383,12 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun `visit rule with children`() {
         val rule = setupRuleWithTwoChildren()
-        val visited = mutableSetOf<Conclusion?>()
+        val visited = mutableSetOf<AssignValue?>()
         val action: ((Rule) -> (Unit)) = {
-            visited.add(it.conclusion)
+            visited.add(it.assignment)
         }
         rule.visit(action)
-        val expected = mutableSetOf(conclusion1, conclusion2, conclusion3)
+        val expected = mutableSetOf(comment1, comment2, comment3)
         visited shouldBe expected
     }
 
@@ -521,15 +396,15 @@ internal class RuleTest : RuleTestBase() {
     fun `visit deep`() {
         val rule = setupRuleWithOneChild()
         val grandChildConditions = setOf(createCondition("a"), createCondition("c"))
-        val grandChild = Rule(1, null, conclusion3, grandChildConditions)
+        val grandChild = Rule(1, null, grandChildConditions, mutableSetOf(), comment3)
         rule.childRules().first().addChild(grandChild)
 
-        val visited = mutableSetOf<Conclusion?>()
+        val visited = mutableSetOf<AssignValue?>()
         val action: ((Rule) -> (Unit)) = {
-            visited.add(it.conclusion)
+            visited.add(it.assignment)
         }
         rule.visit(action)
-        val expected = mutableSetOf(conclusion1, conclusion2, conclusion3)
+        val expected = mutableSetOf(comment1, comment2, comment3)
         visited shouldBe expected
     }
 
@@ -538,7 +413,7 @@ internal class RuleTest : RuleTestBase() {
         val rule = setupRuleWithOneChild()
         val copy = rule.copy()
         (copy !== rule) shouldBe true
-        copy.conclusion shouldBe rule.conclusion
+        copy.assignment shouldBe rule.assignment
         copy.conditions shouldBe rule.conditions
         copy.childRules() shouldBe rule.childRules()
     }
@@ -549,7 +424,7 @@ internal class RuleTest : RuleTestBase() {
         val copy = rule.copy()
         (copy !== rule) shouldBe true
         copy.parent shouldBe rule.parent
-        copy.conclusion shouldBe rule.conclusion
+        copy.assignment shouldBe rule.assignment
         copy.conditions shouldBe rule.conditions
         copy.childRules() shouldBe rule.childRules()
     }
@@ -561,7 +436,7 @@ internal class RuleTest : RuleTestBase() {
         val copy = rule.copy()
         (copy !== rule) shouldBe true
         copy.parent shouldBe Rule(1, null)
-        copy.conclusion shouldBe rule.conclusion
+        copy.assignment shouldBe rule.assignment
         copy.conditions shouldBe rule.conditions
         copy.childRules() shouldBe rule.childRules()
     }
@@ -587,16 +462,28 @@ internal class RuleTest : RuleTestBase() {
 
     @Test
     fun `should list conditions for rule with null parent`() {
-        val child = Rule(99, null, conclusion1, setOf(createCondition("a"), createCondition("b")))
+        val child = Rule(99, null, setOf(createCondition("a"), createCondition("b")), mutableSetOf(), comment1)
         child.conditionTextsFromRoot() shouldBe listOf(createCondition("a"), createCondition("b")).map { it.asText() }
     }
 
     @Test
     fun `should list conditions for rule with not null parent`() {
         val parent =
-            Rule(23, null, conclusion1, setOf(createCondition("x"), createCondition("y"), createCondition("z")))
+            Rule(
+                23,
+                null,
+                setOf(createCondition("x"), createCondition("y"), createCondition("z")),
+                mutableSetOf(),
+                comment1
+            )
         val child =
-            Rule(24, parent, conclusion2, setOf(createCondition("a"), createCondition("b"), createCondition("c")))
+            Rule(
+                24,
+                parent,
+                setOf(createCondition("a"), createCondition("b"), createCondition("c")),
+                mutableSetOf(),
+                comment2
+            )
         child.conditionTextsFromRoot() shouldBe listOf(
             createCondition("x"),
             createCondition("y"),
@@ -611,19 +498,19 @@ internal class RuleTest : RuleTestBase() {
     private fun setupRuleWithTwoChildren(): Rule {
         val rule = setupRuleWithOneChild()
         val childConditions = setOf(createCondition("c"))
-        val childRule = Rule(12, null, conclusion3, childConditions)
+        val childRule = Rule(12, null, childConditions, mutableSetOf(), comment3)
         rule.addChild(childRule)
         return rule
     }
 
     private fun setupRuleWithOneChild(): Rule {
-        val rule = Rule(100, null, conclusion1, setOf(createCondition("a")))
-        val childRule = Rule(200, null, conclusion2, setOf(createCondition("b")))
+        val rule = Rule(100, null, setOf(createCondition("a")), mutableSetOf(), comment1)
+        val childRule = Rule(200, null, setOf(createCondition("b")), mutableSetOf(), comment2)
         rule.addChild(childRule)
         return rule
     }
 
-    private fun checkInterpretation(vararg conclusions: Conclusion) {
-        checkInterpretation(interpretation, *conclusions)
+    private fun checkInterpretation(vararg assignments: AssignValue) {
+        checkInterpretation(interpretation, *assignments)
     }
 }

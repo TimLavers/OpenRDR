@@ -51,9 +51,6 @@ internal class CommentTokenOverlapScorer(
     }
 
     private fun computeCommentTokens(): Set<String> = when (val action = ctx.action) {
-        is ChangeTreeToAddConclusion -> tokenise(action.toBeAdded.text)
-        is ChangeTreeToReplaceConclusion -> tokenise(action.replacement.text)
-        is ChangeTreeToRemoveConclusion -> tokenise(action.toBeRemoved.text)
         is ChangeTreeToAddAssignment -> assignmentTokens(action.toBeAdded, includeExpression = true)
         is ChangeTreeToReplaceAssignment -> assignmentTokens(action.replacement, includeExpression = true)
         is ChangeTreeToRemoveAssignment -> assignmentTokens(action.toBeRemoved, includeExpression = false)

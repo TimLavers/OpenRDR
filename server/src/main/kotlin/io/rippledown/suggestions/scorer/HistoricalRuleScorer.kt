@@ -2,13 +2,16 @@ package io.rippledown.suggestions.scorer
 
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.edit.SuggestedCondition
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.ChangeTreeToAddAssignment
+import io.rippledown.model.rule.ChangeTreeToRemoveAssignment
+import io.rippledown.model.rule.ChangeTreeToReplaceAssignment
+import io.rippledown.model.rule.RuleTreeChange
 import io.rippledown.suggestions.SuggestionContext
 
 /**
  * Scores a [SuggestedCondition] by the number of historical rules in the
- * rule tree whose conclusion matches the current action's target conclusion
- * and whose own conditions include one that `sameAs` the candidate's
+ * rule tree that assign the current action's target attribute and whose own
+ * conditions include one that `sameAs` the candidate's
  * `initialSuggestion()`.
  *
  * This is the strongest signal available in Phase 1: the KB has literally
@@ -16,7 +19,7 @@ import io.rippledown.suggestions.SuggestionContext
  *
  * When the context has no action, score is 0 for every candidate.
  *
- * Matching is by `Conclusion.id` — not reference identity — to survive KB
+ * Matching is by attribute id — not reference identity — to survive KB
  * reloads, and condition matching is by [Condition.sameAs] (ignores
  * condition id, display text and user expression but requires predicate
  * equality, including the cutoff value of `≥` / `≤` predicates).
@@ -45,42 +48,22 @@ internal class HistoricalRuleScorer(
     }
 
     /**
-     * Returns, for every rule in the tree whose conclusion id matches the
-     * action's target conclusion id, that rule's own conditions (not the
-     * conditions inherited along the path — those are Phase 3 territory).
+     * Returns, for every rule in the tree that assigns the action's target
+     * attribute, that rule's own conditions (not the conditions inherited
+     * along the path — those are Phase 3 territory).
      */
     private fun computeHistoricalConditions(): List<List<Condition>> {
-        val targetConclusionId = ctx.action?.targetConclusionId()
-        val targetAttrId = ctx.action?.targetAttributeId()
-        if (targetConclusionId == null && targetAttrId == null) return emptyList()
+        val targetAttrId = ctx.action?.targetAttributeId() ?: return emptyList()
         return ctx.ruleTree.rulesMatching { rule ->
-            (targetConclusionId != null && rule.conclusion?.id == targetConclusionId) ||
-                    (targetAttrId != null && rule.assignment?.attribute?.id == targetAttrId)
+            rule.assignment?.attribute?.id == targetAttrId
         }.map { it.conditions.toList() }
     }
 }
 
 /**
- * The conclusion id this action is introducing (or whose conditions it is
- * reusing). Add / Replace both resolve to the comment being *added* to the
- * case; Remove resolves to the comment being removed so we surface the
- * conditions that previously gated it in.
- *
- * Returns null for assignment-based actions — those use
- * [targetAttributeId] instead, since comments are now comment attributes.
- */
-internal fun RuleTreeChange.targetConclusionId(): Int? = when (this) {
-    is ChangeTreeToAddConclusion -> toBeAdded.id
-    is ChangeTreeToReplaceConclusion -> replacement.id
-    is ChangeTreeToRemoveConclusion -> toBeRemoved.id
-    else -> null
-}
-
-/**
- * The comment-attribute id this action is targeting. For Add it is the
- * attribute being assigned; for Replace it is the *replacement* attribute
- * (the new comment); for Remove it is the attribute being retracted. Returns
- * null for conclusion-based actions.
+ * The attribute id this action is targeting. For Add it is the attribute
+ * being assigned; for Replace it is the *replacement* attribute (the new
+ * comment); for Remove it is the attribute being retracted.
  */
 internal fun RuleTreeChange.targetAttributeId(): Int? = when (this) {
     is ChangeTreeToAddAssignment -> toBeAdded.attribute.id

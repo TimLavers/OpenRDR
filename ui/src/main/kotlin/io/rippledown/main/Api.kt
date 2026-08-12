@@ -21,7 +21,6 @@ import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
@@ -210,10 +209,6 @@ class Api(
     // Retrieves the current cornerstone status for an ongoing rule session, if any
     //todo implement the backend for this. Use the conditions and currre
     suspend fun cornerstoneStatus(): CornerstoneStatus? = client.get("$API_URL$CORNERSTONE_STATUS") {
-        setKBParameter()
-    }.body()
-
-    suspend fun allConclusions(): Set<Conclusion> = client.get("$API_URL$ALL_CONCLUSIONS") {
         setKBParameter()
     }.body()
 

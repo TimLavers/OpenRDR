@@ -5,8 +5,8 @@ import io.kotest.matchers.should
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.beInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.Conclusion
-import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.rule.dsl.ruleTree
@@ -16,18 +16,18 @@ import kotlin.test.Test
 open class RuleTreeChangeTest : RuleTestBase() {
     lateinit var tree: RuleTree
     lateinit var ruleFactory: RuleFactory
-    lateinit var conclusionFactory: DummyConclusionFactory
+    lateinit var commentFactory: CommentFactory
     lateinit var conditionFactory: DummyConditionFactory
     val A = "A"
     val B = "B"
     lateinit var newConclusion: Conclusion
 
     open fun setup() {
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
         ruleFactory = DummyRuleFactory()
-        newConclusion = conclusionFactory.getOrCreate("It is very windy!")
-        tree = ruleTree(conclusionFactory) {
+        newConclusion = commentFactory.getOrCreate("It is very windy!")
+        tree = ruleTree(commentFactory) {
             child {
                 +A
                 condition(conditionFactory) {
@@ -53,7 +53,7 @@ internal class ChangeTreeToAddConclusionTest: RuleTreeChangeTest() {
     fun alignWith() {
         val copyOfNewConclusion = Conclusion(newConclusion.id, newConclusion.text)
         val change = ChangeTreeToAddConclusion(copyOfNewConclusion)
-        val aligned = change.alignWith(conclusionFactory)
+        val aligned = change.alignWith(commentFactory)
         aligned.toBeAdded shouldBeSameInstanceAs newConclusion
     }
 
@@ -62,7 +62,7 @@ internal class ChangeTreeToAddConclusionTest: RuleTreeChangeTest() {
         val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
         val change = ChangeTreeToAddConclusion(copyOfNewConclusion)
         shouldThrow<IllegalArgumentException> {
-            change.alignWith(conclusionFactory)
+            change.alignWith(commentFactory)
         }.message shouldContain "do not match"
     }
 
@@ -90,7 +90,7 @@ internal class ChangeTreeToRemoveConclusionTest: RuleTreeChangeTest() {
     fun alignWith() {
         val copyOfNewConclusion = Conclusion(newConclusion.id, newConclusion.text)
         val change = ChangeTreeToRemoveConclusion(copyOfNewConclusion)
-        val aligned = change.alignWith(conclusionFactory)
+        val aligned = change.alignWith(commentFactory)
         aligned.toBeRemoved shouldBeSameInstanceAs newConclusion
     }
 
@@ -99,7 +99,7 @@ internal class ChangeTreeToRemoveConclusionTest: RuleTreeChangeTest() {
         val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
         val change = ChangeTreeToRemoveConclusion(copyOfNewConclusion)
         shouldThrow<IllegalArgumentException> {
-            change.alignWith(conclusionFactory)
+            change.alignWith(commentFactory)
         }.message shouldContain "do not match"
     }
 
@@ -126,7 +126,7 @@ internal class ChangeTreeToReplaceConclusionTest: RuleTreeChangeTest() {
     @BeforeTest
     override fun setup() {
         super.setup()
-        rainConclusion = conclusionFactory.getOrCreate("It will rain.")
+        rainConclusion = commentFactory.getOrCreate("It will rain.")
     }
 
     @Test
@@ -134,7 +134,7 @@ internal class ChangeTreeToReplaceConclusionTest: RuleTreeChangeTest() {
         val copyOfNewConclusion = Conclusion(newConclusion.id, newConclusion.text)
         val copyOfToGo = Conclusion(rainConclusion.id, rainConclusion.text)
         val change = ChangeTreeToReplaceConclusion(copyOfToGo,copyOfNewConclusion)
-        val aligned = change.alignWith(conclusionFactory)
+        val aligned = change.alignWith(commentFactory)
         aligned.replacement shouldBeSameInstanceAs newConclusion
         aligned.toBeReplaced shouldBeSameInstanceAs rainConclusion
     }
@@ -144,7 +144,7 @@ internal class ChangeTreeToReplaceConclusionTest: RuleTreeChangeTest() {
         val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
         val change = ChangeTreeToReplaceConclusion(rainConclusion, copyOfNewConclusion)
         shouldThrow<IllegalArgumentException> {
-            change.alignWith(conclusionFactory)
+            change.alignWith(commentFactory)
         }.message shouldContain "do not match"
     }
 
@@ -153,7 +153,7 @@ internal class ChangeTreeToReplaceConclusionTest: RuleTreeChangeTest() {
         val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
         val change = ChangeTreeToReplaceConclusion(copyOfNewConclusion, rainConclusion)
         shouldThrow<IllegalArgumentException> {
-            change.alignWith(conclusionFactory)
+            change.alignWith(commentFactory)
         }.message shouldContain "do not match"
     }
 

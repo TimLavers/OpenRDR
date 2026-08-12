@@ -15,6 +15,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.Attribute
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.toJsonString
 
 object KBChatService {
@@ -192,4 +193,7 @@ object KBChatService {
     }
 }
 
-private fun Interpretation.toComments() = conclusionTexts().toJsonString()
+private fun Interpretation.toComments() = assignments()
+    .mapNotNull { (it.expression as? CommentTemplate)?.textWithVariableNames() }
+    .toSet()
+    .toJsonString()

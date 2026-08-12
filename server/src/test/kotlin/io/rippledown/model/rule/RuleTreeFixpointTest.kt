@@ -126,7 +126,7 @@ internal class RuleTreeFixpointTest {
         // Then the whole chain has fired
         materialised.latestValue(diabetesStatus) shouldBe "diabetic"
         materialised.latestValue(riskScore) shouldBe "7"
-        case.interpretation.conclusions() shouldBe setOf(advice)
+        case.interpretation.assignments() shouldBe setOf(advice)
     }
 
     @Test
@@ -190,7 +190,7 @@ internal class RuleTreeFixpointTest {
 
         // Then the computed value is assigned and the dependent rule fired
         materialised.latestValue(bmi) shouldBe "28.7"
-        case.interpretation.conclusions() shouldBe setOf(elevated)
+        case.interpretation.assignments() shouldBe setOf(elevated)
     }
 
     @Test
@@ -313,7 +313,7 @@ internal class RuleTreeFixpointTest {
         // Then the result is stable
         second.hasSameDataAs(first) shouldBe true
         third.hasSameDataAs(first) shouldBe true
-        case.interpretation.conclusions() shouldBe setOf(advice)
+        case.interpretation.assignments() shouldBe setOf(advice)
     }
 
     @Test

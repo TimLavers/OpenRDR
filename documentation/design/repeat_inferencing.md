@@ -285,6 +285,17 @@ Therefore, there is no need for a cycle check when the rule is committed.
    converted to a comment attribute plus assignment.
 8. **Attribute creation UX**: The user adds a non-comment derived attribute by naming it and typing it as text or
    numeric. Within the scope of this rule session, they cannot add another derived attribute.
+9. **"Assignment" is the word for what a rule does**: the rule action is
+   `AssignValue(attribute, expression)`, and an interpretation is the set of `assignments()` made by the rules that
+   fired. The name follows the verb rather than the thing, because after decision 1 there is only one thing a rule can
+   do, and it is deliberately kind-agnostic: one word covers a comment and a derived value, which is the whole point of
+   the phase. `conclusions()` could not survive, since a conclusion is no longer a distinct type; `values()` reads oddly
+   for comments; `actions()`
+   was the near miss, and would be the name to reach for if a second kind of action is ever added. The domain word for
+   what the *user* sees remains "comment", so the code speaks of comments again at the edges that present them —
+   `InterpretationViewManager`,
+   `Interpretation.commentTexts`, the chat and the report — each of which selects the assignments whose attribute is of
+   `COMMENT` kind.
 
 ## Alternative considered and rejected: pre-processing evaluation
 

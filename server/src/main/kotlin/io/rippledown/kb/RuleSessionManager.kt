@@ -67,13 +67,12 @@ class RuleSessionManager(
         action: RuleTreeChange
     ): CornerstoneStatus {
         logger.info("Starting rule session for case ${case.name} and action $action")
-        logger.info("Current conclusions are: ${case.interpretation.conclusionTexts()} ")
+        logger.info("Current comments are: ${case.interpretation.commentTexts(case)} ")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         checkActionExpressionIsAcyclic(action)
-        val alignedAction = action.alignWith(kb.conclusionManager)
         ruleSession = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases(), kb.definitionResolver
+            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), kb.definitionResolver
         )
         logger.info("Rule session created")
         return cornerstoneStatus(null)
@@ -412,11 +411,20 @@ class RuleSessionManager(
     }
 
     /**
-     * Render a conclusion for the given case, substituting any comment variables with their attribute
-     * values so that the diff/preview shows human-readable text rather than the internal token form.
+     * How an assignment reads to the user: a comment as its (truncated) text,
+     * resolved through the attribute's definition when the rule assigns it by
+     * definition, and anything else as the assignment itself.
      */
-    private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
-        conclusion.render(case) { id -> attributeById(id) }.text
+    private fun describe(assignment: AssignValue): String {
+        if (assignment.attribute.kind != AttributeKind.COMMENT) return assignment.asText()
+        val expression = assignment.expression.resolvedFor(assignment.attribute, kb.definitionResolver)
+        val text = when (expression) {
+            is CommentTemplate -> expression.textWithVariableNames { id -> attributeById(id) }
+            is Literal -> expression.value
+            else -> assignment.attribute.name
+        }
+        return text.truncatedComment()
+    }
 
     override fun attributeById(id: Int): Attribute? =
         runCatching { kb.attributeManager.getById(id) }.getOrNull()
@@ -526,10 +534,7 @@ class RuleSessionManager(
             ?: return UndoRuleDescription("There are no rules to undo.", false)
         val idOfExemplar = record.idsOfRulesAddedInSession.random()
         val exemplar = kb.ruleTree.ruleForId(idOfExemplar)
-        val summary = exemplar.actionSummary { conclusion ->
-            conclusion.truncatedText { id -> attributeById(id)?.name ?: "unknown" }
-        }
-        return UndoRuleDescription(summary, true)
+        return UndoRuleDescription(exemplar.actionSummary { describe(it) }, true)
     }
 
     fun ruleSessionHistories() = kb.ruleSessionRecorder.allRuleSessionHistories()

@@ -15,7 +15,6 @@ internal fun idsStringToIdsSet(idsString: String) = idsString.split(',').filter 
 data class PersistentRule(
     val id: Int?,
     val parentId: Int?,
-    val conclusionId: Int?,
     val conditionIds: Set<Int>,
     val assignment: AssignValue? = null
 ) {
@@ -23,7 +22,6 @@ data class PersistentRule(
     constructor(rule: Rule) : this(
         rule.id,
         rule.parent?.id,
-        rule.conclusion?.id,
         rule.conditions.map { requireNotNull(it.id) { "Cannot persist a rule with an unstored condition." } }.toSet(),
         rule.assignment
     )
@@ -31,12 +29,11 @@ data class PersistentRule(
     constructor(
         id: Int?,
         parentId: Int?,
-        conclusionId: Int?,
         conditionIdsString: String,
         assignment: AssignValue? = null
-    ) : this(id, parentId, conclusionId, idsStringToIdsSet(conditionIdsString), assignment)
+    ) : this(id, parentId, idsStringToIdsSet(conditionIdsString), assignment)
 
-    constructor(): this(null, null, null, emptySet() )
+    constructor() : this(null, null, emptySet())
 
     fun conditionIdsString() = idsSetToString(conditionIds)
 
@@ -56,9 +53,6 @@ interface RuleStore {
 
     /**
      * Replace the stored rule that has the same id as the given rule.
-     * Used by the conclusion migration to rewrite conclusion rules as
-     * assignment rules in place. See "Phase 2" in
-     * documentation/design/repeat_inferencing.md.
      */
     fun update(persistentRule: PersistentRule)
 }

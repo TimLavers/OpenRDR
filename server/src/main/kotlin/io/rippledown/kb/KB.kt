@@ -17,7 +17,6 @@ class KB(persistentKB: PersistentKB) {
     val kbInfo = persistentKB.kbInfo()
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager = AttributeManager(persistentKB.attributeStore())
-    val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
     val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
 
     /**
@@ -27,10 +26,10 @@ class KB(persistentKB: PersistentKB) {
      */
     val definitionResolver: DefinitionResolver = { attribute -> derivedDefinitionManager.definitionFor(attribute.id) }
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    val interpretationViewManager = InterpretationViewManager(attributeManager)
+    val interpretationViewManager = InterpretationViewManager()
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
     internal val ruleManager =
-        RuleManager(conclusionManager, conditionManager, attributeManager, persistentKB.ruleStore())
+        RuleManager(conditionManager, attributeManager, persistentKB.ruleStore())
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
