@@ -8,14 +8,13 @@ import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.export.util.Zipper
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.Result
+import io.rippledown.model.*
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.rule.ChangeTreeToAddConclusion
+import io.rippledown.model.rule.CommentTemplate
+import io.rippledown.model.rule.Literal
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import java.io.File
@@ -130,6 +129,28 @@ class KBImporterTest : ExporterTestBase() {
         // Set up the case view.
         kb.caseViewManager.set(listOf(hdl, ldl, glucose))
         return kb
+    }
+
+    @Test
+    fun `should export then import the definitions of comment and derived attributes`() {
+        // Given a KB whose comment is a comment attribute and which has a
+        // derived attribute, so that all the text is held in definitions
+        val kbInfo = KBInfo("Definitions")
+        val kb = KB(persistenceProvider.createKBPersistence(kbInfo))
+        val glucose = kb.attributeManager.getOrCreate("Glucose")
+        val comment = kb.attributeManager.createCommentAttribute()
+        kb.derivedDefinitionManager.store(comment.id, CommentTemplate("Glucose is high."))
+        val ratio = kb.attributeManager.getOrCreate("Ratio", AttributeKind.DERIVED)
+        kb.derivedDefinitionManager.store(ratio.id, Literal("1.5"))
+
+        // When it is exported and imported
+        KBExporter(tempDir, kb).export()
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+
+        // Then the definitions are those of the original, so no comment is lost
+        rebuilt.derivedDefinitionManager.definitionFor(comment.id) shouldBe CommentTemplate("Glucose is high.")
+        rebuilt.derivedDefinitionManager.definitionFor(ratio.id) shouldBe Literal("1.5")
+        rebuilt.attributeManager.getById(glucose.id).name shouldBe "Glucose"
     }
 
     @Test
