@@ -36,13 +36,15 @@ interface CaseSelectorHandler {
 fun CaseSelector(
     caseIds: List<CaseId>,
     cornerstoneCaseIds: List<CaseId> = emptyList(),
-    handler: CaseSelectorHandler
+    handler: CaseSelectorHandler,
+    favouriteCaseIds: List<CaseId> = emptyList()
 ) {
-    val allCaseIds = caseIds + cornerstoneCaseIds
+    val allCaseIds = caseIds + cornerstoneCaseIds + favouriteCaseIds
     var selectedCaseIndex by remember { mutableStateOf(0) }
     val focusRequestors = remember(allCaseIds) { List(allCaseIds.size) { FocusRequester() } }
     var processedExpanded by remember { mutableStateOf(true) }
     var cornerstoneExpanded by remember { mutableStateOf(true) }
+    var favouritesExpanded by remember { mutableStateOf(true) }
 
     // A FocusRequester is only attached once its CaseNameItem has been
     // composed, which only happens when the item's section is expanded (the
@@ -55,10 +57,10 @@ fun CaseSelector(
     // requester on the current frame.
     fun requestFocusOnCase(index: Int) {
         if (index !in focusRequestors.indices) return
-        val isComposed = if (index < caseIds.size) {
-            processedExpanded
-        } else {
-            cornerstoneCaseIds.isNotEmpty() && cornerstoneExpanded
+        val isComposed = when {
+            index < caseIds.size -> processedExpanded
+            index < caseIds.size + cornerstoneCaseIds.size -> cornerstoneCaseIds.isNotEmpty() && cornerstoneExpanded
+            else -> favouriteCaseIds.isNotEmpty() && favouritesExpanded
         }
         if (!isComposed) return
         try {
@@ -175,6 +177,47 @@ fun CaseSelector(
                             .align(Alignment.CenterEnd)
                             .width(8.dp),
                         adapter = rememberScrollbarAdapter(cornerstoneScrollState)
+                    )
+                }
+            }
+            if (favouriteCaseIds.isNotEmpty()) {
+                CollapsibleSectionHeader(
+                    title = "Favourites (${favouriteCaseIds.size})",
+                    expanded = favouritesExpanded,
+                    onToggle = { favouritesExpanded = !favouritesExpanded },
+                    semanticId = FAVOURITES_SECTION_HEADER_ID
+                )
+            }
+            if (favouriteCaseIds.isNotEmpty() && favouritesExpanded) {
+                Box(modifier = Modifier.weight(1f)) {
+                    val favouritesScrollState = rememberScrollState()
+                    Column(
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = FAVOURITES_SECTION_ID
+                            }
+                            .padding(start = 14.dp, end = 20.dp)
+                            .fillMaxSize()
+                            .verticalScroll(favouritesScrollState)
+                    ) {
+                        favouriteCaseIds.forEachIndexed { fIndex, caseId ->
+                            val globalIndex = caseIds.size + cornerstoneCaseIds.size + fIndex
+                            CaseNameItem(
+                                caseId = caseId,
+                                isSelected = globalIndex == selectedCaseIndex,
+                                focusRequester = focusRequestors[globalIndex],
+                                onClick = { indexSelected(globalIndex) },
+                                onDownArrow = { indexSelected(globalIndex + 1) },
+                                onUpArrow = { indexSelected(globalIndex - 1) }
+                            )
+                        }
+                    }
+                    // Show scrollbar 
+                    VerticalScrollbar(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(8.dp),
+                        adapter = rememberScrollbarAdapter(favouritesScrollState)
                     )
                 }
             }

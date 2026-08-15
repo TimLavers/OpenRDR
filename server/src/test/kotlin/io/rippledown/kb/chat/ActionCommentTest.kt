@@ -11,6 +11,26 @@ import kotlin.test.Test
  * @author Cascade AI
  */
 class ActionCommentTest {
+    @Test
+    fun `parser CopyCaseToFavouritesWithNewName from JSON`() {
+        // Given
+        val name = "Great case!"
+        val json = """
+            {
+                "action": "$COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME",
+                "message": "$name",
+            }
+        """
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        with(actionComment) {
+            action shouldBe COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME
+            message shouldBe name
+        }
+    }
 
     @Test
     fun `should handle error when action class cannot be instantiated`() {

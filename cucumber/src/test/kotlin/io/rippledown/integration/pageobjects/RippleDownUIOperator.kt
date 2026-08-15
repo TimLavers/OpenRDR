@@ -22,11 +22,23 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
+    fun processedCaseListPO() = ProcessedCaseListPO {
+        context()
+    }
+
+    fun favouriteCaseListPO() = FavouriteCaseListPO {
+        context()
+    }
+
     fun caseCountPO() = CaseCountPO {
         context()
     }
 
     fun cornerstoneCaseCountPO() = CornerstoneCaseCountPO {
+        context()
+    }
+
+    fun favouriteCaseCountPO() = FavouriteCaseCountPO {
         context()
     }
 

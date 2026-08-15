@@ -74,6 +74,7 @@ class KBEndpoint(
     fun waitingCasesInfo() = CasesInfo(
         caseIds = kb.processedCaseIds(),
         cornerstoneCaseIds = kb.cornerstoneCaseIds(),
+        favouriteCaseIds = kb.favouriteCaseIds(),
         kbName = kb.kbInfo.name
     )
 

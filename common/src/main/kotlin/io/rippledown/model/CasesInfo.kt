@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class CasesInfo(
     val caseIds: List<CaseId> = listOf(),
     val cornerstoneCaseIds: List<CaseId> = listOf(),
+    val favouriteCaseIds: List<CaseId> = listOf(),
     val kbName: String = ""
 ) {
     val count get() = caseIds.size + cornerstoneCaseIds.size

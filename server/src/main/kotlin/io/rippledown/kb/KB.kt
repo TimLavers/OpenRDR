@@ -77,6 +77,22 @@ class KB(persistentKB: PersistentKB) {
 
     fun processedCaseIds() = caseManager.ids(CaseType.Processed)
 
+    fun favouriteCaseIds() = caseManager.ids(CaseType.Favourite)
+
+    fun copyCaseAsFavourite(id: Long, newName: String?): RDRCase {
+        val case = caseManager.getCase(id) ?: throw NoSuchElementException("No case with id $id")
+        if (newName ==  null || newName.trim().isEmpty()) {
+            return caseManager.add(case.copyWithoutId(CaseType.Favourite))
+        } else {
+            return caseManager.add(case.copyWithNewNameAndNoId(CaseType.Favourite, newName))
+        }
+    }
+
+    fun deleteCaseFromFavourites(case: RDRCase) {
+        if (case.caseId.type != CaseType.Favourite) throw IllegalArgumentException("Case is not a favourite")
+        caseManager.delete(case.id!!)
+    }
+
     fun allProcessedCases() = caseManager.all(CaseType.Processed)
 
     fun deletedProcessedCaseWithName(name: String) {
@@ -88,7 +104,7 @@ class KB(persistentKB: PersistentKB) {
 
     fun getProcessedCase(id: Long): RDRCase? = caseManager.getCase(id)
 
-    fun getCase(id: Long): RDRCase? = caseManager.getCase(id) // todo test
+    fun getCase(id: Long): RDRCase? = caseManager.getCase(id)
 
     fun processCase(externalCase: ExternalCase): RDRCase {
         val case = createRDRCase(externalCase)

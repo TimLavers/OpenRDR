@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_HEADER_ID
+import io.rippledown.constants.caseview.FAVOURITES_SECTION_HEADER_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
 import io.rippledown.model.CaseId
 import io.rippledown.model.CaseType
@@ -461,6 +462,203 @@ class CaseSelectorTest {
             //Then
             requireCaseToBeFocused("p1")
             verify { handler.selectCase(1) }
+        }
+    }
+
+    @Test
+    fun `should show favourites section header when favourite cases exist`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            onNodeWithContentDescription(FAVOURITES_SECTION_HEADER_ID).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should not show favourites section header when no favourite cases`() = runTest {
+        val caseIds = listOf(CaseId(id = 1, name = "case a"))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler)
+            }
+            onAllNodesWithContentDescription(FAVOURITES_SECTION_HEADER_ID).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `should show processed, cornerstone and favourite cases together`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val favourites = listOf(CaseId(id = 3, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, cornerstones, handler, favourites)
+            }
+            requireNamesToBeShowingOnCaseList("p1", "c1", "f1")
+        }
+    }
+
+    @Test
+    fun `should select favourite case`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            selectCaseByName("f1")
+            verify { handler.selectCase(2) }
+        }
+    }
+
+    @Test
+    fun `should navigate to the next favourite case using the down arrow key`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(
+            CaseId(id = 2, name = "f1", type = CaseType.Favourite),
+            CaseId(id = 3, name = "f2", type = CaseType.Favourite)
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            //Given
+            selectCaseByName("f1")
+
+            //When
+            downArrowOnCase("f1")
+
+            //Then
+            requireCaseToBeFocused("f2")
+            verify { handler.selectCase(3) }
+        }
+    }
+
+    @Test
+    fun `should navigate to the previous favourite case using the up arrow key`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(
+            CaseId(id = 2, name = "f1", type = CaseType.Favourite),
+            CaseId(id = 3, name = "f2", type = CaseType.Favourite)
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            //Given
+            selectCaseByName("f2")
+
+            //When
+            upArrowOnCase("f2")
+
+            //Then
+            requireCaseToBeFocused("f1")
+            verify { handler.selectCase(2) }
+        }
+    }
+
+    @Test
+    fun `should navigate from last cornerstone case to first favourite case using down arrow`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val favourites = listOf(CaseId(id = 3, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, cornerstones, handler, favourites)
+            }
+            //Given
+            selectCaseByName("c1")
+
+            //When
+            downArrowOnCase("c1")
+
+            //Then
+            requireCaseToBeFocused("f1")
+            verify { handler.selectCase(3) }
+        }
+    }
+
+    @Test
+    fun `should navigate from first favourite case to last cornerstone case using up arrow`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val favourites = listOf(CaseId(id = 3, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, cornerstones, handler, favourites)
+            }
+            //Given
+            selectCaseByName("f1")
+
+            //When
+            upArrowOnCase("f1")
+
+            //Then
+            requireCaseToBeFocused("c1")
+            verify { handler.selectCase(2) }
+        }
+    }
+
+    @Test
+    fun `should not be able to down arrow past the last favourite case`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            //Given
+            selectCaseByName("f1")
+
+            //When
+            downArrowOnCase("f1")
+
+            //Then
+            requireCaseToBeFocused("f1")
+        }
+    }
+
+    @Test
+    fun `should hide favourite cases when section is collapsed`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            requireNamesToBeShowingOnCaseList("f1")
+            onNodeWithContentDescription(FAVOURITES_SECTION_HEADER_ID).performClick()
+            waitForIdle()
+            onNode(caseMatcher("f1")).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `should preserve favourite case focus after recomposition with equivalent case data`() = runTest {
+        //Given
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val f1 = CaseId(id = 2, name = "f1", type = CaseType.Favourite)
+        val f2 = CaseId(id = 3, name = "f2", type = CaseType.Favourite)
+        var favourites by mutableStateOf(listOf(f1, f2))
+
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+            }
+            selectCaseByName("f1")
+            requireCaseToBeFocused("f1")
+
+            //When - trigger recomposition with new list reference but same content
+            favourites = listOf(f1.copy(), f2.copy())
+            waitForIdle()
+
+            //Then - focus should be preserved and navigation should still work
+            downArrowOnCase("f1")
+            requireCaseToBeFocused("f2")
+            verify { handler.selectCase(3) }
         }
     }
 

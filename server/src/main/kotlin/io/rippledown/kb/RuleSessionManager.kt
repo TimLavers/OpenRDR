@@ -354,12 +354,7 @@ class RuleSessionManager(
         ruleSession = null
         currentChange = null
         checkRuleSessionHistoryConsistency()
-        val casesInfo = CasesInfo(
-            caseIds = kb.processedCaseIds(),
-            cornerstoneCaseIds = kb.cornerstoneCaseIds(),
-            kbName = kb.kbInfo.name
-        )
-        runBlocking { webSocketManager?.sendCasesInfo(casesInfo) }
+        sendCasesInfo()
     }
 
     override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)
@@ -547,6 +542,28 @@ class RuleSessionManager(
                 ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
             }
         }
+    }
+
+    override fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase {
+        val copied = kb.copyCaseAsFavourite(case.id!!, newName)
+        sendCasesInfo()
+        return copied
+    }
+
+    override fun deleteCaseFromFavourites(case: ViewableCase) {
+        kb.deleteCaseFromFavourites(case.case)
+        sendCasesInfo()
+    }
+
+    private fun casesInfo() = CasesInfo(
+        caseIds = kb.processedCaseIds(),
+        cornerstoneCaseIds = kb.cornerstoneCaseIds(),
+        favouriteCaseIds = kb.favouriteCaseIds(),
+        kbName = kb.kbInfo.name
+    )
+
+    private fun sendCasesInfo() {
+        runBlocking { webSocketManager?.sendCasesInfo(casesInfo()) }
     }
 
     private fun checkRuleSessionHistoryConsistency() {

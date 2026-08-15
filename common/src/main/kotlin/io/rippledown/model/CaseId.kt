@@ -4,7 +4,8 @@ import kotlinx.serialization.Serializable
 
 enum class CaseType {
     Cornerstone,
-    Processed
+    Processed,
+    Favourite
 }
 
 @Serializable
