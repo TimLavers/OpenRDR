@@ -1,7 +1,6 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.Attribute
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.MathContext
@@ -50,6 +49,118 @@ data class Formula(val expression: Expr) : ValueExpression() {
     override fun referencedAttributes() = expression.referencedAttributes()
     override fun asText() = expression.asText()
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = Formula(expression.alignAttributes(idToAttribute))
+}
+
+/**
+ * A sentinel expression indicating that the value assigned to a derived
+ * attribute is given by the attribute's stored definition, rather than by
+ * an expression embedded in the rule action. It is never evaluated
+ * directly: before evaluation it is resolved to the concrete expression
+ * held in the definition store. See
+ * documentation/design/editing_derived_attribute_definitions.md.
+ */
+@Serializable
+@SerialName("ByDefinition")
+object ByDefinition : ValueExpression() {
+    override fun evaluate(case: RDRCase): String? =
+        error("A ByDefinition expression must be resolved to a concrete expression before evaluation.")
+
+    override fun referencedAttributes(): Set<Attribute> =
+        error("A ByDefinition expression must be resolved to a concrete expression before its referenced attributes can be determined.")
+
+    override fun asText() = "by definition"
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) = this
+}
+
+/**
+ * The value of a comment attribute: a text template whose positional
+ * `${}` tokens are substituted with the latest case values of the
+ * corresponding [variables]. This carries over the rendering semantics of
+ * `Conclusion`: a variable that is missing from the case or blank renders
+ * as a `{name: no value}` marker, whose position is reported by [render]
+ * so that the UI can highlight it. See "Phase 2 — comments become derived
+ * attributes" in documentation/design/repeat_inferencing.md.
+ */
+@Serializable
+@SerialName("CommentTemplate")
+data class CommentTemplate(
+    val text: String,
+    val variables: List<Attribute> = emptyList()
+) : ValueExpression() {
+    override fun evaluate(case: RDRCase): String = render(case).text
+
+    override fun referencedAttributes() = variables.toSet()
+
+    override fun asText() = "\"${substituteTokens { "{${it.name}}" }}\""
+
+    override fun alignAttributes(idToAttribute: (Int) -> Attribute) =
+        CommentTemplate(text, variables.map { idToAttribute(it.id) })
+
+    /**
+     * The template text with each `${}` token replaced by its variable's
+     * name in `{attributeName}` format — the form in which comments with
+     * variables are presented to the LLM. The attribute name is resolved
+     * through [attributeById] where possible (the stored variable may
+     * carry a stale name), falling back to the variable's own name.
+     */
+    fun textWithVariableNames(attributeById: (Int) -> Attribute? = { null }): String =
+        substituteTokens { "{${(attributeById(it.id) ?: it).name}}" }
+
+    /**
+     * The comment for the given case, with the ranges of any unresolved
+     * variable markers.
+     */
+    fun render(case: RDRCase): RenderedComment {
+        if (variables.isEmpty()) {
+            return RenderedComment(text, emptyList())
+        }
+        val builder = StringBuilder()
+        val unresolvedRanges = mutableListOf<IntRangeData>()
+        var textPosition = 0
+        variables.forEach { attribute ->
+            val tokenIndex = text.indexOf(VARIABLE_TOKEN, textPosition)
+            if (tokenIndex != -1) {
+                builder.append(text.substring(textPosition, tokenIndex))
+                val value = if (case.dates.isNotEmpty()) case.latestValue(attribute) else null
+                if (value != null && value.isNotBlank()) {
+                    builder.append(value)
+                } else {
+                    val marker = "{${attribute.name}: no value}"
+                    val markerStart = builder.length
+                    builder.append(marker)
+                    unresolvedRanges.add(IntRangeData(markerStart, builder.length - 1))
+                }
+                textPosition = tokenIndex + VARIABLE_TOKEN.length
+            }
+        }
+        if (textPosition < text.length) {
+            builder.append(text.substring(textPosition))
+        }
+        return RenderedComment(builder.toString(), unresolvedRanges)
+    }
+
+    /**
+     * Replace each `${}` token (in order of appearance) with the given
+     * rendering of the corresponding variable.
+     */
+    private fun substituteTokens(renderVariable: (Attribute) -> String): String {
+        val builder = StringBuilder()
+        var pos = 0
+        var varIndex = 0
+        while (pos < text.length) {
+            val tokenIndex = text.indexOf(VARIABLE_TOKEN, pos)
+            if (tokenIndex == -1 || varIndex >= variables.size) {
+                builder.append(text.substring(pos))
+                break
+            }
+            builder.append(text.substring(pos, tokenIndex))
+            builder.append(renderVariable(variables[varIndex]))
+            pos = tokenIndex + VARIABLE_TOKEN.length
+            varIndex++
+        }
+        return builder.toString()
+    }
 }
 
 /**

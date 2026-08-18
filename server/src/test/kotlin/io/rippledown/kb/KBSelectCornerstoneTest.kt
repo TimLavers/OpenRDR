@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
@@ -68,6 +69,50 @@ class KBSelectCornerstoneTest {
 
         //Then
         ccStatus shouldBe CornerstoneStatus(vcc3, 2, 3)
+    }
+
+    @Test
+    fun `a selected cornerstone stays selected even when comment rules give it derived values`() {
+        //Given three cornerstones that are all given a comment, so their viewable
+        //copies carry materialised comment-attribute values that the raw
+        //cornerstone cases do not have
+        val cc1 = kb.addProcessedCase(createCase("Case1", glucoseValue = "1.0"))
+        rsm.startRuleSessionToAddComment(kb.viewableCase(cc1), "Comment 1.")
+        rsm.commitCurrentRuleSession()
+        kb.addCornerstoneCase(createCase("Case2", glucoseValue = "2.0"))
+        kb.addCornerstoneCase(createCase("Case3", glucoseValue = "3.0"))
+        val sessionCase = createCase("Session")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When the second cornerstone is selected
+        val selected = rsm.selectCornerstoneCase(1)
+
+        //Then the selection is retained by the current cornerstone status
+        selected.indexOfCornerstoneToReview shouldBe 1
+        rsm.cornerstoneStatus().indexOfCornerstoneToReview shouldBe 1
+    }
+
+    @Test
+    fun `cornerstoneStatus matches the current cornerstone by case id, not by case data`() {
+        //Given a comment rule that gives every case a comment-attribute value
+        val cc1 = kb.addProcessedCase(createCase("Case1", glucoseValue = "1.0"))
+        rsm.startRuleSessionToAddComment(kb.viewableCase(cc1), "Comment 1.")
+        rsm.commitCurrentRuleSession()
+        kb.addCornerstoneCase(createCase("Case2", glucoseValue = "2.0"))
+        val cc3 = kb.addCornerstoneCase(createCase("Case3", glucoseValue = "3.0"))
+        val sessionCase = createCase("Session")
+        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+
+        //When the status is asked for the viewable copy of the last cornerstone,
+        //whose materialised comment value makes its data differ from the raw case
+        val viewableCopy = kb.viewableCase(cc3)
+        withClue("sanity check: the viewable copy has materialised derived values") {
+            viewableCopy.case.hasSameDataAs(cc3) shouldBe false
+        }
+        val status = rsm.cornerstoneStatus(viewableCopy)
+
+        //Then the status points at that cornerstone, not the first one
+        status.indexOfCornerstoneToReview shouldBe 2
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")

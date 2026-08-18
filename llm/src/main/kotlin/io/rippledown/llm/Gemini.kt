@@ -2,18 +2,25 @@ package io.rippledown.llm
 
 import com.google.genai.Client
 import com.google.genai.types.*
-import io.rippledown.log.lazyLogger
 import kotlinx.coroutines.delay
+import org.slf4j.LoggerFactory
 import java.lang.System.getenv
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 val GEMINI_MODEL = "gemini-3.1-flash-lite"
 var GEMINI_API_KEY = getenv("API_KEY") ?: ""
+
+/**
+ * JVM-global count of Gemini API calls, incremented by [callWithTimeout].
+ * Starts at 0 when the server JVM launches (i.e. when a Cucumber scenario starts).
+ */
+val geminiApiCallCount = AtomicInteger(0)
 
 val geminiClient: Client by lazy {
     Client.builder()
@@ -163,6 +170,8 @@ fun noSafetySettings(): List<SafetySetting> =
  * and may hang indefinitely if the API is unresponsive.
  */
 fun <T> callWithTimeout(timeoutMs: Long = 90_000, block: () -> T): T {
+    val callNumber = geminiApiCallCount.incrementAndGet()
+    LoggerFactory.getLogger("Gemini").info("Gemini API call #$callNumber (timeout=${timeoutMs}ms)")
     val future = CompletableFuture.supplyAsync { block() }
     return try {
         future.get(timeoutMs, TimeUnit.MILLISECONDS)
@@ -192,7 +201,7 @@ suspend fun <T> retry(
         } catch (e: Exception) {
             e.printStackTrace()
             if (attempt == maxRetries - 1) throw e
-            Retry.lazyLogger.info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
+            LoggerFactory.getLogger("Retry").info("attempt $attempt failed. Waiting $currentDelay ms before retrying")
             delay(currentDelay.milliseconds)
             currentDelay = (currentDelay * 2).coerceAtMost(maxDelay) + Random.Default.nextLong(0, 1_000)
         }

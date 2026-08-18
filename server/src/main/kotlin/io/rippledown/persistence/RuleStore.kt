@@ -53,4 +53,12 @@ interface RuleStore {
     fun create(prototype: PersistentRule):PersistentRule
     fun load(persistentRules: Set<PersistentRule>)
     fun removeById(ruleId: Int)
+
+    /**
+     * Replace the stored rule that has the same id as the given rule.
+     * Used by the conclusion migration to rewrite conclusion rules as
+     * assignment rules in place. See "Phase 2" in
+     * documentation/design/repeat_inferencing.md.
+     */
+    fun update(persistentRule: PersistentRule)
 }

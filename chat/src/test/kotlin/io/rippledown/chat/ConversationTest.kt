@@ -45,6 +45,7 @@ class ConversationTest {
         val response = mockk<GenerateContentResponse>()
         every { response.text() } returns text
         every { response.functionCalls() } returns functionCalls?.let { ImmutableList.copyOf(it) }
+        every { response.usageMetadata() } returns Optional.empty()
         return response
     }
 
@@ -61,6 +62,7 @@ class ConversationTest {
         val response = mockk<GenerateContentResponse>()
         every { response.functionCalls() } throws failure
         every { response.text() } throws failure
+        every { response.usageMetadata() } returns Optional.empty()
         return response
     }
 

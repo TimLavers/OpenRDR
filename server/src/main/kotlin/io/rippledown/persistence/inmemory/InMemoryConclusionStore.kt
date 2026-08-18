@@ -31,4 +31,8 @@ class InMemoryConclusionStore: ConclusionStore {
         }
         conclusionSet.addAll(conclusions)
     }
+
+    override fun clear() {
+        conclusionSet.clear()
+    }
 }

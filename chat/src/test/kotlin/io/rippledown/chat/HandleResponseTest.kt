@@ -48,7 +48,7 @@ class HandleResponseTest {
         every { response.text() } returns text
         every { response.functionCalls() } returns functionCalls?.let { ImmutableList.copyOf(it) }
         every { response.candidates() } returns null
-        every { response.usageMetadata() } returns null
+        every { response.usageMetadata() } returns Optional.empty()
         return response
     }
 
@@ -59,7 +59,7 @@ class HandleResponseTest {
         every { response.functionCalls() } throws failure
         every { response.text() } throws failure
         every { response.candidates() } returns null
-        every { response.usageMetadata() } returns null
+        every { response.usageMetadata() } returns Optional.empty()
         return response
     }
 

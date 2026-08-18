@@ -25,9 +25,9 @@ These are called *derived attributes*.
 A derived attributes is added to the case (or removed or replaced) by a rule, in the same was as a comment is given.
 
 Once a derived attribute has been assigned a value and added to the case, it
-is indistinguishable from an externally assigned attribute for the purposes of
-condition evaluation, with one minor difference: the knowledge base only
-assigns values in the most recent episode of the case.
+is indistinguishable from an externally assigned attribute for the purposes of condition evaluation, with one
+difference: the knowledge base only assigns values in the most recent episode of the case. (This may change in the
+future, i.e. we may want the KB to assign values to previous episodes.)
 
 Some examples:
 
@@ -129,8 +129,8 @@ variable placeholders (see `Interpretation.toComments`).
   Comments and Report panels — not in the case data table. This suits
   their non-episodic nature (a single value in the latest episode would
   occupy a mostly empty row of the episodic grid), and makes the
-  KB-owned/external distinction structural rather than a matter of
-  styling. The panel is hidden when the case has no derived attributes.
+  KB-owned/external distinction structural rather than a matter of styling. The panel is always visible, even when the
+  case has no derived attributes, so the user is made aware of this facility.
   It is labelled **"Derived attributes"**.
 - The cornerstone view shows derived attributes the same way: during rule
   building, a chained rule's effect on a cornerstone will often be visible
@@ -275,8 +275,10 @@ Therefore, there is no need for a cycle check when the rule is committed.
 6. **Episodic derived attributes**: deferred. Scenarios where derived
    values in earlier episodes would be useful are imaginable (e.g.
    conditions like `previous Diabetes status is "diabetic"`, or trends in
-   a derived quantity such as BMI), and the model leaves room for them as
-   derived values are ordinary values in episodes. Not for the first implementation however.
+   a derived quantity such as BMI), and the model leaves room for them as derived values are ordinary values in
+   episodes. Not for the first implementation however. When we do this, we will need to consider the rules associated
+   with the derived attribute, and how they should be applied to previous episodes, e.g. by successively stripping the
+   most recent episode and then re-interpreting the case.
 7. **Conclusions as derived attributes**: Comments-as-conclusions run deep
    (`Conclusion`, `RuleSummary`, interpretation diffs, the conclusion
    store, conclusion ordering). Existing KBs need each conclusion
@@ -284,21 +286,54 @@ Therefore, there is no need for a cycle check when the rule is committed.
 8. **Attribute creation UX**: The user adds a non-comment derived attribute by naming it and typing it as text or
    numeric. Within the scope of this rule session, they cannot add another derived attribute.
 
+## Alternative considered and rejected: pre-processing evaluation
+
+Before committing to Phase 2, an alternative to rule-driven derived attributes was considered: evaluate every
+derived-attribute definition once as a *pre-processing step* before the rules run, adding the attribute to the case
+whenever its value is not blank/null. No rules would be needed to add a derived attribute; concepts genuinely needing
+rules (e.g. `Diabetes status`)
+would instead be expressed as "abbreviated comments" and used as conditions via repeat inferencing on comments.
+
+The attraction is reduced cognitive load: the user would not have to "add"
+formula attributes like `BMI` to the case with an (unconditional) rule.
+
+Rejected, for these reasons:
+
+1. **The cognitive load it saves is already near zero.** Requesting a derived attribute with no reason creates an
+   unconditional root rule, so from the user's perspective it already *is* "evaluated for every case" — no extra
+   conceptual step is visible in the chat flow.
+2. **Refinement would be lost.** A pre-processing step evaluates each definition once, uniformly. The rule-driven model
+   gives conditioned overrides (e.g. a corrected `BMI` for amputees), conditional removal and replacement — exactly the
+   RDR machinery. Exceptions bolted onto a pre-processing step would reinvent rules.
+3. **Abbreviated comments are a weaker substitute.** Comments are text; derived attributes carry numeric values, so
+   `Risk score > 5`, trends, and formulas composing other derived attributes all work. A
+   `"diabetic status"` comment cannot support these.
+4. **The intermediate/final distinction becomes the user's problem.** With derived attributes shown in their own panel
+   and excluded from report inputs, "intermediary, not report content" is *structural*. Folding intermediaries into
+   comments would force a naming convention (e.g. a
+   `#` prefix) to keep them out of the AI report — a worse cognitive load than the one removed, and fragile. Nor can
+   "used as a condition in another rule" be inferred to mean "not for the report": many true intermediate comments may
+   be given for a case yet be irrelevant to the final report (e.g. detailed GP-directed comments all suppressed when the
+   referrer is a specialist).
+
+Conclusion: keep the current plan. Derived attributes remain rule-driven and user-visibly distinct from comments (the
+report is based on comments only), while Phase 2 still unifies the machinery underneath.
+
 ## Out of scope
 
 - Grouping derived attributes into folders.
 - Assigning the value of a derived attribute using an AI rather than with a rule ("please read the clinical notes and
   assign diabetic status to be "diabetes" if indicated")
 - Referring to derived attributes from *other* knowledge bases.
-- Historical derived values in earlier episodes (see resolved decision 5).
-- Conditions on report structure (ordering, sections).
+- Historical derived values in earlier episodes (see resolved decision).
+- Conditions on report structure (e.g. that would set the ordering or filtering of report sections).
 
 ## Implementation plan
 
 The plan is phased: derived data attributes and repeat inferencing first, with
 comments untouched; comments are recast as derived attributes in a second
-phase. Each step follows TDD: tests are written before the production code
-they cover, and each step leaves all tests green.
+phase. Each step follows TDD: tests are written before the production code they cover, and each step leaves all tests
+green, including cucumber tests.
 
 ### Status (as of this revision)
 
@@ -445,8 +480,8 @@ they were implemented as part of Phase 1 rather than deferred to Phase 3.
 
 10. **Derived attributes panel.** Collapsible panel (UI label "Derived
     attributes"; see Presentation) under the case view — alongside Comments
-    and Report — listing non-comment derived attributes as name/value pairs;
-    hidden when empty; excluded from the case data table; also shown for
+    and Report — listing non-comment derived attributes as name/value pairs; always showing; excluded from the case data
+    table; also shown for
     cornerstones during rule building. The data source is the materialised
     case via `ViewableCase.derivedValues()` (`RuleTree.materialise`), so the
     UI recomputes nothing. `ui/.../interpretation/DerivedValuesPanel.kt`,
@@ -485,31 +520,35 @@ leaving `AssignConclusion` in place until step 16.
       attributes.
     - `${}` comment-variable support moves to the assigned value: the
       rendering currently done via `Conclusion`/`Interpretation.toComments`
-      is re-implemented for `Literal` values of `COMMENT` attributes.
-      Preserve the existing rendering semantics exactly — the tests in
-      the comments cucumber features
-      (`cucumber/src/test/resources/requirements/comments/`) pin them.
-13. **Migration of configured KBs.** Configured KBs are in zip files under
-    `server/src/test/resources`. Convert these to the new format as a one-off
-    migration before step 16 lands, and reconfigure them.
-
-- On KB load (and KB import), each existing conclusion
-    is converted to a `COMMENT` attribute plus assignment:
-    - for each `Conclusion` in the conclusion store, create a `COMMENT`
-      attribute (auto-named) whose assigned value is the conclusion text;
-    - each rule whose `conclusionId` references it becomes a rule with an
-      `AssignValue` on that attribute (update `PersistentRule`:
-      `conclusionId` becomes unused);
-    - one-way and idempotent: migrated KBs have an empty conclusion
-      store, so re-running is a no-op; exports after migration use the
-      new form only.
-    - No in-code SQL migration: the conversion is at the manager level
-      (read old stores, write new form). Removal of the obsolete tables
-      is a documented one-off (`DROP TABLE conclusions;`,
+      is re-implemented as a dedicated `ValueExpression` subtype,
+      `CommentTemplate(text, variables)` — id-based attribute references (rename-safe, like `AttributeValue`), rendering
+      semantics preserved exactly. *(Implemented 2 Aug 2026.)* The tests in the comments cucumber features
+      (`cucumber/src/test/resources/requirements/comments/`) pin the semantics.
+13. **Migration of configured KBs.** *(Resolved 2 Aug 2026: a one-off conversion, not load-time migration logic.)* The
+    only KBs in the old format are those in this project — the zip files under
+    `server/src/test/resources` and the zoo KB under
+    `server/src/main/resources`; there are no external databases to convert. So the conversion is a well-tested one-off
+    applied to those fixtures before step 16 lands, after which the migrator is deleted rather than carried in the KB
+    load path forever.
+    - Each conclusion is converted to a `COMMENT` attribute plus assignment:
+        - for each `Conclusion` in the conclusion store, create a
+          `COMMENT` attribute (auto-named) whose stored definition is a
+          `CommentTemplate` of the conclusion text and variables;
+        - each rule whose `conclusionId` references it becomes a rule with `AssignValue(attribute, ByDefinition)`
+          (update
+          `PersistentRule`: `conclusionId` becomes unused);
+        - one-way and idempotent: migrated KBs have an empty conclusion store, so re-running is a no-op; exports after
+          migration use the new form only.
+    - No in-code SQL migration: the conversion is at the store level (read old stores, write new form) via
+      `RuleStore.update` and
+      `ConclusionStore.clear`. Removal of the obsolete tables is a documented one-off (`DROP TABLE conclusions;`,
+      `DROP TABLE conclusion_variables;`,
       `DROP TABLE conclusion_indexes;`) once step 16 lands.
+    - After step 16, KB load/import `check`s that the conclusion store is empty — one cheap guard against any stray old
+      export, in place of a permanent migration subsystem.
     - Tests: a KB built with conclusion rules (e.g. via the sample KBs in
-      `server/src/main/kotlin/io/rippledown/kb/sample/`) interprets every
-      case identically before and after migration.
+      `server/src/main/kotlin/io/rippledown/kb/sample/`) interprets every case identically before and after migration,
+      comparing rendered comment texts (including unresolved-variable markers).
 
 14. **Chat naming flow.** "Add the comment …" creates the comment
     attribute; the LLM proposes a semantic name with `C1`-style fallback;
@@ -528,7 +567,13 @@ leaving `AssignConclusion` in place until step 16.
     Remove the conclusion ordering machinery — `conclusionOrderStore()` on
     `PersistentKB`, `PostgresConclusionOrderStore`, and the
     `OrderedEntityManager` base of `InterpretationViewManager` (resolved
-    decision 4: ordering is not significant).
+    decision 4: ordering is not significant). *(Resolved 2 Aug 2026: one comment attribute per comment text.)*
+    "Replace this comment with X" mints a new comment attribute for X:
+    the replacing rule assigns the new attribute, and leaf-most suppression retracts the parent's — one rule, no
+    explicit retraction. This preserves the invariant that a comment attribute's definition is its text, so a future
+    "change this comment's wording everywhere" is exactly the definition-edit flow used for derived formulas. A
+    conditional per-case wording override of the *same*
+    attribute was considered and rejected: it would make "the comment's text" ambiguous.
 16. **Retire `AssignConclusion`.** Only after 12–15 are green: delete
     `AssignConclusion`, `Conclusion`, `ConclusionManager`,
     `ConclusionProvider`, the conclusion store, and `Rule.conclusion`
@@ -573,6 +618,14 @@ leaving `AssignConclusion` in place until step 16.
 
 - Phases 0–1 are independently shippable: they add repeat inferencing and
   derived data attributes without touching comment behaviour.
+- **Editing derived-attribute
+  definitions ([editing_derived_attribute_definitions.md](editing_derived_attribute_definitions.md))
+  lands before Phase 2.** It introduces the `DerivedDefinitionStore` /
+  `ByDefinition` architecture that Phase 2 should land on: a comment then becomes a `COMMENT` attribute whose definition
+  is a text template, and
+  `ConclusionStore` folds into the definition store. Doing Phase 2 first would migrate conclusions into the embedded-
+  `AssignValue` form only to re-migrate them when the definition store arrives — two breaking migrations of configured
+  KBs instead of one. It is also the smaller, non-breaking piece, so landing it first de-risks Phase 2.
 - Phase 2 is the large, breaking phase; steps 12–16 should land together
   behind passing migration tests before any release.
 - Phase 4 is independent of Phases 2–3 and can land any time after

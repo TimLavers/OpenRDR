@@ -35,6 +35,15 @@ interface RuleService {
         attributeName: String,
         replacementValueExpression: String
     ): CornerstoneStatus
+
+    /**
+     * Edit the stored definition of a derived attribute in place, so that
+     * the change applies everywhere the attribute is given by its
+     * definition, with no rule change. Returns a summary of the change.
+     * See documentation/design/editing_derived_attribute_definitions.md.
+     */
+    fun editDerivedAttributeDefinition(attributeName: String, valueExpression: String): String
+
     fun exemptCornerstoneCase(): CornerstoneStatus
     fun selectCornerstoneCase(index: Int): CornerstoneStatus
     fun addConditionToCurrentRuleSession(condition: Condition)

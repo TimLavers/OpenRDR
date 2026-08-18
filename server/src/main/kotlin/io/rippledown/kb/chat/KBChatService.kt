@@ -116,6 +116,7 @@ object KBChatService {
         "15_cancelling_the_rule.md",
         "16_listing_capabilities.md",
         "17_assigning_derived_values.md",
+        "18_editing_derived_definition.md",
         "25_favourite_cases.md",
     )
     val systemPromptExampleSections = listOf(
@@ -134,7 +135,10 @@ object KBChatService {
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
-        "COMMENTS" to viewableCase.case.interpretation.toComments(viewableCase.case, attributeById),
+        // The viewable interpretation holds the resolved copy of the case's
+        // interpretation, in which ByDefinition comment assignments have been
+        // substituted with their stored definitions.
+        "COMMENTS" to viewableCase.viewableInterpretation.interpretation.toComments(viewableCase.case, attributeById),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
         "GET_SUGGESTED_CONDITIONS" to GET_SUGGESTED_CONDITIONS,
         "REASON" to REASON,
@@ -146,6 +150,7 @@ object KBChatService {
         "ASSIGN_DERIVED_VALUE" to ASSIGN_DERIVED_VALUE,
         "REMOVE_DERIVED_VALUE" to REMOVE_DERIVED_VALUE,
         "REPLACE_DERIVED_VALUE" to REPLACE_DERIVED_VALUE,
+        "EDIT_DERIVED_DEFINITION" to EDIT_DERIVED_DEFINITION,
         "SHOW_CORNERSTONES" to SHOW_CORNERSTONES,
         "REMOVE" to REMOVE,
         "REPLACE" to REPLACE,

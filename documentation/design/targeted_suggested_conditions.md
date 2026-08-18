@@ -12,10 +12,10 @@ then describes the design as currently implemented.
 Originally the suggester was blind to the rule action. It took only
 `(attributes, sessionCase)`, generated the cartesian product of
 predicates × attributes × signatures, kept those that held for the session
-case, and sorted them alphabetically (a `Sorter`). The comment text and the
-action type (`ChangeTreeToAddConclusion` / `…Remove…` / `…Replace…`) were
-available to `RuleSessionManager` but never reached the suggester, so the
-list was long, generic, and in no useful order.
+case, and sorted them alphabetically (a `Sorter`). The comment text and the action type (`ChangeTreeToAddConclusion` /
+`…Remove…` / `…Replace…`, or after Phase 2 `ChangeTreeToAddAssignment` / `…Remove…` / `…Replace…` for comment
+attributes) were available to `RuleSessionManager` but never reached the suggester, so the list was long, generic, and
+in no useful order.
 
 "Targeting" means threading the action context (and the session's cornerstone
 cases) into the suggester, then ranking, filtering, or generating using it.
@@ -121,16 +121,14 @@ only if it holds for the case, and an editable condition is suggested unless
 there is no way to edit it so that it holds (e.g. `TSH ≥ _` is not offered
 when the case's latest `TSH` is non-numeric). On top of that:
 
-**Historical-condition injection.** The literal conditions of every rule
-whose conclusion id matches the action's target conclusion, and that
-`holds(sessionCase)`, are injected as candidates in their own right. In
-pathology the cutoffs in existing rules are usually the clinically defensible
-ones (e.g. a historical `eGFR ≥ 70`), whereas the generator's editable cutoff
-pins to the case's current reading (e.g. `eGFR ≥ 74`). Injecting the literal
-lets the user pick the clinical cutoff in one click and lets the historical
-scorer boost it via plain `sameAs`. Injected conditions are deduped against
-generated ones by `sameAs`, preferring the editable form when cutoffs
-coincide.
+**Historical-condition injection.** The literal conditions of every rule whose action target matches the current
+action — by conclusion id for conclusion-based actions, or by comment-attribute id for assignment-based actions — and
+that `holds(sessionCase)`, are injected as candidates in their own right. In pathology the cutoffs in existing rules are
+usually the clinically defensible ones (e.g. a historical `eGFR ≥ 70`), whereas the generator's editable cutoff pins to
+the case's current reading (e.g.
+`eGFR ≥ 74`). Injecting the literal lets the user pick the clinical cutoff in one click and lets the historical scorer
+boost it via plain `sameAs`. Injected conditions are deduped against generated ones by `sameAs`, preferring the editable
+form when cutoffs coincide.
 
 **Generator-level prunes.** A few shapes are suppressed before ranking
 because they reliably waste the 20-slot budget:
@@ -152,18 +150,24 @@ because they reliably waste the 20-slot budget:
 
 Each scorer returns an integer per candidate (`ScoredSuggestion`):
 
-- **`HistoricalRuleScorer`** — number of rules targeting the action's
-  conclusion whose conditions `sameAs` the candidate. The strongest signal in
-  an RDR setting. Add uses `toBeAdded`, Replace uses `replacement`, Remove
-  uses `toBeRemoved`; a null action scores 0.
-- **`CommentTokenOverlapScorer`** — size of the intersection between the
-  comment's tokens and the candidate's tokens. The comment is lowercased,
-  split on non-alphanumerics, and stripped of a small stopword list; the
-  candidate's tokens come from a hand-curated map of attribute name plus
-  direction words (`high`, `low`, `normal`, `increasing`, …). Signature tokens
-  are excluded. Value tokens from `Is`/`Contains` predicates are only counted
-  when the value has at most `MAX_VALUE_TOKENS` (= 3), so multi-sentence
-  comment fields can't win on accidental word collisions. Works at cold start.
+- **`HistoricalRuleScorer`** — number of rules targeting the action's conclusion (for conclusion-based actions) or
+  comment attribute (for assignment-based actions) whose conditions `sameAs` the candidate. The strongest signal in an
+  RDR setting. For conclusion-based actions, Add uses
+  `toBeAdded`, Replace uses `replacement`, Remove uses `toBeRemoved`; for assignment-based actions the same convention
+  applies via the corresponding
+  `AssignValue`'s attribute. A null action scores 0.
+- **`CommentTokenOverlapScorer`** — size of the intersection between the comment's tokens and the candidate's tokens.
+  The comment text is extracted from the action: for conclusion-based actions it is the `Conclusion.text`; for
+  assignment-based actions the `AssignValue`'s expression is resolved through the `SuggestionContext`'s definition
+  resolver (to handle
+  `ByDefinition` sentinels) and, if it is a `CommentTemplate`, the template text is used. The text is lowercased, split
+  on non-alphanumerics, and stripped of a small stopword list; the candidate's tokens come from a hand-curated map of
+  attribute name plus direction words (`high`, `low`,
+  `normal`, `increasing`, …). Signature tokens are excluded. Value tokens from `Is`/`Contains` predicates are only
+  counted when the value has at most
+  `MAX_VALUE_TOKENS` (= 3), so multi-sentence comment fields can't win on accidental word collisions. Non-comment
+  assignments (e.g. derived-value formulas) produce no tokens, so the scorer degrades to other signals for those
+  actions. Works at cold start.
 - **`CornerstoneDiscriminationScorer`** — number of cornerstones for which the
   candidate does *not* hold (i.e. cornerstones it would exclude from the new
   rule). Empty cornerstones → 0 for all.

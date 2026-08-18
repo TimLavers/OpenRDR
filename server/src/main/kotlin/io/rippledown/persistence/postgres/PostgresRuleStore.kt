@@ -63,6 +63,21 @@ class PostgresRuleStore(private val db: Database): RuleStore {
         }
     }
 
+    override fun update(persistentRule: PersistentRule) {
+        require(persistentRule.id != null) {
+            "Cannot update a rule that has no id."
+        }
+        transaction(db) {
+            val pgRule = requireNotNull(PGRule.findById(persistentRule.id)) {
+                "Cannot update a rule that is not in the store."
+            }
+            pgRule.parentId = persistentRule.parentId
+            pgRule.conclusionId = persistentRule.conclusionId
+            pgRule.conditionIds = persistentRule.conditionIdsString()
+            pgRule.assignment = persistentRule.assignmentString()
+        }
+    }
+
     private fun persistentRule(pgRule: PGRule) = PersistentRule(
         pgRule.id.value,
         pgRule.parentId,

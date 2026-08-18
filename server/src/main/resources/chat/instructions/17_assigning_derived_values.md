@@ -30,6 +30,10 @@ Otherwise, they are referring to a comment action. If in doubt, ask for clarific
 
 If the user wants to add, remove or replace a comment, follow "Defining the change to the report" instead.
 
+If the user wants a *global* correction to the formula or value of an existing derived attribute (e.g. "fix the BMI
+formula"), with no condition attached, follow "Editing the definition of a derived attribute" instead — that is an
+in-place edit, not a rule.
+
 ## Step 2: Obtain the attribute name
 
 If the user does not provide a clear attribute name, propose a short semantic name and ask for confirmation.

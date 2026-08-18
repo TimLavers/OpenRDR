@@ -2,7 +2,6 @@ package io.rippledown.persistence.inmemory
 
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistentKB
-import io.rippledown.persistence.RuleSessionRecordStore
 
 class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
 
@@ -10,6 +9,7 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     private val attributeOrderStore = InMemoryOrderStore()
     private val conclusionStore = InMemoryConclusionStore()
     private val conclusionOrderStore = InMemoryOrderStore()
+    private val derivedDefinitionStore = InMemoryDerivedDefinitionStore()
     private val conditionStore = InMemoryConditionStore()
     private val ruleStore = InMemoryRuleStore()
     private val ruleSessionRecordStore = InMemoryRuleSessionRecordStore()
@@ -25,6 +25,8 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     override fun conclusionStore() = conclusionStore
 
     override fun conclusionOrderStore() = conclusionOrderStore
+
+    override fun derivedDefinitionStore() = derivedDefinitionStore
 
     override fun conditionStore() = conditionStore
 

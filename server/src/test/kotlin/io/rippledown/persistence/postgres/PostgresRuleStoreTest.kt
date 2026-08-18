@@ -214,5 +214,35 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         store.all() shouldBe toLoad
     }
 
+    @Test
+    fun update() {
+        // Given a stored rule that gives a conclusion
+        val stored = store.create(pr(0, 10, 100, 101))
+
+        // When it is updated to assign a value instead
+        val comment = Attribute(7, "C1", AttributeKind.COMMENT)
+        val updated = stored.copy(conclusionId = null, assignment = AssignValue(comment, ByDefinition))
+        store.update(updated)
+
+        // Then the stored rule has the new form, same id, and survives a reload
+        store.all() shouldBe setOf(updated)
+        reload()
+        store.all() shouldBe setOf(updated)
+    }
+
+    @Test
+    fun `updating a rule that is not in the store is not allowed`() {
+        shouldThrow<IllegalArgumentException> {
+            store.update(PersistentRule(99, null, null, emptySet()))
+        }.message shouldBe "Cannot update a rule that is not in the store."
+    }
+
+    @Test
+    fun `updating a rule with no id is not allowed`() {
+        shouldThrow<IllegalArgumentException> {
+            store.update(PersistentRule(null, null, 10, emptySet()))
+        }.message shouldBe "Cannot update a rule that has no id."
+    }
+
     private fun pr(parentId: Int, conclusionId: Int, vararg conditionIds: Int)  = PersistentRule(null, parentId, conclusionId, conditionIds.toSet())
 }

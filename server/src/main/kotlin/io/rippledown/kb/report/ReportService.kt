@@ -14,13 +14,16 @@ class ReportService {
 
     /** Build the LLM user-content from the case's comments (+ serialized case data). */
     fun userContent(viewableCase: ViewableCase, attributeById: (Int) -> Attribute?): String {
-        val comments = viewableCase.case.interpretation.toComments(viewableCase.case, attributeById)
+        // The viewable interpretation holds the resolved copy of the case's
+        // interpretation, in which ByDefinition comment assignments have been
+        // substituted with their stored definitions.
+        val comments = viewableCase.viewableInterpretation.interpretation.toComments(viewableCase.case, attributeById)
         val caseJson = viewableCase.toJsonString()
         return "Comments (JSON array):\n$comments\n\nCase data (JSON):\n$caseJson"
     }
 
     suspend fun generate(viewableCase: ViewableCase, attributeById: (Int) -> Attribute?): CaseReport {
-        val comments = viewableCase.case.interpretation.toComments(viewableCase.case, attributeById)
+        val comments = viewableCase.viewableInterpretation.interpretation.toComments(viewableCase.case, attributeById)
         // toComments returns "[]" for an empty interpretation — do not call the LLM.
         if (comments.isBlank() || comments == "[]") return CaseReport(markdown = "", generated = false)
         // This is an interactive, UI-triggered path, so cap retries and per-call
