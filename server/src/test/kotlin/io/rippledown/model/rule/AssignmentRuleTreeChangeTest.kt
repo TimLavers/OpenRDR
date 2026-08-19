@@ -4,7 +4,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.utils.defaultDate
@@ -26,11 +29,8 @@ internal class AssignmentRuleTreeChangeTest {
     fun setup() {
         tree = RuleTree()
         ruleFactory = object : RuleFactory {
-            override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) =
-                Rule(nextRuleId++, parent, conclusion, conditions)
-
-            override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>) =
-                Rule(nextRuleId++, parent, null, conditions, mutableSetOf(), assignment)
+            override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>) =
+                Rule(nextRuleId++, parent, conditions, mutableSetOf(), assignment)
         }
     }
 
@@ -74,7 +74,6 @@ internal class AssignmentRuleTreeChangeTest {
         rulesAdded shouldHaveSize 1
         with(rulesAdded.single()) {
             assignment shouldBe diabetic
-            conclusion.shouldBeNull()
             parent shouldBe tree.root
         }
         tree.materialise(case()).latestValue(diabetesStatus) shouldBe "diabetic"
@@ -105,7 +104,6 @@ internal class AssignmentRuleTreeChangeTest {
         rulesAdded shouldHaveSize 1
         with(rulesAdded.single()) {
             assignment.shouldBeNull()
-            conclusion.shouldBeNull()
             parent?.assignment shouldBe diabetic
         }
         tree.materialise(case("25.0")).latestValue(diabetesStatus).shouldBeNull()
@@ -184,6 +182,15 @@ internal class AssignmentRuleTreeChangeTest {
     }
 
     @Test
+    fun `a remove-assignment change introduces no expression, so it has no expression references`() {
+        // Given a resolver that would supply an expression referencing glucose
+        val resolver: DefinitionResolver = { Formula(AttributeValue(glucose)) }
+
+        // Then a change that carries no value expression has no references
+        ChangeTreeToRemoveAssignment(diabetic).expressionReferences(resolver) shouldBe emptySet()
+    }
+
+    @Test
     fun `expressionReferences of a by-definition replace-assignment change come from the resolver`() {
         // Given a replacement assigning by definition, whose stored definition references glucose
         val change = ChangeTreeToReplaceAssignment(diabetic, AssignValue(diabetesStatus, ByDefinition))
@@ -196,30 +203,4 @@ internal class AssignmentRuleTreeChangeTest {
         change.expressionReferences() shouldBe emptySet()
     }
 
-    @Test
-    fun `changes that introduce no expression have no expression references`() {
-        // Given changes that carry no value expression, and a resolver
-        val resolver: DefinitionResolver = { Formula(AttributeValue(glucose)) }
-
-        // Then they have no expression references, resolver or not
-        ChangeTreeToRemoveAssignment(diabetic).expressionReferences(resolver) shouldBe emptySet()
-        ChangeTreeToAddConclusion(Conclusion(1, "Comment.")).expressionReferences(resolver) shouldBe emptySet()
-        ChangeTreeToRemoveConclusion(Conclusion(1, "Comment.")).expressionReferences(resolver) shouldBe emptySet()
-        ChangeTreeToReplaceConclusion(Conclusion(1, "Comment."), Conclusion(2, "Other."))
-            .expressionReferences(resolver) shouldBe emptySet()
-    }
-
-    @Test
-    fun `alignWith leaves assignment changes unchanged`() {
-        // Given assignment changes
-        val add = ChangeTreeToAddAssignment(diabetic)
-        val remove = ChangeTreeToRemoveAssignment(diabetic)
-        val replace = ChangeTreeToReplaceAssignment(diabetic, preDiabetic)
-
-        // When they are aligned with a conclusion factory
-        // Then they are unchanged, as no conclusions are involved
-        add.alignWith(DummyConclusionFactory()) shouldBe add
-        remove.alignWith(DummyConclusionFactory()) shouldBe remove
-        replace.alignWith(DummyConclusionFactory()) shouldBe replace
-    }
 }

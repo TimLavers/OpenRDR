@@ -10,11 +10,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.assertions.withClue
 import io.mockk.mockk
-import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RenderedComment
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.RuleSummary
+import io.rippledown.utils.commentAssignment
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -41,8 +41,8 @@ class InterpretationViewUpdateTest {
 
     @Test
     fun `should update interpretation when the interpretation text is changed`() = runTest {
-        val i1 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(1, textA))) }
-        val i2 = Interpretation().apply { add(RuleSummary(conclusion = Conclusion(2, textB))) }
+        val i1 = Interpretation().apply { add(RuleSummary(assignment = commentAssignment(1, textA))) }
+        val i2 = Interpretation().apply { add(RuleSummary(assignment = commentAssignment(2, textB))) }
         val original =
             ViewableInterpretation(i1, textGivenByRules = textA, renderedComments = listOf(RenderedComment(textA)))
         val changed =

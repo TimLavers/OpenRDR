@@ -9,7 +9,6 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.model.CasesInfo
-import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
@@ -64,7 +63,6 @@ class EngineConfig {
     val defaultKB = KBInfo("Thyroids")
     var returnKBInfo = defaultKB
     val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), defaultKB)
-    lateinit var returnConclusions: Set<Conclusion>
 }
 
 private class EngineBuilder(private val config: EngineConfig) {
@@ -74,10 +72,6 @@ private class EngineBuilder(private val config: EngineConfig) {
 
     fun build() = MockEngine { request ->
         when (request.url.encodedPath) {
-            ALL_CONCLUSIONS -> {
-                httpResponseData(json.encodeToString(config.returnConclusions))
-            }
-
             WAITING_CASES -> {
                 httpResponseData(json.encodeToString(config.returnCasesInfo))
             }

@@ -3,7 +3,6 @@ package io.rippledown.suggestions.scorer
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
@@ -39,7 +38,9 @@ class CommentTokenOverlapScorerTest {
     private fun ctxFor(commentText: String) = SuggestionContext(
         sessionCase = sessionCase,
         attributes = setOf(tsh, mcv, glucose),
-        action = ChangeTreeToAddConclusion(Conclusion(1, commentText)),
+        action = ChangeTreeToAddAssignment(
+            AssignValue(Attribute(1, "C1", AttributeKind.COMMENT), CommentTemplate(commentText))
+        ),
     )
 
     private fun ctxForAssignment(assigned: Attribute, expression: ValueExpression) = SuggestionContext(
@@ -201,12 +202,12 @@ class CommentTokenOverlapScorerTest {
     @Test
     fun `replace action scores against replacement text, not the original`() {
         //Given a Replace action whose replacement comment is "TSH is high"
-        val original = Conclusion(1, "TSH is low")
-        val replacement = Conclusion(2, "TSH is high")
+        val original = AssignValue(Attribute(1, "C1", AttributeKind.COMMENT), CommentTemplate("TSH is low"))
+        val replacement = AssignValue(Attribute(2, "C2", AttributeKind.COMMENT), CommentTemplate("TSH is high"))
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToReplaceConclusion(toBeReplaced = original, replacement = replacement),
+            action = ChangeTreeToReplaceAssignment(toBeReplaced = original, replacement = replacement),
         )
 
         //When
@@ -228,7 +229,9 @@ class CommentTokenOverlapScorerTest {
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToRemoveConclusion(Conclusion(1, "TSH is high")),
+            action = ChangeTreeToRemoveAssignment(
+                AssignValue(Attribute(1, "C1", AttributeKind.COMMENT), CommentTemplate("TSH is high"))
+            ),
         )
 
         //When

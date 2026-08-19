@@ -179,9 +179,8 @@ class KBProcessCaseResolutionTest {
         // When a case is processed
         val processed = kb.processCase(externalCase("Case1", "12.0"))
 
-        // Then the interpretation has no assignments or conclusions
+        // Then the interpretation has no assignments or comments
         processed.interpretation.assignments() shouldBe emptySet()
-        processed.interpretation.conclusions() shouldBe emptySet()
         processed.interpretation.commentTexts(processed) shouldBe emptySet()
     }
 

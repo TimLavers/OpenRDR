@@ -8,15 +8,9 @@ import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class
-DummyRuleFactory: RuleFactory {
-    override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        return Rule(0, parent, conclusion, conditions)
-    }
-
-    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule {
-        return Rule(0, parent, null, conditions, mutableSetOf(), assignment)
-    }
+class DummyRuleFactory : RuleFactory {
+    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>): Rule =
+        Rule(0, parent, conditions, mutableSetOf(), assignment)
 }
 
 internal class RuleTreeTest : RuleTestBase() {
@@ -71,10 +65,10 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.ruleForId(tree.root.id) shouldBe tree.root
-        tree.ruleForId(1).conclusion?.text shouldBe "ConcA"
-        tree.ruleForId(11).conclusion?.text shouldBe "ConcB"
-        tree.ruleForId(111).conclusion?.text shouldBe "ConcC"
-        tree.ruleForId(1111).conclusion?.text shouldBe "ConcD"
+        tree.ruleForId(1).assignment shouldBe commentFactory.comment("ConcA")
+        tree.ruleForId(11).assignment shouldBe commentFactory.comment("ConcB")
+        tree.ruleForId(111).assignment shouldBe commentFactory.comment("ConcC")
+        tree.ruleForId(1111).assignment shouldBe commentFactory.comment("ConcD")
     }
 
     @Test
@@ -111,9 +105,9 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.apply(kase)
-        val conclusion1 = tree.root.childRules().first().conclusion!!
-        checkInterpretation(kase.interpretation, conclusion1)
-        conclusion1.text shouldBe A
+        val assignment1 = tree.root.childRules().first().assignment!!
+        checkInterpretation(kase.interpretation, assignment1)
+        (assignment1.expression as CommentTemplate).text shouldBe A
     }
 
     @Test
@@ -135,9 +129,9 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.apply(kase)
-        val conclusion1 = tree.root.childRules().first().conclusion!!
-        val conclusion2 = tree.root.childRules().last().conclusion!!
-        checkInterpretation(kase.interpretation, conclusion1, conclusion2)
+        val assignment1 = tree.root.childRules().first().assignment!!
+        val assignment2 = tree.root.childRules().last().assignment!!
+        checkInterpretation(kase.interpretation, assignment1, assignment2)
     }
 
     @Test
@@ -369,11 +363,11 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         val predicate: ((Rule) -> Boolean) = { r ->
-            r.conclusion?.text == "ConcA"
+            (r.assignment?.expression as? CommentTemplate)?.text == "ConcA"
         }
         val rulesMatching = tree.rulesMatching(predicate)
         rulesMatching.size shouldBe 3
-        rulesMatching.forEach { it.conclusion?.text shouldBe "ConcA" }
+        rulesMatching.forEach { (it.assignment?.expression as CommentTemplate).text shouldBe "ConcA" }
     }
 
     @Test
@@ -456,6 +450,7 @@ internal class RuleTreeTest : RuleTestBase() {
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {
         val case = clinicalNotesCase(text)
         tree.apply(case)
-        case.interpretation.assignments().map { it.text }.toSet() shouldBe conclusions.toSet()
+        case.interpretation.assignments().map { (it.expression as CommentTemplate).text }
+            .toSet() shouldBe conclusions.toSet()
     }
 }

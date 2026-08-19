@@ -344,12 +344,12 @@ class OpenRDRUITest {
         val viewableCaseA = createViewableCaseWithInterpretation(
             name = caseA,
             caseId = 1,
-            conclusionTexts = listOf(bondiComment)
+            commentTexts = listOf(bondiComment)
         )
         val viewableCaseB = createViewableCaseWithInterpretation(
             name = caseB,
             caseId = 2,
-            conclusionTexts = listOf(malabarComment)
+            commentTexts = listOf(malabarComment)
         )
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(caseId1.id!!) } returns viewableCaseA

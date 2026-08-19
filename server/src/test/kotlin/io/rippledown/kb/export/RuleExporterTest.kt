@@ -3,8 +3,8 @@ package io.rippledown.kb.export
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.model.Attribute
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.ConditionFactory
-import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.condition.isHigh
 import io.rippledown.model.condition.isNormal
@@ -14,26 +14,30 @@ import io.rippledown.model.rule.dsl.ruleTree
 import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
-
 import kotlin.test.Test
 
 class RuleExporterTest: ExporterTestBase() {
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionFactory: ConditionFactory
     private lateinit var rule: Rule
 
     @BeforeEach
     override fun init() {
         super.init()
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
-        val conclusion = conclusionFactory.getOrCreate("More coffee needed.")
         val glucose = Attribute(9, "Glucose")
         val tsh = Attribute(10, "TSH")
         val glucoseHigh = conditionFactory.getOrCreate(isHigh(null, glucose, ""))
         val tshNormal = conditionFactory.getOrCreate(isNormal(null, tsh))
-        val parent = Rule(0, null, null, emptySet())
-        rule = Rule(8, parent, conclusion, setOf(glucoseHigh,tshNormal))
+        val parent = Rule(0, null, emptySet())
+        rule = Rule(
+            8,
+            parent,
+            setOf(glucoseHigh, tshNormal),
+            mutableSetOf(),
+            commentFactory.comment("More coffee needed.")
+        )
     }
 
     @Suppress("JSON_FORMAT_REDUNDANT")
@@ -54,36 +58,36 @@ class RuleExporterTest: ExporterTestBase() {
 }
 class RuleSourceTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionFactory: ConditionFactory
 
     @BeforeEach
     override fun init() {
         super.init()
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
     }
 
     @Test
     fun all() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 34
-                conclusion { "ConclusionA" }
+                comment { "ConclusionA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 134
-                    conclusion { "ConclusionA" }
+                    comment { "ConclusionA" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 111
-                        conclusion { "ConclusionB" }
+                        comment { "ConclusionB" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
@@ -92,7 +96,7 @@ class RuleSourceTest: ExporterTestBase() {
                 }
                 child {
                     id = 12
-                    conclusion { "ConclusionD" }
+                    comment { "ConclusionD" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
@@ -119,7 +123,7 @@ class RuleSourceTest: ExporterTestBase() {
     @Test
     fun idFor() {
         tree = RuleTree()
-        val rule = Rule(99, tree.root, null, emptySet())
+        val rule = Rule(99, tree.root, emptySet())
         RuleSource(tree).idFor(rule) shouldBe rule.id
     }
 }

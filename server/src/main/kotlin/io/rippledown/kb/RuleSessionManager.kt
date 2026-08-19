@@ -372,7 +372,7 @@ class RuleSessionManager(
             if (it.id == attribute.id) newExpression else kb.definitionResolver(it)
         }
         val graph = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), editedResolver)
-        val referenced = newExpression.referencedAttributes().filter { it.kind == AttributeKind.DERIVED }.toSet()
+        val referenced = newExpression.referencedAttributes().filter { it.kind.isAssignedByKB() }.toSet()
         return graph.cycleCreatedBy(attribute, referenced)
     }
 

@@ -59,9 +59,6 @@ class RuleSessionManagerCommentAssignmentTest {
         kb.derivedDefinitionManager.definitionFor(comment.id) shouldBe
                 CommentTemplate("Diabetic diet advice given.")
 
-        // And no conclusion is created
-        kb.conclusionManager.all() shouldBe emptySet()
-
         // And the rule assigns the attribute by definition, for matching cases only
         kb.interpret(createCase("A")).assignments() shouldBe setOf(AssignValue(comment, ByDefinition))
         commentsShownFor("A") shouldBe listOf("Diabetic diet advice given.")

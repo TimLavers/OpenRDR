@@ -66,7 +66,7 @@ class CaseControlTest {
         val viewableCase = createViewableCaseWithInterpretation(
             name = "case 1",
             caseId = 1,
-            conclusionTexts = listOf()
+            commentTexts = listOf()
         )
 
         with(composeTestRule) {

@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.utils.defaultDate
@@ -28,7 +27,7 @@ class KBSelectCornerstoneTest {
         val cc1 = kb.addCornerstoneCase(createCase("Case1"))
         val vcc1 = kb.viewableCase(cc1)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val ccStatus = rsm.selectCornerstoneCase(0)
@@ -45,7 +44,7 @@ class KBSelectCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case3"))
         val vcc2 = kb.viewableCase(cc2)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val ccStatus = rsm.selectCornerstoneCase(1)
@@ -62,7 +61,7 @@ class KBSelectCornerstoneTest {
         val cc3 = kb.addCornerstoneCase(createCase("Case3"))
         val vcc3 = kb.viewableCase(cc3)
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When
         val ccStatus = rsm.selectCornerstoneCase(2)
@@ -82,7 +81,7 @@ class KBSelectCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case2", glucoseValue = "2.0"))
         kb.addCornerstoneCase(createCase("Case3", glucoseValue = "3.0"))
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When the second cornerstone is selected
         val selected = rsm.selectCornerstoneCase(1)
@@ -101,7 +100,7 @@ class KBSelectCornerstoneTest {
         kb.addCornerstoneCase(createCase("Case2", glucoseValue = "2.0"))
         val cc3 = kb.addCornerstoneCase(createCase("Case3", glucoseValue = "3.0"))
         val sessionCase = createCase("Session")
-        rsm.startRuleSession(sessionCase, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go to Bondi.")))
+        rsm.startRuleSessionToAddComment(sessionCase, "Go to Bondi.")
 
         //When the status is asked for the viewable copy of the last cornerstone,
         //whose materialised comment value makes its data differ from the raw case

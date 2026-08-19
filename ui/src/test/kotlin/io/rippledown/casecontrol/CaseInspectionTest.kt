@@ -52,7 +52,7 @@ class CaseInspectionTest {
     @Test
     fun `should show interpretation`() = runTest {
         val text = "Go to Bondi now!"
-        val case = createViewableCaseWithInterpretation(name = "case a", caseId = 1L, conclusionTexts = listOf(text))
+        val case = createViewableCaseWithInterpretation(name = "case a", caseId = 1L, commentTexts = listOf(text))
         with(composeTestRule) {
             setContent {
                 CaseInspection(case, handler = handler)
@@ -102,7 +102,7 @@ class CaseInspectionTest {
             name = "case a",
             caseId = 1L,
             numberOfAttributes = 80,
-            conclusionTexts = listOf(text)
+            commentTexts = listOf(text)
         )
         with(composeTestRule) {
             setContent {

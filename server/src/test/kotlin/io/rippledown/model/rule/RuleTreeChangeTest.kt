@@ -1,12 +1,10 @@
 package io.rippledown.model.rule
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.should
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.beInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.rippledown.model.CommentFactory
-import io.rippledown.model.Conclusion
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.rule.dsl.ruleTree
@@ -20,13 +18,13 @@ open class RuleTreeChangeTest : RuleTestBase() {
     lateinit var conditionFactory: DummyConditionFactory
     val A = "A"
     val B = "B"
-    lateinit var newConclusion: Conclusion
+    lateinit var newAssignment: AssignValue
 
     open fun setup() {
         commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
         ruleFactory = DummyRuleFactory()
-        newConclusion = commentFactory.getOrCreate("It is very windy!")
+        newAssignment = commentFactory.comment("It is very windy!")
         tree = ruleTree(commentFactory) {
             child {
                 +A
@@ -45,135 +43,71 @@ open class RuleTreeChangeTest : RuleTestBase() {
         }.build()
     }
 }
-internal class ChangeTreeToAddConclusionTest: RuleTreeChangeTest() {
+
+internal class ChangeTreeToAddAssignmentTest : RuleTreeChangeTest() {
     @BeforeTest
     override fun setup() = super.setup()
 
     @Test
-    fun alignWith() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id, newConclusion.text)
-        val change = ChangeTreeToAddConclusion(copyOfNewConclusion)
-        val aligned = change.alignWith(commentFactory)
-        aligned.toBeAdded shouldBeSameInstanceAs newConclusion
-    }
-
-    @Test
-    fun `align with for conclusion that does not match that in the factory`() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
-        val change = ChangeTreeToAddConclusion(copyOfNewConclusion)
-        shouldThrow<IllegalArgumentException> {
-            change.alignWith(commentFactory)
-        }.message shouldContain "do not match"
-    }
-
-    @Test
     fun createChanger() {
-        val changer = ChangeTreeToAddConclusion(newConclusion).createChanger(tree, ruleFactory)
-        changer should  beInstanceOf<AddConclusionRuleTreeChanger>()
+        val changer = ChangeTreeToAddAssignment(newAssignment).createChanger(tree, ruleFactory)
+        changer should beInstanceOf<AddAssignmentRuleTreeChanger>()
         changer.ruleFactory shouldBeSameInstanceAs ruleFactory
         changer.ruleTree shouldBeSameInstanceAs tree
     }
 
     @Test
     fun toStringTest() {
-        val toString = ChangeTreeToAddConclusion(newConclusion).toString()
-        toString shouldContain newConclusion.text
-        toString shouldContain newConclusion.id.toString()
-        toString shouldContain ChangeTreeToAddConclusion::class.simpleName.toString()
+        val toString = ChangeTreeToAddAssignment(newAssignment).toString()
+        toString shouldContain "It is very windy!"
+        toString shouldContain newAssignment.attribute.id.toString()
+        toString shouldContain ChangeTreeToAddAssignment::class.simpleName.toString()
     }
 }
-internal class ChangeTreeToRemoveConclusionTest: RuleTreeChangeTest() {
+
+internal class ChangeTreeToRemoveAssignmentTest : RuleTreeChangeTest() {
     @BeforeTest
     override fun setup() = super.setup()
 
     @Test
-    fun alignWith() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id, newConclusion.text)
-        val change = ChangeTreeToRemoveConclusion(copyOfNewConclusion)
-        val aligned = change.alignWith(commentFactory)
-        aligned.toBeRemoved shouldBeSameInstanceAs newConclusion
-    }
-
-    @Test
-    fun `align with for conclusion that does not match that in the factory`() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
-        val change = ChangeTreeToRemoveConclusion(copyOfNewConclusion)
-        shouldThrow<IllegalArgumentException> {
-            change.alignWith(commentFactory)
-        }.message shouldContain "do not match"
-    }
-
-    @Test
     fun createChanger() {
-        val changer = ChangeTreeToRemoveConclusion(findOrCreateConclusion(A, tree.root)).createChanger(tree, ruleFactory)
-        changer should  beInstanceOf<RemoveConclusionRuleTreeChanger>()
+        val changer = ChangeTreeToRemoveAssignment(commentFactory.comment(A)).createChanger(tree, ruleFactory)
+        changer should beInstanceOf<RemoveAssignmentRuleTreeChanger>()
         changer.ruleFactory shouldBeSameInstanceAs ruleFactory
         changer.ruleTree shouldBeSameInstanceAs tree
     }
 
     @Test
     fun toStringTest() {
-        val toGo = findOrCreateConclusion(A, tree.root)
-        val toString = ChangeTreeToRemoveConclusion(toGo).toString()
-        toString shouldContain toGo.text
-        toString shouldContain toGo.id.toString()
-        toString shouldContain ChangeTreeToRemoveConclusion::class.simpleName.toString()
+        val toGo = commentFactory.comment(A)
+        val toString = ChangeTreeToRemoveAssignment(toGo).toString()
+        toString shouldContain A
+        toString shouldContain toGo.attribute.id.toString()
+        toString shouldContain ChangeTreeToRemoveAssignment::class.simpleName.toString()
     }
 }
-internal class ChangeTreeToReplaceConclusionTest: RuleTreeChangeTest() {
-    private lateinit var rainConclusion: Conclusion
 
+internal class ChangeTreeToReplaceAssignmentTest : RuleTreeChangeTest() {
     @BeforeTest
-    override fun setup() {
-        super.setup()
-        rainConclusion = commentFactory.getOrCreate("It will rain.")
-    }
-
-    @Test
-    fun alignWith() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id, newConclusion.text)
-        val copyOfToGo = Conclusion(rainConclusion.id, rainConclusion.text)
-        val change = ChangeTreeToReplaceConclusion(copyOfToGo,copyOfNewConclusion)
-        val aligned = change.alignWith(commentFactory)
-        aligned.replacement shouldBeSameInstanceAs newConclusion
-        aligned.toBeReplaced shouldBeSameInstanceAs rainConclusion
-    }
-
-    @Test
-    fun `align with for added conclusion that does not match that in the factory`() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
-        val change = ChangeTreeToReplaceConclusion(rainConclusion, copyOfNewConclusion)
-        shouldThrow<IllegalArgumentException> {
-            change.alignWith(commentFactory)
-        }.message shouldContain "do not match"
-    }
-
-    @Test
-    fun `align with for removed conclusion that does not match that in the factory`() {
-        val copyOfNewConclusion = Conclusion(newConclusion.id * 100, newConclusion.text)
-        val change = ChangeTreeToReplaceConclusion(copyOfNewConclusion, rainConclusion)
-        shouldThrow<IllegalArgumentException> {
-            change.alignWith(commentFactory)
-        }.message shouldContain "do not match"
-    }
+    override fun setup() = super.setup()
 
     @Test
     fun createChanger() {
-        val toGo = findOrCreateConclusion(A, tree.root)
-        val changer = ChangeTreeToReplaceConclusion(toGo, newConclusion).createChanger(tree, ruleFactory)
-        changer should  beInstanceOf<ReplaceConclusionRuleTreeChanger>()
+        val toGo = commentFactory.comment(A)
+        val changer = ChangeTreeToReplaceAssignment(toGo, newAssignment).createChanger(tree, ruleFactory)
+        changer should beInstanceOf<ReplaceAssignmentRuleTreeChanger>()
         changer.ruleFactory shouldBeSameInstanceAs ruleFactory
         changer.ruleTree shouldBeSameInstanceAs tree
     }
 
     @Test
     fun toStringTest() {
-        val toGo = findOrCreateConclusion(A, tree.root)
-        val toString = ChangeTreeToReplaceConclusion(toGo, newConclusion).toString()
-        toString shouldContain toGo.text
-        toString shouldContain toGo.id.toString()
-        toString shouldContain newConclusion.text
-        toString shouldContain newConclusion.id.toString()
-        toString shouldContain ChangeTreeToReplaceConclusion::class.simpleName.toString()
+        val toGo = commentFactory.comment(A)
+        val toString = ChangeTreeToReplaceAssignment(toGo, newAssignment).toString()
+        toString shouldContain A
+        toString shouldContain toGo.attribute.id.toString()
+        toString shouldContain "It is very windy!"
+        toString shouldContain newAssignment.attribute.id.toString()
+        toString shouldContain ChangeTreeToReplaceAssignment::class.simpleName.toString()
     }
 }

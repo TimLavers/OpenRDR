@@ -8,7 +8,6 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.diff.Addition
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
@@ -78,15 +77,14 @@ class KBSessionTest {
     fun `should allow rule session operations through ruleSessionManager`() {
         // Given
         val sessionCase = createCase("Case1")
-        val conclusion = kb.conclusionManager.getOrCreate("Go.")
 
         // When
-        session.ruleSessionManager.startRuleSession(sessionCase, ChangeTreeToAddConclusion(conclusion))
+        session.ruleSessionManager.startRuleSessionToAddComment(sessionCase, "Go.")
         session.ruleSessionManager.commitCurrentRuleSession()
 
         // Then
         kb.interpret(sessionCase)
-        sessionCase.interpretation.conclusionTexts() shouldBe setOf("Go.")
+        kb.commentsFor(sessionCase) shouldBe setOf("Go.")
     }
 
     @Test
@@ -108,10 +106,7 @@ class KBSessionTest {
     fun `should share the same RuleSessionManager between session and chatSessionManager`() {
         // Given - start a rule session through rsm
         val sessionCase = createCase("Case1")
-        session.ruleSessionManager.startRuleSession(
-            sessionCase,
-            ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Go."))
-        )
+        session.ruleSessionManager.startRuleSessionToAddComment(sessionCase, "Go.")
 
         // When/Then - the session should show active
         session.ruleSessionManager.isRuleSessionActive() shouldBe true

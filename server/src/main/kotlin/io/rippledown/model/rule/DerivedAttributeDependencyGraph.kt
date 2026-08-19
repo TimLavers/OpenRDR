@@ -1,7 +1,6 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.Attribute
-import io.rippledown.model.AttributeKind
 import io.rippledown.model.condition.Condition
 
 /**
@@ -10,10 +9,13 @@ import io.rippledown.model.condition.Condition
  * "Stratification: keeping dependencies acyclic" in
  * documentation/design/repeat_inferencing.md.
  *
- * Nodes are derived attributes. Derived attribute B depends on derived
- * attribute A if some rule whose action assigns B (or removes or replaces
- * an assignment of B) has a condition referring to A anywhere on its path
- * from the root, or has a value expression referring to A.
+ * Nodes are the attributes assigned by the knowledge base: derived
+ * attributes and comment attributes, since a comment is assigned by a rule
+ * like any other value and so can depend on other attributes and be
+ * depended upon. Node B depends on node A if some rule whose action assigns
+ * B (or removes or replaces an assignment of B) has a condition referring to
+ * A anywhere on its path from the root, or has a value expression referring
+ * to A.
  *
  * The graph is computed on demand from the rule tree; it is not persisted.
  * The [resolver] supplies the stored definitions of derived attributes, so
@@ -26,8 +28,8 @@ class DerivedAttributeDependencyGraph(
     knownAttributes: Set<Attribute>,
     private val resolver: DefinitionResolver = NO_DEFINITIONS
 ) {
-    private val derivedByName = knownAttributes
-        .filter { it.kind == AttributeKind.DERIVED }
+    private val kbAssignedByName = knownAttributes
+        .filter { it.kind.isAssignedByKB() }
         .associateBy { it.name }
 
     private val dependencies: Map<Attribute, Set<Attribute>> = buildDependencies(ruleTree)
@@ -39,8 +41,8 @@ class DerivedAttributeDependencyGraph(
      */
     fun cycleCreatedBy(action: RuleTreeChange?, condition: Condition?): List<Attribute>? {
         val assigned = action?.assignedAttribute() ?: return null
-        val referenced = derivedIn(action.expressionReferences(resolver)) +
-                (condition?.let { derivedAttributesIn(it) } ?: emptySet())
+        val referenced = kbAssignedIn(action.expressionReferences(resolver)) +
+                (condition?.let { kbAssignedAttributesIn(it) } ?: emptySet())
         return cycleCreatedBy(assigned, referenced)
     }
 
@@ -69,11 +71,11 @@ class DerivedAttributeDependencyGraph(
             val assigned = attributeAffectedBy(rule) ?: return@forEach
             val dependsOn = result.getOrPut(assigned) { mutableSetOf() }
             conditionsOnPathFromRoot(rule).forEach { condition ->
-                dependsOn.addAll(derivedAttributesIn(condition))
+                dependsOn.addAll(kbAssignedAttributesIn(condition))
             }
             rule.assignment?.let { assignment ->
                 assignment.expression.resolvedFor(assignment.attribute, resolver)?.let {
-                    dependsOn.addAll(derivedIn(it.referencedAttributes()))
+                    dependsOn.addAll(kbAssignedIn(it.referencedAttributes()))
                 }
             }
         }
@@ -93,11 +95,11 @@ class DerivedAttributeDependencyGraph(
         return result
     }
 
-    private fun derivedAttributesIn(condition: Condition) =
-        condition.attributeNames().mapNotNull { derivedByName[it] }.toSet()
+    private fun kbAssignedAttributesIn(condition: Condition) =
+        condition.attributeNames().mapNotNull { kbAssignedByName[it] }.toSet()
 
-    private fun derivedIn(attributes: Set<Attribute>) =
-        attributes.mapNotNull { derivedByName[it.name] }.toSet()
+    private fun kbAssignedIn(attributes: Set<Attribute>) =
+        attributes.mapNotNull { kbAssignedByName[it.name] }.toSet()
 
     /**
      * A path from [start] back to itself in the graph given by [edges],

@@ -12,7 +12,6 @@ import io.rippledown.model.*
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.signature.Current
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.model.rule.Literal
 import io.rippledown.persistence.PersistenceProvider
@@ -121,7 +120,7 @@ class KBImporterTest : ExporterTestBase() {
 
         // Add a rule.
         val rsm = KBSession(kb).ruleSessionManager
-        rsm.startRuleSession(case1, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Glucose ok.")))
+        rsm.startRuleSessionToAddComment(case1, "Glucose ok.")
         val condition = EpisodicCondition(null, glucose, LessThanOrEquals(4.1), Current, userExpression)
         rsm.addConditionToCurrentRuleSession(condition)
         rsm.commitCurrentRuleSession()

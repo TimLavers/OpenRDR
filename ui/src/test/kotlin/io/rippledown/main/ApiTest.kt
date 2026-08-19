@@ -3,7 +3,10 @@ package io.rippledown.main
 import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
+import io.rippledown.model.CasesInfo
+import io.rippledown.model.OperationResult
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -79,7 +82,7 @@ class ApiTest {
     fun getCaseWithInterpretationTest() = runTest {
         //Given
         val malabarComment = "go to Malabar"
-        val case = createViewableCaseWithInterpretation("A", 1, conclusionTexts = listOf(malabarComment))
+        val case = createViewableCaseWithInterpretation("A", 1, commentTexts = listOf(malabarComment))
 
         //sanity check
         case.viewableInterpretation.latestText() shouldBe malabarComment
@@ -110,20 +113,6 @@ class ApiTest {
         }
 
         Api(mock(config)).waitingCasesInfo() shouldBe expected
-    }
-
-    @Test
-    fun `should retrieve all conclusions for the specified kb`() = runTest {
-        val expected = setOf(
-            Conclusion(1, "A"),
-            Conclusion(2, "B")
-        )
-
-        val config = config {
-            returnConclusions = expected
-        }
-
-        Api(mock(config)).allConclusions() shouldBe expected
     }
 
     @Test

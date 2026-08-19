@@ -481,11 +481,4 @@ class Defs {
     fun theNumberOfCornerstoneCasesIsInt(numberOfCases: Int) {
         cornerstoneCaseCountPO().waitForCountOfNumberOfCasesToBe(numberOfCases)
     }
-
-    @And("the following comments have been defined in the project:")
-    fun createComments(dataTable: DataTable) {
-        dataTable.asList().forEach { comment ->
-            restClient().getOrCreateConclusion(comment)
-        }
-    }
 }

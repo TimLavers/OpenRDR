@@ -10,6 +10,7 @@ import io.mockk.*
 import io.rippledown.CaseTestUtils
 import io.rippledown.kb.*
 import io.rippledown.kb.report.ReportService
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -342,7 +343,11 @@ internal class KBEndpointTest {
         endpoint.commitCurrentRuleSession()
         endpoint.commentsForCase(caseId) shouldBe setOf("Whatever")
 
-        val attributesAfterRule = endpoint.viewableCase(caseId).attributes()
+        // The comment given by the rule is a comment attribute whose value is
+        // materialised onto the case, so it is one of the case's attributes too.
+        // The ordering under test is that of the case's external attributes.
+        val attributesAfterRule =
+            endpoint.viewableCase(caseId).attributes().filter { it.kind == AttributeKind.EXTERNAL }
         attributesAfterRule.size shouldBe 4
         attributesAfterRule[0] shouldBe attributesBefore[1]
         attributesAfterRule[1] shouldBe attributesBefore[2]

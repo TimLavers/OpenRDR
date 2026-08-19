@@ -3,7 +3,6 @@ package io.rippledown.suggestions
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
 import io.rippledown.model.condition.edit.SuggestedCondition
@@ -19,7 +18,7 @@ class RelevanceRankerTest {
     private val tsh = Attribute(10, "TSH")
     private val mcv = Attribute(11, "MCV")
 
-    private val goToBondi = Conclusion(100, "Go to Bondi.")
+    private val goToBondi = AssignValue(Attribute(100, "C1", AttributeKind.COMMENT), CommentTemplate("Go to Bondi."))
 
     private val tshHigh = EpisodicCondition(tsh, High, Current)
     private val tshLow = EpisodicCondition(tsh, Low, Current)
@@ -74,11 +73,11 @@ class RelevanceRankerTest {
     fun `historical score beats alphabetic tiebreak`() {
         //Given a history where tshHigh has been used for goToBondi, and a
         //candidate set in which mcvHigh would win on alphabetic order alone
-        val history = Rule(1, null, goToBondi, setOf(tshHigh))
+        val history = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh, mcv),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(history),
         )
         val candidates = listOf(suggestionFor(mcvHigh), suggestionFor(tshHigh))
@@ -100,12 +99,12 @@ class RelevanceRankerTest {
     @Test
     fun `equal historical scores fall back to alphabetic order`() {
         //Given tshHigh and mcvHigh both scoring 1 historically
-        val h1 = Rule(1, null, goToBondi, setOf(tshHigh))
-        val h2 = Rule(2, null, goToBondi, setOf(mcvHigh))
+        val h1 = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val h2 = Rule(2, null, setOf(mcvHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh, mcv),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(h1, h2),
         )
         val candidates = listOf(suggestionFor(tshHigh), suggestionFor(mcvHigh))
@@ -124,13 +123,13 @@ class RelevanceRankerTest {
     @Test
     fun `higher historical score ranks above lower historical score`() {
         //Given tshHigh used twice, mcvHigh once, tshLow never
-        val r1 = Rule(1, null, goToBondi, setOf(tshHigh))
-        val r2 = Rule(2, null, goToBondi, setOf(tshHigh))
-        val r3 = Rule(3, null, goToBondi, setOf(mcvHigh))
+        val r1 = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val r2 = Rule(2, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val r3 = Rule(3, null, setOf(mcvHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh, mcv),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(r1, r2, r3),
         )
         val candidates = listOf(

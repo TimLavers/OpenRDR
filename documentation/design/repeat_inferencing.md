@@ -162,14 +162,13 @@ including cornerstone evaluation during rule building):
 2. Evaluate the tree against the case; collect the derived-attribute
    assignments made by the rules that fired.
 3. Write those assignments into the latest episode of the case.
-4. If the assignments (and conclusions) are unchanged from the previous
+4. If the assignments are unchanged from the previous
    pass, stop. Otherwise repeat from step 2, with no hard cap of
    passes as this is guaranteed to terminate.
 
-Conditions on external data evaluate identically on every pass; only conditions
-on derived attributes can change value between passes. Because the
-dependency graph is kept acyclic (next section), the iteration is
-guaranteed to converge.
+Conditions on external data evaluate identically on every pass; only conditions on KB-assigned attributes can change
+value between passes. Because the dependency graph is kept acyclic (next section), the iteration is guaranteed to
+converge.
 
 ### Reset semantics
 
@@ -187,19 +186,24 @@ rule-build time.
 
 ### Dependency graph
 
-- Nodes: derived attributes.
-- Edges: derived attribute B *depends on* derived attribute A if some rule
-  whose action assigns B (or removes/replaces an assignment of B) has a
-  condition referring to A anywhere on its path from the root, or has a
-  value expression referring to A.
+- Nodes: the attributes assigned by the KB — derived attributes *and*
+  comment attributes.
+- Edges: node B *depends on* node A if some rule whose action assigns B (or removes/replaces an assignment of B) has a
+  condition referring to A anywhere on its path from the root, or has a value expression referring to A.
 
-Because conditions reference attributes by id, and the set of derived
+Comment attributes are nodes because a comment is assigned by a rule like any other value (Phase 2), so it can be
+depended upon as well as depend on others, and a cycle through one oscillates just the same. For example: a rule gives a
+comment, a rule assigns a derived value conditioned on that comment, and a rule retracting the comment is conditioned on
+that derived value — so the comment is present on one pass and absent on the next, forever. Restricting the nodes to
+derived attributes would leave that unprevented.
+
+Because conditions reference attributes by id, and the set of KB-assigned
 attributes is known, edge extraction from the rule tree is exact.
 
 ### Build-time prevention
 
-Cycles are prevented during rule building, before they can reach the rule.
-A condition on a derived attribute *would create a cycle* if adding its
+Cycles are prevented during rule building, before they can reach the rule. A condition on a KB-assigned attribute *would
+create a cycle* if adding its
 would-be edges to the graph makes the graph cyclic. Such conditions are
 kept away from the user at every entry point:
 
@@ -698,10 +702,9 @@ leaving `AssignConclusion` in place until step 16.
   from named comment attributes.
 - `RuleTree`/`KB` tests: multi-pass convergence, first-pass semantics of
   absence conditions, idempotent re-interpretation.
-- Dependency-graph tests: edge construction (including inherited path
-  conditions and value-expression references), `wouldCreateCycle`,
-  suggester filtering of cycle-creating conditions, manual entry refused
-  with a message naming the cycle, commit invariant.
+- Dependency-graph tests: edge construction (including inherited path conditions and value-expression references),
+  `cycleCreatedBy`, cycles running through a comment attribute, suggester filtering of cycle-creating conditions, manual
+  entry refused with a message naming the cycle, commit invariant.
 - Rule-session tests: cornerstone behaviour with chained rules.
 - Cucumber: end-to-end scenario — build a rule assigning
   `Diabetes status = "diabetic"`, then build a dependent rule conditioned

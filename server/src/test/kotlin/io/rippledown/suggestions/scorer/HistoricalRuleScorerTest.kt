@@ -3,7 +3,6 @@ package io.rippledown.suggestions.scorer
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
-import io.rippledown.model.Conclusion
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.*
 import io.rippledown.model.condition.episodic.predicate.GreaterThanOrEquals
@@ -19,8 +18,11 @@ class HistoricalRuleScorerTest {
     private val tsh = Attribute(10, "TSH")
     private val mcv = Attribute(11, "MCV")
 
-    private val goToBondi = Conclusion(100, "Go to Bondi.")
-    private val otherConclusion = Conclusion(101, "Go to Manly.")
+    private val commentAttr = Attribute(100, "C1", AttributeKind.COMMENT)
+    private val otherCommentAttr = Attribute(101, "C2", AttributeKind.COMMENT)
+
+    private val goToBondi = AssignValue(commentAttr, CommentTemplate("Go to Bondi."))
+    private val otherAssignment = AssignValue(otherCommentAttr, CommentTemplate("Go to Manly."))
 
     private val tshHigh = EpisodicCondition(tsh, High, Current)
     private val tshLow = EpisodicCondition(tsh, Low, Current)
@@ -38,13 +40,13 @@ class HistoricalRuleScorerTest {
     }
 
     /**
-     * No action on the context means no target conclusion — the scorer has
+     * No action on the context means no target assignment — the scorer has
      * nothing to anchor on, so every candidate scores 0.
      */
     @Test
     fun `returns 0 for every candidate when action is null`() {
         //Given a tree with a rule using tshHigh for Go to Bondi but no active action
-        val rule = Rule(1, null, goToBondi, setOf(tshHigh))
+        val rule = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
@@ -60,18 +62,18 @@ class HistoricalRuleScorerTest {
     }
 
     /**
-     * Cold start: no rule in the tree has the target conclusion, so every
+     * Cold start: no rule in the tree has the target assignment, so every
      * candidate scores 0. The ranker will lean on the other scorers (added in
      * later commits) or the alphabetic tiebreak.
      */
     @Test
-    fun `returns 0 when no rule in the tree matches the target conclusion`() {
-        //Given a tree whose only rule has an unrelated conclusion
-        val unrelatedRule = Rule(1, null, otherConclusion, setOf(tshHigh))
+    fun `returns 0 when no rule in the tree matches the target assignment`() {
+        //Given a tree whose only rule has an unrelated assignment
+        val unrelatedRule = Rule(1, null, setOf(tshHigh), mutableSetOf(), otherAssignment)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(unrelatedRule),
         )
 
@@ -84,17 +86,17 @@ class HistoricalRuleScorerTest {
 
     /**
      * The canonical happy path: one historical rule uses tshHigh for the
-     * target conclusion, so a tshHigh candidate scores 1 and an unrelated
+     * target assignment, so a tshHigh candidate scores 1 and an unrelated
      * candidate scores 0.
      */
     @Test
-    fun `scores 1 when one historical rule uses the condition for the target conclusion`() {
-        //Given one historical rule using tshHigh for the target conclusion
-        val historical = Rule(1, null, goToBondi, setOf(tshHigh))
+    fun `scores 1 when one historical rule uses the condition for the target assignment`() {
+        //Given one historical rule using tshHigh for the target assignment
+        val historical = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -114,15 +116,15 @@ class HistoricalRuleScorerTest {
     @Test
     fun `counts every historical rule that uses the condition`() {
         //Given three rules using tshHigh, and one rule for an unrelated
-        //conclusion also using tshHigh (must not be counted)
-        val r1 = Rule(1, null, goToBondi, setOf(tshHigh))
-        val r2 = Rule(2, null, goToBondi, setOf(tshHigh, mcvHigh))
-        val r3 = Rule(3, null, goToBondi, setOf(tshHigh))
-        val unrelated = Rule(4, null, otherConclusion, setOf(tshHigh))
+        //assignment also using tshHigh (must not be counted)
+        val r1 = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val r2 = Rule(2, null, setOf(tshHigh, mcvHigh), mutableSetOf(), goToBondi)
+        val r3 = Rule(3, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val unrelated = Rule(4, null, setOf(tshHigh), mutableSetOf(), otherAssignment)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh, mcv),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(r1, r2, r3, unrelated),
         )
 
@@ -135,47 +137,48 @@ class HistoricalRuleScorerTest {
     }
 
     /**
-     * Matching is by `Conclusion.id`, not reference identity. KB reloads
-     * create fresh `Conclusion` instances and this scorer must still find
+     * Matching is by attribute id, not reference identity. KB reloads
+     * create fresh `Attribute` instances and this scorer must still find
      * the historical rules.
      */
     @Test
-    fun `matches the target conclusion by id, not by reference identity`() {
-        //Given a historical rule, and a freshly constructed Conclusion sharing
-        //its id (modelling a KB reload that re-instantiates Conclusion objects)
-        val historical = Rule(1, null, goToBondi, setOf(tshHigh))
-        val reloadedGoToBondi = Conclusion(goToBondi.id, goToBondi.text)
+    fun `matches the target assignment by attribute id, not by reference identity`() {
+        //Given a historical rule, and a freshly constructed AssignValue with an
+        //Attribute sharing its id (modelling a KB reload that re-instantiates objects)
+        val historical = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val reloadedAttr = Attribute(commentAttr.id, commentAttr.name, AttributeKind.COMMENT)
+        val reloadedGoToBondi = AssignValue(reloadedAttr, CommentTemplate("Go to Bondi."))
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToAddConclusion(reloadedGoToBondi),
+            action = ChangeTreeToAddAssignment(reloadedGoToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
         //When
         val score = HistoricalRuleScorer(ctx).score(suggestionFor(tshHigh))
 
-        //Then the historical rule is found despite the new Conclusion instance
+        //Then the historical rule is found despite the new Attribute instance
         score shouldBe 1
     }
 
     /**
-     * ChangeTreeToReplaceConclusion's *replacement* — the comment being added
-     * — is the target; the conclusion being replaced is ignored. This keeps
+     * ChangeTreeToReplaceAssignment's *replacement* — the comment being added
+     * — is the target; the assignment being replaced is ignored. This keeps
      * the scorer's behaviour aligned with Add: we surface conditions that the
      * KB has used to justify the comment the user is introducing.
      */
     @Test
-    fun `replace action uses the replacement conclusion, not the one being replaced`() {
+    fun `replace action uses the replacement assignment, not the one being replaced`() {
         //Given two rules — one using tshHigh for goToBondi (the replacement),
-        //one using mcvHigh for otherConclusion (the comment being replaced)
-        val usingTshHigh = Rule(1, null, goToBondi, setOf(tshHigh))
-        val usingMcvHigh = Rule(2, null, otherConclusion, setOf(mcvHigh))
+        //one using mcvHigh for otherAssignment (the comment being replaced)
+        val usingTshHigh = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
+        val usingMcvHigh = Rule(2, null, setOf(mcvHigh), mutableSetOf(), otherAssignment)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh, mcv),
-            action = ChangeTreeToReplaceConclusion(
-                toBeReplaced = otherConclusion,
+            action = ChangeTreeToReplaceAssignment(
+                toBeReplaced = otherAssignment,
                 replacement = goToBondi,
             ),
             ruleTree = ruleTreeWith(usingTshHigh, usingMcvHigh),
@@ -195,13 +198,13 @@ class HistoricalRuleScorerTest {
      * not prescriptive (Phase 1 does not attempt to invert conditions).
      */
     @Test
-    fun `remove action scores conditions that gated the removed conclusion in`() {
-        //Given a historical rule that gated the to-be-removed conclusion in
-        val historical = Rule(1, null, goToBondi, setOf(tshHigh))
+    fun `remove action scores conditions that gated the removed assignment in`() {
+        //Given a historical rule that gated the to-be-removed assignment in
+        val historical = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToRemoveConclusion(goToBondi),
+            action = ChangeTreeToRemoveAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -246,13 +249,13 @@ class HistoricalRuleScorerTest {
     fun `editable greater-than-equals candidate matches historical greater-than-equals with the same cutoff`() {
         //Given a historical eGFR ≥ 70 rule and an editable candidate auto-filled to 70
         val historical = Rule(
-            1, null, goToBondi,
-            setOf(EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)),
+            1, null, setOf(EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)),
+            mutableSetOf(), goToBondi,
         )
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -274,13 +277,13 @@ class HistoricalRuleScorerTest {
     fun `editable greater-than-equals candidate does not match historical greater-than-equals with a different cutoff`() {
         //Given a historical eGFR ≥ 70 rule and an editable candidate auto-filled to 74
         val historical = Rule(
-            1, null, goToBondi,
-            setOf(EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)),
+            1, null, setOf(EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)),
+            mutableSetOf(), goToBondi,
         )
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -303,16 +306,17 @@ class HistoricalRuleScorerTest {
         //entries (unusual but a useful regression guard: candidate matching
         //uses `Iterable.any`, not `count`).
         val historical = Rule(
-            1, null, goToBondi,
+            1, null,
             setOf(
                 EpisodicCondition(null, tsh, High, Current, "tsh is elevated"),
                 EpisodicCondition(null, tsh, High, Current, "tsh is up"),
             ),
+            mutableSetOf(), goToBondi,
         )
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -330,11 +334,11 @@ class HistoricalRuleScorerTest {
     @Test
     fun `non-editable candidate uses strict sameAs matching`() {
         //Given a historical "tsh is high" rule
-        val historical = Rule(1, null, goToBondi, setOf(tshHigh))
+        val historical = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -350,15 +354,6 @@ class HistoricalRuleScorerTest {
     // Assignment-based actions (Phase 2: comments are comment attributes)
     // -----------------------------------------------------------------
 
-    private val commentAttr = Attribute(100, "C1", AttributeKind.COMMENT)
-    private val otherCommentAttr = Attribute(101, "C2", AttributeKind.COMMENT)
-
-    private fun ruleTreeWithAssignment(vararg rules: Rule): RuleTree {
-        val root = Rule(0)
-        rules.forEach { root.addChild(it) }
-        return RuleTree(root)
-    }
-
     /**
      * A historical rule that assigns the same comment attribute as the
      * action's target must be found by the scorer, so its conditions
@@ -368,14 +363,14 @@ class HistoricalRuleScorerTest {
     fun `assignment add action matches historical rules by target attribute id`() {
         //Given a historical rule assigning commentAttr with tshHigh
         val historical = Rule(
-            1, null, null, setOf(tshHigh),
+            1, null, setOf(tshHigh), mutableSetOf(),
             assignment = AssignValue(commentAttr, ByDefinition)
         )
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
             action = ChangeTreeToAddAssignment(AssignValue(commentAttr, ByDefinition)),
-            ruleTree = ruleTreeWithAssignment(historical),
+            ruleTree = ruleTreeWith(historical),
         )
 
         //When
@@ -394,14 +389,14 @@ class HistoricalRuleScorerTest {
     fun `assignment add action does not match rules with a different comment attribute`() {
         //Given a rule for a different comment attribute
         val unrelated = Rule(
-            1, null, null, setOf(tshHigh),
+            1, null, setOf(tshHigh), mutableSetOf(),
             assignment = AssignValue(otherCommentAttr, ByDefinition)
         )
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
             action = ChangeTreeToAddAssignment(AssignValue(commentAttr, ByDefinition)),
-            ruleTree = ruleTreeWithAssignment(unrelated),
+            ruleTree = ruleTreeWith(unrelated),
         )
 
         //When
@@ -419,11 +414,11 @@ class HistoricalRuleScorerTest {
     fun `assignment replace action uses the replacement attribute as target`() {
         //Given one rule for the replacement attribute and one for the original
         val usingTshHigh = Rule(
-            1, null, null, setOf(tshHigh),
+            1, null, setOf(tshHigh), mutableSetOf(),
             assignment = AssignValue(commentAttr, ByDefinition)
         )
         val usingMcvHigh = Rule(
-            2, null, null, setOf(mcvHigh),
+            2, null, setOf(mcvHigh), mutableSetOf(),
             assignment = AssignValue(otherCommentAttr, ByDefinition)
         )
         val ctx = SuggestionContext(
@@ -433,7 +428,7 @@ class HistoricalRuleScorerTest {
                 AssignValue(otherCommentAttr, ByDefinition),
                 AssignValue(commentAttr, ByDefinition)
             ),
-            ruleTree = ruleTreeWithAssignment(usingTshHigh, usingMcvHigh),
+            ruleTree = ruleTreeWith(usingTshHigh, usingMcvHigh),
         )
 
         //When
@@ -451,14 +446,14 @@ class HistoricalRuleScorerTest {
     fun `assignment remove action scores conditions that gated the removed comment`() {
         //Given a historical rule that assigned the to-be-removed comment attribute
         val historical = Rule(
-            1, null, null, setOf(tshHigh),
+            1, null, setOf(tshHigh), mutableSetOf(),
             assignment = AssignValue(commentAttr, ByDefinition)
         )
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
             action = ChangeTreeToRemoveAssignment(AssignValue(commentAttr, ByDefinition)),
-            ruleTree = ruleTreeWithAssignment(historical),
+            ruleTree = ruleTreeWith(historical),
         )
 
         //When

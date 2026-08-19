@@ -90,7 +90,7 @@ class CornerstoneInspectionTest {
             name = "Greta",
             caseId = 2L,
             numberOfAttributes = 80,
-            conclusionTexts = listOf("Go to Bondi")
+            commentTexts = listOf("Go to Bondi")
         )
         with(composeTestRule) {
             setContent {

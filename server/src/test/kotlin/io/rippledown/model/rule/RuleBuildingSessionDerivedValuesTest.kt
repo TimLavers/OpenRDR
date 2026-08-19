@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
-import io.rippledown.model.Conclusion
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isCondition
@@ -15,7 +15,8 @@ import kotlin.test.Test
 internal class RuleBuildingSessionDerivedValuesTest {
     private val glucose = Attribute(1, "Glucose")
     private val diabetesStatus = Attribute(10, "Diabetes status", AttributeKind.DERIVED)
-    private val advice = Conclusion(1, "Diabetic diet advice given.")
+    private val commentFactory = CommentFactory()
+    private val advice = commentFactory.comment("Diabetic diet advice given.")
     private val ruleFactory = DummyRuleFactory()
 
     private lateinit var tree: RuleTree
@@ -30,7 +31,7 @@ internal class RuleBuildingSessionDerivedValuesTest {
         // A tree with a rule assigning a derived value for high glucose.
         tree = RuleTree()
         val assigning = Rule(
-            1, null, null,
+            1, null,
             setOf(greaterThanOrEqualTo(100, glucose, 11.0)), mutableSetOf(),
             AssignValue(diabetesStatus, Literal("diabetic"))
         )
@@ -41,7 +42,7 @@ internal class RuleBuildingSessionDerivedValuesTest {
     fun `a condition on a derived value assigned by the tree can be added`() {
         // Given a session for a case whose derived value is assigned by the tree
         val case = case("A", "12.0")
-        val session = RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddConclusion(advice), listOf())
+        val session = RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddAssignment(advice), listOf())
 
         // When a condition on the derived value is added
         session.addCondition(isCondition(200, diabetesStatus, "diabetic"))
@@ -54,7 +55,7 @@ internal class RuleBuildingSessionDerivedValuesTest {
     fun `a condition on a derived value not assigned for the case is rejected`() {
         // Given a session for a case whose glucose is too low for the assignment rule
         val case = case("A", "5.0")
-        val session = RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddConclusion(advice), listOf())
+        val session = RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddAssignment(advice), listOf())
 
         // When a condition on the derived value is added
         // Then it is rejected
@@ -68,7 +69,7 @@ internal class RuleBuildingSessionDerivedValuesTest {
         // Given a tree whose assignment rule gives the derived value by definition
         tree = RuleTree()
         val assigning = Rule(
-            1, null, null,
+            1, null,
             setOf(greaterThanOrEqualTo(100, glucose, 11.0)), mutableSetOf(),
             AssignValue(diabetesStatus, ByDefinition)
         )
@@ -80,7 +81,7 @@ internal class RuleBuildingSessionDerivedValuesTest {
         // When a session with the resolver adds a condition on the derived value
         val case = case("A", "12.0")
         val session =
-            RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddConclusion(advice), listOf(), resolver)
+            RuleBuildingSession(ruleFactory, tree, case, ChangeTreeToAddAssignment(advice), listOf(), resolver)
         session.addCondition(isCondition(200, diabetesStatus, "diabetic"))
 
         // Then it is accepted
@@ -95,7 +96,7 @@ internal class RuleBuildingSessionDerivedValuesTest {
         val diabeticCornerstone = case("B", "15.0")
         val nonDiabeticCornerstone = case("C", "5.0")
         val session = RuleBuildingSession(
-            ruleFactory, tree, case, ChangeTreeToAddConclusion(advice),
+            ruleFactory, tree, case, ChangeTreeToAddAssignment(advice),
             listOf(diabeticCornerstone, nonDiabeticCornerstone)
         )
         session.cornerstoneCases().map { it.name } shouldBe listOf("B", "C")

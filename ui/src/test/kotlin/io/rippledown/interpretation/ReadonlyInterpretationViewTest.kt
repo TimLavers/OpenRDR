@@ -144,8 +144,8 @@ class ReadonlyInterpretationViewTest {
         val malabarComment = "Malabar."
         val interpretation =
             createViewableInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
-        val conclusionTexts = interpretation.conclusions().map { it.text }
-        val unhighlighted = conclusionTexts.unhighlighted().text
+        val commentTexts = interpretation.renderedComments.map { it.text }
+        val unhighlighted = commentTexts.unhighlighted().text
         var textLayoutResult: TextLayoutResult? = null
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
@@ -172,8 +172,8 @@ class ReadonlyInterpretationViewTest {
         //Given
         val bondiComment = "Bondi."
         val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        val conclusionTexts = interpretation.conclusions().map { it.text }
-        val unhighlighted = conclusionTexts.unhighlighted().text
+        val commentTexts = interpretation.renderedComments.map { it.text }
+        val unhighlighted = commentTexts.unhighlighted().text
         var textLayoutResult: TextLayoutResult? = null
         val handler = object : ReadonlyInterpretationViewHandler by handler {
             override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
@@ -199,7 +199,7 @@ class ReadonlyInterpretationViewTest {
     }
 
     @Test
-    fun `should show the conditions for the conclusion under the pointer`() = runTest {
+    fun `should show the conditions for the comment under the pointer`() = runTest {
         //Given
         val bondiComment = "Best surf in the world!"
         val malabarComment = "Great for a swim!"
@@ -234,7 +234,7 @@ class ReadonlyInterpretationViewTest {
     }
 
     @Test
-    fun `should show comment but not show any conditions for the conclusion under the pointer if there are none`() =
+    fun `should show comment but not show any conditions for the comment under the pointer if there are none`() =
         runTest {
             //Given
             val bondiComment = "Best surf in the world!"

@@ -68,10 +68,22 @@ class ReportServiceTest {
         val interpretation = case.interpretation
 
         // Add rules to create comments
-        val conclusion1 = io.rippledown.model.Conclusion(1, "High HGB")
-        val conclusion2 = io.rippledown.model.Conclusion(2, "Macrocytosis")
-        val rule1 = io.rippledown.model.rule.Rule(1, conclusion = conclusion1)
-        val rule2 = io.rippledown.model.rule.Rule(2, conclusion = conclusion2)
+        val c1 = Attribute(1, "C1", AttributeKind.COMMENT)
+        val c2 = Attribute(2, "C2", AttributeKind.COMMENT)
+        val rule1 = io.rippledown.model.rule.Rule(
+            1,
+            null,
+            setOf(),
+            mutableSetOf(),
+            io.rippledown.model.rule.AssignValue(c1, CommentTemplate("High HGB"))
+        )
+        val rule2 = io.rippledown.model.rule.Rule(
+            2,
+            null,
+            setOf(),
+            mutableSetOf(),
+            io.rippledown.model.rule.AssignValue(c2, CommentTemplate("Macrocytosis"))
+        )
         interpretation.add(rule1)
         interpretation.add(rule2)
 

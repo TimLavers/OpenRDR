@@ -2,8 +2,8 @@ package io.rippledown.kb.export
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.ConditionFactory
-import io.rippledown.model.DummyConclusionFactory
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
@@ -18,13 +18,13 @@ import kotlin.text.Charsets.UTF_8
 
 class IdentifiedObjectExporterTest: ExporterTestBase() {
     private lateinit var tree: RuleTree
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionFactory: ConditionFactory
 
     @BeforeEach
     override fun init() {
         super.init()
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
         tempDir.mkdirs()
         tree = RuleTree()
@@ -58,24 +58,24 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
 
     @Test
     fun `each rule is in its own file`() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 34
-                conclusion { "ConclusionA" }
+                comment { "ConclusionA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 134
-                    conclusion { "ConclusionA" }
+                    comment { "ConclusionA" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 111
-                        conclusion { "ConclusionB" }
+                        comment { "ConclusionB" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
@@ -84,7 +84,7 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
                 }
                 child {
                     id = 12
-                    conclusion { "ConclusionD" }
+                    comment { "ConclusionD" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
@@ -100,7 +100,7 @@ class IdentifiedObjectExporterTest: ExporterTestBase() {
             val persistentRule: PersistentRule = Json.decodeFromString(data)
             persistentRule.id shouldBe it.id
             persistentRule.parentId shouldBe it.parent?.id
-            persistentRule.conclusionId shouldBe it.conclusion?.id
+            persistentRule.assignment shouldBe it.assignment
             persistentRule.conditionIds shouldBe  it.conditions.map { it.id!! }.toSet()
         }
     }

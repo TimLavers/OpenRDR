@@ -27,27 +27,26 @@ class PersistentRuleAssignmentTest {
 
     @Test
     fun `assignment defaults to null`() {
-        PersistentRule(1, 0, null, setOf(2, 3)).assignment.shouldBeNull()
+        PersistentRule(1, 0, setOf(2, 3)).assignment.shouldBeNull()
         PersistentRule().assignment.shouldBeNull()
     }
 
     @Test
     fun `construction from a rule carries the assignment`() {
         // Given a rule with an assignment
-        val rule = Rule(7, Rule(0), null, emptySet(), mutableSetOf(), literalAssignment)
+        val rule = Rule(7, Rule(0), emptySet(), mutableSetOf(), literalAssignment)
 
         // When a persistent rule is built from it
         val persistentRule = PersistentRule(rule)
 
         // Then the assignment is carried
         persistentRule.assignment shouldBe literalAssignment
-        persistentRule.conclusionId.shouldBeNull()
     }
 
     @Test
     fun `serialization round trip with a literal assignment`() {
         // Given a persistent rule with a literal assignment
-        val persistentRule = PersistentRule(1, 0, null, setOf(2), literalAssignment)
+        val persistentRule = PersistentRule(1, 0, setOf(2), literalAssignment)
 
         // When it is serialized and deserialized
         val restored = Json.decodeFromString<PersistentRule>(Json.encodeToString(persistentRule))
@@ -59,7 +58,7 @@ class PersistentRuleAssignmentTest {
     @Test
     fun `serialization round trip with a formula assignment`() {
         // Given a persistent rule with a formula assignment
-        val persistentRule = PersistentRule(1, 0, null, emptySet(), formulaAssignment)
+        val persistentRule = PersistentRule(1, 0, emptySet(), formulaAssignment)
 
         // When it is serialized and deserialized
         val restored = Json.decodeFromString<PersistentRule>(Json.encodeToString(persistentRule))
@@ -71,20 +70,20 @@ class PersistentRuleAssignmentTest {
     @Test
     fun `legacy JSON without an assignment field can be deserialized`() {
         // Given JSON written before the assignment field existed
-        val legacy = """{"id":1,"parentId":0,"conclusionId":5,"conditionIds":[2,3]}"""
+        val legacy = """{"id":1,"parentId":0,"conditionIds":[2,3]}"""
 
         // When it is deserialized
         val restored = Json.decodeFromString<PersistentRule>(legacy)
 
         // Then the assignment is null
-        restored shouldBe PersistentRule(1, 0, 5, setOf(2, 3))
+        restored shouldBe PersistentRule(1, 0, setOf(2, 3))
         restored.assignment.shouldBeNull()
     }
 
     @Test
     fun `assignment string round trip`() {
         // Given a persistent rule with an assignment
-        val persistentRule = PersistentRule(1, 0, null, emptySet(), formulaAssignment)
+        val persistentRule = PersistentRule(1, 0, emptySet(), formulaAssignment)
 
         // When the assignment is written to and read from its string form
         val restored = PersistentRule.assignmentFromString(persistentRule.assignmentString())
@@ -95,7 +94,7 @@ class PersistentRuleAssignmentTest {
 
     @Test
     fun `assignment string of a rule without an assignment is null`() {
-        PersistentRule(1, 0, 5, setOf(2)).assignmentString().shouldBeNull()
+        PersistentRule(1, 0, setOf(2)).assignmentString().shouldBeNull()
         PersistentRule.assignmentFromString(null).shouldBeNull()
     }
 }

@@ -3,7 +3,10 @@ package io.rippledown.suggestions
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
+import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.isPresent
 import io.rippledown.model.rule.*
@@ -16,11 +19,8 @@ class ConditionSuggesterCycleTest {
     private val diabetesStatus = Attribute(11, "Diabetes status", AttributeKind.DERIVED)
 
     private val ruleFactory = object : RuleFactory {
-        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) =
-            Rule(100, parent, conclusion, conditions)
-
-        override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>) =
-            Rule(100, parent, null, conditions, mutableSetOf(), assignment)
+        override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>) =
+            Rule(100, parent, conditions, mutableSetOf(), assignment)
     }
 
     /**

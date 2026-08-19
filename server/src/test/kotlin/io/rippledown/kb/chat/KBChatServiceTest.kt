@@ -31,7 +31,7 @@ class KBChatServiceTest {
     fun `system instruction should contain the comments in the interpretation`() {
         // Given
         val comments = listOf("Go to Bondi", "Go to Malabar")
-        val case = createCaseWithInterpretation("Test Case", conclusionTexts = comments)
+        val case = createCaseWithInterpretation("Test Case", commentTexts = comments)
 
         // When
         val systemPrompt = KBChatService.systemPrompt(case)

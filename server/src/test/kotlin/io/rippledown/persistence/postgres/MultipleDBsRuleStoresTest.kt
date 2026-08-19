@@ -31,10 +31,10 @@ class MultipleDBsRuleStoresTest: MultipleDBsTest() {
 
     @Test
     fun create() {
-        val a11 = store1.create(PersistentRule(null, null, null, setOf()))
-        val a21 = store2.create(PersistentRule(null, null, null, setOf()))
-        val a12 = store1.create(PersistentRule(null, 0, 5, setOf(10, 11)))
-        val a22 = store2.create(PersistentRule(null, 0, 6, setOf(11, 12)))
+        val a11 = store1.create(PersistentRule(null, null, setOf()))
+        val a21 = store2.create(PersistentRule(null, null, setOf()))
+        val a12 = store1.create(PersistentRule(null, 0, setOf(10, 11)))
+        val a22 = store2.create(PersistentRule(null, 0, setOf(11, 12)))
 
         store1.all() shouldBe setOf(a11, a12)
         store2.all() shouldBe setOf(a21, a22)
@@ -45,10 +45,10 @@ class MultipleDBsRuleStoresTest: MultipleDBsTest() {
 
     @Test
     fun remove() {
-        val a11 = store1.create(PersistentRule(null, null, null, setOf()))
-        val a21 = store2.create(PersistentRule(null, null, null, setOf()))
-        val a12 = store1.create(PersistentRule(null, 0, 5, setOf(10, 11)))
-        val a22 = store2.create(PersistentRule(null, 0, 6, setOf(11, 12)))
+        val a11 = store1.create(PersistentRule(null, null, setOf()))
+        val a21 = store2.create(PersistentRule(null, null, setOf()))
+        val a12 = store1.create(PersistentRule(null, 0, setOf(10, 11)))
+        val a22 = store2.create(PersistentRule(null, 0, setOf(11, 12)))
 
         store1.removeById(a12.id!!)
         store2.removeById(a22.id!!)
@@ -61,10 +61,10 @@ class MultipleDBsRuleStoresTest: MultipleDBsTest() {
 
     @Test
     fun load() {
-        val a1 = PersistentRule(0, null, null, setOf())
-        val a2 = PersistentRule(1, 0, 9, setOf(7, 8))
-        val b1 = PersistentRule(0, null, null, setOf())
-        val b2 = PersistentRule(1, 0, 9, setOf(17, 18))
+        val a1 = PersistentRule(0, null, setOf())
+        val a2 = PersistentRule(1, 0, setOf(7, 8))
+        val b1 = PersistentRule(0, null, setOf())
+        val b2 = PersistentRule(1, 0, setOf(17, 18))
         store1.load(setOf(a1, a2))
         store2.load(setOf(b1, b2))
 
