@@ -3,32 +3,35 @@ package io.rippledown.interpretation
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import io.rippledown.constants.interpretation.CONDITION_PREFIX
+import io.rippledown.constants.interpretation.COMMENT_PENDING_ADD_PREFIX
+import io.rippledown.constants.interpretation.COMMENT_PENDING_REMOVE_PREFIX
+import io.rippledown.constants.interpretation.COMMENT_PENDING_REPLACE_PREFIX
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
-import io.rippledown.decoration.BACKGROUND_COLOR
 import io.rippledown.model.IntRangeData
 import io.rippledown.model.RenderedComment
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
-import io.rippledown.utils.createInterpretation
-import io.rippledown.utils.createViewableInterpretation
-import io.rippledown.utils.waitUntilAsserted
+import io.rippledown.utils.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
+/**
+ * The comments are shown as a two column table of the name of the comment
+ * attribute that gave each comment and the comment itself, so these tests read
+ * and hover its rows. The rows themselves are computed by
+ * [commentRowsToDisplay], which [CommentRowsTest] covers.
+ */
 @ExperimentalFoundationApi
 class ReadonlyInterpretationViewTest {
 
@@ -38,6 +41,9 @@ class ReadonlyInterpretationViewTest {
     lateinit var handler: ReadonlyInterpretationViewHandler
     lateinit var modifier: Modifier
 
+    private val firstName = commentAttributeName(FIRST_COMMENT_ATTRIBUTE_ID)
+    private val secondName = commentAttributeName(FIRST_COMMENT_ATTRIBUTE_ID + 1)
+
     @Before
     fun setUp() {
         handler = mockk(relaxUnitFun = true)
@@ -45,7 +51,7 @@ class ReadonlyInterpretationViewTest {
     }
 
     @Test
-    fun `should show non-blank interpretation`() = runTest {
+    fun `should show a comment and the name of the attribute that gave it`() = runTest {
         val text = "Go to Bondi now!"
         with(composeTestRule) {
             setContent {
@@ -55,7 +61,8 @@ class ReadonlyInterpretationViewTest {
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone(text)
+            requireInterpretation(text)
+            commentNamesShown() shouldBe listOf(firstName)
         }
     }
 
@@ -65,451 +72,262 @@ class ReadonlyInterpretationViewTest {
             setContent {
                 ReadonlyInterpretationView(createViewableInterpretation(), modifier = modifier, handler = handler)
             }
-            requireInterpretationForCornerstone("")
+            requireInterpretation("")
+            commentsShown() shouldBe emptyList()
         }
     }
 
     @Test
-    fun `should not show tool tip for a blank interpretation`() = runTest {
-        with(composeTestRule) {
-            //Given
-            setContent {
-                ToolTipForNonEmptyInterpretation(
-                    commentIndex = -1,
-                    interpretation = ViewableInterpretation()
-                )
-            }
-            //When
-            //Then
-            onNodeWithContentDescription(label = CONDITION_PREFIX, substring = true).assertDoesNotExist()
-        }
-    }
-
-    @Test
-    fun `should show tool tip for a non-blank interpretation and non-empty condition list`() = runTest {
-        //Given
-        val condition1 = "surf's up"
-        val condition2 = "it's sunny"
-        val interpretation = ViewableInterpretation(
-            renderedComments = listOf(
-                RenderedComment(text = "meaning of life", conditions = listOf(condition1, condition2))
-            )
-        )
-
-        with(composeTestRule) {
-            //When
-            setContent {
-                ToolTipForNonEmptyInterpretation(
-                    commentIndex = 0,
-                    interpretation = interpretation
-                )
-            }
-            //Then
-            onNodeWithContentDescription(label = "$CONDITION_PREFIX$condition1").assertIsDisplayed()
-            onNodeWithContentDescription(label = "$CONDITION_PREFIX$condition2").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun `should highlight comment under the pointer`() = runTest {
-        //Given
-        val bondiComment = "Bondi."
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
-
-        with(composeTestRule) {
-            setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
-            }
-            requireInterpretationForCornerstone(bondiComment)
-
-            //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
-            waitForIdle()
-
-            //Then
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult)
-        }
-    }
-
-    @Test
-    fun `should highlight comment under the pointer when showing two comments`() = runTest {
-        //Given
+    fun `should show a row for each comment, each with its own name`() = runTest {
         val bondiComment = "Bondi."
         val malabarComment = "Malabar."
-        val interpretation =
-            createViewableInterpretation(mapOf(bondiComment to emptyList(), malabarComment to emptyList()))
-        val commentTexts = interpretation.renderedComments.map { it.text }
-        val unhighlighted = commentTexts.unhighlighted().text
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    createViewableInterpretation(
+                        mapOf(bondiComment to emptyList(), malabarComment to emptyList())
+                    ),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(unhighlighted)
+            commentsShown() shouldBe listOf(bondiComment, malabarComment)
+            commentNamesShown() shouldBe listOf(firstName, secondName)
+        }
+    }
+
+    // ==================== Hover ====================
+
+    @Test
+    fun `should highlight the row of the comment under the pointer`() = runTest {
+        val bondiComment = "Bondi."
+        val malabarComment = "Malabar."
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    createViewableInterpretation(
+                        mapOf(bondiComment to emptyList(), malabarComment to emptyList())
+                    ),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
 
             //When
-            movePointerOverComment(malabarComment, textLayoutResult!!)
-            waitForIdle()
+            movePointerOverCommentRow(secondName)
 
-            //Then
-            requireCommentToBeHighlighted(malabarComment, textLayoutResult)
+            //Then only that row is highlighted
+            requireCommentRowToBeHighlighted(secondName)
+            requireCommentRowNotToBeHighlighted(firstName)
         }
     }
 
     @Test
     fun `should not highlight a comment if the pointer is not over it`() = runTest {
-        //Given
         val bondiComment = "Bondi."
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        val commentTexts = interpretation.renderedComments.map { it.text }
-        val unhighlighted = commentTexts.unhighlighted().text
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(unhighlighted)
-            movePointerOverComment(bondiComment, textLayoutResult!!)
-            waitForIdle()
-            requireCommentToBeHighlighted(bondiComment, textLayoutResult)
+            movePointerOverCommentRow(firstName)
+            requireCommentRowToBeHighlighted(firstName)
 
             //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult)
-            waitForIdle()
+            movePointerAwayFromTheComments()
 
             //Then
-            requireCommentToBeNotHighlighted(textLayoutResult)
+            requireNoCommentRowToBeHighlighted()
         }
     }
 
     @Test
     fun `should show the conditions for the comment under the pointer`() = runTest {
-        //Given
         val bondiComment = "Best surf in the world!"
         val malabarComment = "Great for a swim!"
-        val interpretationText = "$bondiComment $malabarComment"
         val bondiConditions = listOf("Bring your flippers.", "And your sunscreeen.")
         val malabarConditions = listOf("Great for a swim!", "And a picnic.")
-        val interpretation = createViewableInterpretation(
-            mapOf(
-                bondiComment to bondiConditions,
-                malabarComment to malabarConditions
-            )
-        )
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    createViewableInterpretation(
+                        mapOf(bondiComment to bondiConditions, malabarComment to malabarConditions)
+                    ),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(interpretationText)
 
             //When
-            movePointerOverComment(malabarComment, textLayoutResult!!)
+            movePointerOverCommentRow(secondName)
 
-            //Then
+            //Then the comments are still shown, with the conditions of the one hovered over
             requireConditionsToBeShowing(malabarConditions)
-            requireInterpretationForCornerstone(interpretationText)
+            commentsShown() shouldBe listOf(bondiComment, malabarComment)
         }
     }
 
     @Test
     fun `should show comment but not show any conditions for the comment under the pointer if there are none`() =
         runTest {
-            //Given
             val bondiComment = "Best surf in the world!"
-            val interpretation = createViewableInterpretation(
-                mapOf(bondiComment to listOf())
-            )
-            var textLayoutResult: TextLayoutResult? = null
-            val handler = object : ReadonlyInterpretationViewHandler by handler {
-                override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                    textLayoutResult = layoutResult
-                }
-            }
             with(composeTestRule) {
                 setContent {
-                    ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                    ReadonlyInterpretationView(
+                        createViewableInterpretation(mapOf(bondiComment to listOf())),
+                        modifier = modifier,
+                        handler = handler
+                    )
                 }
-                requireInterpretationForCornerstone(bondiComment)
 
                 //When
-                movePointerOverComment(bondiComment, textLayoutResult!!)
+                movePointerOverCommentRow(firstName)
 
                 //Then
                 requireNoConditionsToBeShowing()
-                requireInterpretationForCornerstone(bondiComment)
+                requireInterpretation(bondiComment)
             }
         }
-
 
     @Test
     fun `should show comment but not show any conditions if the pointer is not over a comment`() = runTest {
-        //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createViewableInterpretation(
-            mapOf(bondiComment to listOf())
-        )
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    createViewableInterpretation(mapOf(bondiComment to listOf("Sun is in case"))),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(bondiComment)
 
             //When
-            movePointerToTheRightOfTheComment(bondiComment, textLayoutResult!!)
+            movePointerAwayFromTheComments()
 
             //Then
             requireNoConditionsToBeShowing()
-            requireInterpretationForCornerstone(bondiComment)
+            requireInterpretation(bondiComment)
         }
     }
 
     @Test
     fun `should not show change interpretation icon`() = runTest {
-        //Given
         val bondiComment = "Best surf in the world!"
-        val interpretation = createViewableInterpretation(
-            mapOf(bondiComment to listOf())
-        )
         with(composeTestRule) {
-            //When
             setContent {
-                ReadonlyInterpretationView(interpretation = interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    interpretation = createViewableInterpretation(mapOf(bondiComment to listOf())),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(bondiComment)
+            requireInterpretation(bondiComment)
 
             //Then
             requireChangeInterpretationIconToBeNotShowing()
         }
     }
 
-    @Test
-    fun `should identify the comment index for a given offset`() {
-        with(listOf("01234", "56789")) {
-            for (i in 0..4) {
-                commentIndexForOffset(i) shouldBe 0
-            }
-            for (i in 5..9) {
-                commentIndexForOffset(i) shouldBe 1
-            }
-            commentIndexForOffset(10) shouldBe -1
-            commentIndexForOffset(-1) shouldBe -1
-        }
-    }
+    // ==================== Pending changes ====================
 
     @Test
-    fun `should highlight the first comment`() {
-        with(listOf("01234", "56789")) {
-            val annotatedString = highlightItem(0)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], BACKGROUND_COLOR)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], Color.Unspecified)
-        }
-    }
-
-    @Test
-    fun `should highlight the second comment`() {
-        with(listOf("01234", "56789")) {
-            val annotatedString = highlightItem(1)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[0], Color.Unspecified)
-            requireStyleForCommentInAnnotatedStringToHaveBackground(annotatedString, this[1], BACKGROUND_COLOR)
-        }
-    }
-
-    @Test
-    fun `unhighlighted with Addition diff should append addition text with green background`() {
-        val comments = listOf("Bondi.")
-        val diff = Addition("Beach time!")
-        val annotatedString = comments.unhighlighted(diff)
-        annotatedString.text shouldBe "Bondi. Beach time!"
-        annotatedString.spanStyles.size shouldBe 1
-        val span = annotatedString.spanStyles[0]
-        span.item.background shouldBe DIFF_ADDITION_COLOR
-        span.start shouldBe "Bondi. ".length
-        span.end shouldBe "Bondi. Beach time!".length
-    }
-
-    @Test
-    fun `unhighlighted with Addition diff and empty comments should show only the addition`() {
-        val comments = emptyList<String>()
-        val diff = Addition("Beach time!")
-        val annotatedString = comments.unhighlighted(diff)
-        annotatedString.text shouldBe "Beach time!"
-        annotatedString.spanStyles.size shouldBe 1
-        val span = annotatedString.spanStyles[0]
-        span.item.background shouldBe DIFF_ADDITION_COLOR
-        span.start shouldBe 0
-        span.end shouldBe "Beach time!".length
-    }
-
-    @Test
-    fun `unhighlighted with Removal diff should style removed comment with red background`() {
-        val comments = listOf("Bondi.", "Malabar.")
-        val diff = Removal("Bondi.")
-        val annotatedString = comments.unhighlighted(diff)
-        annotatedString.text shouldBe "Bondi. Malabar."
-        annotatedString.spanStyles.size shouldBe 1
-        val span = annotatedString.spanStyles[0]
-        span.item.background shouldBe DIFF_REMOVAL_COLOR
-        span.start shouldBe 0
-        span.end shouldBe "Bondi.".length
-    }
-
-    @Test
-    fun `unhighlighted with Replacement diff should style original red and append replacement green`() {
-        val comments = listOf("Bondi.")
-        val diff = Replacement("Bondi.", "Maroubra.")
-        val annotatedString = comments.unhighlighted(diff)
-        annotatedString.text shouldBe "Bondi. Maroubra."
-        annotatedString.spanStyles.size shouldBe 2
-        val redSpan = annotatedString.spanStyles.first { it.item.background == DIFF_REMOVAL_COLOR }
-        redSpan.start shouldBe 0
-        redSpan.end shouldBe "Bondi.".length
-        val greenSpan = annotatedString.spanStyles.first { it.item.background == DIFF_ADDITION_COLOR }
-        greenSpan.start shouldBe "Bondi. ".length
-        greenSpan.end shouldBe "Bondi. Maroubra.".length
-    }
-
-    @Test
-    fun `highlightItem should not apply hover highlight to a Removal diff target`() {
-        val comments = listOf("Bondi.")
-        val diff = Removal("Bondi.")
-        val annotatedString = comments.highlightItem(0, diff)
-        annotatedString.spanStyles.size shouldBe 1
-        val span = annotatedString.spanStyles[0]
-        span.item.background shouldBe DIFF_REMOVAL_COLOR
-    }
-
-    @Test
-    fun `highlightItem should not apply hover highlight to a Replacement diff target`() {
-        val comments = listOf("Bondi.")
-        val diff = Replacement("Bondi.", "Maroubra.")
-        val annotatedString = comments.highlightItem(0, diff)
-        val backgrounds = annotatedString.spanStyles.map { it.item.background }
-        backgrounds shouldBe listOf(DIFF_REMOVAL_COLOR, DIFF_ADDITION_COLOR)
-    }
-
-    @Test
-    fun `should show addition diff appended to existing interpretation`() = runTest {
+    fun `should show an addition as a row after the comments of the case`() = runTest {
         val bondiComment = "Go to Bondi."
         val addedComment = "Beach time!"
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Addition(addedComment),
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    diff = Addition(addedComment, "C99"),
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone("$bondiComment $addedComment")
+
+            //Then the comment being added is last, named, and marked as pending
+            commentsShown() shouldBe listOf(bondiComment, addedComment)
+            commentNamesShown() shouldBe listOf(firstName, "C99")
+            onNodeWithContentDescription("$COMMENT_PENDING_ADD_PREFIX" + "C99", useUnmergedTree = true).assertExists()
         }
     }
 
     @Test
-    fun `should show addition diff as first text when interpretation is blank`() = runTest {
+    fun `should show an addition as the only row when the interpretation is blank`() = runTest {
         val addedComment = "Beach time!"
-        val interpretation = createViewableInterpretation()
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Addition(addedComment),
+                    createViewableInterpretation(),
+                    diff = Addition(addedComment, "C99"),
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone(addedComment)
+            requireInterpretation(addedComment)
+            commentNamesShown() shouldBe listOf("C99")
         }
     }
 
     @Test
-    fun `should show removal diff with existing comment still visible`() = runTest {
+    fun `should show a removal with the comment still visible, marked as pending`() = runTest {
         val bondiComment = "Go to Bondi."
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Removal(bondiComment),
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    diff = Removal(bondiComment, firstName),
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone(bondiComment)
+            requireInterpretation(bondiComment)
+            onNodeWithContentDescription("$COMMENT_PENDING_REMOVE_PREFIX$firstName", useUnmergedTree = true)
+                .assertExists()
         }
     }
 
     @Test
-    fun `should show replacement diff with original and replacement text`() = runTest {
+    fun `should show a replacement as both comments in one row, each with its own name`() = runTest {
         val bondiComment = "Go to Bondi."
         val replacementComment = "Go to Maroubra."
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Replacement(bondiComment, replacementComment),
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    diff = Replacement(bondiComment, replacementComment, "C99"),
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone("$bondiComment $replacementComment")
+
+            //Then the comment going and the comment coming are both shown, each named
+            commentsShown() shouldBe listOf(bondiComment, replacementComment)
+            commentNamesShown() shouldBe listOf(firstName, "C99")
+            onNodeWithContentDescription("$COMMENT_PENDING_REPLACE_PREFIX$firstName", useUnmergedTree = true)
+                .assertExists()
         }
     }
 
     @Test
-    fun `should show rule conditions tooltip when hovering over addition diff text`() = runTest {
+    fun `should show the rule conditions when hovering over a comment being added`() = runTest {
         val addedComment = "Beach time!"
         val ruleConditions = listOf("UV is high", "Waves is high")
-        val interpretation = createViewableInterpretation()
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Addition(addedComment),
+                    createViewableInterpretation(),
+                    diff = Addition(addedComment, "C99"),
                     ruleConditions = ruleConditions,
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone(addedComment)
 
             //When
-            movePointerOverComment(addedComment, textLayoutResult!!)
+            movePointerOverPendingCommentRow(COMMENT_PENDING_ADD_PREFIX, "C99")
 
             //Then
             requireConditionsToBeShowing(ruleConditions)
@@ -517,62 +335,47 @@ class ReadonlyInterpretationViewTest {
     }
 
     @Test
-    fun `should show rule conditions tooltip when hovering over removal diff text`() = runTest {
+    fun `should show the rule conditions when hovering over a comment being removed`() = runTest {
         val bondiComment = "Go to Bondi."
         val ruleConditions = listOf("UV is high")
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Removal(bondiComment),
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    diff = Removal(bondiComment, firstName),
                     ruleConditions = ruleConditions,
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone(bondiComment)
 
             //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            movePointerOverPendingCommentRow(COMMENT_PENDING_REMOVE_PREFIX, firstName)
 
-            //Then
+            //Then the conditions of the rule being built are shown, the comment
+            //having none of its own
             requireConditionsToBeShowing(ruleConditions)
         }
     }
 
     @Test
-    fun `should show rule conditions tooltip when hovering over replacement diff text`() = runTest {
+    fun `should show the rule conditions when hovering over the comment that is replacing another`() = runTest {
         val bondiComment = "Go to Bondi."
         val replacementComment = "Go to Maroubra."
         val ruleConditions = listOf("UV is high", "Waves is high")
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Replacement(bondiComment, replacementComment),
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    diff = Replacement(bondiComment, replacementComment, "C99"),
                     ruleConditions = ruleConditions,
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone("$bondiComment $replacementComment")
 
             //When
-            movePointerOverComment(replacementComment, textLayoutResult!!)
+            movePointerOverReplacementHalf("C99")
 
             //Then
             requireConditionsToBeShowing(ruleConditions)
@@ -580,33 +383,26 @@ class ReadonlyInterpretationViewTest {
     }
 
     @Test
-    fun `should not show rule conditions tooltip when hovering over non-diff text`() = runTest {
+    fun `should not show the rule conditions when hovering over a comment that is not being changed`() = runTest {
         val bondiComment = "Go to Bondi."
         val addedComment = "Beach time!"
         val ruleConditions = listOf("UV is high")
-        val interpretation = createViewableInterpretation(mapOf(bondiComment to emptyList()))
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
                 ReadonlyInterpretationView(
-                    interpretation,
-                    diff = Addition(addedComment),
+                    createViewableInterpretation(mapOf(bondiComment to emptyList())),
+                    diff = Addition(addedComment, "C99"),
                     ruleConditions = ruleConditions,
                     modifier = modifier,
                     handler = handler
                 )
             }
-            requireInterpretationForCornerstone("$bondiComment $addedComment")
 
-            //When
-            movePointerOverComment(bondiComment, textLayoutResult!!)
+            //When the comment that is staying is hovered over
+            movePointerOverCommentRow(firstName)
 
-            //Then
+            //Then the conditions of the rule being built are not shown, as they
+            //are not the conditions that gave this comment
             requireNoConditionsToBeShowing()
         }
     }
@@ -614,44 +410,43 @@ class ReadonlyInterpretationViewTest {
     // ==================== Unresolved variable marker ====================
 
     @Test
-    fun `unhighlighted should style an unresolved range with the unresolved colour`() {
+    fun `should highlight an unresolved variable marker within the comment`() = runTest {
         val comment = "Glucose is {Glucose: no value} mmol/L"
-        val markerStart = comment.indexOf("{Glucose: no value}")
-        val markerEndInclusive = markerStart + "{Glucose: no value}".length - 1
-        val unresolvedRanges = listOf(listOf(IntRangeData(markerStart, markerEndInclusive)))
+        val marker = "{Glucose: no value}"
+        val markerStart = comment.indexOf(marker)
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretationWithUnresolvedMarker(
+                        comment,
+                        listOf(IntRangeData(markerStart, markerStart + marker.length - 1))
+                    ),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
 
-        val annotatedString = listOf(comment).unhighlighted(unresolvedRanges = unresolvedRanges)
-
-        annotatedString.text shouldBe comment
-        val span = annotatedString.spanStyles.first { it.item.background == UNRESOLVED_COLOR }
-        span.start shouldBe markerStart
-        span.end shouldBe markerEndInclusive + 1
+            //Then the marker, and only the marker, is highlighted
+            val span = commentTextStyles(firstName).single { it.item.background == UNRESOLVED_COLOR }
+            span.start shouldBe markerStart
+            span.end shouldBe markerStart + marker.length
+        }
     }
 
     @Test
-    fun `highlightItem should offset unresolved ranges per comment`() {
-        val first = "All good."
-        val second = "Sun is {Sun: no value}."
-        val markerStartInSecond = second.indexOf("{Sun: no value}")
-        val markerEndInclusiveInSecond = markerStartInSecond + "{Sun: no value}".length - 1
-        // The second comment carries the unresolved range.
-        val unresolvedRanges =
-            listOf(emptyList(), listOf(IntRangeData(markerStartInSecond, markerEndInclusiveInSecond)))
-
-        val annotatedString = listOf(first, second).unhighlighted(unresolvedRanges = unresolvedRanges)
-
-        // Comments are joined with a single space, so the second comment starts after "first ".
-        val globalMarkerStart = "$first ".length + markerStartInSecond
-        val span = annotatedString.spanStyles.first { it.item.background == UNRESOLVED_COLOR }
-        span.start shouldBe globalMarkerStart
-        span.end shouldBe globalMarkerStart + "{Sun: no value}".length
-    }
-
-    @Test
-    fun `unhighlighted should not add an unresolved span when there are no unresolved ranges`() {
+    fun `should not highlight anything in a comment with no unresolved variable`() = runTest {
         val comment = "Glucose is 5 mmol/L"
-        val annotatedString = listOf(comment).unhighlighted(unresolvedRanges = listOf(emptyList()))
-        annotatedString.spanStyles.none { it.item.background == UNRESOLVED_COLOR } shouldBe true
+        with(composeTestRule) {
+            setContent {
+                ReadonlyInterpretationView(
+                    interpretationWithUnresolvedMarker(comment, emptyList()),
+                    modifier = modifier,
+                    handler = handler
+                )
+            }
+
+            commentTextStyles(firstName).none { it.item.background == UNRESOLVED_COLOR } shouldBe true
+        }
     }
 
     @Test
@@ -666,28 +461,20 @@ class ReadonlyInterpretationViewTest {
 
     @Test
     fun `should show the unresolved variable tooltip when hovering over an unresolved marker`() = runTest {
-        //Given
-        val comment = "Glucose is {Glucose: no value} mmol/L"
+        //Given a comment whose unresolved marker is at its start
         val marker = "{Glucose: no value}"
-        val markerStart = comment.indexOf(marker)
-        val interpretation = interpretationWithUnresolvedMarker(
-            comment,
-            listOf(IntRangeData(markerStart, markerStart + marker.length - 1))
-        )
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
+        val comment = "$marker was the glucose reading for this case"
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    interpretationWithUnresolvedMarker(comment, listOf(IntRangeData(0, marker.length - 1))),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(comment)
 
-            //When
-            movePointerOverComment(marker, textLayoutResult!!)
+            //When the start of the comment, which is the marker, is hovered over
+            movePointerOverStartOfComment(firstName)
 
             //Then
             waitUntilAsserted {
@@ -698,29 +485,24 @@ class ReadonlyInterpretationViewTest {
 
     @Test
     fun `should not show the unresolved variable tooltip when hovering over resolved text`() = runTest {
-        //Given
-        val comment = "Glucose is {Glucose: no value} mmol/L"
+        //Given a comment whose unresolved marker is at its end
+        val comment = "Glucose is a very long way from the marker at {Glucose: no value}"
         val marker = "{Glucose: no value}"
         val markerStart = comment.indexOf(marker)
-        val interpretation = interpretationWithUnresolvedMarker(
-            comment,
-            listOf(IntRangeData(markerStart, markerStart + marker.length - 1))
-        )
-        var textLayoutResult: TextLayoutResult? = null
-        val handler = object : ReadonlyInterpretationViewHandler by handler {
-            override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                textLayoutResult = layoutResult
-            }
-        }
         with(composeTestRule) {
             setContent {
-                ReadonlyInterpretationView(interpretation, modifier = modifier, handler = handler)
+                ReadonlyInterpretationView(
+                    interpretationWithUnresolvedMarker(
+                        comment,
+                        listOf(IntRangeData(markerStart, markerStart + marker.length - 1))
+                    ),
+                    modifier = modifier,
+                    handler = handler
+                )
             }
-            requireInterpretationForCornerstone(comment)
 
-            //When - hover over the leading "Glucose is " text, which is outside the unresolved range
-            movePointerOverComment("Glucose is", textLayoutResult!!)
-            waitForIdle()
+            //When the start of the comment, which is resolved, is hovered over
+            movePointerOverStartOfComment(firstName)
 
             //Then
             onNodeWithContentDescription(UNRESOLVED_VARIABLE_TOOLTIP).assertDoesNotExist()
@@ -732,7 +514,9 @@ class ReadonlyInterpretationViewTest {
         unresolvedRanges: List<IntRangeData>
     ): ViewableInterpretation {
         val interp = createInterpretation(mapOf(commentText to emptyList()))
-        val renderedComments = listOf(RenderedComment(text = commentText, unresolvedRanges = unresolvedRanges))
+        val renderedComments = listOf(
+            RenderedComment(text = commentText, unresolvedRanges = unresolvedRanges, name = firstName)
+        )
         return ViewableInterpretation(
             interpretation = interp,
             textGivenByRules = commentText,

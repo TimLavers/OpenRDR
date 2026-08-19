@@ -1,26 +1,27 @@
 package io.rippledown.integration.pageobjects
 
 import io.kotest.matchers.string.shouldContain
-import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
-import io.rippledown.integration.utils.find
+import io.rippledown.constants.interpretation.*
+import io.rippledown.integration.utils.findAllByDescriptionPrefixesInOrder
+import io.rippledown.integration.utils.renderedText
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 
 class RuleMakerPO(private val contextProvider: () -> AccessibleContext) {
-    private fun interpretationText(): String? = execute<String?> {
-        // From Compose 1.11 the Java accessibility bridge uses the
-        // contentDescription as the accessible name on Text nodes,
-        // overriding the rendered text. Read the rendered text via
-        // AccessibleText (which exposes the actual characters) instead.
-        val ctx = contextProvider().find(INTERPRETATION_TEXT_FIELD) ?: return@execute null
-        val text = ctx.accessibleText ?: return@execute ctx.accessibleName
-        buildString {
-            for (i in 0 until text.charCount) {
-                val ch = text.getAtIndex(javax.accessibility.AccessibleText.CHARACTER, i)
-                if (ch != null) append(ch)
-            }
-        }
+
+    /**
+     * The comments shown by the Comments table, including the one the rule being
+     * built is about to add or to put in place of another, read as one string.
+     */
+    private fun interpretationText(): String = execute<String> {
+        contextProvider().findAllByDescriptionPrefixesInOrder(
+            COMMENT_TEXT_PREFIX,
+            COMMENT_PENDING_ADD_PREFIX,
+            COMMENT_PENDING_REMOVE_PREFIX,
+            COMMENT_PENDING_REPLACE_PREFIX,
+            COMMENT_REPLACEMENT_TEXT_PREFIX
+        ).joinToString(" ") { renderedText(it) }
     }
 
     fun requireMessageForAddingComment(newComment: String) {

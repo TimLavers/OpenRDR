@@ -87,7 +87,19 @@ fun createCase(
  * "Phase 2" in documentation/design/repeat_inferencing.md.
  */
 fun commentAssignment(id: Int, text: String) =
-    AssignValue(Attribute(id, "C$id", AttributeKind.COMMENT), CommentTemplate(text))
+    AssignValue(Attribute(id, commentAttributeName(id), AttributeKind.COMMENT), CommentTemplate(text))
+
+/**
+ * The name of the comment attribute with the given id, as the Comments panel
+ * shows it.
+ */
+fun commentAttributeName(id: Int) = "C$id"
+
+/**
+ * The id given to the attribute of the first comment of an interpretation built
+ * by these fixtures; those of the comments after it follow in order.
+ */
+const val FIRST_COMMENT_ATTRIBUTE_ID = 10
 
 fun createViewableCaseWithInterpretation(
     name: String = "",
@@ -95,7 +107,7 @@ fun createViewableCaseWithInterpretation(
     commentTexts: List<String> = listOf(),
 ): ViewableCase {
     val case = createViewableCase(name, caseId, attributesWithResults = listOf(AttributeWithValue()))
-    var attributeId = 10
+    var attributeId = FIRST_COMMENT_ATTRIBUTE_ID
     val interp = Interpretation(case.case.caseId).apply {
         commentTexts.forEach { text ->
             add(
@@ -148,7 +160,8 @@ fun createLargeViewableCaseWithInterpretation(
         RenderedComment(
             text = commentText,
             unresolvedRanges = emptyList(),
-            conditions = interp.conditionsForAssignment(assignment)
+            conditions = interp.conditionsForAssignment(assignment),
+            name = assignment.attribute.name
         )
     }
     case.viewableInterpretation =
@@ -173,7 +186,7 @@ fun createCaseWithInterpretation(
 fun createInterpretation(
     commentToConditions: Map<String, List<String>> = mapOf(),
 ): Interpretation {
-    var attributeId = 10
+    var attributeId = FIRST_COMMENT_ATTRIBUTE_ID
     return Interpretation().apply {
         commentToConditions.forEach { (comment, conditions) ->
             add(
@@ -191,11 +204,12 @@ fun createViewableInterpretation(
 ): ViewableInterpretation {
     val interp = createInterpretation(commentToConditions)
     val text = commentToConditions.keys.joinToString(" ")
-    val renderedComments = commentToConditions.map { (comment, conditions) ->
+    val renderedComments = commentToConditions.entries.mapIndexed { index, (comment, conditions) ->
         RenderedComment(
             text = comment,
             unresolvedRanges = emptyList(),
-            conditions = conditions
+            conditions = conditions,
+            name = commentAttributeName(FIRST_COMMENT_ATTRIBUTE_ID + index)
         )
     }
     return ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = renderedComments)

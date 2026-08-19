@@ -5,7 +5,10 @@ package io.rippledown.interpretation
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import io.kotest.matchers.shouldBe
@@ -26,6 +29,10 @@ class AnnotatedTextViewTest {
     fun setUp() {
     }
 
+    private fun ComposeTestRule.requireTextShown(expected: String) {
+        onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true).assertTextEquals(expected)
+    }
+
     @Test
     fun `should show non-blank interpretation`() = runTest {
         val bondiComment = "Bondi"
@@ -34,10 +41,10 @@ class AnnotatedTextViewTest {
                 AnnotatedTextView(
                     AnnotatedString(bondiComment),
                     INTERPRETATION_TEXT_FIELD,
-                    mockk()
+                    handler = mockk()
                 )
             }
-            requireInterpretation(bondiComment)
+            requireTextShown(bondiComment)
         }
     }
 
@@ -45,9 +52,9 @@ class AnnotatedTextViewTest {
     fun `should show a blank interpretation`() = runTest {
         with(composeTestRule) {
             setContent {
-                AnnotatedTextView(AnnotatedString(""), INTERPRETATION_TEXT_FIELD, mockk())
+                AnnotatedTextView(AnnotatedString(""), INTERPRETATION_TEXT_FIELD, handler = mockk())
             }
-            requireInterpretation("")
+            requireTextShown("")
         }
     }
 
@@ -76,11 +83,11 @@ class AnnotatedTextViewTest {
         with(composeTestRule) {
             setContent {
                 AnnotatedTextView(
-                    text = commentList.unhighlighted(),
+                    text = AnnotatedString(commentList.joinToString(" ")),
                     handler = handler
                 )
             }
-            requireInterpretation(commentList.unhighlighted().text)
+            requireTextShown(commentList.joinToString(" "))
 
             //When
             movePointerOverComment(malabarComment, textLayoutResult!!)
@@ -114,11 +121,11 @@ class AnnotatedTextViewTest {
         with(composeTestRule) {
             setContent {
                 AnnotatedTextView(
-                    text = commentList.unhighlighted(),
+                    text = AnnotatedString(commentList.joinToString(" ")),
                     handler = handler
                 )
             }
-            requireInterpretation(commentList.unhighlighted().text)
+            requireTextShown(commentList.joinToString(" "))
             movePointerOverComment(malabarComment, textLayoutResult!!)
             pointerExit shouldBe false
 
@@ -156,11 +163,11 @@ class AnnotatedTextViewTest {
         with(composeTestRule) {
             setContent {
                 AnnotatedTextView(
-                    text = commentList.unhighlighted(),
+                    text = AnnotatedString(commentList.joinToString(" ")),
                     handler = handler
                 )
             }
-            requireInterpretation(commentList.unhighlighted().text)
+            requireTextShown(commentList.joinToString(" "))
             movePointerOverComment(malabarComment, textLayoutResult!!)
             actualIndex shouldBe "$bondiComment ".length
 
@@ -209,11 +216,11 @@ class AnnotatedTextViewTest {
         with(composeTestRule) {
             setContent {
                 AnnotatedTextView(
-                    text = commentList.unhighlighted(),
+                    text = AnnotatedString(commentList.joinToString(" ")),
                     handler = handlerState.value
                 )
             }
-            requireInterpretation(commentList.unhighlighted().text)
+            requireTextShown(commentList.joinToString(" "))
 
             // Hover over first comment - should call first handler
             movePointerOverComment(bondiComment, textLayoutResult!!)

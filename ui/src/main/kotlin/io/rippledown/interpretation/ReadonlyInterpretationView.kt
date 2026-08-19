@@ -1,16 +1,17 @@
 package io.rippledown.interpretation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
+import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.model.diff.Diff
@@ -20,6 +21,14 @@ interface ReadonlyInterpretationViewHandler {
     fun onTextLayoutResult(layoutResult: TextLayoutResult) {}
 }
 
+/**
+ * The comments of an interpretation, as a two column table of the name of the
+ * comment attribute that gave each comment and the comment itself. See
+ * [CommentRow] for how a row previews a pending change.
+ *
+ * @param idPrefix distinguishes these rows from those of another Comments table
+ *   on screen at the same time, as the cornerstone view's is.
+ */
 @OptIn(ExperimentalComposeUiApi::class)
 @ExperimentalFoundationApi
 @Composable
@@ -28,72 +37,19 @@ fun ReadonlyInterpretationView(
     diff: Diff? = null,
     ruleConditions: List<String> = emptyList(),
     contentDescription: String = INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE,
+    columnWidths: ColumnWidths = ColumnWidths(1),
+    idPrefix: String = "",
     modifier: Modifier,
     handler: ReadonlyInterpretationViewHandler
 ) {
-    var comments by remember {
-        mutableStateOf(interpretation.renderedComments.map { it.text })
-    }
-    var unresolvedRanges by remember {
-        mutableStateOf(interpretation.renderedComments.map { it.unresolvedRanges })
-    }
-    var unstyledText by remember { mutableStateOf(comments.unhighlighted(diff, unresolvedRanges)) }
-    var styledText by remember { mutableStateOf(unstyledText) }
-    var commentIndex by remember { mutableStateOf(-1) }
-    var isOverDiffText by remember { mutableStateOf(false) }
-    var isOverUnresolved by remember { mutableStateOf(false) }
-
-    LaunchedEffect(interpretation, diff) {
-        comments = interpretation.renderedComments.map { it.text }
-        unresolvedRanges = interpretation.renderedComments.map { it.unresolvedRanges }
-        unstyledText = comments.unhighlighted(diff, unresolvedRanges)
-        styledText = unstyledText
-    }
-
-    TooltipArea(
-        modifier = modifier.fillMaxWidth(),
-        tooltip = {
-            if (isOverUnresolved) {
-                UnresolvedVariableTooltip()
-            } else if (isOverDiffText && ruleConditions.isNotEmpty()) {
-                ConditionTooltip(ruleConditions)
-            } else {
-                ToolTipForNonEmptyInterpretation(commentIndex, interpretation)
-            }
-        },
-        content = {
-            AnnotatedTextView(
-                text = if (commentIndex == -1) unstyledText else styledText,
-                description = contentDescription,
-                handler = object : AnnotatedTextViewHandler {
-                    override fun onTextLayoutResult(layoutResult: TextLayoutResult) {
-                        handler.onTextLayoutResult(layoutResult)
-                    }
-
-                    override fun onPointerEnter(characterOffset: Int) {
-                        isOverUnresolved = unstyledText.spanStyles.any { span ->
-                            characterOffset in span.start until span.end &&
-                                    span.item.background == UNRESOLVED_COLOR
-                        }
-                        isOverDiffText = unstyledText.spanStyles.any { span ->
-                            characterOffset in span.start until span.end &&
-                                    (span.item.background == DIFF_ADDITION_COLOR || span.item.background == DIFF_REMOVAL_COLOR)
-                        }
-                        if (!isOverDiffText) {
-                            commentIndex = comments.commentIndexForOffset(characterOffset)
-                            styledText = comments.highlightItem(commentIndex, diff)
-                        }
-                    }
-
-                    override fun onPointerExit() {
-                        commentIndex = -1
-                        isOverDiffText = false
-                        isOverUnresolved = false
-                    }
-                }
-            )
+    val rows = commentRowsToDisplay(interpretation.renderedComments, diff, ruleConditions)
+    Column(
+        modifier = modifier.fillMaxWidth().semantics { this.contentDescription = contentDescription }
+    ) {
+        rows.forEach { row ->
+            CommentRow(row = row, columnWidths = columnWidths, idPrefix = idPrefix)
         }
-    )
+    }
 }
 
 @Composable
@@ -109,17 +65,5 @@ fun UnresolvedVariableTooltip() {
                 .padding(8.dp)
                 .semantics { contentDescription = UNRESOLVED_VARIABLE_TOOLTIP }
         )
-    }
-}
-
-@Composable
-fun ToolTipForNonEmptyInterpretation(
-    commentIndex: Int,
-    interpretation: ViewableInterpretation
-) {
-    val renderedComments = interpretation.renderedComments
-    val showToolTip = commentIndex != -1 && commentIndex < renderedComments.size
-    if (showToolTip) {
-        ConditionTooltip(renderedComments[commentIndex].conditions)
     }
 }
