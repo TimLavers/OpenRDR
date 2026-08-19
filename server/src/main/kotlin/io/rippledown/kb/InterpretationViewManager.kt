@@ -18,7 +18,10 @@ class InterpretationViewManager {
         val commentAssignments = commentAssignments(interpretation)
         val texts = commentAssignments.map { it.expression.rawText() }
         val renderedComments = commentAssignments.map { assignment ->
-            assignment.render(case).copy(conditions = interpretation.conditionsForAssignment(assignment))
+            assignment.render(case).copy(
+                conditions = interpretation.conditionsForAssignment(assignment),
+                name = assignment.attribute.name
+            )
         }
         return ViewableInterpretation(
             interpretation,

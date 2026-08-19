@@ -99,7 +99,7 @@ class KBSessionTest {
         session.ruleSessionManager.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
-        session.ruleSessionManager.currentDiff shouldBe Addition(comment)
+        session.ruleSessionManager.currentDiff shouldBe Addition(comment, "C1")
     }
 
     @Test

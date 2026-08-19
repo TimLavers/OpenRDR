@@ -1684,7 +1684,7 @@ class KBTest {
         rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        rsm.currentDiff shouldBe Addition(comment)
+        rsm.currentDiff shouldBe Addition(comment, "C1")
     }
 
     @Test
@@ -1700,7 +1700,7 @@ class KBTest {
         rsm.startRuleSessionToRemoveComment(viewableCase, comment)
 
         //Then
-        rsm.currentDiff shouldBe Removal(comment)
+        rsm.currentDiff shouldBe Removal(comment, "C1")
     }
 
     @Test
@@ -1717,7 +1717,8 @@ class KBTest {
         rsm.startRuleSessionToReplaceComment(viewableCase, original, replacement)
 
         //Then
-        rsm.currentDiff shouldBe Replacement(original, replacement)
+        // The replacing comment is a new comment attribute, so it is auto-named C2.
+        rsm.currentDiff shouldBe Replacement(original, replacement, "C2")
     }
 
     @Test
@@ -1762,7 +1763,7 @@ class KBTest {
         val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        status.commentDiff shouldBe Addition(comment)
+        status.commentDiff shouldBe Addition(comment, "C1")
     }
 
     @Test
@@ -1776,7 +1777,7 @@ class KBTest {
         val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        status.commentDiff shouldBe Addition(comment)
+        status.commentDiff shouldBe Addition(comment, "C1")
     }
 
     @Test

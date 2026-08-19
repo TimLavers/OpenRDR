@@ -101,7 +101,7 @@ class RuleSessionManager(
     ): CornerstoneStatus {
         val template = commentTemplate(comment, variables)
         val attribute = commentAttributeFor(template, proposedAttributeName)
-        currentChange = Addition(template.textWithVariableNames())
+        currentChange = Addition(template.textWithVariableNames(), attribute.name)
         commentAttributeInSession = attribute
         return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
@@ -112,7 +112,7 @@ class RuleSessionManager(
     internal fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
         val attribute = commentAttributeForText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentChange = Removal(renderedComment(attribute, case))
+        currentChange = Removal(renderedComment(attribute, case), attribute.name)
         commentAttributeInSession = null
         return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
     }
@@ -149,8 +149,11 @@ class RuleSessionManager(
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementTemplate = commentTemplate(replacementComment, variables)
         val replacementAttribute = commentAttributeFor(replacementTemplate, proposedAttributeName)
-        currentChange =
-            Replacement(renderedComment(replacedAttribute, case), replacementTemplate.textWithVariableNames())
+        currentChange = Replacement(
+            renderedComment(replacedAttribute, case),
+            replacementTemplate.textWithVariableNames(),
+            replacementAttribute.name
+        )
         commentAttributeInSession = replacementAttribute
         return startRuleSession(
             case,
@@ -727,16 +730,17 @@ class RuleSessionManager(
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-        currentChange = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
-        val status = when (diff) {
+        // Each of these records the change itself, naming the comment attribute
+        // it concerns. That named change is kept, rather than the client's
+        // unnamed one, because every CornerstoneStatus built during the session
+        // carries it to the Comments panel.
+        return when (diff) {
             is Addition -> startRuleSessionToAddComment(case, diff.right())
             is Removal -> startRuleSessionToRemoveComment(case, diff.left())
             is Replacement -> startRuleSessionToReplaceComment(case, diff.left(), diff.right())
         }
-        currentChange = diff
-        return status
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {

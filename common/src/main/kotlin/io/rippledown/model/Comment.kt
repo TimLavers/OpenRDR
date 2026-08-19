@@ -15,7 +15,11 @@ data class RenderedComment(
     val unresolvedRanges: List<IntRangeData> = emptyList(),
     // The texts of the conditions of the rules that gave the comment, for
     // display in the comment's tooltip.
-    val conditions: List<String> = emptyList()
+    val conditions: List<String> = emptyList(),
+    // The name of the comment attribute that gave the comment, shown in the
+    // name column of the Comments panel. Empty when the comment did not come
+    // from a comment attribute, as for a rendering done without one.
+    val name: String = ""
 )
 
 @Serializable

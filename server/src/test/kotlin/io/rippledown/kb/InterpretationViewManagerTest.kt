@@ -56,7 +56,7 @@ class InterpretationViewManagerTest {
 
         //Then
         viewable.textGivenByRules shouldBe "Diabetic diet advice given."
-        viewable.renderedComments shouldBe listOf(RenderedComment("Diabetic diet advice given."))
+        viewable.renderedComments shouldBe listOf(RenderedComment("Diabetic diet advice given.", name = c1.name))
     }
 
     @Test
@@ -69,7 +69,7 @@ class InterpretationViewManagerTest {
         val viewable = manager.viewableInterpretation(interpretation, case())
 
         //Then the rendered comment has the case value, and the raw text keeps the token
-        viewable.renderedComments shouldBe listOf(RenderedComment("Glucose is 12.0 today."))
+        viewable.renderedComments shouldBe listOf(RenderedComment("Glucose is 12.0 today.", name = c1.name))
         viewable.textGivenByRules shouldBe "Glucose is \${} today."
     }
 
@@ -115,7 +115,7 @@ class InterpretationViewManagerTest {
 
         //Then
         viewable.textGivenByRules shouldBe "Plain comment."
-        viewable.renderedComments shouldBe listOf(RenderedComment("Plain comment."))
+        viewable.renderedComments shouldBe listOf(RenderedComment("Plain comment.", name = c1.name))
     }
 
     @Test
@@ -132,8 +132,23 @@ class InterpretationViewManagerTest {
 
         //Then the rendered comment carries the conditions for its tooltip
         viewable.renderedComments shouldBe listOf(
-            RenderedComment("Diabetic diet advice given.", conditions = conditions)
+            RenderedComment("Diabetic diet advice given.", conditions = conditions, name = c1.name)
         )
+    }
+
+    @Test
+    fun `each rendered comment carries the name of the comment attribute that gave it`() {
+        //Given comments given by two different comment attributes
+        val interpretation = interpretation(
+            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("First."))),
+            RuleSummary(id = 2, assignment = AssignValue(c2, CommentTemplate("Second.")))
+        )
+
+        //When
+        val viewable = manager.viewableInterpretation(interpretation, case())
+
+        //Then each rendered comment is named for its own attribute
+        viewable.renderedComments.map { it.name } shouldBe listOf(c1.name, c2.name)
     }
 
     @Test

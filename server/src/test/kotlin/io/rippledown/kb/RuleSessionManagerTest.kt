@@ -260,7 +260,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
-        rsm.currentDiff shouldBe Addition(comment)
+        rsm.currentDiff shouldBe Addition(comment, "C1")
     }
 
     @Test
@@ -274,7 +274,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToAddComment(viewableCase, template, variables)
 
         // Then - the pending comment shows the template, with the variable named
-        rsm.currentDiff shouldBe Addition("Glucose is {Glucose}")
+        rsm.currentDiff shouldBe Addition("Glucose is {Glucose}", "C1")
     }
 
     /**
@@ -303,7 +303,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToAddComment(viewableCase, template, listOf(CommentVariable(bmi.id)))
 
         // Then the variable is shown by name, not marked as missing
-        rsm.currentDiff shouldBe Addition("BMI is {BMI}")
+        rsm.currentDiff shouldBe Addition("BMI is {BMI}", "C1")
     }
 
     // --- startRuleSessionToRemoveComment ---
@@ -320,7 +320,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToRemoveComment(viewableCase, comment)
 
         // Then
-        rsm.currentDiff shouldBe Removal(comment)
+        rsm.currentDiff shouldBe Removal(comment, "C1")
     }
 
     @Test
@@ -340,7 +340,7 @@ class RuleSessionManagerTest {
 
         // Then the existing comment is matched (so the action is applicable) and the diff shows the
         // rendered text rather than the raw template.
-        rsm.currentDiff shouldBe Removal("Glucose is 5.0")
+        rsm.currentDiff shouldBe Removal("Glucose is 5.0", "C1")
     }
 
     // --- startRuleSessionToReplaceComment ---
@@ -358,7 +358,8 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToReplaceComment(viewableCase, original, replacement)
 
         // Then
-        rsm.currentDiff shouldBe Replacement(original, replacement)
+        // The replacing comment is a new comment attribute, so it is auto-named C2.
+        rsm.currentDiff shouldBe Replacement(original, replacement, "C2")
     }
 
     @Test
@@ -375,7 +376,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToReplaceComment(viewableCase, original, template, variables)
 
         // Then - the pending replacement shows the template, with the variable named
-        rsm.currentDiff shouldBe Replacement(original, "Glucose is {Glucose}")
+        rsm.currentDiff shouldBe Replacement(original, "Glucose is {Glucose}", "C2")
     }
 
     @Test
@@ -397,7 +398,7 @@ class RuleSessionManagerTest {
 
         // Then the existing comment is matched (so the action is applicable) and the diff shows the
         // rendered original rather than the raw template.
-        rsm.currentDiff shouldBe Replacement("Glucose is 5.0", replacement)
+        rsm.currentDiff shouldBe Replacement("Glucose is 5.0", replacement, "C2")
     }
 
     // --- attributeForName ---
@@ -927,9 +928,9 @@ class RuleSessionManagerTest {
         // When
         rsm.startRuleSession(request)
 
-        // Then
+        // Then the recorded change names the comment attribute the server minted
         rsm.isRuleSessionActive() shouldBe true
-        rsm.currentDiff shouldBe diff
+        rsm.currentDiff shouldBe diff.copy(attributeName = "C1")
     }
 
     @Test
@@ -947,7 +948,7 @@ class RuleSessionManagerTest {
 
         // Then
         rsm.isRuleSessionActive() shouldBe true
-        rsm.currentDiff shouldBe diff
+        rsm.currentDiff shouldBe diff.copy(attributeName = "C1")
     }
 
     @Test
@@ -963,9 +964,9 @@ class RuleSessionManagerTest {
         // When
         rsm.startRuleSession(request)
 
-        // Then
+        // Then the replacing comment is a new comment attribute, so it is auto-named C2
         rsm.isRuleSessionActive() shouldBe true
-        rsm.currentDiff shouldBe diff
+        rsm.currentDiff shouldBe diff.copy(attributeName = "C2")
     }
 
     @Test
