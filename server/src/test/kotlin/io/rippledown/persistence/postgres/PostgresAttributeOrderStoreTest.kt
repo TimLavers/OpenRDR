@@ -3,24 +3,16 @@ package io.rippledown.persistence.postgres
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.persistence.OrderStore
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PostgresAttributeOrderStoreTest: PostgresStoreTest() {
     private lateinit var store: OrderStore
 
-    override fun tablesInDropOrder() = listOf(ATTRIBUTE_INDEXES_TABLE)
-
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.attributeOrderStore()
-    }
-
-    @AfterTest
-    fun cleanup() {
-        dropDB(dbName)
     }
 
     override fun reload() {

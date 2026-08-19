@@ -15,11 +15,9 @@ import kotlin.test.Test
 class PostgresRuleStoreTest: PostgresStoreTest() {
     private lateinit var store: RuleStore
 
-    override fun tablesInDropOrder() = listOf(RULES_TABLE)
-
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.ruleStore()
     }
 

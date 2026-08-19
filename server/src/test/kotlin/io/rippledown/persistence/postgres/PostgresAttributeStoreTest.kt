@@ -12,8 +12,6 @@ import kotlin.test.Test
 class PostgresAttributeStoreTest: PostgresStoreTest() {
     private lateinit var store: AttributeStore
 
-    override fun tablesInDropOrder() = listOf(ATTRIBUTES_TABLE)
-
     override fun reload() {
         super.reload()
         store = postgresKB.attributeStore()
@@ -21,7 +19,7 @@ class PostgresAttributeStoreTest: PostgresStoreTest() {
 
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.attributeStore()
     }
 

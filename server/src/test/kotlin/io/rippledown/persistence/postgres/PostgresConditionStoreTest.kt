@@ -21,11 +21,9 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
     private val notes = Attribute(1002, "Notes")
     private lateinit var store: ConditionStore
 
-    override fun tablesInDropOrder() = listOf(CONDITIONS_TABLE)
-
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.conditionStore()
     }
 

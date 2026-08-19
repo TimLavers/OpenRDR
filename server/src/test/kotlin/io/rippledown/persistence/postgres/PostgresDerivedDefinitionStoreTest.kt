@@ -22,11 +22,9 @@ class PostgresDerivedDefinitionStoreTest : PostgresStoreTest() {
 
     private lateinit var store: DerivedDefinitionStore
 
-    override fun tablesInDropOrder() = listOf(DERIVED_DEFINITIONS_TABLE)
-
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.derivedDefinitionStore()
     }
 
