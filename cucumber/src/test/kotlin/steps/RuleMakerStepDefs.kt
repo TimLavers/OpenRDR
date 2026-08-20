@@ -144,6 +144,7 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @And("I build another rule to append the comment {string}")
     fun buildAnotherRuleToAppendTheComment(comment: String) {
         chatDefs.addCommentWithoutConfirmation(comment)
+        chatDefs.confirm()
         completeRule()
     }
 

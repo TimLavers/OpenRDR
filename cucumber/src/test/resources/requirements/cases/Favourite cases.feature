@@ -11,6 +11,7 @@ Feature: Show a list of favourite cases
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case3
+    And I see the case Case3 as the current case
     And I copy the current case to the favourites case list
     Then the favourites case list should contain:
       | Case3 |
