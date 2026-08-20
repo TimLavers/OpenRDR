@@ -43,6 +43,17 @@ class RDRCaseTest {
         }
     }
 
+
+    @Test
+    fun copyWithNewNameAndWithoutId() {
+        val case = RDRCase(CaseId(1234, "Tea"))
+        with(case.copyWithNewNameAndNoId(CaseType.Favourite, "Coffee")) {
+            name shouldBe "Coffee"
+            id shouldBe null
+            caseId.type shouldBe CaseType.Favourite
+        }
+    }
+
     @Test
     fun getCaseData() {
         val case1 = RDRCase(CaseId(1, "Case1"), emptyMap())

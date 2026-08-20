@@ -982,6 +982,170 @@ class OpenRDRUITest {
     }
 
     @Test
+    fun `should select the previous case when the current case is deleted`() = runTest {
+        //Given
+        val caseA = CaseId(id = 1, name = "case A")
+        val caseB = CaseId(id = 2, name = "case B")
+        val caseC = CaseId(id = 3, name = "case C")
+        val caseIds = listOf(caseA, caseB, caseC)
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
+        coEvery { api.getCase(1) } returns createViewableCase(caseA)
+        coEvery { api.getCase(2) } returns createViewableCase(caseB)
+        coEvery { api.getCase(3) } returns createViewableCase(caseC)
+        var updateCasesInfo: ((CasesInfo) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
+            updateCasesInfo = thirdArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+            selectCaseByName("case B")
+            waitForCaseToBeShowing("case B")
+
+            //When - the currently selected case (case B) is deleted
+            runOnIdle {
+                updateCasesInfo?.invoke(CasesInfo(listOf(caseA, caseC)))
+            }
+
+            //Then - the previous case (case A) is selected
+            waitForCaseToBeShowing("case A")
+        }
+    }
+
+    @Test
+    fun `should select the first Processed case when the deleted current case was the first case`() = runTest {
+        //Given
+        val caseA = CaseId(id = 1, name = "case A")
+        val caseB = CaseId(id = 2, name = "case B")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseA, caseB))
+        coEvery { api.getCase(1) } returns createViewableCase(caseA)
+        coEvery { api.getCase(2) } returns createViewableCase(caseB)
+        var updateCasesInfo: ((CasesInfo) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
+            updateCasesInfo = thirdArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+
+            //When - the currently selected case (case A, the first case) is deleted
+            runOnIdle {
+                updateCasesInfo?.invoke(CasesInfo(listOf(caseB)))
+            }
+
+            //Then - there is no previous case, so the first Processed case is selected
+            waitForCaseToBeShowing("case B")
+        }
+    }
+
+    @Test
+    fun `should keep a favourite case selected once it is chosen`() = runTest {
+        // Regression test: the reconciliation effect used to only recognise ids
+        // from the Processed and Cornerstone lists, so selecting a favourite case
+        // (whose id only appears in favouriteCaseIds) was immediately undone.
+        //Given
+        val processed = CaseId(id = 1, name = "processed 1")
+        val favourite = CaseId(id = 2, name = "favourite 1")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(
+            caseIds = listOf(processed),
+            favouriteCaseIds = listOf(favourite)
+        )
+        coEvery { api.getCase(1) } returns createViewableCase(processed)
+        coEvery { api.getCase(2) } returns createViewableCase(favourite)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("processed 1")
+
+            //When
+            selectCaseByName("favourite 1")
+
+            //Then
+            waitForCaseToBeShowing("favourite 1")
+        }
+    }
+
+    @Test
+    fun `should select the previous favourite case when the current favourite case is deleted`() = runTest {
+        //Given
+        val processed = CaseId(id = 1, name = "processed 1")
+        val favouriteA = CaseId(id = 2, name = "favourite A")
+        val favouriteB = CaseId(id = 3, name = "favourite B")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(
+            caseIds = listOf(processed),
+            favouriteCaseIds = listOf(favouriteA, favouriteB)
+        )
+        coEvery { api.getCase(1) } returns createViewableCase(processed)
+        coEvery { api.getCase(2) } returns createViewableCase(favouriteA)
+        coEvery { api.getCase(3) } returns createViewableCase(favouriteB)
+        var updateCasesInfo: ((CasesInfo) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
+            updateCasesInfo = thirdArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("processed 1")
+            selectCaseByName("favourite B")
+            waitForCaseToBeShowing("favourite B")
+
+            //When - the currently selected favourite (favourite B) is deleted
+            runOnIdle {
+                updateCasesInfo?.invoke(
+                    CasesInfo(caseIds = listOf(processed), favouriteCaseIds = listOf(favouriteA))
+                )
+            }
+
+            //Then - the previous favourite (favourite A) is selected
+            waitForCaseToBeShowing("favourite A")
+        }
+    }
+
+    @Test
+    fun `should select the first Processed case when the only favourite case is deleted`() = runTest {
+        //Given
+        val processed = CaseId(id = 1, name = "processed 1")
+        val favourite = CaseId(id = 2, name = "favourite 1")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(
+            caseIds = listOf(processed),
+            favouriteCaseIds = listOf(favourite)
+        )
+        coEvery { api.getCase(1) } returns createViewableCase(processed)
+        coEvery { api.getCase(2) } returns createViewableCase(favourite)
+        var updateCasesInfo: ((CasesInfo) -> Unit)? = null
+        coEvery { api.startWebSocketSession(any(), any(), any()) } coAnswers {
+            updateCasesInfo = thirdArg()
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("processed 1")
+            selectCaseByName("favourite 1")
+            waitForCaseToBeShowing("favourite 1")
+
+            //When - the only favourite (with no previous case) is deleted
+            runOnIdle {
+                updateCasesInfo?.invoke(CasesInfo(caseIds = listOf(processed)))
+            }
+
+            //Then - there is no previous case, so the first Processed case is selected
+            waitForCaseToBeShowing("processed 1")
+        }
+    }
+
+    @Test
     fun `should generate report when panel is visible`() = runTest {
         //Given
         val caseName = "case A"

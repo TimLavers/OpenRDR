@@ -78,5 +78,8 @@ const val RULE_SESSION_COMPLETED = "RuleSessionCompleted"
 const val CASES_INFO_PREFIX = "CasesInfo:"
 const val REMOVE_REASON = "RemoveReason"
 const val CANCEL_RULE = "CancelRule"
+const val COPY_CASE_TO_FAVOURITES = "CopyCaseToFavourites"
+const val DELETE_CASE_FROM_FAVOURITES = "DeleteCaseFromFavourites"
+const val COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME = "CopyCaseToFavouritesWithNewName"
 
 

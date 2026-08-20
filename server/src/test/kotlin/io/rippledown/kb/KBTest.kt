@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.mockk.*
 import io.rippledown.chat.ReasonTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
@@ -819,6 +820,92 @@ class KBTest {
         kb.addCornerstoneCase(createCase("Whatever"))
         kb.addCornerstoneCase(createCase("Blah"))
         kb.allCornerstoneCases().size shouldBe 3
+    }
+
+    @Test
+    fun `can retrieve favourite case ids`() {
+        kb.favouriteCaseIds().size shouldBe 0
+
+        val favouritesAdded = mutableListOf<RDRCase>()
+        for (i in 1..10) {
+            val ccAdded = kb.addCornerstoneCase(createCase("Case$i"))
+            val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, null)
+            favouriteAdded shouldNotBeSameInstanceAs ccAdded
+            favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
+            favouriteAdded.name shouldBe ccAdded.name
+            favouriteAdded.data shouldBe ccAdded.data
+            favouriteAdded.id shouldNotBe ccAdded.id
+            favouritesAdded.add(favouriteAdded)
+        }
+
+        val favouriteCaseIds = favouritesAdded.map { it.caseId }
+        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+
+        kb = KB(persistentKB)
+        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+    }
+
+    @Test
+    fun `can copy case as favourite with new name`() {
+        val favouritesAdded = mutableListOf<RDRCase>()
+        for (i in 1..10) {
+            val ccAdded = kb.addCornerstoneCase(createCase("Case$i"))
+            val newName = "New Case $i"
+            val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, newName)
+            favouriteAdded shouldNotBeSameInstanceAs ccAdded
+            favouriteAdded.caseId.name shouldBe newName
+            favouriteAdded.name shouldBe newName
+            favouriteAdded.data shouldBe ccAdded.data
+            favouriteAdded.id shouldNotBe ccAdded.id
+            favouritesAdded.add(favouriteAdded)
+        }
+
+        val favouriteCaseIds = favouritesAdded.map { it.caseId }
+        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+
+        kb = KB(persistentKB)
+        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+    }
+
+    @Test
+    fun `copy a case to favourites with null new name`() {
+        val caseName = "What a great case name!"
+        val ccAdded = kb.addCornerstoneCase(createCase(caseName))
+        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, null)
+        favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
+        favouriteAdded.name shouldBe ccAdded.name
+        favouriteAdded.id shouldNotBe ccAdded.id
+    }
+
+    @Test
+    fun `copy a case to favourites with blank new name`() {
+        val caseName = "What a great case name!"
+        val ccAdded = kb.addCornerstoneCase(createCase(caseName))
+        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, "")
+        favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
+        favouriteAdded.name shouldBe ccAdded.name
+        favouriteAdded.id shouldNotBe ccAdded.id
+    }
+
+    @Test
+    fun `copy a case to favourites with whitespace new name`() {
+        val caseName = "What a great case name!"
+        val ccAdded = kb.addCornerstoneCase(createCase(caseName))
+        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, " \t\n\r ")
+        favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
+        favouriteAdded.name shouldBe ccAdded.name
+        favouriteAdded.id shouldNotBe ccAdded.id
+    }
+
+    @Test
+    fun `copy a case to favourites with valid new name`() {
+        val caseName = "What a great case name!"
+        val caseNameNew = "What a great modern case name!"
+        val ccAdded = kb.addCornerstoneCase(createCase(caseName))
+        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, caseNameNew)
+        favouriteAdded.caseId.name shouldBe caseNameNew
+        favouriteAdded.name shouldBe caseNameNew
+        favouriteAdded.id shouldNotBe ccAdded.id
     }
 
     @Test

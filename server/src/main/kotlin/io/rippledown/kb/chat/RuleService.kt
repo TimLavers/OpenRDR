@@ -92,4 +92,7 @@ interface RuleService {
      * whether the current case has a value for it, or null if there is no such attribute.
      */
     fun attributeById(id: Int): Attribute?
+
+    fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase
+    fun deleteCaseFromFavourites(case: ViewableCase)
 }

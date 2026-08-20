@@ -75,6 +75,8 @@ class LaunchedClient {
     fun applicationBarPO() = rdUiOperator.applicationBarOperator()
     fun caseListPO() = rdUiOperator.caseListPO()
     fun cornerstoneCaseListPO() = rdUiOperator.cornerstoneCaseListPO()
+    fun processedCaseListPO() = rdUiOperator.processedCaseListPO()
+    fun favouriteCaseListPO() = rdUiOperator.favouriteCaseListPO()
     fun caseCountPO() = rdUiOperator.caseCountPO()
     fun cornerstoneCaseCountPO() = rdUiOperator.cornerstoneCaseCountPO()
     fun kbControlsPO() = rdUiOperator.kbControlsPO()

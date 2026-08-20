@@ -119,6 +119,7 @@ object KBChatService {
         "17_assigning_derived_values.md",
         "18_editing_derived_definition.md",
         "19_naming_and_renaming.md",
+        "25_favourite_cases.md",
     )
     val systemPromptExampleSections = listOf(
         "examples.md",
@@ -176,7 +177,9 @@ object KBChatService {
         "REMOVE_REASON" to REMOVE_REASON,
         "CANCEL_RULE" to CANCEL_RULE,
         "SELECT_SUGGESTION" to SELECT_SUGGESTED_CONDITION,
-
+        "COPY_CASE_TO_FAVOURITES" to COPY_CASE_TO_FAVOURITES,
+        "DELETE_CASE_FROM_FAVOURITES" to DELETE_CASE_FROM_FAVOURITES,
+        "COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME" to COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME,
     )
 
     fun systemPrompt(

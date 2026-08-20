@@ -42,7 +42,7 @@ class InterpreterTest : OpenRDRServerTestBase() {
         val case = CaseTestUtils.getCase("Case2")
         val caseData = case.serialize()
         val returnCase = createViewableCase("Case2").case
-        val casesInfo = CasesInfo(emptyList(), emptyList(), kbName)
+        val casesInfo = CasesInfo(emptyList(), emptyList(), emptyList(), kbName)
         every { kbEndpoint.processCase(case) } returns returnCase
         every { kbEndpoint.waitingCasesInfo() } returns casesInfo
         httpClient.put(INTERPRET_CASE) {

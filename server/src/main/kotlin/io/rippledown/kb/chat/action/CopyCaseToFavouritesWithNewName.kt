@@ -5,16 +5,13 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
-class NextCornerstone : ChatAction {
+class CopyCaseToFavouritesWithNewName(val message: String) : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
         currentCase: ViewableCase?,
         modelResponder: ModelResponder
     ): ChatResponse {
-        val currentStatus = ruleService.cornerstoneStatus()
-        val nextIndex = currentStatus.indexOfCornerstoneToReview + 1
-        val cornerstoneStatus = ruleService.selectCornerstoneCase(nextIndex)
-        ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.endOfReviewMessage())
+        ruleService.copyCaseToFavourites(currentCase!!, newName = message)
+        return ChatResponse("case copied")
     }
 }

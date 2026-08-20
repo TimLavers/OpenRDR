@@ -137,18 +137,39 @@ fun OpenRDRUI(
         }
     }
 
+    // Tracks the ordering of all known case ids (Processed + Cornerstone +
+    // Favourite), as last reported by the server, so that if the currently
+    // selected case is later removed from that combined list (e.g. it was
+    // deleted), we can work out which case was showing immediately before it
+    // and re-select that one instead of always falling back to the first case.
+    var lastKnownCaseOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
+
     LaunchedEffect(casesInfo, currentCaseId) {
         withContext(dispatcher) {
-            val allIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds
-            if (allIds.isNotEmpty()) {
-                if (currentCaseId == null || currentCaseId !in allIds.map { it.id }) {
-                    // No initial case, or it's now been deleted
-                    currentCaseId = allIds[0].id!!
+            val allCaseIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds + casesInfo.favouriteCaseIds
+            val allIdValues = allCaseIds.mapNotNull { it.id }
+            if (allIdValues.isNotEmpty()) {
+                if (currentCaseId == null) {
+                    // No initial case.
+                    currentCaseId = casesInfo.caseIds.firstOrNull()?.id ?: allIdValues[0]
+                } else if (currentCaseId !in allIdValues) {
+                    // The current case is no longer represented in the ids received
+                    // from the server, e.g. it's been deleted. Select the case that
+                    // was showing immediately before it, if there is one, else fall
+                    // back to the first case in the Processed list.
+                    val previousIndex = lastKnownCaseOrder.indexOf(currentCaseId)
+                    val previousCaseId = if (previousIndex > 0) lastKnownCaseOrder[previousIndex - 1] else null
+                    currentCaseId = if (previousCaseId != null && previousCaseId in allIdValues) {
+                        previousCaseId
+                    } else {
+                        casesInfo.caseIds.firstOrNull()?.id ?: allIdValues[0]
+                    }
                 }
                 if (currentCase?.case?.caseId?.id != currentCaseId) {
                     currentCase = api.getCase(currentCaseId!!)
                 }
             }
+            lastKnownCaseOrder = allIdValues
         }
     }
 
@@ -266,7 +287,8 @@ fun OpenRDRUI(
                         CaseSelector(
                             casesInfo.caseIds,
                             casesInfo.cornerstoneCaseIds,
-                            caseSelectorHandler
+                            caseSelectorHandler,
+                            casesInfo.favouriteCaseIds
                         )
                     }
 
