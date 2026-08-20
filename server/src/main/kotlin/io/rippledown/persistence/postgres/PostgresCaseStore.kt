@@ -24,7 +24,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
 
     override fun allCaseIds() = transaction(db) {
         return@transaction PGCaseId.all()
-            .map { CaseId(it.id.value, it.name!!, CaseType.values()[it.type!!]) }
+            .map { CaseId(it.id.value, it.name!!, CaseType.entries[it.type!!]) }
             .sortedBy { it.id!! }
     }
 
