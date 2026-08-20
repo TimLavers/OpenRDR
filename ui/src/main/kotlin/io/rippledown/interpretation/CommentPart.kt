@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,8 +27,8 @@ import androidx.compose.ui.unit.sp
 import io.rippledown.model.RenderedComment
 
 /**
- * A name chip and the comment beside it, tooltipped with the conditions of the
- * rule that gave the comment.
+ * The name of the comment attribute and the comment beside it, tooltipped with
+ * the conditions of the rule that gave the comment.
  *
  * A whole row is one part; a row previewing a replacement is two, the comment
  * going and the comment coming in its place, each with its own name, so that a
@@ -43,7 +41,7 @@ import io.rippledown.model.RenderedComment
  *
  * @param partBackground tints this part alone, as against the whole row, which
  *   is how the two halves of a replacement are tinted differently.
- * @param nameWeight the share of this part taken by the name chip.
+ * @param nameWeight the share of this part taken by the name.
  */
 @Composable
 internal fun RowScope.CommentPart(
@@ -67,10 +65,10 @@ internal fun RowScope.CommentPart(
         modifier = Modifier.weight(partWeight).background(partBackground)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            CommentNameChip(
+            CommentName(
                 name = comment.name,
                 description = nameDescription,
-                modifier = Modifier.weight(nameWeight).padding(end = 8.dp)
+                modifier = Modifier.weight(nameWeight).padding(end = 12.dp)
             )
             AnnotatedTextView(
                 text = comment.annotatedText(),
@@ -96,25 +94,19 @@ internal fun RowScope.CommentPart(
 }
 
 /**
- * The name of a comment attribute, as a chip, so that it reads as a label of
- * the comment beside it rather than as part of the comment's text.
+ * The name of a comment attribute, rendered as an attribute name is rendered
+ * anywhere else: the case table's attribute cell and the Derived attributes
+ * panel's name cell.
  */
 @Composable
-private fun CommentNameChip(name: String, description: String, modifier: Modifier = Modifier) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = Color.LightGray.copy(alpha = 0.4f),
-        modifier = modifier
-    ) {
-        Text(
-            text = name,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp,
-            color = Color.DarkGray,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                .semantics { contentDescription = description }
-        )
-    }
+private fun CommentName(name: String, description: String, modifier: Modifier = Modifier) {
+    Text(
+        text = name,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        color = Color.DarkGray,
+        modifier = modifier.semantics { contentDescription = description }
+    )
 }
 
 /**
