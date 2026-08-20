@@ -80,6 +80,33 @@ class CommentRowsTest {
         rows.map { it.highlight } shouldBe listOf(CommentHighlight.ADDED)
     }
 
+    /**
+     * The rule has been committed, so the comment is on the case, but the client
+     * has not yet been told that the session is over. Appending the pending row
+     * as well would show the comment twice.
+     */
+    @Test
+    fun `an addition already on the case is not shown twice`() {
+        // Given a case whose comments include the one being added
+        val rows = commentRowsToDisplay(listOf(bondi, flippers), Addition(flippers.text, flippers.name))
+
+        // Then there is a row for each comment, and none is highlighted
+        rows.map { it.comment.name } shouldBe listOf("C1", "C2")
+        rows.map { it.highlight } shouldBe listOf(CommentHighlight.NONE, CommentHighlight.NONE)
+    }
+
+    @Test
+    fun `an addition matched by name is not shown twice, whatever its rendered text`() {
+        // Given a comment with a variable, rendered for this case
+        val forThisCase = RenderedComment(text = "Glucose is 12.0.", name = "C1")
+
+        // When the addition carries the text as rendered for another case
+        val rows = commentRowsToDisplay(listOf(forThisCase), Addition("Glucose is 5.0.", "C1"))
+
+        // Then the comment is shown once
+        rows.map { it.comment.text } shouldBe listOf("Glucose is 12.0.")
+    }
+
     @Test
     fun `a removal highlights the row of the comment being removed`() {
         // When a removal of the second comment is applied

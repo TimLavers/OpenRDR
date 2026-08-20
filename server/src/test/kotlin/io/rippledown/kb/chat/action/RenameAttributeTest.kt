@@ -22,6 +22,7 @@ class RenameAttributeTest {
         ruleService = mockk()
         currentCase = mockk()
         modelResponder = mockk()
+        every { ruleService.isRuleSessionActive() } returns false
     }
 
     @Test
@@ -49,6 +50,32 @@ class RenameAttributeTest {
         coVerify(exactly = 0) { modelResponder.response(any<String>()) }
         coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
         coVerify(exactly = 0) { ruleService.cancelCurrentRuleSession() }
+    }
+
+    @Test
+    fun `should refresh the pending change when a rule session is in progress`() = runTest {
+        //Given a rename made while a rule is being built
+        every { ruleService.renameAttribute(any(), any()) } returns "Renamed \"C1\" to \"Beach\"."
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.sendCornerstoneStatus() } returns Unit
+
+        //When
+        RenameAttribute("C1", "Beach").doIt(ruleService, currentCase, modelResponder)
+
+        //Then the status is pushed, so that the panel shows the pending change under the new name
+        coVerify(exactly = 1) { ruleService.sendCornerstoneStatus() }
+    }
+
+    @Test
+    fun `should not send a status when no rule session is in progress`() = runTest {
+        //Given
+        every { ruleService.renameAttribute(any(), any()) } returns "Renamed \"C1\" to \"Beach\"."
+
+        //When
+        RenameAttribute("C1", "Beach").doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify(exactly = 0) { ruleService.sendCornerstoneStatus() }
     }
 
     @Test

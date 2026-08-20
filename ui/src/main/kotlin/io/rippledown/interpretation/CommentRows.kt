@@ -77,14 +77,24 @@ fun commentRowsToDisplay(
             }
         }
 
-        is Addition -> comments.map { CommentRowState(it) } + CommentRowState(
-            comment = RenderedComment(
-                text = diff.addedText,
-                conditions = ruleConditions,
-                name = diff.attributeName
-            ),
-            highlight = CommentHighlight.ADDED
-        )
+        // The comment can already be on the case: the rule has been committed
+        // but the client has not yet been told the session is over. Showing the
+        // pending row as well would show the comment twice.
+        is Addition -> comments.map { CommentRowState(it) } +
+                if (comments.any { it.isThatOf(diff.addedText, diff.attributeName) }) {
+                    emptyList()
+                } else {
+                    listOf(
+                        CommentRowState(
+                            comment = RenderedComment(
+                                text = diff.addedText,
+                                conditions = ruleConditions,
+                                name = diff.attributeName
+                            ),
+                            highlight = CommentHighlight.ADDED
+                        )
+                    )
+                }
     }
 }
 

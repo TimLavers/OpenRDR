@@ -49,7 +49,10 @@ families of subtype, one per panel:
   `attributeName` of the comment attribute concerned, so that the Comments table can show the name beside the comment
   before the rule is committed. For a replacement the name is that of the *replacing* attribute, the two comments having
   an attribute each. The name is empty when the change did not come from a comment attribute, as when this type is used
-  elsewhere for diffing lists of sentences.
+  elsewhere for diffing lists of sentences. The name a client is sent is read from the attribute at the moment the
+  status is built (`RuleSessionManager.pendingChange`), not snapshotted when the session started, because the user can
+  rename a comment while its rule is being built; `RenameAttribute` pushes a fresh status during a session so that the
+  panel shows the new name straight away.
 - **`DerivedValueChange`** - a derived attribute change, carrying an
   `attributeName`:
     - `DerivedValueAddition(attributeName, value, formula)`

@@ -8,6 +8,8 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Removal
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.ByDefinition
 import io.rippledown.persistence.inmemory.InMemoryKB
@@ -28,7 +30,7 @@ class RenameAttributeTest {
 
     @BeforeTest
     fun setup() {
-        webSocketManager = mockk()
+        webSocketManager = mockk(relaxed = true)
         kb = KB(InMemoryKB(KBInfo("id123", "Blah")))
         rsm = RuleSessionManager(kb, webSocketManager)
     }
@@ -120,6 +122,40 @@ class RenameAttributeTest {
         kb.attributeManager.byName("Body mass index") shouldNotBe null
         kb.attributeManager.byName("BMI") shouldBe null
         rsm.isRuleSessionActive() shouldBe true
+    }
+
+    @Test
+    fun `renaming the comment being added shows the new name in the pending change`() {
+        // Given a session in progress to add a comment, whose pending change is
+        // shown under the comment attribute's name
+        val case = caseWith("weight" to "93.0")
+        rsm.startRuleSessionToAddComment(case, "Overweight.", proposedAttributeName = "Surf")
+        rsm.currentDiff shouldBe Addition("Overweight.", "Surf")
+
+        // When the comment is renamed
+        rsm.renameAttribute("Surf", "Beach")
+
+        // Then the pending change carries the new name
+        rsm.currentDiff shouldBe Addition("Overweight.", "Beach")
+        rsm.cornerstoneStatus().commentDiff shouldBe Addition("Overweight.", "Beach")
+    }
+
+    @Test
+    fun `renaming the comment being removed shows the new name in the pending change`() {
+        // Given a comment given to a case by a rule
+        val case = caseWith("weight" to "93.0")
+        rsm.startRuleSessionToAddComment(case, "Overweight.", proposedAttributeName = "Surf")
+        rsm.commitCurrentRuleSession()
+
+        // And a session in progress to remove it
+        rsm.startRuleSessionToRemoveComment(kb.viewableCase(case).case, "Overweight.")
+        rsm.currentDiff shouldBe Removal("Overweight.", "Surf")
+
+        // When the comment is renamed
+        rsm.renameAttribute("Surf", "Beach")
+
+        // Then the pending change carries the new name
+        rsm.currentDiff shouldBe Removal("Overweight.", "Beach")
     }
 
     @Test

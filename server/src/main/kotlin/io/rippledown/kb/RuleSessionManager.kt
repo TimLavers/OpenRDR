@@ -34,22 +34,53 @@ class RuleSessionManager(
 
     /**
      * The change the session in progress is about to make. A session makes one
-     * change, so this is one field; [currentDiff] and [currentDerivedValueChange]
-     * are read views of it for the code that handles only one kind.
+     * change, so this is one field; [pendingChange] is the read view of it, and
+     * [currentDiff] and [currentDerivedValueChange] narrow that to the code
+     * that handles only one kind.
      */
     internal var currentChange: PendingChange? = null
 
+    /**
+     * The change the session in progress is about to make, with the name of the
+     * comment attribute it concerns as that attribute is named *now*: the user
+     * can rename a comment while its rule is being built, and the panel showing
+     * the pending change must show the new name.
+     */
+    internal val pendingChange: PendingChange?
+        get() = when (val change = currentChange) {
+            is Addition -> change.copy(attributeName = currentAttributeName(change.attributeName))
+            is Removal -> change.copy(attributeName = currentAttributeName(change.attributeName))
+            is Replacement -> change.copy(attributeName = currentAttributeName(change.attributeName))
+            else -> change
+        }
+
+    /**
+     * The current name of [diffAttribute], falling back to the name the change
+     * was made with when the change does not concern a comment attribute.
+     */
+    private fun currentAttributeName(nameWhenChangeWasMade: String) =
+        diffAttribute?.name ?: nameWhenChangeWasMade
+
     internal val currentDiff: Diff?
-        get() = currentChange as? Diff
+        get() = pendingChange as? Diff
 
     internal val currentDerivedValueChange: DerivedValueChange?
-        get() = currentChange as? DerivedValueChange
+        get() = pendingChange as? DerivedValueChange
 
     /**
      * The comment attribute that the session in progress will assign, held so
      * that the user can be told its name when the comment is accepted.
      */
     private var commentAttributeInSession: Attribute? = null
+
+    /**
+     * The comment attribute whose name the pending diff shows: the attribute
+     * being assigned for an addition or a replacement, and the one being
+     * retracted for a removal. Held so that the name is read from the attribute
+     * itself, which a rename updates in place, rather than being a snapshot
+     * taken when the session started.
+     */
+    private var diffAttribute: Attribute? = null
 
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
@@ -103,6 +134,7 @@ class RuleSessionManager(
         val attribute = commentAttributeFor(template, proposedAttributeName)
         currentChange = Addition(template.textWithVariableNames(), attribute.name)
         commentAttributeInSession = attribute
+        diffAttribute = attribute
         return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -114,6 +146,7 @@ class RuleSessionManager(
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
         currentChange = Removal(renderedComment(attribute, case), attribute.name)
         commentAttributeInSession = null
+        diffAttribute = attribute
         return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
     }
 
@@ -155,6 +188,7 @@ class RuleSessionManager(
             replacementAttribute.name
         )
         commentAttributeInSession = replacementAttribute
+        diffAttribute = replacementAttribute
         return startRuleSession(
             case,
             ChangeTreeToReplaceAssignment(
@@ -279,6 +313,7 @@ class RuleSessionManager(
         action: RuleTreeChange
     ): CornerstoneStatus {
         currentChange = change
+        diffAttribute = null
         return try {
             startRuleSession(case, action)
         } catch (e: Throwable) {
@@ -476,6 +511,7 @@ class RuleSessionManager(
         ruleSession = null
         currentChange = null
         commentAttributeInSession = null
+        diffAttribute = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -519,6 +555,7 @@ class RuleSessionManager(
         ruleSession = null
         currentChange = null
         commentAttributeInSession = null
+        diffAttribute = null
         checkRuleSessionHistoryConsistency()
         sendCasesInfo()
     }
@@ -651,7 +688,7 @@ class RuleSessionManager(
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
-            pendingChange = currentChange,
+            pendingChange = pendingChange,
             ruleConditions = conditionTexts
         )
 
@@ -666,7 +703,7 @@ class RuleSessionManager(
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentChange, conditionTexts)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, pendingChange, conditionTexts)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests

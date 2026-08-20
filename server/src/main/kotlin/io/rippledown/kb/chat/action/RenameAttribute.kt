@@ -20,7 +20,11 @@ data class RenameAttribute(
         currentCase: ViewableCase?,
         modelResponder: ModelResponder
     ): ChatResponse = try {
-        ChatResponse(ruleService.renameAttribute(attributeName, newName))
+        val summary = ruleService.renameAttribute(attributeName, newName)
+        // A rename during a rule session changes the name shown for the pending
+        // change, so push the status to refresh the Comments panel.
+        if (ruleService.isRuleSessionActive()) ruleService.sendCornerstoneStatus()
+        ChatResponse(summary)
     } catch (e: IllegalStateException) {
         ChatResponse(e.message ?: "Could not rename the attribute.")
     } catch (e: IllegalArgumentException) {
