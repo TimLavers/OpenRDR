@@ -88,6 +88,13 @@ fun CaseSelector(
         requestFocusOnCase(selectedCaseIndex)
     }
 
+    // The sections are stacked, each taking only the height its cases need, so
+    // that a section header always sits directly below the section above it.
+    // (Giving each section a weight instead would share the panel's height
+    // between the expanded sections, so collapsing one would push the headers
+    // below it down the panel.) One scroll state covers the lot, so a long case
+    // list scrolls the whole panel rather than each section separately.
+    val scrollState = rememberScrollState()
     Box(
         modifier = Modifier
             .height(800.dp)
@@ -100,6 +107,7 @@ fun CaseSelector(
                 .semantics {
                     contentDescription = CASELIST_ID
                 }
+                .verticalScroll(scrollState)
         ) {
             CollapsibleSectionHeader(
                 title = "Processed (${caseIds.size})",
@@ -108,36 +116,14 @@ fun CaseSelector(
                 semanticId = PROCESSED_SECTION_HEADER_ID
             )
             if (processedExpanded) {
-                Box(modifier = Modifier.weight(1f)) {
-                    val processedScrollState = rememberScrollState()
-                    Column(
-                        modifier = Modifier
-                            .semantics {
-                                contentDescription = PROCESSED_SECTION_ID
-                            }
-                            .padding(start = 14.dp, end = 20.dp)
-                            .fillMaxSize()
-                            .verticalScroll(processedScrollState)
-                    ) {
-                        caseIds.forEachIndexed { index, caseId ->
-                            CaseNameItem(
-                                caseId = caseId,
-                                isSelected = index == selectedCaseIndex,
-                                focusRequester = focusRequestors[index],
-                                onClick = { indexSelected(index) },
-                                onDownArrow = { indexSelected(index + 1) },
-                                onUpArrow = { indexSelected(index - 1) }
-                            )
-                        }
-                    }
-                    // Show scrollbar 
-                    VerticalScrollbar(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .width(8.dp),
-                        adapter = rememberScrollbarAdapter(processedScrollState)
-                    )
-                }
+                CaseSectionList(
+                    caseIds = caseIds,
+                    firstIndex = 0,
+                    semanticId = PROCESSED_SECTION_ID,
+                    selectedCaseIndex = selectedCaseIndex,
+                    focusRequestors = focusRequestors,
+                    onSelect = ::indexSelected
+                )
             }
             if (cornerstoneCaseIds.isNotEmpty()) {
                 CollapsibleSectionHeader(
@@ -148,37 +134,14 @@ fun CaseSelector(
                 )
             }
             if (cornerstoneCaseIds.isNotEmpty() && cornerstoneExpanded) {
-                Box(modifier = Modifier.weight(1f)) {
-                    val cornerstoneScrollState = rememberScrollState()
-                    Column(
-                        modifier = Modifier
-                            .semantics {
-                                contentDescription = CORNERSTONE_SECTION_ID
-                            }
-                            .padding(start = 14.dp, end = 20.dp)
-                            .fillMaxSize()
-                            .verticalScroll(cornerstoneScrollState)
-                    ) {
-                        cornerstoneCaseIds.forEachIndexed { csIndex, caseId ->
-                            val globalIndex = caseIds.size + csIndex
-                            CaseNameItem(
-                                caseId = caseId,
-                                isSelected = globalIndex == selectedCaseIndex,
-                                focusRequester = focusRequestors[globalIndex],
-                                onClick = { indexSelected(globalIndex) },
-                                onDownArrow = { indexSelected(globalIndex + 1) },
-                                onUpArrow = { indexSelected(globalIndex - 1) }
-                            )
-                        }
-                    }
-                    // Show scrollbar 
-                    VerticalScrollbar(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .width(8.dp),
-                        adapter = rememberScrollbarAdapter(cornerstoneScrollState)
-                    )
-                }
+                CaseSectionList(
+                    caseIds = cornerstoneCaseIds,
+                    firstIndex = caseIds.size,
+                    semanticId = CORNERSTONE_SECTION_ID,
+                    selectedCaseIndex = selectedCaseIndex,
+                    focusRequestors = focusRequestors,
+                    onSelect = ::indexSelected
+                )
             }
             if (favouriteCaseIds.isNotEmpty()) {
                 CollapsibleSectionHeader(
@@ -189,38 +152,58 @@ fun CaseSelector(
                 )
             }
             if (favouriteCaseIds.isNotEmpty() && favouritesExpanded) {
-                Box(modifier = Modifier.weight(1f)) {
-                    val favouritesScrollState = rememberScrollState()
-                    Column(
-                        modifier = Modifier
-                            .semantics {
-                                contentDescription = FAVOURITES_SECTION_ID
-                            }
-                            .padding(start = 14.dp, end = 20.dp)
-                            .fillMaxSize()
-                            .verticalScroll(favouritesScrollState)
-                    ) {
-                        favouriteCaseIds.forEachIndexed { fIndex, caseId ->
-                            val globalIndex = caseIds.size + cornerstoneCaseIds.size + fIndex
-                            CaseNameItem(
-                                caseId = caseId,
-                                isSelected = globalIndex == selectedCaseIndex,
-                                focusRequester = focusRequestors[globalIndex],
-                                onClick = { indexSelected(globalIndex) },
-                                onDownArrow = { indexSelected(globalIndex + 1) },
-                                onUpArrow = { indexSelected(globalIndex - 1) }
-                            )
-                        }
-                    }
-                    // Show scrollbar 
-                    VerticalScrollbar(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .width(8.dp),
-                        adapter = rememberScrollbarAdapter(favouritesScrollState)
-                    )
-                }
+                CaseSectionList(
+                    caseIds = favouriteCaseIds,
+                    firstIndex = caseIds.size + cornerstoneCaseIds.size,
+                    semanticId = FAVOURITES_SECTION_ID,
+                    selectedCaseIndex = selectedCaseIndex,
+                    focusRequestors = focusRequestors,
+                    onSelect = ::indexSelected
+                )
             }
+        }
+        VerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .width(8.dp),
+            adapter = rememberScrollbarAdapter(scrollState)
+        )
+    }
+}
+
+/**
+ * The cases of one section, indented under its header.
+ *
+ * @param firstIndex the index of this section's first case in the combined list
+ *   of all cases, which is what selection and arrow-key navigation work in.
+ */
+@Composable
+private fun CaseSectionList(
+    caseIds: List<CaseId>,
+    firstIndex: Int,
+    semanticId: String,
+    selectedCaseIndex: Int,
+    focusRequestors: List<FocusRequester>,
+    onSelect: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .semantics {
+                contentDescription = semanticId
+            }
+            .padding(start = 14.dp, end = 20.dp)
+            .fillMaxWidth()
+    ) {
+        caseIds.forEachIndexed { index, caseId ->
+            val globalIndex = firstIndex + index
+            CaseNameItem(
+                caseId = caseId,
+                isSelected = globalIndex == selectedCaseIndex,
+                focusRequester = focusRequestors[globalIndex],
+                onClick = { onSelect(globalIndex) },
+                onDownArrow = { onSelect(globalIndex + 1) },
+                onUpArrow = { onSelect(globalIndex - 1) }
+            )
         }
     }
 }
