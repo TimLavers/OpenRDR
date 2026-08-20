@@ -3,6 +3,10 @@ Milestone 1 will be a system for providing interpretations for Thyroid cases in 
 Clinical Pathology setting, using the rules set out in the paper cited 
 in [Goals](goals.md).
 
+> **This records milestone 1, which was delivered.** It is kept as the statement of
+> what was asked for then. Where the system has since moved on, the current
+> requirements govern; the places where it has are noted below.
+
 ## Basic concepts
 The basic data structures needed for Milestone 1 are given below.  
 **Ticket:** [ORD1](../tickets/work_tickets.md)
@@ -36,6 +40,9 @@ A typical example is the set of test results for a patient on a particular date.
 **Conclusion**
 A textual comment applicable to a given case.
 
+*Since superseded:* a comment is now an `Attribute` of kind `COMMENT`, with a name of its own, rather than a separate
+`Conclusion`. See [comments.md](comments.md).
+
 ## User interface
 **CaseView:**
 An `RDRCase` is presented to the user as a table. Each `Attribute` that has data in
@@ -53,6 +60,10 @@ The order of the conclusions in this text is defined by the conclusion ordering.
 The text is shown in a text area with a monospaced font. This is because comments
 sometimes contain tables formed by white-spaces.
 **Ticket:** [ORD7](../tickets/work_tickets.md)
+
+*Since superseded:* the comments are now shown in the **Comments** panel as a two column table, a row for each comment
+giving the name of the comment attribute and the comment itself, and comment ordering no longer signifies. See
+[case_view.md](case_view.md).
 
 ## Data processing
 The Clinical Decision Support System is backed by a Knowledge Base (KB).

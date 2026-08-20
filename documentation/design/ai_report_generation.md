@@ -53,8 +53,9 @@ so a one-shot call is the right tool. Callers wrap it in `retry` to survive tran
 - `readPrompt()` loads the system prompt from the resource
   `@/C:\repos\OpenRDR\server\src\main\resources\report\report_system_prompt.md`. The prompt instructs
   the model to write grounded, lightly-structured prose based only on the supplied comments.
-- `userContent(viewableCase, attributeById)` builds the user message from two parts: the comments
-  (via `Interpretation.toComments`, a JSON array with attribute placeholders resolved to `{Name}`)
+- `userContent(viewableCase, attributeById)` builds the user message from two parts: the comments (via
+  `Interpretation.toComments` on the *viewable* interpretation, whose `ByDefinition` comment assignments have been
+  resolved to their stored definitions; a JSON array of comment texts, with attribute placeholders resolved to `{Name}`)
   and the full case serialized as JSON (via `viewableCase.toJsonString()`, using the
   `ViewableCase` serializer). Sending the whole case lets the model make wording concrete with
   actual attribute values.
@@ -215,6 +216,9 @@ with no comments (`generated = false`) shows "No comments to report on."
   UI-only visibility state via `ChatResponse`).
 - **Selecting which attributes are sent to the LLM.** Currently the full case is serialized and sent;
   a future version will let the user choose which attributes to include.
-- **The future comments redesign** (turning the Interpretation panel's comments into an indexed list
-  of derived attributes). `ReportView` is kept independent of `InterpretationView` so that redesign
-  will not disturb the report.
+- **Sending the comments' names to the model.** The report is built from the comment *texts* only
+  (`Interpretation.toComments`). Now that every comment is a named attribute, the name is signal about the comment's
+  role and is meant to be an input too; see step 19 of
+  [repeat_inferencing.md](repeat_inferencing.md), which also updates the system prompt. Keeping
+  `ReportView` independent of `InterpretationView` meant the comments redesign (step 17, done) did not disturb the
+  report.

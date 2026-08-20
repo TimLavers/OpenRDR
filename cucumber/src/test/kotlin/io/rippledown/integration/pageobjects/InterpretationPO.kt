@@ -1,6 +1,7 @@
 package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeDialog
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -46,6 +47,37 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
      * interpretation can still be written as one string.
      */
     fun interpretationText(): String = commentsShown().joinToString(" ")
+
+    /**
+     * The names shown in the name column, in the order of the rows, being the
+     * names of the comment attributes that gave the comments.
+     */
+    fun commentNamesShown(): List<String> =
+        execute<List<String>> {
+            contextProvider().findAllByDescriptionPrefixesInOrder(
+                COMMENT_NAME_PREFIX,
+                COMMENT_REPLACEMENT_NAME_PREFIX
+            ).map { renderedText(it) }
+        }
+
+    /**
+     * The name shown beside the given comment, or null if the comment is not
+     * shown. The name and text cells of a row are read in the same order, so
+     * they can be paired off.
+     */
+    fun nameShownForComment(comment: String): String? {
+        val names = commentNamesShown()
+        val index = commentsShown().indexOfFirst { it == comment }
+        return if (index in names.indices) names[index] else null
+    }
+
+    fun waitForCommentToBeNamed(comment: String, name: String) {
+        waitUntilAsserted {
+            withClue("the name shown for the comment \"$comment\", of ${commentsShown()} named ${commentNamesShown()}") {
+                nameShownForComment(comment) shouldBe name
+            }
+        }
+    }
 
     private fun commentCells(): List<AccessibleContext> =
         contextProvider().findAllByDescriptionPrefixesInOrder(

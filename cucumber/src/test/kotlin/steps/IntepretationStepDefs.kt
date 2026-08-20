@@ -20,6 +20,11 @@ class IntepretationStepDefs {
         interpretationViewPO().requireNoConditionsToBeShowing()
     }
 
+    @And("the comment {string} should be shown with the name {string}")
+    fun requireCommentToBeNamed(comment: String, name: String) {
+        interpretationViewPO().waitForCommentToBeNamed(comment, name)
+    }
+
     fun requireConditionsToBeShowing(conditions: DataTable) {
         interpretationViewPO().waitForConditionsToBeShowing(conditions.asList())
     }

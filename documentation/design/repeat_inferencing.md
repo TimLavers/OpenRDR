@@ -110,8 +110,14 @@ The existing comment actions map directly onto assignment:
 
 - *add comment* → assign a value to a new comment attribute
 - *remove comment* → refinement rule retracting the assignment
-- *replace comment* → child rule assigning a different value to the same
-  attribute
+- *replace comment* → child rule assigning the comment attribute for the replacement text, with leaf-most suppression
+  retracting the original
+
+*(Resolved during Phase 2: each comment text has its own attribute, so a replacement is a change of attribute rather
+than a new value for the one attribute. A comment's text is therefore fixed — changing what a comment says is adding a
+different comment — which keeps a name attached to one wording, and lets a text already in the knowledge base be reused
+rather than duplicated.
+`RuleTreeChange` allows a replacement across two attributes only when both are comment attributes.)*
 
 Conflicts between rules assigning the same attribute are resolved by the
 existing RDR refinement structure: the leaf-most satisfied rule for an
@@ -267,8 +273,9 @@ Therefore, there is no need for a cycle check when the rule is committed.
 
 1. **Comments are derived attributes** (see above). One rule action kind
    for the whole system: assign a value to a derived attribute.
-2. **Refinement semantics**: remove = retract assignment; replace = child
-   rule assigning a different value to the same attribute.
+2. **Refinement semantics**: remove = retract assignment; replace = child rule assigning the comment attribute for the
+   replacement text, the original being retracted by leaf-most suppression. (For a *derived value*, where the attribute
+   is the thing named, a replacement is a new value for the same attribute.)
 3. **Conflict resolution**: leaf-most satisfied rule per attribute wins,
    as per the existing RDR refinement structure.
 4. **Comment ordering**: not significant — the AI report generator
@@ -634,20 +641,40 @@ leaving `AssignConclusion` in place until step 16.
 
 ### Phase 3 — presentation and report
 
-17. **Comments panel.** Show each comment in a two column table, rather than sequentially, with its attribute name and
-    value
-    (`ui/src/main/kotlin/io/rippledown/interpretation/`); comment
-    attributes excluded from the case data table.
-18. **Cucumber assertions via the panel.** The Derived attributes panel
-    (Phase 1 step 10) and its viewable-case data source
-    (`ViewableCase.derivedValues()`) already exist. Rewrite the remaining
-    REST-based derived-value cucumber assertions (currently in
-    `Repeat inferencing.feature`) to read from the panel instead (Compose
-    UI test ids, following the existing panels' conventions).
-19. **AI report.** The report generator receives named comment attributes
-    (name + value pairs) as inputs; update
-    `server/src/main/resources/report/report_system_prompt.md`
-    accordingly.
+17. **Comments panel.** *(Implemented 20 Aug 2026.)* Each comment is a row of a two-column table — name chip, then
+    comment text — rather than one block of concatenated text; comment attributes are excluded from the case data table.
+    - The row state is computed by a pure function,
+      `commentRowsToDisplay` in
+      `ui/src/main/kotlin/io/rippledown/interpretation/CommentRows.kt`, mirroring `DerivedValueRows`, so the
+      pending-change cases (addition, removal, replacement) are unit-testable without composing. A pending change is
+      matched to a comment by attribute name, falling back to text for a KB whose diff carries no name.
+    - `CommentRow.kt` draws a row and `CommentPart.kt` draws one half of it (name chip + `AnnotatedTextView`), which is
+      what makes a *pending replacement* one row with two halves: the comment being replaced and its replacement, each
+      with its own highlight. Test ids come from the `COMMENT_ROW_*` / `COMMENT_CELL_*` constants in
+      `common/.../constants.interpretation/Constants.kt`, and take an `idPrefix` so the case and cornerstone panels
+      (`InterpretationView`, `ReadonlyInterpretationView` via `CornerstoneInspection`) can both be on screen.
+    - The comment's name reaches the client on `RenderedComment.name`, set in
+      `InterpretationViewManager`, and on the diff types (`Diff.attributeName`), set by `RuleSessionManager` when a
+      session starts. See
+      [previewing_pending_changes_when_a_rule_is_being_built.md](previewing_pending_changes_when_a_rule_is_being_built.md).
+    - Tests: `CommentRowsTest`, `CommentRowTest`, `CommentPartTest`, and the rewritten
+      `InterpretationViewTest` / `ReadonlyInterpretationViewTest` /
+      `DiffClearedAfterRuleBuildingTest`, all row-based. Cukes read the rows in layout order
+      (`AccessibilityUtils.findAllInOrder`, `InterpretationPO`), and
+      `chat/Naming and renaming.feature` asserts the name shown in the panel for both an auto-named comment and a
+      renamed one.
+18. **Cucumber assertions via the panel.** *(Not done.)* The Derived attributes panel
+    (Phase 1 step 10) and its viewable-case data source (`ViewableCase.derivedValues()`) already exist, and
+    panel-reading steps ("the UI should show the derived value …", backed by
+    `InterpretationPO.waitForDerivedValueToBeShown`) are in use. Two REST-based assertions remain in
+    `Repeat inferencing.feature` — "the derived value {string} should be {string}" and "… should not be present" in
+    `DerivedValueStepDefs` — and should be rewritten to read from the panel.
+19. **AI report.** *(Not done.)* The report generator is to receive named comment attributes (name + value pairs) as
+    inputs; currently `Interpretation.toComments`
+    sends the comment *texts* only, and
+    `server/src/main/resources/report/report_system_prompt.md` describes its input as a set of comments. Both need
+    updating together; see
+    [ai_report_generation.md](ai_report_generation.md).
 
 ### Phase 4 — later: external attribute renaming
 

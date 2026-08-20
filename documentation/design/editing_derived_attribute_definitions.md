@@ -2,16 +2,21 @@
 
 ## Status
 
-**DESIGN AGREED — ready for implementation.** Not yet implemented. All open questions are resolved (see "Resolved
+**IMPLEMENTED.** `DerivedDefinitionStore` (with in-memory and Postgres implementations),
+`DerivedDefinitionManager`, the `ByDefinition` rule action and the chat's definition-edit command
+(`RuleService.editDerivedAttributeDefinition`) are all in place. All open questions were resolved (see "Resolved
 questions" at the end).
 See also [repeat_inferencing.md](repeat_inferencing.md), on which this builds.
 
-**Sequencing (agreed):** this work is implemented **before** repeat inferencing Phase 2 (comments become derived
+**Sequencing (as done):** this work landed **before** repeat inferencing Phase 2 (comments become derived
 attributes). The
-`DerivedDefinitionStore` / `ByDefinition` architecture introduced here is the final architecture Phase 2 lands on (a
-comment's text template becomes just another definition, and `ConclusionStore` folds into the definition store), so
-doing this first avoids migrating configured KBs twice. See the Sequencing notes
+`DerivedDefinitionStore` / `ByDefinition` architecture introduced here is the architecture Phase 2 landed on: a
+comment's text template (`CommentTemplate`) is just another definition, and the conclusion store has since been deleted
+rather than maintained alongside it. Doing this first avoided migrating configured KBs twice. See the Sequencing notes
 in [repeat_inferencing.md](repeat_inferencing.md).
+
+References below to `Conclusion`, `ConclusionStore` and `ConclusionManager` describe the state of the code when this
+design was written; those types were deleted by Phase 2 step 16.
 
 ## The requirement
 
