@@ -16,6 +16,16 @@ Feature: Naming comments, and renaming comments and derived attributes
     When I request that the comment "Let's surf." be added
     Then the chatbot tells me the name of the comment and that it can be renamed
 
+  Scenario: A comment given no name of its own is named for the user, and shown with that name
+    Given case Bondi is provided having data:
+      | wave height | 2 |
+    # The rule is built without going through the chat, so no name is proposed
+    # for the comment and it falls back to the first free "C" name.
+    And a rule exists to add the comment "Let's surf." to case Bondi with no conditions
+    And I start the client application
+    When I see the case Bondi as the current case
+    Then the comment "Let's surf." should be shown with the name "C1"
+
   Scenario: The user can rename a comment through the chat
     Given case Bondi is provided having data:
       | wave height | 2 |
@@ -27,6 +37,18 @@ Feature: Naming comments, and renaming comments and derived attributes
     Then the chatbot confirms a rename to "Surfing advice"
     # Only the name has changed: the comment itself is unaffected.
     And the report should be "Let's surf."
+
+  Scenario: A comment is shown with the name the user gave it in place of the one it was given
+    Given case Bondi is provided having data:
+      | wave height | 2 |
+    And a rule exists to add the comment "Let's surf." to case Bondi with no conditions
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the comment "Let's surf." should be shown with the name "C1"
+    When I request that the attribute "C1" be renamed to "Surfing advice"
+    Then the chatbot confirms that "C1" has been renamed to "Surfing advice"
+    # The comment is unchanged; only the name beside it is different.
+    And the comment "Let's surf." should be shown with the name "Surfing advice"
 
   Scenario: A comment can be renamed while a rule is being built
     Given case Bondi is provided having data:
