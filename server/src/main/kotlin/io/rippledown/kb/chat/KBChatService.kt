@@ -29,10 +29,11 @@ object KBChatService {
 
     private fun String.replacePlaceholders(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute?
+        attributeById: (Int) -> Attribute?,
+        allAttributes: Set<Attribute>
     ): String {
         var result = this
-        systemPromptVariables(viewableCase, attributeById).forEach { key, value ->
+        systemPromptVariables(viewableCase, attributeById, allAttributes).forEach { key, value ->
             result = result.replace("{{$key}}", value)
         }
         return result
@@ -90,9 +91,10 @@ object KBChatService {
 
     fun createKBChatService(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute? = { null }
+        attributeById: (Int) -> Attribute? = { null },
+        allAttributes: Set<Attribute> = emptySet()
     ): ChatService {
-        val systemInstruction = systemPrompt(viewableCase, attributeById)
+        val systemInstruction = systemPrompt(viewableCase, attributeById, allAttributes)
         return GeminiChatService(
             systemInstruction = systemInstruction,
             functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
@@ -131,12 +133,14 @@ object KBChatService {
 
     fun systemPromptVariables(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute? = { null }
+        attributeById: (Int) -> Attribute? = { null },
+        allAttributes: Set<Attribute> = emptySet()
     ) = mapOf(
         "ADD" to ADD,
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
+        "ALL_ATTRIBUTES" to allAttributes.joinToString("\n") { it.name },
         // The viewable interpretation holds the resolved copy of the case's
         // interpretation, in which ByDefinition comment assignments have been
         // substituted with their stored definitions.
@@ -184,13 +188,18 @@ object KBChatService {
 
     fun systemPrompt(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute? = { null }
+        attributeById: (Int) -> Attribute? = { null },
+        allAttributes: Set<Attribute> = emptySet()
     ): String {
         val mainSection = systemPromptMainSections.map { it ->
-            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase, attributeById)
+            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase, attributeById, allAttributes)
         }
         val exampleSection = systemPromptExampleSections.map { it ->
-            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(viewableCase, attributeById)
+            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(
+                viewableCase,
+                attributeById,
+                allAttributes
+            )
         }
         return (mainSection + exampleSection).joinToString(separator = "\n")
     }

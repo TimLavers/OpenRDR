@@ -74,4 +74,24 @@ class KBChatServiceTest {
 
         systemPrompt shouldContain glucose.name + "\n" + lipids.name + "\n" + age.name
     }
+
+    @Test
+    fun `system instruction should contain all KB attributes including those not on the current case`() {
+        // Given a case with glucose and lipids, and a KB that also has haemoglobin and sodium
+        val glucose = Attribute(1, "glucose")
+        val glucoseValue = AttributeWithValue(glucose, Result("5.1"))
+        val lipids = Attribute(2, "lipids")
+        val lipidValue = AttributeWithValue(lipids, Result("5.2"))
+        val case = createViewableCase(CaseId(99, "Case1"), listOf(glucoseValue, lipidValue))
+        val haemoglobin = Attribute(3, "haemoglobin")
+        val sodium = Attribute(4, "sodium")
+        val allAttributes = setOf(glucose, lipids, haemoglobin, sodium)
+
+        // When
+        val systemPrompt = KBChatService.systemPrompt(case, allAttributes = allAttributes)
+
+        // Then the prompt contains the attributes that are not on the case
+        systemPrompt shouldContain haemoglobin.name
+        systemPrompt shouldContain sodium.name
+    }
 }

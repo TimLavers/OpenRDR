@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -473,6 +474,30 @@ class RuleSessionManagerTest {
 
         // Then
         result shouldBe null
+    }
+
+    // --- allAttributes ---
+
+    @Test
+    fun `allAttributes should return all attributes in the knowledge base`() {
+        // Given
+        kb.attributeManager.getOrCreate("Glucose")
+        kb.attributeManager.getOrCreate("Haemoglobin")
+
+        // When
+        val result = rsm.allAttributes()
+
+        // Then
+        result.map { it.name } shouldContainAll listOf("Glucose", "Haemoglobin")
+    }
+
+    @Test
+    fun `allAttributes should return an empty set when the knowledge base has no attributes`() {
+        // When
+        val result = rsm.allAttributes()
+
+        // Then
+        result shouldBe emptySet()
     }
 
     // --- sendCornerstoneStatus ---

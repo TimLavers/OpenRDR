@@ -191,7 +191,8 @@ To issue `api.moveAttribute(movedId, targetId)` the rows need ids.
   `api.getCase` refetch, so it can be reused verbatim for both panels. The refetch is what makes the new order appear.
 - **UI tests**: extend `ReadonlyInterpretationViewTest` and
   `DerivedValuesPanelTest` with "rows are drawn in the order supplied" and
-  "moving row 1 below row 2 calls the handler with the two attribute ids", mirroring the existing case-table drag tests.
+  "moving row 1 below row 2 calls the handler with the two attribute ids", mirroring the existing case-table drag
+  testsF.
 
 ## 2E — Export, import and docs
 

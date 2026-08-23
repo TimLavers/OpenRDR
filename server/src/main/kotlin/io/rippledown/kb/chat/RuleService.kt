@@ -91,6 +91,11 @@ interface RuleService {
      */
     fun attributeById(id: Int): Attribute?
 
+    /**
+     * All attributes in the knowledge base, including those not present on the current case.
+     */
+    fun allAttributes(): Set<Attribute>
+
     fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase
     fun deleteCaseFromFavourites(case: ViewableCase)
 }

@@ -85,6 +85,7 @@ Feature: Add, replace or remove comments with variables
     When  I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
     Then the report should contain "The wave is excellent"
     And the report should show "Sun" as unevaluated
+    And pause
 
   Scenario: Building a rule with variables should create a cornerstone copy of the processed case
     Given case Bondi is provided having data:

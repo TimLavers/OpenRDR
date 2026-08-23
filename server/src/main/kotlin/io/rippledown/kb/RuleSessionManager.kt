@@ -476,6 +476,8 @@ class RuleSessionManager(
     override fun attributeById(id: Int): Attribute? =
         runCatching { kb.attributeManager.getById(id) }.getOrNull()
 
+    override fun allAttributes(): Set<Attribute> = kb.attributeManager.all()
+
     override fun attributeForName(name: String): Attribute? {
         val attributes = kb.attributeManager.all()
         // Exact, case-insensitive match.
