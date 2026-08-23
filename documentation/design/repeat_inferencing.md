@@ -35,8 +35,8 @@ Some examples:
 - `Risk score = 7`
 - `BMI = weight / height ** 2`
 
-Both the attribute (user-named at rule-building time) and the value
-expression (a literal or a formula)are chosen by the user.
+Both the attribute (user-named at rule-building time) and the value expression (a literal or a formula) are chosen by
+the user.
 
 ### Value expressions
 
@@ -76,7 +76,7 @@ There are two other reasons why a derived attribute can be absent from a case:
 1. the rule assigning its value is not satisfied, or
 2. there is a rule that removes it
 
-The expression language is deliberately small at first: arithmetic on the
+The expression language for formulas is deliberately small at first: arithmetic on the
 latest values of attributes (`+ - * / **`, parentheses, numeric literals).
 Functions, episode indexing and text manipulation can be added later if
 needed.
@@ -95,16 +95,17 @@ and informs the user:
 > I have given this comment the name "C1", but you can change the name at
 > any time.
 
-Since the chat LLM sees the comment text, it should propose a semantic
-default name (e.g. `DiabetesStatus`) where it can, falling back to `C1`,
-`C2`, … Renaming is always safe: rules and conditions reference the
+The chat LLM sees the comment text and it could propose a semantic name (e.g. `DiabetesStatus`) where it can, falling
+back to `C1`,
+`C2`, … if it can't. However, this dual-naming approach was thought to be confusing to the user, so we adopt the
+approach of always naming a new attribute `CX` where X is the next available integer. The user can change it if they
+want. Renaming is always safe: rules and conditions reference the
 attribute id, not the name.
 
-The report is the set of comment-attribute values present on the case. The
-AI report generator receives these named comment attributes as its inputs;
-a meaningful name is useful signal about the comment's role. Comment
-ordering is no longer significant: the AI produces the report, so the
-ordering machinery that mattered under string concatenation is not needed.
+The report is based on the set of comment-attribute values present on the case, *not* on the derived attributes. The
+AI report generator receives these named comment attributes as its inputs; a meaningful name, if the user has assigned
+one, is a useful signal about the comment's role. Comment ordering is maintained, even though it is less important as
+the AI produces the report.
 
 The existing comment actions map directly onto assignment:
 
@@ -113,22 +114,22 @@ The existing comment actions map directly onto assignment:
 - *replace comment* → child rule assigning the comment attribute for the replacement text, with leaf-most suppression
   retracting the original
 
-*(Resolved during Phase 2: each comment text has its own attribute, so a replacement is a change of attribute rather
+Each comment text has its own attribute, so a replacement is a change of attribute rather
 than a new value for the one attribute. A comment's text is therefore fixed — changing what a comment says is adding a
 different comment — which keeps a name attached to one wording, and lets a text already in the knowledge base be reused
 rather than duplicated.
-`RuleTreeChange` allows a replacement across two attributes only when both are comment attributes.)*
+`RuleTreeChange` allows a replacement across two attributes only when both are comment attributes.
 
 Conflicts between rules assigning the same attribute are resolved by the
 existing RDR refinement structure: the leaf-most satisfied rule for an
 attribute wins, exactly as `Rule.apply` works today for conclusions.
 
-Comment values must continue to support the existing `${}` attribute (or derived attribute)
+Comment values continue to support the existing `${}` attribute (or derived attribute)
 variable placeholders (see `Interpretation.toComments`).
 
 ### Presentation
 
-- Comment attributes appear in the Comments panel, each with its name;
+- Comment attributes appear in the collapsible Comments panel, each with its name;
   they do not appear in the case data table.
 - Non-comment derived attributes (e.g. `Risk score`, `BMI`) appear in
   their own collapsible panel just under the case view, alongside the
@@ -159,20 +160,20 @@ import/export.
 
 ## Inference algorithm
 
-`RuleTree.apply` currently makes a single depth-first pass. This changes to
+`RuleTree.apply` currently formerly made a single depth-first pass. This changes to
 a fixpoint iteration, applied wherever a case is interpreted (`KB.interpret`,
 including cornerstone evaluation during rule building):
 
-1. Strip all derived-attribute values from the case (see reset semantics
+1. Strip all derived and comment attributes from the case (see reset semantics
    below).
-2. Evaluate the tree against the case; collect the derived-attribute
+2. Evaluate the tree against the case; collect the derived and comment attribute
    assignments made by the rules that fired.
 3. Write those assignments into the latest episode of the case.
-4. If the assignments are unchanged from the previous
-   pass, stop. Otherwise repeat from step 2, with no hard cap of
-   passes as this is guaranteed to terminate.
+4. If the assignments are unchanged from the previous pass, stop. Otherwise repeat from step 2, **with no hard cap of
+   passes as this is guaranteed to terminate**.
 
-Conditions on external data evaluate identically on every pass; only conditions on KB-assigned attributes can change
+Conditions on external data (i.e. the original case data) evaluate identically on every pass; only conditions on
+KB-assigned attributes can change
 value between passes. Because the dependency graph is kept acyclic (next section), the iteration is guaranteed to
 converge.
 
@@ -197,7 +198,7 @@ rule-build time.
 - Edges: node B *depends on* node A if some rule whose action assigns B (or removes/replaces an assignment of B) has a
   condition referring to A anywhere on its path from the root, or has a value expression referring to A.
 
-Comment attributes are nodes because a comment is assigned by a rule like any other value (Phase 2), so it can be
+Comment attributes are nodes because a comment is assigned by a rule like any other value, so it can be
 depended upon as well as depend on others, and a cycle through one oscillates just the same. For example: a rule gives a
 comment, a rule assigns a derived value conditioned on that comment, and a rule retracting the comment is conditioned on
 that derived value — so the comment is present on one pass and absent on the next, forever. Restricting the nodes to
@@ -227,9 +228,9 @@ Therefore, there is no need for a cycle check when the rule is committed.
 
 ## Derived attributes are KB-owned
 
-- Derived attributes are flagged as KB-assigned, distinguishing them from
-  external attributes.
-- The external system cannot supply values for them. If an incoming case
+- Derived attributes are flagged as KB-assigned, distinguishing them from external attributes (attributes that are
+  present in the original processed case)
+- The external system cannot therefore supply values for derived attributes. If an incoming case
   has an external attribute whose name matches a derived attribute, the
   external attribute's name is mangled deterministically (e.g. `A` →
   `A (external)`) — case processing must never fail and external data must
