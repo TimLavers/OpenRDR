@@ -22,7 +22,7 @@ The prompt section `server/.../chat/instructions/4_comment_variables.md` instruc
 2. match the braced name against the attributes in the `ATTRIBUTES` prompt variable (case-insensitive, tolerant of
    small misspellings),
 3. auto-bind on an exact match, otherwise ask the user which attribute is meant, and
-4. emit the add-comment action with a `variables` array, one entry per placeholder, each carrying an `attributeName`.
+4. emit the add-comment action with a `variables` array, one entry per placeholder.
 
 The chat-level variable is `ChatCommentVariable(attributeName)`. `resolveCommentVariables(...)` then:
 
