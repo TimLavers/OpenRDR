@@ -79,30 +79,11 @@ class RuleSessionManagerCommentAssignmentTest {
     }
 
     @Test
-    fun `a new comment attribute takes the name proposed for it`() {
-        // When an add-comment session proposes a name
+    fun `a new comment attribute is auto-named C1 and the session reports it`() {
+        // When an add-comment session is started
         rsm.startRuleSessionToAddComment(
             createCase("A"),
-            "Diabetic diet advice given.",
-            proposedAttributeName = "Diabetes advice"
-        )
-
-        // Then the comment attribute has that name, and the session reports it
-        kb.attributeManager.byName("Diabetes advice")?.kind shouldBe AttributeKind.COMMENT
-        kb.attributeManager.byName("C1").shouldBeNull()
-        rsm.nameOfCommentAttributeInSession() shouldBe "Diabetes advice"
-    }
-
-    @Test
-    fun `an unusable proposed name falls back to the auto-generated name`() {
-        // Given an attribute with the name the model will propose
-        kb.attributeManager.getOrCreate("Diabetes advice")
-
-        // When an add-comment session proposes that name
-        rsm.startRuleSessionToAddComment(
-            createCase("A"),
-            "Diabetic diet advice given.",
-            proposedAttributeName = "Diabetes advice"
+            "Diabetic diet advice given."
         )
 
         // Then the comment attribute is auto-named, and the session reports that name
@@ -116,11 +97,10 @@ class RuleSessionManagerCommentAssignmentTest {
         buildAddCommentRule("Diabetic diet advice given.")
         kb.attributeManager.rename(kb.attributeManager.byName("C1")!!, "Diabetes advice")
 
-        // When the same comment is added to another case, with a different name proposed
+        // When the same comment is added to another case
         rsm.startRuleSessionToAddComment(
             createCase("C", "5.0"),
-            "Diabetic diet advice given.",
-            proposedAttributeName = "Diet"
+            "Diabetic diet advice given."
         )
 
         // Then the existing attribute is reused, keeping its name
@@ -129,21 +109,20 @@ class RuleSessionManagerCommentAssignmentTest {
     }
 
     @Test
-    fun `the replacement comment attribute takes the name proposed for it`() {
+    fun `the replacement comment attribute is auto-named and the session reports it`() {
         // Given a committed comment rule
         buildAddCommentRule("Diabetic diet advice given.")
 
-        // When the comment is replaced, with a name proposed for the replacement
+        // When the comment is replaced
         rsm.startRuleSessionToReplaceComment(
             createCase("A"),
             "Diabetic diet advice given.",
-            "Dietary review is recommended.",
-            proposedAttributeName = "Dietary review"
+            "Dietary review is recommended."
         )
 
-        // Then the new attribute has that name, and the session reports it
-        kb.attributeManager.byName("Dietary review")?.kind shouldBe AttributeKind.COMMENT
-        rsm.nameOfCommentAttributeInSession() shouldBe "Dietary review"
+        // Then the new attribute is auto-named, and the session reports that name
+        kb.attributeManager.byName("C2")?.kind shouldBe AttributeKind.COMMENT
+        rsm.nameOfCommentAttributeInSession() shouldBe "C2"
     }
 
     @Test
@@ -213,6 +192,42 @@ class RuleSessionManagerCommentAssignmentTest {
         // And the replacement applies for such cases only
         commentsShownFor("D", "25.0") shouldBe listOf("Urgent diabetic review required.")
         commentsShownFor("E") shouldBe listOf("Diabetic diet advice given.")
+    }
+
+    @Test
+    fun `a replacement comment's variables are carried into its definition and rendered`() {
+        // Given a comment rule
+        buildAddCommentRule("Diabetic diet advice given.")
+
+        // When it is replaced by a comment with a variable
+        rsm.startRuleSessionToReplaceComment(
+            viewableCase("C", "25.0"),
+            "Diabetic diet advice given.",
+            "Glucose is \${} today.",
+            listOf(CommentVariable(glucose().id))
+        )
+        rsm.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose(), 20.0))
+        rsm.commitCurrentRuleSession()
+
+        // Then the replacement is rendered with the case's value, not with its
+        // raw variable token
+        kb.derivedDefinitionManager.definitionFor(kb.attributeManager.byName("C2")!!.id) shouldBe
+                CommentTemplate("Glucose is \${} today.", listOf(glucose()))
+        commentsShownFor("D", "25.0") shouldBe listOf("Glucose is 25.0 today.")
+    }
+
+    /**
+     * The chat layer keeps a variable that names no attribute, so that its token
+     * still renders as an unresolved marker. Looking such a variable up as if it
+     * were an attribute of the KB threw, failing the whole rule session.
+     */
+    @Test
+    fun `a comment variable that names no attribute renders as unresolved`() {
+        // When a comment is added with a variable that names no attribute
+        buildAddCommentRule("Glucose is \${} today.", listOf(CommentVariable(-1)))
+
+        // Then the comment is given, with the variable marked unresolved
+        commentsShownFor("A") shouldBe listOf("Glucose is {unknown: no value} today.")
     }
 
     @Test

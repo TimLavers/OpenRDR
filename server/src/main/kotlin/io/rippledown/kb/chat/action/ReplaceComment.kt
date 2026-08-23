@@ -10,16 +10,15 @@ import io.rippledown.model.chat.ChatResponse
 
 /**
  * Starts a rule session to replace a comment. Each comment text has its own
- * attribute, so the replacement is named too: [attributeName] is the concise
- * name the model proposes for it, and the server falls back to an
- * auto-generated name. See step 14 of
+ * attribute, so the replacement is a new (or existing) attribute for the
+ * replacement text. The server auto-names a new attribute (C1, C2, …); the
+ * user can rename it later. See step 14 of
  * documentation/design/repeat_inferencing.md.
  */
 class ReplaceComment(
     val comment: String,
     val replacementComment: String,
-    val variables: List<ChatCommentVariable> = emptyList(),
-    val attributeName: String? = null
+    val variables: List<ChatCommentVariable> = emptyList()
 ) : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
@@ -48,7 +47,6 @@ class ReplaceComment(
             internalReplacedComment,
             internalReplacementComment,
             resolvedVariables,
-            attributeName
         )
         ruleService.sendCornerstoneStatus()
         val response = modelResponder.response(cornerstoneStatus.summary())

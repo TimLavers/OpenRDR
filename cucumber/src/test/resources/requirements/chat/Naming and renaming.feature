@@ -3,10 +3,10 @@
 @delay_after_cuke
 Feature: Naming comments, and renaming comments and derived attributes
   Every comment has a name, so that the user can refer to it later. The name is
-  proposed by the chatbot and the user is told it when the comment is accepted.
-  Comments and derived attributes can be renamed at any time: a name is only a
-  label, since everything refers to an attribute by its identity. Attributes
-  that come with the case data cannot be renamed.
+  assigned by the system (C1, C2, ...) and the user is told it when the comment
+  is accepted. Comments and derived attributes can be renamed at any time: a
+  name is only a label, since everything refers to an attribute by its identity.
+  Attributes that come with the case data cannot be renamed.
 
   Scenario: The user is told the name of a comment when it is accepted, and that it can be changed
     Given case Bondi is provided having data:
@@ -16,15 +16,25 @@ Feature: Naming comments, and renaming comments and derived attributes
     When I request that the comment "Let's surf." be added
     Then the chatbot tells me the name of the comment and that it can be renamed
 
-  Scenario: A comment given no name of its own is named for the user, and shown with that name
+  Scenario: A comment is named C1 by the system and shown with that name
     Given case Bondi is provided having data:
       | wave height | 2 |
-    # The rule is built without going through the chat, so no name is proposed
-    # for the comment and it falls back to the first free "C" name.
+    # The rule is built without going through the chat, so the comment is
+    # auto-named with the first free "C" name.
     And a rule exists to add the comment "Let's surf." to case Bondi with no conditions
     And I start the client application
     When I see the case Bondi as the current case
     Then the comment "Let's surf." should be shown with the name "C1"
+
+  Scenario: Two comments added in one session are named C1 then C2
+    Given case Bondi is provided having data:
+      | wave height | 2 |
+    And a rule exists to add the comment "Let's surf." to case Bondi with no conditions
+    And a rule exists to add the comment "Surf's up." to case Bondi with no conditions
+    And I start the client application
+    When I see the case Bondi as the current case
+    Then the comment "Let's surf." should be shown with the name "C1"
+    And the comment "Surf's up." should be shown with the name "C2"
 
   Scenario: The user can rename a comment through the chat
     Given case Bondi is provided having data:

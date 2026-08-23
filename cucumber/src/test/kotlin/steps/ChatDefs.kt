@@ -304,6 +304,20 @@ class ChatDefs {
         addCommentThenConfirm(comment)
     }
 
+    @And("I request that the comment with variable(s) {string} be added")
+    fun requestCommentWithVariableBeAdded(comment: String) {
+        waitForBotQuestionOrCompletedAction()
+        // The model is instructed to ask for confirmation when the comment
+        // contains a variable, and occasionally asks for other comments too;
+        // addCommentThenConfirm confirms only if the model actually asks.
+        addCommentWithoutConfirmation(comment)
+    }
+
+    @Then("the bot should ask which attribute to use for the placeholder")
+    fun requireBotToAskWhichAttributeToUseForPlaceholder() {
+        waitForBotText(WHICH_ATTRIBUTE)
+    }
+
     @And("I request that the comment {string} be added without being prompted")
     fun requestCommentBeAddedWithoutPrompt(comment: String) {
         addCommentWithoutConfirmation(comment)

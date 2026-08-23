@@ -572,17 +572,16 @@ leaving `AssignConclusion` in place until step 16.
       `server/src/main/kotlin/io/rippledown/kb/sample/`) interprets every case identically before and after migration,
       comparing rendered comment texts (including unresolved-variable markers).
 
-14. **Chat naming flow.** *(Implemented 10 Aug 2026.)* "Add the comment …"
-    creates the comment attribute; the LLM proposes a semantic name with
-    `C1`-style fallback; the user is told the name when the comment is accepted, and that it can be changed. A rename
-    command updates
+14. **Chat naming flow.** *(Implemented 10 Aug 2026; revised 23 Aug 2026.)* "Add the comment …"
+    creates the comment attribute; the server auto-names it (`C1`, `C2`, …) and the user is told the name when the
+    comment is accepted, and that it can be changed. A rename command updates
     `Attribute.name` only (id-referenced, so nothing else changes). Renaming refuses names in use (same rule as step
     8c).
-    - The model carries an `attributeName` on `{{ADD_COMMENT}}` and
-      `{{REPLACE_COMMENT}}`. It is only a proposal: `AttributeManager`
-      `createCommentAttribute(proposedName)` falls back to `C1`, `C2`, … if it is blank, in use, or longer than
-      `MAX_PROPOSED_ATTRIBUTE_NAME_LENGTH` (20 — names are labels, so a long one means the model did not comply). An
-      existing comment attribute, reused because the text already has one, keeps its name.
+    - *(Resolved, 23 Aug 2026: against LLM-proposed names.)* Names must be predictable, and must not consume model
+      attention or latency; renaming covers the semantic case. The model no longer carries an `attributeName` on
+      `{{ADD_COMMENT}}` or `{{REPLACE_COMMENT}}`. `AttributeManager.createCommentAttribute()` takes no argument and
+      always assigns the smallest unused `C`-number. An existing comment attribute, reused because the text already has
+      one, keeps its name.
     - *(Resolved: announce at acceptance, not at commit.)* The name is stated deterministically by the server
       (`ChatResponse.withCommentName`, prefixed to the response for `AddComment`/`ReplaceComment`), not left to the
       model, and the session's attribute is available through

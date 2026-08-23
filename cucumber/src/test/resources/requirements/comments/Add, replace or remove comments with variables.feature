@@ -73,17 +73,17 @@ Feature: Add, replace or remove comments with variables
     When I select the case Malabar
     Then the report should be "The wave quality is non-existent and the air temperature is scorching"
 
-  Scenario: The user should be able to use the chat to add a comment with a variable when the attribute has no value in the current case
+  Scenario: The user should be asked to clarify the attribute to use in a variable if it is not clear
     Given case Manly is provided having data:
       | Wave | good |
       | Sun  | warm |
     And case Bondi is provided having data:
       | Wave | excellent |
+      | Beach | Bondi     |
     And I start the client application
     And I select the case Bondi
-    When  I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
-    Then the report should contain "The wave is excellent"
-    And the report should show "Sun" as unevaluated
+    When  I request that the comment with variables "The wave is {wave} and the sun is {sun}" be added
+    Then the bot should ask which attribute to use for the placeholder
 
   Scenario: Building a rule with variables should create a cornerstone copy of the processed case
     Given case Bondi is provided having data:

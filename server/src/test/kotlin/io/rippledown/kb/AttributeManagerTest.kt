@@ -277,67 +277,6 @@ class AttributeManagerTest {
     }
 
     @Test
-    fun `a comment attribute is created with the proposed name`() {
-        // When a comment attribute is created with a proposed name
-        val comment = attributeManager.createCommentAttribute("Diabetes advice")
-
-        // Then the proposed name is used
-        comment.name shouldBe "Diabetes advice"
-        comment.kind shouldBe AttributeKind.COMMENT
-        attributeManager.byName("Diabetes advice") shouldBe comment
-    }
-
-    @Test
-    fun `a proposed name is trimmed`() {
-        // When a comment attribute is created with a padded proposed name
-        val comment = attributeManager.createCommentAttribute("  Diabetes advice  ")
-
-        // Then the name is trimmed
-        comment.name shouldBe "Diabetes advice"
-    }
-
-    @Test
-    fun `auto-naming is used when the proposed name is blank`() {
-        // When a comment attribute is created with a blank proposed name
-        val comment = attributeManager.createCommentAttribute("   ")
-
-        // Then the auto-generated name is used
-        comment.name shouldBe "C1"
-    }
-
-    @Test
-    fun `auto-naming is used when the proposed name is already in use ignoring case`() {
-        // Given an attribute named Diabetes advice
-        attributeManager.getOrCreate("Diabetes advice")
-
-        // When a comment attribute proposes the same name in a different case
-        val comment = attributeManager.createCommentAttribute("diabetes advice")
-
-        // Then the clash is avoided by falling back to the auto-generated name
-        comment.name shouldBe "C1"
-    }
-
-    @Test
-    fun `auto-naming is used when the proposed name is not concise`() {
-        // When a comment attribute proposes a name longer than the limit
-        val longName = "a".repeat(MAX_PROPOSED_ATTRIBUTE_NAME_LENGTH + 1)
-        val comment = attributeManager.createCommentAttribute(longName)
-
-        // Then the auto-generated name is used
-        comment.name shouldBe "C1"
-    }
-
-    @Test
-    fun `a proposed name of the maximum length is accepted`() {
-        // When a comment attribute proposes a name of exactly the maximum length
-        val name = "a".repeat(MAX_PROPOSED_ATTRIBUTE_NAME_LENGTH)
-        val comment = attributeManager.createCommentAttribute(name)
-
-        // Then it is used
-        comment.name shouldBe name
-    }
-
-    @Test
     fun `commentAttributes returns only the COMMENT attributes`() {
         // Given attributes of each kind
         attributeManager.getOrCreate("Glucose")

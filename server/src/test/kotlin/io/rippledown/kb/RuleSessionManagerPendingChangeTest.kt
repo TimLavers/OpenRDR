@@ -57,19 +57,19 @@ class RuleSessionManagerPendingChangeTest {
     @Test
     fun `the pending change of a comment addition names the comment attribute`() {
         // When a session to add a comment is started
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
 
         // Then the pending change is the addition, named
-        rsm.pendingChange shouldBe Addition("Surf's up.", "Surf")
+        rsm.pendingChange shouldBe Addition("Surf's up.", "C1")
     }
 
     @Test
     fun `a comment attribute renamed during its session is renamed in the pending change`() {
         // Given a session to add a comment
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
 
         // When the comment is renamed
-        rsm.renameAttribute("Surf", "Beach")
+        rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change shows the new name
         rsm.pendingChange shouldBe Addition("Surf's up.", "Beach")
@@ -78,13 +78,13 @@ class RuleSessionManagerPendingChangeTest {
     @Test
     fun `the pending change of a removal follows a rename of the comment being removed`() {
         // Given a comment given to the case by a rule, and a session to remove it
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
         rsm.commitCurrentRuleSession()
         rsm.startRuleSessionToRemoveComment(currentCase(), "Surf's up.")
-        rsm.pendingChange shouldBe Removal("Surf's up.", "Surf")
+        rsm.pendingChange shouldBe Removal("Surf's up.", "C1")
 
         // When the comment is renamed
-        rsm.renameAttribute("Surf", "Beach")
+        rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change shows the new name
         rsm.pendingChange shouldBe Removal("Surf's up.", "Beach")
@@ -93,19 +93,18 @@ class RuleSessionManagerPendingChangeTest {
     @Test
     fun `the pending change of a replacement follows a rename of the replacing comment`() {
         // Given a comment given to the case by a rule, and a session to replace it
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
         rsm.commitCurrentRuleSession()
         rsm.startRuleSessionToReplaceComment(
             currentCase(),
             "Surf's up.",
             "Surf's flat.",
-            proposedAttributeName = "Flat"
         )
         // The name a replacement carries is that of the replacing attribute
-        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "Flat")
+        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "C2")
 
         // When the replacing comment is renamed
-        rsm.renameAttribute("Flat", "Lake")
+        rsm.renameAttribute("C2", "Lake")
 
         // Then the pending change shows the new name
         rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "Lake")
@@ -114,20 +113,19 @@ class RuleSessionManagerPendingChangeTest {
     @Test
     fun `renaming the comment being replaced leaves the pending change's name alone`() {
         // Given a session to replace a comment
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
         rsm.commitCurrentRuleSession()
         rsm.startRuleSessionToReplaceComment(
             currentCase(),
             "Surf's up.",
             "Surf's flat.",
-            proposedAttributeName = "Flat"
         )
 
         // When the comment being replaced is renamed
-        rsm.renameAttribute("Surf", "Beach")
+        rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change still names the replacing attribute
-        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "Flat")
+        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "C2")
     }
 
     /**
@@ -151,8 +149,8 @@ class RuleSessionManagerPendingChangeTest {
     @Test
     fun `the cornerstone status carries the pending change as it is named now`() {
         // Given a session to add a comment, renamed since it started
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
-        rsm.renameAttribute("Surf", "Beach")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
+        rsm.renameAttribute("C1", "Beach")
 
         // Then the status the client is sent shows the new name
         rsm.cornerstoneStatus().commentDiff shouldBe Addition("Surf's up.", "Beach")
@@ -160,7 +158,7 @@ class RuleSessionManagerPendingChangeTest {
 
     @Test
     fun `committing the session leaves no pending change`() {
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
 
         rsm.commitCurrentRuleSession()
 
@@ -169,7 +167,7 @@ class RuleSessionManagerPendingChangeTest {
 
     @Test
     fun `cancelling the session leaves no pending change`() {
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
 
         rsm.cancelRuleSession()
 
@@ -183,7 +181,7 @@ class RuleSessionManagerPendingChangeTest {
     @Test
     fun `a comment session does not name the pending change of the session after it`() {
         // Given a comment session that has been committed
-        rsm.startRuleSessionToAddComment(case, "Surf's up.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Surf's up.")
         rsm.commitCurrentRuleSession()
 
         // When a derived-value session is started

@@ -166,36 +166,14 @@ class AddCommentTest {
     }
 
     @Test
-    fun `should pass the name proposed for the comment to the rule service`() = runTest {
-        //Given
-        val commentToAdd = "The patient is diabetic."
-        val action = AddComment(commentToAdd, attributeName = "Diabetes advice")
-        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
-        coEvery { ruleService.isRuleSessionActive() } returns false
-        coEvery {
-            ruleService.startRuleSessionToAddComment(currentCase, commentToAdd, emptyList(), "Diabetes advice")
-        } returns ccStatus
-        every { ruleService.nameOfCommentAttributeInSession() } returns "Diabetes advice"
-        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Why?")
-
-        //When
-        action.doIt(ruleService, currentCase, modelResponder)
-
-        //Then
-        coVerify {
-            ruleService.startRuleSessionToAddComment(currentCase, commentToAdd, emptyList(), "Diabetes advice")
-        }
-    }
-
-    @Test
     fun `should tell the user the name given to the comment`() = runTest {
         //Given
         val commentToAdd = "The patient is diabetic."
-        val action = AddComment(commentToAdd, attributeName = "Diabetes advice")
+        val action = AddComment(commentToAdd)
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
         coEvery { ruleService.isRuleSessionActive() } returns false
-        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any(), any()) } returns ccStatus
-        every { ruleService.nameOfCommentAttributeInSession() } returns "Diabetes advice"
+        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any()) } returns ccStatus
+        every { ruleService.nameOfCommentAttributeInSession() } returns "C1"
         coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Why should this comment be given?")
 
         //When
@@ -203,7 +181,7 @@ class AddCommentTest {
 
         //Then the name, and that it can be changed, precede the model's question
         response.text shouldBe
-                "${commentNamedMessage("Diabetes advice")}\n\nWhy should this comment be given?"
+                "${commentNamedMessage("C1")}\n\nWhy should this comment be given?"
     }
 
     @Test
@@ -212,7 +190,7 @@ class AddCommentTest {
         val action = AddComment("The patient is diabetic.")
         val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 42, numberOfCornerstones = 84)
         coEvery { ruleService.isRuleSessionActive() } returns false
-        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any(), any()) } returns ccStatus
+        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any()) } returns ccStatus
         every { ruleService.nameOfCommentAttributeInSession() } returns null
         val responseFromModel = ChatResponse("Why should this comment be given?")
         coEvery { modelResponder.response(any<String>()) } returns responseFromModel

@@ -21,6 +21,7 @@ const val CHAT_BOT_NO_RESPONSE_MESSAGE = "Sorry, I don't understand. Please try 
 const val CHAT_BOT_PLACEHOLDER = "Your response..."
 const val CHAT_BOT_DONE_MESSAGE = "Done"
 const val START_ACTION = "start"
+const val WHICH_ATTRIBUTE = "which attribute"
 
 // Terminal bot responses: the conversation cannot make further progress after
 // either of these, so anything waiting on the bot must give up at once rather

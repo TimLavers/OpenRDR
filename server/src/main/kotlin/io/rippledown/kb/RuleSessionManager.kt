@@ -24,6 +24,12 @@ import io.rippledown.suggestions.ConditionSuggester
 import io.rippledown.suggestions.SuggestionContext
 import kotlinx.coroutines.runBlocking
 
+/**
+ * The name a comment variable's marker is rendered with when the variable names
+ * an attribute not in the KB.
+ */
+const val UNKNOWN_VARIABLE_NAME = "unknown"
+
 class RuleSessionManager(
     private val kb: KB,
     private val webSocketManager: WebSocketManager? = null
@@ -113,25 +119,22 @@ class RuleSessionManager(
         viewableCase: ViewableCase,
         comment: String,
         variables: List<CommentVariable>,
-        proposedAttributeName: String?
-    ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables, proposedAttributeName)
+    ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables)
 
     /**
      * Comments are comment attributes: adding one gets or creates the
      * attribute whose definition is the comment's text, and builds a rule
-     * assigning it by definition. A new attribute is named
-     * [proposedAttributeName] if that is usable, and otherwise auto-named.
-     * See "Phase 2 — comments become derived attributes" in
-     * documentation/design/repeat_inferencing.md.
+     * assigning it by definition. A new attribute is auto-named (C1, C2, …)
+     * and can be renamed by the user later. See "Phase 2 — comments become
+     * derived attributes" in documentation/design/repeat_inferencing.md.
      */
     internal fun startRuleSessionToAddComment(
         case: RDRCase,
         comment: String,
         variables: List<CommentVariable> = emptyList(),
-        proposedAttributeName: String? = null
     ): CornerstoneStatus {
         val template = commentTemplate(comment, variables)
-        val attribute = commentAttributeFor(template, proposedAttributeName)
+        val attribute = commentAttributeFor(template)
         currentChange = Addition(template.textWithVariableNames(), attribute.name)
         commentAttributeInSession = attribute
         diffAttribute = attribute
@@ -155,14 +158,12 @@ class RuleSessionManager(
         replacedComment: String,
         replacementComment: String,
         variables: List<CommentVariable>,
-        proposedAttributeName: String?
     ): CornerstoneStatus =
         startRuleSessionToReplaceComment(
             viewableCase.case,
             replacedComment,
             replacementComment,
             variables,
-            proposedAttributeName
         )
 
     /**
@@ -176,12 +177,11 @@ class RuleSessionManager(
         replacedComment: String,
         replacementComment: String,
         variables: List<CommentVariable> = emptyList(),
-        proposedAttributeName: String? = null
     ): CornerstoneStatus {
         val replacedAttribute = commentAttributeForText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementTemplate = commentTemplate(replacementComment, variables)
-        val replacementAttribute = commentAttributeFor(replacementTemplate, proposedAttributeName)
+        val replacementAttribute = commentAttributeFor(replacementTemplate)
         currentChange = Replacement(
             renderedComment(replacedAttribute, case),
             replacementTemplate.textWithVariableNames(),
@@ -198,18 +198,27 @@ class RuleSessionManager(
         )
     }
 
+    /**
+     * The definition of a comment with variables. A variable naming no attribute
+     * in this KB is kept, so that its token still renders as an unresolved
+     * marker rather than being dropped, which would leave the raw token in the
+     * comment and misalign the variables that follow it.
+     */
     private fun commentTemplate(comment: String, variables: List<CommentVariable>) =
-        CommentTemplate(comment, variables.map { kb.attributeManager.getById(it.attributeId) })
+        CommentTemplate(comment, variables.map { variable ->
+            attributeById(variable.attributeId) ?: Attribute(variable.attributeId, UNKNOWN_VARIABLE_NAME)
+        })
 
     /**
      * The comment attribute whose definition is the given template,
-     * created if necessary, in which case it is named [proposedAttributeName]
-     * if that is usable. An existing attribute keeps the name it has.
+     * created if necessary. A new attribute is auto-named (C1, C2, …) and
+     * can be renamed by the user later. An existing attribute keeps the
+     * name it has.
      */
-    private fun commentAttributeFor(template: CommentTemplate, proposedAttributeName: String? = null): Attribute =
+    private fun commentAttributeFor(template: CommentTemplate): Attribute =
         kb.attributeManager.commentAttributes()
             .firstOrNull { kb.derivedDefinitionManager.definitionFor(it.id) == template }
-            ?: kb.attributeManager.createCommentAttribute(proposedAttributeName)
+            ?: kb.attributeManager.createCommentAttribute()
                 .also { kb.derivedDefinitionManager.store(it.id, template) }
 
     override fun nameOfCommentAttributeInSession(): String? =

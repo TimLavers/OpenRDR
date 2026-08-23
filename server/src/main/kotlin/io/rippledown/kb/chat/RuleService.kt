@@ -15,7 +15,6 @@ interface RuleService {
         viewableCase: ViewableCase,
         comment: String,
         variables: List<CommentVariable> = emptyList(),
-        proposedAttributeName: String? = null
     ): CornerstoneStatus
     fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
     fun startRuleSessionToReplaceComment(
@@ -23,7 +22,6 @@ interface RuleService {
         replacedComment: String,
         replacementComment: String,
         variables: List<CommentVariable> = emptyList(),
-        proposedAttributeName: String? = null
     ): CornerstoneStatus
 
     /**

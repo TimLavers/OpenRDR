@@ -25,9 +25,11 @@ import steps.StepsInfrastructure.startServerWithPostgresDatabase
 import java.io.File
 import java.util.concurrent.TimeUnit.*
 
+const val DELAY_AFTER_CUKE_SEC = 20L
 class Defs {
     private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
+
 
     // Restores keyboard focus to the last-selected case before an arrow-key press.
     // After a case is selected, ChatPanel's LaunchedEffect(id) steals focus to the
@@ -74,14 +76,14 @@ class Defs {
             Regex("rate_limit_(\\d+)s?").find(tag)?.groupValues?.get(1)?.toLongOrNull()
         }
         if (delaySecs != null) {
-            Thread.sleep(delaySecs * 1_000)
+            Thread.sleep(DELAY_AFTER_CUKE_SEC * 1_000)
         }
     }
 
     @After("@delay_after_cuke")
     fun afterGeminiScenario(scenario: Scenario) {
-        println("Delaying for 10 secs after scenario to avoid rate limiting")
-        Thread.sleep(10_000)
+        println("Delaying for $DELAY_AFTER_CUKE_SEC secs after scenario to avoid rate limiting")
+        Thread.sleep(DELAY_AFTER_CUKE_SEC * 1_000)
     }
 
     @When("A Knowledge Base called {word} has been created")

@@ -129,11 +129,11 @@ class RenameAttributeTest {
         // Given a session in progress to add a comment, whose pending change is
         // shown under the comment attribute's name
         val case = caseWith("weight" to "93.0")
-        rsm.startRuleSessionToAddComment(case, "Overweight.", proposedAttributeName = "Surf")
-        rsm.currentDiff shouldBe Addition("Overweight.", "Surf")
+        rsm.startRuleSessionToAddComment(case, "Overweight.")
+        rsm.currentDiff shouldBe Addition("Overweight.", "C1")
 
         // When the comment is renamed
-        rsm.renameAttribute("Surf", "Beach")
+        rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change carries the new name
         rsm.currentDiff shouldBe Addition("Overweight.", "Beach")
@@ -144,15 +144,15 @@ class RenameAttributeTest {
     fun `renaming the comment being removed shows the new name in the pending change`() {
         // Given a comment given to a case by a rule
         val case = caseWith("weight" to "93.0")
-        rsm.startRuleSessionToAddComment(case, "Overweight.", proposedAttributeName = "Surf")
+        rsm.startRuleSessionToAddComment(case, "Overweight.")
         rsm.commitCurrentRuleSession()
 
         // And a session in progress to remove it
         rsm.startRuleSessionToRemoveComment(kb.viewableCase(case).case, "Overweight.")
-        rsm.currentDiff shouldBe Removal("Overweight.", "Surf")
+        rsm.currentDiff shouldBe Removal("Overweight.", "C1")
 
         // When the comment is renamed
-        rsm.renameAttribute("Surf", "Beach")
+        rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change carries the new name
         rsm.currentDiff shouldBe Removal("Overweight.", "Beach")
