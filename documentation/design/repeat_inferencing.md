@@ -1,4 +1,4 @@
-# Repeat Inferencing via Derived Attributes
+# Repeat Inferencing via Derived Attributes and Comments
 
 ## Motivation
 
@@ -13,6 +13,9 @@ This requires the inference engine to run repeatedly: a finding recorded in
 one pass can trigger further rules in the next pass, until the
 interpretation is stable.
 
+Similarly, a user may build a rule that adds, removes, or replaces a comment based on other comments that are present
+(or absent) in the case.
+
 ## The model: derived attributes
 
 In production, a case originates from an external information system — for
@@ -22,7 +25,7 @@ action of the knowledge base as *adding more attributes to the case*, whose
 values are assigned by the knowledge base rather than the external system.
 These are called *derived attributes*.
 
-A derived attributes is added to the case (or removed or replaced) by a rule, in the same was as a comment is given.
+A derived attribute is added to the case (or removed or replaced) by a rule, i.e. in the same way as a comment is given.
 
 Once a derived attribute has been assigned a value and added to the case, it
 is indistinguishable from an externally assigned attribute for the purposes of condition evaluation, with one
@@ -54,7 +57,7 @@ value is a *value expression*, of which a literal is the trivial case.
 
 This unification has significant benefits:
 
-- Fixpoint inference, stratification, reset semantics and KB-ownership
+- Fixpoint inference, stratification, reset semantics, and KB-ownership
   apply unchanged. An expression referencing another derived attribute
   resolves on a later pass; expression references contribute edges to the
   dependency graph exactly as conditions do.
@@ -77,13 +80,13 @@ There are two other reasons why a derived attribute can be absent from a case:
 2. there is a rule that removes it
 
 The expression language for formulas is deliberately small at first: arithmetic on the
-latest values of attributes (`+ - * / **`, parentheses, numeric literals).
-Functions, episode indexing and text manipulation can be added later if
+latest values of attributes (`+ - * / **`, parentheses, numeric literals). Functions, episode indexing, and text
+manipulation can be added later if
 needed.
 
-### Comments are derived attributes
+### Comments are attributes
 
-Report comments are themselves derived attributes, of a *comment* subtype.
+Report comments are themselves attributes, of a *comment* subtype.
 When the user requests
 
 > add the comment "Patient is diabetic"
@@ -95,16 +98,17 @@ and informs the user:
 > I have given this comment the name "C1", but you can change the name at
 > any time.
 
-The chat LLM sees the comment text and it could propose a semantic name (e.g. `DiabetesStatus`) where it can, falling
+The chat LLM sees the comment text and it may be able to propose a semantic name (e.g. `DiabetesStatus`), falling
 back to `C1`,
 `C2`, … if it can't. However, this dual-naming approach was thought to be confusing to the user, so we adopt the
 approach of always naming a new attribute `CX` where X is the next available integer. The user can change it if they
 want. Renaming is always safe: rules and conditions reference the
 attribute id, not the name.
 
-The report is based on the set of comment-attribute values present on the case, *not* on the derived attributes. The
-AI report generator receives these named comment attributes as its inputs; a meaningful name, if the user has assigned
-one, is a useful signal about the comment's role. Comment ordering is maintained, even though it is less important as
+The report is based on the set of comment-attribute values present on the case, **not** on the derived attributes, and
+in fact, this is the key distinction between them as far as the user is concerned. The AI report generator receives
+these named comment attributes as its inputs; a meaningful name (if the user has assigned one) is a useful signal about
+the comment's role. Comment ordering is maintained, even though it is less important as
 the AI produces the report.
 
 The existing comment actions map directly onto assignment:
@@ -270,48 +274,26 @@ Therefore, there is no need for a cycle check when the rule is committed.
 - **User expressions**: no parser changes needed — conditions on derived
   attributes use the existing syntax.
 
-## Resolved design decisions
+## Terminology
 
-1. **Comments are derived attributes** (see above). One rule action kind
+1. **A comment is a type of derived attribute**. One rule action kind
    for the whole system: assign a value to a derived attribute.
-2. **Refinement semantics**: remove = retract assignment; replace = child rule assigning the comment attribute for the
-   replacement text, the original being retracted by leaf-most suppression. (For a *derived value*, where the attribute
-   is the thing named, a replacement is a new value for the same attribute.)
-3. **Conflict resolution**: leaf-most satisfied rule per attribute wins,
-   as per the existing RDR refinement structure.
-4. **Comment ordering**: not significant — the AI report generator
-   consumes the named comment attributes, so the ordering machinery that
-   mattered under string concatenation is unnecessary.
-5. **Derived attribute ordering**: same process as for external attribute ordering. A new derived attribute will be last
+2. **Derived attribute ordering**: same process as for external attribute ordering. A new derived attribute will be last
    on the list, but the user can change this.
-6. **Episodic derived attributes**: deferred. Scenarios where derived
+3. **Episodic derived attributes**: deferred. Scenarios where derived
    values in earlier episodes would be useful are imaginable (e.g.
    conditions like `previous Diabetes status is "diabetic"`, or trends in
    a derived quantity such as BMI), and the model leaves room for them as derived values are ordinary values in
    episodes. Not for the first implementation however. When we do this, we will need to consider the rules associated
    with the derived attribute, and how they should be applied to previous episodes, e.g. by successively stripping the
    most recent episode and then re-interpreting the case.
-7. **Conclusions as derived attributes**: Comments-as-conclusions run deep
-   (`Conclusion`, `RuleSummary`, interpretation diffs, the conclusion
-   store, conclusion ordering). Existing KBs need each conclusion
-   converted to a comment attribute plus assignment.
-8. **Attribute creation UX**: The user adds a non-comment derived attribute by naming it and typing it as text or
-   numeric. Within the scope of this rule session, they cannot add another derived attribute.
-9. **"Assignment" is the word for what a rule does**: the rule action is
+4. **"Assignment" is the word for what a rule does, not "Conclusion"**: the rule action is
    `AssignValue(attribute, expression)`, and an interpretation is the set of `assignments()` made by the rules that
-   fired. The name follows the verb rather than the thing, because after decision 1 there is only one thing a rule can
-   do, and it is deliberately kind-agnostic: one word covers a comment and a derived value, which is the whole point of
-   the phase. `conclusions()` could not survive, since a conclusion is no longer a distinct type; `values()` reads oddly
-   for comments; `actions()`
-   was the near miss, and would be the name to reach for if a second kind of action is ever added. The domain word for
-   what the *user* sees remains "comment", so the code speaks of comments again at the edges that present them —
-   `InterpretationViewManager`,
-   `Interpretation.commentTexts`, the chat and the report — each of which selects the assignments whose attribute is of
-   `COMMENT` kind.
+   fired. It is deliberately kind-agnostic: one word covers a comment and a derived value
 
 ## Alternative considered and rejected: pre-processing evaluation
 
-Before committing to Phase 2, an alternative to rule-driven derived attributes was considered: evaluate every
+An alternative to rule-driven derived attributes was considered: evaluate every
 derived-attribute definition once as a *pre-processing step* before the rules run, adding the attribute to the case
 whenever its value is not blank/null. No rules would be needed to add a derived attribute; concepts genuinely needing
 rules (e.g. `Diabetes status`)
@@ -326,21 +308,23 @@ Rejected, for these reasons:
    unconditional root rule, so from the user's perspective it already *is* "evaluated for every case" — no extra
    conceptual step is visible in the chat flow.
 2. **Refinement would be lost.** A pre-processing step evaluates each definition once, uniformly. The rule-driven model
-   gives conditioned overrides (e.g. a corrected `BMI` for amputees), conditional removal and replacement — exactly the
+   gives conditioned overrides (e.g. a corrected `BMI` for amputees), conditional removal, and replacement — exactly the
    RDR machinery. Exceptions bolted onto a pre-processing step would reinvent rules.
 3. **Abbreviated comments are a weaker substitute.** Comments are text; derived attributes carry numeric values, so
    `Risk score > 5`, trends, and formulas composing other derived attributes all work. A
    `"diabetic status"` comment cannot support these.
 4. **The intermediate/final distinction becomes the user's problem.** With derived attributes shown in their own panel
-   and excluded from report inputs, "intermediary, not report content" is *structural*. Folding intermediaries into
-   comments would force a naming convention (e.g. a
+   and excluded from report inputs, "intermediary, not report content" is *structural*. Repeat inferencing could then
+   only be achieved using comments, and the user would have to decide whether a comment was actually an intermediate
+   concept or something that the model should use when generating the report. This approach would therefore force a
+   naming convention (e.g. a
    `#` prefix) to keep them out of the AI report — a worse cognitive load than the one removed, and fragile. Nor can
    "used as a condition in another rule" be inferred to mean "not for the report": many true intermediate comments may
    be given for a case yet be irrelevant to the final report (e.g. detailed GP-directed comments all suppressed when the
    referrer is a specialist).
 
-Conclusion: keep the current plan. Derived attributes remain rule-driven and user-visibly distinct from comments (the
-report is based on comments only), while Phase 2 still unifies the machinery underneath.
+Conclusion: Derived attributes remain rule-driven and user-visibly distinct from comments (the report is based on
+comments only), while still unifying the machinery underneath.
 
 ## Out of scope
 
@@ -350,394 +334,3 @@ report is based on comments only), while Phase 2 still unifies the machinery und
 - Referring to derived attributes from *other* knowledge bases.
 - Historical derived values in earlier episodes (see resolved decision).
 - Conditions on report structure (e.g. that would set the ordering or filtering of report sections).
-
-## Implementation plan
-
-The plan is phased: derived data attributes and repeat inferencing first, with
-comments untouched; comments are recast as derived attributes in a second
-phase. Each step follows TDD: tests are written before the production code they cover, and each step leaves all tests
-green, including cucumber tests.
-
-### Status (as of this revision)
-
-**Done:** all of Phase 0 (steps 1–3) and all of Phase 1 (steps 4–11) —
-including the "Derived attributes" UI panel and its tooltip.
-
-**Remaining:** none of the
-subsequent phases have been started — Phase 2 (comments become derived
-attributes; steps 12–16, `Conclusion` / `AssignConclusion` still exist),
-Phase 3 (presentation and report; steps 17–19), and Phase 4 (external
-attribute renaming; steps 20–21). The completed steps below have been
-compressed to implementation notes so that the remaining steps can refer
-to real, existing symbols.
-
-### Conventions (mandatory for all remaining steps)
-
-- **TDD**: write the tests for a step before its production code. Test
-  bodies use `// Given` / `// When` / `// Then` comments. Kotest matchers
-  (`shouldBe`, `shouldThrow`) with `kotlin.test.Test`.
-- **Never use `!!` in production code.** Use `requireNotNull(x) { "…" }`,
-  `checkNotNull(x) { "…" }`, `?:` with `error("…")`, or safe calls. `!!`
-  is acceptable in test code only.
-- **No in-code DB migrations.** New columns go into the Exposed table
-  definitions only (`SchemaUtils.create` covers fresh databases). When a
-  schema changes, state the one-off `ALTER TABLE` SQL in the commit/PR
-  description for the user to run manually against existing KB databases.
-- **Do not delete or weaken existing tests.** If a behaviour genuinely
-  changes, update the test and say why.
-- Run `.\gradlew.bat :common:test :server:test` after each step;
-- Run specific cucumber scenarios after each implementation step using @single annotation on each scenario to be tested.
-  Then use `.\gradlew.bat cucumberSingleTest`.
-
-### Phase 0 — groundwork (DONE)
-
-1. **Attribute kind.** `Attribute` now has `kind: AttributeKind`
-   enum values: `EXTERNAL`, `DERIVED`, `COMMENT`; `AttributeKind.isAssignedByKB()` is
-   true for the latter two. `AttributeManager.getOrCreate(name, kind)`
-   exists; the Postgres attributes table has a `kind VARCHAR(32)` column
-   (one-off migration for existing DBs:
-   `ALTER TABLE attributes ADD COLUMN IF NOT EXISTS kind VARCHAR(32) NOT NULL DEFAULT 'EXTERNAL';`).
-2. **Case support.** `RDRCase.withDerivedValue(attribute, value)` and
-   `RDRCase.withoutDerivedValues()` return copies carrying over case id
-   and interpretation.
-3. **External collision guard.** In `KB`
-   (`server/src/main/kotlin/io/rippledown/kb/KB.kt`): external values for
-   a name owned by a derived attribute go to a mangled
-   `"<name> (external)"` attribute, created once and reused; collisions
-   logged.
-
-### Phase 1 steps 4–7 — actions, fixpoint, sessions, cycles (DONE)
-
-Key symbols, all covered by tests:
-
-- `RuleAction` / `AssignConclusion` / `AssignValue(attribute, expression)`
-  in `common/.../model/rule/RuleAction.kt`. `AssignValue.evaluate(case)`
-  returns null (no assignment) if the expression cannot be evaluated.
-- `ValueExpression` (`Literal`, `Formula`), the arithmetic tree `Expr`
-  (`Num`, `AttributeValue`, `Binary`, `Operator`), and
-  `FormulaParser((String) -> Attribute?)` in
-  `common/.../model/rule/ValueExpression.kt`.
-- `Rule.assignment: AssignValue?` (a rule has a conclusion or an
-  assignment, never both); `Rule.action: RuleAction?`.
-- `Interpretation.assignments(): Set<AssignValue>`.
-- Fixpoint: `RuleTree.materialise(case)` (server `RuleTree.kt`) strips
-  derived values then iterates to a fixpoint, returning the case copy
-  with derived values written; `RuleTree.apply(case)` delegates to it.
-  `KB.interpret` funnels all interpretation through this.
-- Tree changes: `ChangeTreeToAddAssignment` / `ChangeTreeToRemoveAssignment`
-  / `ChangeTreeToReplaceAssignment` in server `RuleTreeChange.kt`, each
-  with `assignedAttribute()` and `expressionReferences()`; changers in
-  `RuleTreeChanger.kt`; `RuleFactory.createRuleAndAddToParent(parent,
-  assignment, conditions)` overload.
-- Persistence: `PersistentRule.assignment: AssignValue?` (JSON-serialized
-  into a nullable `assignment TEXT` column in `PostgresRuleStore`;
-  one-off migration:
-  `ALTER TABLE rules ADD COLUMN IF NOT EXISTS assignment TEXT NULL;`).
-- Session entry points on `RuleSessionManager`
-  (`server/src/main/kotlin/io/rippledown/kb/RuleSessionManager.kt`):
-  `startRuleSessionToAssignValue(case, attributeName, expressionText)`
-  (creates the `DERIVED` attribute if needed),
-  `startRuleSessionToRemoveAssignment(case, attributeName)`,
-  `startRuleSessionToReplaceAssignment(case, attributeName, replacementExpressionText)`.
-  `valueExpressionFor(text)` maps a double-quoted string to a `Literal`,
-  text parseable as arithmetic over known attribute names to a `Formula`,
-  and anything else to a `Literal`.
-- Cycle prevention: `DerivedAttributeDependencyGraph(ruleTree,
-  knownAttributes)` with `cycleCreatedBy(action, condition)` and
-  `cycleCreatedBy(assigned, referenced)`, plus the top-level
-  `cycleMessage(cycle)` helper, in server
-  `model/rule/DerivedAttributeDependencyGraph.kt`. Guards are in place in
-  `RuleSessionManager.startRuleSession` (expression self-reference),
-  `addConditionToCurrentRuleSession` (throws `IllegalArgumentException`
-  with the cycle message), `conditionForExpression` (returns
-  `ConditionParsingResult(errorMessage = …)`), `commitCurrentRuleSession`
-  (invariant `check`), and `ConditionSuggester.pruneCycleCreating`.
-
-Existing tests to keep green (they pin the behaviour the remaining steps
-build on): `RuleActionTest`, `ValueExpressionTest`, `RuleTreeTest`,
-`AssignmentRuleTreeChangeTest`, `RuleManagerAssignmentTest`,
-`PersistentRuleAssignmentTest`, `RuleSessionManagerAssignmentTest`,
-`DerivedAttributeDependencyGraphTest`, `ConditionSuggesterCycleTest`.
-
-### Phase 1 step 8 — suggestions and chat (DONE)
-
-Implemented as four sub-steps; key symbols, all covered by tests:
-
-- **8a. Session-case materialisation.** `RuleSessionManager.conditionHintsForCase`
-  and `conditionForExpression` build/evaluate against
-  `kb.ruleTree.materialise(case)`, so derived values assigned by existing
-  rules are visible to suggestions and typed conditions. `ConditionSuggester`
-  stays a pure function of its context.
-- **8b. Suggestions for KB derived attributes.**
-  `ConditionSuggester.derivedAttributeSuggestions()` offers presence/absence
-  conditions on `DERIVED` attributes not on the session case (only those
-  that hold), included in `allSuggestions()` before `pruneCycleCreating` so
-  cycle-creating ones are filtered.
-- **8c. Chat actions.** Constants `ASSIGN_DERIVED_VALUE` /
-  `REMOVE_DERIVED_VALUE` / `REPLACE_DERIVED_VALUE` in common chat
-  `Constants.kt`; action classes `AssignDerivedValue` / `RemoveDerivedValue`
-  / `ReplaceDerivedValue` in `server/.../kb/chat/action/`; `RuleService`
-  gains `startRuleSessionToAssignValue` / `…RemoveAssignment` /
-  `…ReplaceAssignment` taking a `ViewableCase`. External-name-in-use and
-  expression-cycle errors are relayed to the chat verbatim.
-- **8d. Chat instructions.** `17_assigning_derived_values.md` added
-  (quoting rule for literal vs formula; JSON action shape);
-  `16_listing_capabilities.md` lists assigning values to derived attributes.
-
-### Phase 1 step 9 — cucumber (DONE)
-
-`cucumber/src/test/resources/requirements/inferencing/Repeat inferencing.feature`
-and `Derived attribute.feature` are implemented and no longer `@ignore`d.
-Backdoor plumbing: `BuildRuleRequest` gained nullable `assignAttribute` /
-`assignExpression`; `RuleSessionManager.buildRule` starts an assignment
-session when `assignAttribute != null`; `RESTClient.buildAssignmentRule`
-and the `BackdoorRuleStepDefs` "assign the value/formula … to the derived
-attribute …" steps drive it (literal values quoted, formulas passed
-as-is). Derived-value assertions read the materialised values via the
-viewable case (`DerivedValueStepDefs`).
-
-### Phase 1 steps 10–11 — derived-attributes UI (DONE)
-
-These UI steps do not depend on comments becoming derived attributes, so
-they were implemented as part of Phase 1 rather than deferred to Phase 3.
-
-10. **Derived attributes panel.** Collapsible panel (UI label "Derived
-    attributes"; see Presentation) under the case view — alongside Comments
-    and Report — listing non-comment derived attributes as name/value pairs; always showing; excluded from the case data
-    table; also shown for
-    cornerstones during rule building. The data source is the materialised
-    case via `ViewableCase.derivedValues()` (`RuleTree.materialise`), so the
-    UI recomputes nothing. `ui/.../interpretation/DerivedValuesPanel.kt`,
-    wired into `CaseInspection` and `CornerstoneInspection`.
-11. **Derived-value tooltip.** Hovering over a derived attribute name shows
-    both its formula and the conditions that have assigned it a value,
-    similar to showing the conditions for a comment.
-
-### Phase 2 — comments become derived attributes
-
-This phase resolves the temporary duplication that Phase 1 introduces
-between `AssignConclusion` and `AssignValue` (parallel rule actions,
-tree-change and changer classes). A `Conclusion` is really just an
-`Attribute` (of `COMMENT` kind) plus a `ValueExpression` (a text template
-whose `${}` variables are attribute references), so once comments are
-derived attributes, `AssignConclusion` and its parallel machinery are
-deleted. The one semantic difference to design for: a report is a *set*
-of comments from independent rules, whereas a derived attribute holds a
-single value (leaf-most rule wins) — hence one comment attribute per
-conclusion rather than one shared "report" attribute.
-
-Phase 2 is large and breaking: steps 12–16 land together behind passing
-migration tests before any release. Before starting, re-read this whole
-document and survey the current usages of `Conclusion` (it reaches into
-`Interpretation`, `RuleSummary`, the diff types, `ConclusionManager`,
-`InterpretationViewManager`, the conclusion store and order store, the
-chat comment actions, and the UI interpretation package). Sequence the
-work bottom-up as below, keeping the build green between sub-steps by
-leaving `AssignConclusion` in place until step 16.
-
-12. **Comment attributes.** Each `Conclusion` is replaced by a `COMMENT`
-    attribute whose assigned value is the comment text.
-    - `AttributeManager` (`server/src/main/kotlin/io/rippledown/kb/AttributeManager.kt`)
-      gains comment-attribute support: creation with auto-naming (`C1`,
-      `C2`, … — smallest unused index), lookup of all `COMMENT`
-      attributes.
-    - `${}` comment-variable support moves to the assigned value: the
-      rendering currently done via `Conclusion`/`Interpretation.toComments`
-      is re-implemented as a dedicated `ValueExpression` subtype,
-      `CommentTemplate(text, variables)` — id-based attribute references (rename-safe, like `AttributeValue`), rendering
-      semantics preserved exactly. *(Implemented 2 Aug 2026.)* The tests in the comments cucumber features
-      (`cucumber/src/test/resources/requirements/comments/`) pin the semantics.
-13. **Migration of configured KBs.** *(Resolved 2 Aug 2026: a one-off conversion, not load-time migration logic.)* The
-    only KBs in the old format are those in this project — the zip files under
-    `server/src/test/resources` and the zoo KB under
-    `server/src/main/resources`; there are no external databases to convert. So the conversion is a well-tested one-off
-    applied to those fixtures before step 16 lands, after which the migrator is deleted rather than carried in the KB
-    load path forever.
-    - Each conclusion is converted to a `COMMENT` attribute plus assignment:
-        - for each `Conclusion` in the conclusion store, create a
-          `COMMENT` attribute (auto-named) whose stored definition is a
-          `CommentTemplate` of the conclusion text and variables;
-        - each rule whose `conclusionId` references it becomes a rule with `AssignValue(attribute, ByDefinition)`
-          (update
-          `PersistentRule`: `conclusionId` becomes unused);
-        - one-way and idempotent: migrated KBs have an empty conclusion store, so re-running is a no-op; exports after
-          migration use the new form only.
-    - No in-code SQL migration: the conversion is at the store level (read old stores, write new form) via
-      `RuleStore.update` and
-      `ConclusionStore.clear`. Removal of the obsolete tables is a documented one-off (`DROP TABLE conclusions;`,
-      `DROP TABLE conclusion_variables;`,
-      `DROP TABLE conclusion_indexes;`) once step 16 lands.
-    - After step 16, KB load/import `check`s that the conclusion store is empty — one cheap guard against any stray old
-      export, in place of a permanent migration subsystem.
-    - Tests: a KB built with conclusion rules (e.g. via the sample KBs in
-      `server/src/main/kotlin/io/rippledown/kb/sample/`) interprets every case identically before and after migration,
-      comparing rendered comment texts (including unresolved-variable markers).
-
-14. **Chat naming flow.** *(Implemented 10 Aug 2026; revised 23 Aug 2026.)* "Add the comment …"
-    creates the comment attribute; the server auto-names it (`C1`, `C2`, …) and the user is told the name when the
-    comment is accepted, and that it can be changed. A rename command updates
-    `Attribute.name` only (id-referenced, so nothing else changes). Renaming refuses names in use (same rule as step
-    8c).
-    - *(Resolved, 23 Aug 2026: against LLM-proposed names.)* Names must be predictable, and must not consume model
-      attention or latency; renaming covers the semantic case. The model no longer carries an `attributeName` on
-      `{{ADD_COMMENT}}` or `{{REPLACE_COMMENT}}`. `AttributeManager.createCommentAttribute()` takes no argument and
-      always assigns the smallest unused `C`-number. An existing comment attribute, reused because the text already has
-      one, keeps its name.
-    - *(Resolved: announce at acceptance, not at commit.)* The name is stated deterministically by the server
-      (`ChatResponse.withCommentName`, prefixed to the response for `AddComment`/`ReplaceComment`), not left to the
-      model, and the session's attribute is available through
-      `RuleService.nameOfCommentAttributeInSession()`.
-    - *(Resolved: renaming covers derived attributes too, not just comments.)* `RENAME_ATTRIBUTE` → `RenameAttribute`
-      action →
-      `RuleService.renameAttribute`, refused for `EXTERNAL` attributes (until the alias map of step 20 exists). Renaming
-      is not rule building, so it is allowed whether or not a session is in progress; the logic lives in
-      `AttributeManager.rename` and the `RuleService`
-      method is a delegation. (`RuleService` is the chat's façade onto the KB and already carries non-session operations
-      such as
-      `moveAttributeTo` and `editDerivedAttributeDefinition`; splitting an
-      `AttributeService` out of it is a separate refactor.)
-    - Renaming is in place: `Attribute.name` is a `var`, so every holder of the attribute sees the new name. Holders
-      deserialized separately would otherwise carry a stale name, so they are aligned with the attribute manager when
-      the KB is loaded: `AssignValue.alignAttributes`
-      in `RuleManager`, and `ValueExpression.alignAttributes` in
-      `DerivedDefinitionManager`.
-    - The client had to be told that a rename is a change: an `Attribute` is equal to another with the same id whatever
-      its name, so a refreshed case whose only change is a renamed attribute is structurally equal to the case it
-      replaces, and the default `mutableStateOf` policy discarded it, leaving the old name on screen. `OpenRDRUI` holds
-      the current case with
-      `neverEqualPolicy()`.
-    - Cukes: `cucumber/.../requirements/chat/Naming and renaming.feature`. The messages are matched through the
-      `COMMENT_IS_NAMED`, `CAN_BE_RENAMED`,
-      `RENAMED` and `CANNOT_BE_RENAMED` constants, because the name itself is chosen by the model.
-      `gradlew :cucumber:cucumberDryRun` checks every step of every feature is defined, without a server or the LLM.
-    - Instructions: new `19_naming_and_renaming.md`, referenced from
-      `3_defining_the_report_change.md`; `RENAME_ATTRIBUTE` added to
-      `13_json_format_guidelines.md` and `16_listing_capabilities.md`.
-15. **Diffs and interpretation views.** Rework `Interpretation`,
-    `RuleSummary`, the diff types (`Addition`/`Removal`/`Replacement` in
-    `common/.../model/diff/`) and `InterpretationViewManager`
-    (`server/src/main/kotlin/io/rippledown/kb/InterpretationViewManager.kt`)
-    to be backed by comment-attribute assignments rather than conclusions.
-    Remove the conclusion ordering machinery — `conclusionOrderStore()` on
-    `PersistentKB`, `PostgresConclusionOrderStore`, and the
-    `OrderedEntityManager` base of `InterpretationViewManager` (resolved decision 4: ordering is not significant). *(
-    Done: comments are shown in id order — conclusions, which only a KB not yet converted has, ahead of assignments.
-    `OrderedEntityManager` remains, as attribute ordering in the case view is significant.
-    `DROP TABLE conclusion_indexes;` joins the documented one-offs of step 13.)* *(Resolved 2 Aug 2026: one comment
-    attribute per comment text.)*
-    "Replace this comment with X" mints a new comment attribute for X:
-    the replacing rule assigns the new attribute, and leaf-most suppression retracts the parent's — one rule, no
-    explicit retraction. This preserves the invariant that a comment attribute's definition is its text, so a future
-    "change this comment's wording everywhere" is exactly the definition-edit flow used for derived formulas. A
-    conditional per-case wording override of the *same*
-    attribute was considered and rejected: it would make "the comment's text" ambiguous.
-16. **Retire `AssignConclusion`.** Only after 12–15 are green: delete
-    `AssignConclusion`, `Conclusion`, `ConclusionManager`,
-    `ConclusionProvider`, the conclusion store, and `Rule.conclusion`
-    (making `Rule.assignment` the single action field; `RuleTreeChange`
-    loses its conclusion subclasses and `alignWith`). One rule action
-    kind remains: `AssignValue`. Expect wide but mechanical fallout in
-    tests; do not weaken assertions while converting them.
-
-### Phase 3 — presentation and report
-
-17. **Comments panel.** *(Implemented 20 Aug 2026.)* Each comment is a row of a two-column table — name chip, then
-    comment text — rather than one block of concatenated text; comment attributes are excluded from the case data table.
-    - The row state is computed by a pure function,
-      `commentRowsToDisplay` in
-      `ui/src/main/kotlin/io/rippledown/interpretation/CommentRows.kt`, mirroring `DerivedValueRows`, so the
-      pending-change cases (addition, removal, replacement) are unit-testable without composing. A pending change is
-      matched to a comment by attribute name, falling back to text for a KB whose diff carries no name.
-    - `CommentRow.kt` draws a row and `CommentPart.kt` draws one half of it (name chip + `AnnotatedTextView`), which is
-      what makes a *pending replacement* one row with two halves: the comment being replaced and its replacement, each
-      with its own highlight. Test ids come from the `COMMENT_ROW_*` / `COMMENT_CELL_*` constants in
-      `common/.../constants.interpretation/Constants.kt`, and take an `idPrefix` so the case and cornerstone panels
-      (`InterpretationView`, `ReadonlyInterpretationView` via `CornerstoneInspection`) can both be on screen.
-    - The comment's name reaches the client on `RenderedComment.name`, set in
-      `InterpretationViewManager`, and on the diff types (`Diff.attributeName`), set by `RuleSessionManager` when a
-      session starts. See
-      [previewing_pending_changes_when_a_rule_is_being_built.md](previewing_pending_changes_when_a_rule_is_being_built.md).
-    - Tests: `CommentRowsTest`, `CommentRowTest`, `CommentPartTest`, and the rewritten
-      `InterpretationViewTest` / `ReadonlyInterpretationViewTest` /
-      `DiffClearedAfterRuleBuildingTest`, all row-based. Cukes read the rows in layout order
-      (`AccessibilityUtils.findAllInOrder`, `InterpretationPO`), and
-      `chat/Naming and renaming.feature` asserts the name shown in the panel for both an auto-named comment and a
-      renamed one.
-18. **Cucumber assertions via the panel.** *(Not done.)* The Derived attributes panel
-    (Phase 1 step 10) and its viewable-case data source (`ViewableCase.derivedValues()`) already exist, and
-    panel-reading steps ("the UI should show the derived value …", backed by
-    `InterpretationPO.waitForDerivedValueToBeShown`) are in use. Two REST-based assertions remain in
-    `Repeat inferencing.feature` — "the derived value {string} should be {string}" and "… should not be present" in
-    `DerivedValueStepDefs` — and should be rewritten to read from the panel.
-19. **AI report.** *(Not done.)* The report generator is to receive named comment attributes (name + value pairs) as
-    inputs; currently `Interpretation.toComments`
-    sends the comment *texts* only, and
-    `server/src/main/resources/report/report_system_prompt.md` describes its input as a set of comments. Both need
-    updating together; see
-    [ai_report_generation.md](ai_report_generation.md).
-
-### Phase 4 — later: external attribute renaming
-
-20. **External-name alias mapping.** A persisted map from external names
-    (as sent by the external system) to attribute ids, consulted at case
-    ingestion (`KB.createRDRCase` path) before attribute lookup by name.
-    New store on `PersistentKB` (in-memory + Postgres implementations,
-    table `external_name_aliases(external_name TEXT PRIMARY KEY,
-    attribute_id INT)`); the collision mangling from step 3 records its
-    alias here (`A` → the `A (external)` attribute).
-21. **Renaming external attributes.** With the alias map in place, the
-    user can rename any external attribute (including mangled ones) via
-    the chat; incoming cases still match through the alias, so data is
-    never split across attributes. Name-in-use refusal applies as for
-    derived attributes.
-
-### Sequencing notes
-
-- Phases 0–1 are independently shippable: they add repeat inferencing and
-  derived data attributes without touching comment behaviour.
-- **Editing derived-attribute
-  definitions ([editing_derived_attribute_definitions.md](editing_derived_attribute_definitions.md))
-  lands before Phase 2.** It introduces the `DerivedDefinitionStore` /
-  `ByDefinition` architecture that Phase 2 should land on: a comment then becomes a `COMMENT` attribute whose definition
-  is a text template, and
-  `ConclusionStore` folds into the definition store. Doing Phase 2 first would migrate conclusions into the embedded-
-  `AssignValue` form only to re-migrate them when the definition store arrives — two breaking migrations of configured
-  KBs instead of one. It is also the smaller, non-breaking piece, so landing it first de-risks Phase 2.
-- Phase 2 is the large, breaking phase; steps 12–16 should land together
-  behind passing migration tests before any release.
-- Phase 4 is independent of Phases 2–3 and can land any time after
-  Phase 0. Until it does, mangled names are stable and deterministic, so
-  no data is at risk — the alias map can be backfilled from the mangling
-  convention when it arrives.
-- Episode history (resolved decision 5) needs nothing in any phase; the
-  model leaves room for it because derived values are ordinary values in
-  episodes.
-
-## Testing
-
-- Derived-attribute model tests: KB-owned flag, comment vs data subtype,
-  collision mangling (deterministic, stable across cases, logged), naming/
-  renaming refusal for names in use, reset/strip semantics, assignment to
-  latest episode only.
-- Value-expression tests: literal and formula evaluation, no assignment
-  when a referenced attribute has no value, formulas referencing derived
-  attributes (resolved across passes), formula overridden by a conditioned
-  child rule, serialization and attribute alignment,
-  `referencedAttributes()`.
-- Comment-attribute tests: auto-naming and rename safety, `${}` variable
-  placeholders in values, Comments panel presentation, report generation
-  from named comment attributes.
-- `RuleTree`/`KB` tests: multi-pass convergence, first-pass semantics of
-  absence conditions, idempotent re-interpretation.
-- Dependency-graph tests: edge construction (including inherited path conditions and value-expression references),
-  `cycleCreatedBy`, cycles running through a comment attribute, suggester filtering of cycle-creating conditions, manual
-  entry refused with a message naming the cycle, commit invariant.
-- Rule-session tests: cornerstone behaviour with chained rules.
-- Cucumber: end-to-end scenario — build a rule assigning
-  `Diabetes status = "diabetic"`, then build a dependent rule conditioned
-  on it, verify the dependent comment is given; a numeric-value scenario
-  (`Risk score > 5`); a scenario using `is not in case`; scenarios showing
-  a cycle-creating condition is neither suggested nor accepted when
-  entered manually; a formula scenario — an unconditional
-  rule assigning `BMI = weight / (height * height)`, a dependent rule
-  conditioned on `BMI > 28`, and a case lacking `height` getting no BMI.

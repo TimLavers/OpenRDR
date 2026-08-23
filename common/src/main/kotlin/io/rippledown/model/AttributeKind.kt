@@ -22,7 +22,7 @@ enum class AttributeKind {
     DERIVED,
 
     /**
-     * Assigned by the knowledge base, holds a report comment, shown in the
+     * Assigned by the knowledge base, holds a comment, shown in the
      * Comments panel.
      */
     COMMENT;
