@@ -6,6 +6,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.kb.chat.action.ExemptCornerstone
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
@@ -69,6 +70,17 @@ class ChatManager(
 
     private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
+        // Deterministic cornerstone exemption: when the user confirms allowing
+        // the report change to a cornerstone case, run the action directly
+        // instead of relying on the model to emit ExemptCornerstone. The model
+        // sometimes routes "allow" into a function call or a UserAction and
+        // never emits the exemption, leaving the cornerstone un-exempted.
+        if (ruleService.isRuleSessionActive()
+            && ReasonTransformHandler.isAllowConfirmation(message)
+            && ruleService.cornerstoneStatus().numberOfCornerstones > 0
+        ) {
+            return ExemptCornerstone().doIt(ruleService, currentCase, this)
+        }
         val messageToSend = augmentWithCornerstoneStatus(message)
         val response = try {
             conversationService.response(messageToSend)
