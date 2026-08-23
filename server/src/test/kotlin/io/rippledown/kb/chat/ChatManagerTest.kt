@@ -792,6 +792,67 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `should exempt cornerstone directly when user says allow and a review is pending`() = runTest {
+        // Given
+        val cornerstoneCase = mockk<ViewableCase>()
+        every { cornerstoneCase.name } returns "Case2"
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus(
+            cornerstoneToReview = cornerstoneCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 2
+        )
+        every { ruleService.exemptCornerstoneCase() } returns CornerstoneStatus()
+        every { ruleService.sendCornerstoneStatus() } returns Unit
+        // ExemptCornerstone calls modelResponder.response() which recurses into
+        // processConversationResponse with the end-of-review message, so the
+        // model is called once with that message.
+        val modelResponse = ActionComment(USER_ACTION, message = "Done").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns modelResponse
+
+        // When
+        val response = chatManager.response("allow")
+
+        // Then - the cornerstone is exempted directly
+        coVerify { ruleService.exemptCornerstoneCase() }
+        coVerify { ruleService.sendCornerstoneStatus() }
+        // and the model is called once with the end-of-review message, not "allow"
+        coVerify { conversationService.response(match<String> { it.contains("Total: 0") }) }
+        response.text shouldBe "Done"
+    }
+
+    @Test
+    fun `should not intercept allow when no rule session is active`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns false
+        val responseFromModel = ActionComment(USER_ACTION, message = "ok").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("allow")
+
+        // Then - the model is called as normal
+        coVerify { conversationService.response(any<String>()) }
+        coVerify(exactly = 0) { ruleService.exemptCornerstoneCase() }
+    }
+
+    @Test
+    fun `should not intercept allow when no cornerstones are pending`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        val responseFromModel = ActionComment(USER_ACTION, message = "ok").toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns responseFromModel
+
+        // When
+        chatManager.response("allow")
+
+        // Then - the model is called as normal
+        coVerify { conversationService.response(any<String>()) }
+        coVerify(exactly = 0) { ruleService.exemptCornerstoneCase() }
+    }
+
+    @Test
     fun `should convert double-escaped newline to proper json newline`() {
         // Given - LLM outputs \\n (literal backslash-n) instead of \n (JSON newline)
         val input = """
