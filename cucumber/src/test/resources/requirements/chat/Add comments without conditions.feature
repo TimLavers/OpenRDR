@@ -10,6 +10,18 @@ Feature: Add comments without conditions
     When  I build a rule to add the comment "Bring flippers."
     Then the report should be "Bring flippers."
 
+  Scenario: The current case should remain selected after building a rule
+    Given case Manly is provided having data:
+      | Wave | good |
+      | Sun  | warm |
+    And case Bondi is provided having data:
+      | Wave | excellent |
+    And I start the client application
+    And I select the case Bondi
+    When  I build a rule to add the comment "Go to the beach"
+    Then the selected case should still be Bondi
+
+
   Scenario: The user should be able to use the chat to add two comments with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |

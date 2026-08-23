@@ -288,7 +288,8 @@ fun OpenRDRUI(
                             casesInfo.caseIds,
                             casesInfo.cornerstoneCaseIds,
                             caseSelectorHandler,
-                            casesInfo.favouriteCaseIds
+                            casesInfo.favouriteCaseIds,
+                            currentCaseId
                         )
                     }
 

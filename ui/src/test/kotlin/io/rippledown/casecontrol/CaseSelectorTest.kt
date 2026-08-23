@@ -3,6 +3,7 @@ package io.rippledown.casecontrol
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
@@ -1013,6 +1014,215 @@ class CaseSelectorTest {
             // Select another visible case to test selection state changes
             selectCaseByName("case 2")
             verify { handler.selectCase(2) }
+        }
+    }
+
+    // --- Selection highlight ---
+
+    private val selectedMatcher = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
+    private val unselectedMatcher = SemanticsMatcher.expectValue(SemanticsProperties.Selected, false)
+
+    @Test
+    fun `should highlight the case matching selectedCaseId`() = runTest {
+        val caseIds = listOf(
+            CaseId(id = 1, name = "case 1"),
+            CaseId(id = 2, name = "case 2"),
+            CaseId(id = 3, name = "case 3")
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = 2L)
+            }
+            onNode(caseMatcher("case 2") and selectedMatcher).assertExists()
+            onNode(caseMatcher("case 1") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("case 3") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should highlight no case when selectedCaseId is null`() = runTest {
+        val caseIds = listOf(
+            CaseId(id = 1, name = "case 1"),
+            CaseId(id = 2, name = "case 2")
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = null)
+            }
+            onNode(caseMatcher("case 1") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("case 2") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should highlight no case when selectedCaseId is not in the list`() = runTest {
+        val caseIds = listOf(
+            CaseId(id = 1, name = "case 1"),
+            CaseId(id = 2, name = "case 2")
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = 999L)
+            }
+            onNode(caseMatcher("case 1") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("case 2") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should highlight a cornerstone case when selectedCaseId matches it`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, cornerstones, handler, selectedCaseId = 2L)
+            }
+            onNode(caseMatcher("c1") and selectedMatcher).assertExists()
+            onNode(caseMatcher("p1") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should highlight a favourite case when selectedCaseId matches it`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites, selectedCaseId = 2L)
+            }
+            onNode(caseMatcher("f1") and selectedMatcher).assertExists()
+            onNode(caseMatcher("p1") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should update highlight when selectedCaseId changes`() = runTest {
+        val caseIds = listOf(
+            CaseId(id = 1, name = "case 1"),
+            CaseId(id = 2, name = "case 2")
+        )
+        var selectedId by mutableStateOf(1L)
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = selectedId)
+            }
+            onNode(caseMatcher("case 1") and selectedMatcher).assertExists()
+            onNode(caseMatcher("case 2") and unselectedMatcher).assertExists()
+
+            selectedId = 2L
+            waitForIdle()
+
+            onNode(caseMatcher("case 2") and selectedMatcher).assertExists()
+            onNode(caseMatcher("case 1") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should maintain highlight after recomposition with same selectedCaseId`() = runTest {
+        val case1 = CaseId(id = 1, name = "case 1")
+        val case2 = CaseId(id = 2, name = "case 2")
+        var caseIds by mutableStateOf(listOf(case1, case2))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = 2L)
+            }
+            onNode(caseMatcher("case 2") and selectedMatcher).assertExists()
+
+            caseIds = listOf(case1.copy(), case2.copy())
+            waitForIdle()
+
+            onNode(caseMatcher("case 2") and selectedMatcher).assertExists()
+            onNode(caseMatcher("case 1") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should highlight the correct case after a case is inserted at the front`() = runTest {
+        val caseA = CaseId(id = 1, name = "A")
+        val caseB = CaseId(id = 2, name = "B")
+        var caseIds by mutableStateOf(listOf(caseA, caseB))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = 2L)
+            }
+            onNode(caseMatcher("B") and selectedMatcher).assertExists()
+            onNode(caseMatcher("A") and unselectedMatcher).assertExists()
+
+            // Insert C at front: B should still be selected, not C (which takes B's old index)
+            val caseC = CaseId(id = 3, name = "C")
+            caseIds = listOf(caseC, caseA, caseB)
+            waitForIdle()
+
+            onNode(caseMatcher("B") and selectedMatcher).assertExists()
+            onNode(caseMatcher("C") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("A") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should still call selectCase when a case is clicked`() = runTest {
+        val caseIds = listOf(
+            CaseId(id = 1, name = "case 1"),
+            CaseId(id = 2, name = "case 2")
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = 1L)
+            }
+            selectCaseByName("case 2")
+            verify { handler.selectCase(2) }
+        }
+    }
+
+    @Test
+    fun `should not highlight any case by default when selectedCaseId is not passed`() = runTest {
+        val caseIds = listOf(
+            CaseId(id = 1, name = "case 1"),
+            CaseId(id = 2, name = "case 2")
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler)
+            }
+            onNode(caseMatcher("case 1") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("case 2") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should highlight the correct case across processed and cornerstone sections`() = runTest {
+        val processed = listOf(
+            CaseId(id = 1, name = "p1"),
+            CaseId(id = 2, name = "p2")
+        )
+        val cornerstones = listOf(
+            CaseId(id = 3, name = "c1", type = CaseType.Cornerstone),
+            CaseId(id = 4, name = "c2", type = CaseType.Cornerstone)
+        )
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, cornerstones, handler, selectedCaseId = 3L)
+            }
+            onNode(caseMatcher("c1") and selectedMatcher).assertExists()
+            onNode(caseMatcher("p1") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("p2") and unselectedMatcher).assertExists()
+            onNode(caseMatcher("c2") and unselectedMatcher).assertExists()
+        }
+    }
+
+    @Test
+    fun `should still navigate with keyboard when selectedCaseId is set`() = runTest {
+        val caseIds = (0..1).map { i ->
+            CaseId(id = i.toLong(), name = "case $i")
+        }
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(caseIds, handler = handler, selectedCaseId = 0L)
+            }
+            selectCaseByName("case 0")
+            downArrowOnCase("case 0")
+            requireCaseToBeFocused("case 1")
+            verify { handler.selectCase(1) }
         }
     }
 

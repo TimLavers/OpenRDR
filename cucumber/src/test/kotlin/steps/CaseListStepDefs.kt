@@ -99,6 +99,11 @@ class CaseListStepDefs {
         refocusLastSelectedCase = { cornerstoneCaseListPO().mouseClick(caseName) }
     }
 
+    @Then("the selected case should (still )be {word}")
+    fun theSelectedCaseShouldStillBe(caseName: String) {
+        caseListPO().requireCaseToBeSelected(caseName)
+    }
+
     @When("I press the down arrow key")
     fun pressDownArrowKey() {
         // Best-effort: give any pending ChatPanel.LaunchedEffect(id) focus-steal

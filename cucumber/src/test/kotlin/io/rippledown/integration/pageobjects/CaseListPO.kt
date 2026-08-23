@@ -96,6 +96,14 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         waitUntilAsserted { caseNameContext(caseName) shouldNotBe null }
     }
 
+    fun requireCaseToBeSelected(caseName: String) {
+        waitUntilAsserted {
+            val ctx = caseNameContext(caseName)
+            ctx shouldNotBe null
+            ctx!!.accessibleStateSet.contains(javax.accessibility.AccessibleState.SELECTED)
+        }
+    }
+
     fun pressDownArrow() {
         Cyborg().downArrow()
     }

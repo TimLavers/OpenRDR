@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.key.KeyEventType.Companion.KeyDown
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -37,10 +38,11 @@ fun CaseSelector(
     caseIds: List<CaseId>,
     cornerstoneCaseIds: List<CaseId> = emptyList(),
     handler: CaseSelectorHandler,
-    favouriteCaseIds: List<CaseId> = emptyList()
+    favouriteCaseIds: List<CaseId> = emptyList(),
+    selectedCaseId: Long? = null
 ) {
     val allCaseIds = caseIds + cornerstoneCaseIds + favouriteCaseIds
-    var selectedCaseIndex by remember { mutableStateOf(0) }
+    val selectedCaseIndex = allCaseIds.indexOfFirst { it.id == selectedCaseId }
     val focusRequestors = remember(allCaseIds) { List(allCaseIds.size) { FocusRequester() } }
     var processedExpanded by remember { mutableStateOf(true) }
     var cornerstoneExpanded by remember { mutableStateOf(true) }
@@ -76,16 +78,10 @@ fun CaseSelector(
     }
 
     fun indexSelected(index: Int) {
-        selectedCaseIndex = if (index < 1) { // Arrow up at top.
-            0
-        } else if (index >= allCaseIds.size) { // Arrow down at bottom.
-            allCaseIds.size - 1
-        } else {
-            index
-        }
-        val caseId = allCaseIds[selectedCaseIndex]
-        handler.selectCase(caseId.id!!)
-        requestFocusOnCase(selectedCaseIndex)
+        if (allCaseIds.isEmpty()) return
+        val clampedIndex = index.coerceIn(0, allCaseIds.size - 1)
+        allCaseIds[clampedIndex].id?.let { handler.selectCase(it) }
+        requestFocusOnCase(clampedIndex)
     }
 
     // The sections are stacked, each taking only the height its cases need, so
@@ -268,7 +264,10 @@ private fun CaseNameItem(
                     false
                 }
             }
-            .semantics { contentDescription = "$CASE_NAME_PREFIX${caseId.name}" }
+            .semantics {
+                contentDescription = "$CASE_NAME_PREFIX${caseId.name}"
+                selected = isSelected
+            }
     )
 }
 

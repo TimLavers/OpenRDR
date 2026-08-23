@@ -73,7 +73,6 @@ Feature: Add, replace or remove comments with variables
     When I select the case Malabar
     Then the report should be "The wave quality is non-existent and the air temperature is scorching"
 
-  @single
   Scenario: The user should be able to use the chat to add a comment with a variable when the attribute has no value in the current case
     Given case Manly is provided having data:
       | Wave | good |
@@ -85,7 +84,6 @@ Feature: Add, replace or remove comments with variables
     When  I build a rule to add the comment "The wave is {wave} and the sun is {sun}"
     Then the report should contain "The wave is excellent"
     And the report should show "Sun" as unevaluated
-    And pause
 
   Scenario: Building a rule with variables should create a cornerstone copy of the processed case
     Given case Bondi is provided having data:
