@@ -133,7 +133,29 @@ class ChatManager(
 
             else -> chatResponse.copy(tip = tip ?: chatResponse.tip)
         }
-        return ensureSuggestionsAfterStartingRuleSession(actionComment, response)
+        return withoutConditionsAlreadyInTheRule(ensureSuggestionsAfterStartingRuleSession(actionComment, response))
+    }
+
+    /**
+     * Drops any suggestion that is already a condition of the rule being built.
+     *
+     * [SuggestedConditionsHandler] does exclude the conditions added so far, but it does so when the
+     * *model* calls it, which can be earlier in the same turn than the condition is added. The model
+     * sometimes calls {@code getSuggestedConditions} and then {@code selectSuggestion} in the one turn,
+     * in which case the buffered list was computed before the selected condition existed and would
+     * re-offer the very condition the user just chose. Filtering here, as the response is assembled,
+     * uses the session's conditions as they finally stand, so it is immune to the order of the model's
+     * function calls. It also covers the list the model may echo back in its own JSON, which nothing
+     * else filters.
+     */
+    private fun withoutConditionsAlreadyInTheRule(response: ChatResponse): ChatResponse {
+        if (response.suggestions.isEmpty()) return response
+        val alreadyUsed = ruleService.currentRuleSessionConditionTexts()
+        if (alreadyUsed.isEmpty()) return response
+        val remaining = response.suggestions.filterNot {
+            SuggestedConditionsHandler.conditionTextOf(it) in alreadyUsed
+        }
+        return if (remaining.size == response.suggestions.size) response else response.copy(suggestions = remaining)
     }
 
     /**

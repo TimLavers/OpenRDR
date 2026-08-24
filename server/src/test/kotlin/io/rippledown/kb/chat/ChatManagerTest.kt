@@ -13,6 +13,7 @@ import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PR
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.commentVariableTip
+import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -46,6 +47,7 @@ class ChatManagerTest {
         every { viewableCase.case } returns case
         every { viewableCase.attributes() } returns listOf(Attribute(1, "Glucose"), Attribute(2, "TSH"))
         every { ruleService.isRuleSessionActive() } returns false
+        every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
         chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer)
         setupLogger()
     }
@@ -188,6 +190,128 @@ class ChatManagerTest {
         responseToUser shouldBe ChatResponse(message, bufferedSuggestions)
         // Buffer is consumed
         suggestionsBuffer.suggestions shouldBe null
+    }
+
+    @Test
+    fun `should not re-offer a buffered suggestion that has since become a condition of the rule`() = runTest {
+        // Given a buffered list computed by getSuggestedConditions earlier in the turn, i.e. before
+        // the model went on to call selectSuggestion and add "Sun is warm" to the rule
+        val message = "Added the condition \"Sun is warm\". Do you want to provide any more reasons?"
+        suggestionsBuffer.suggestions = listOf("Sun is warm", "Wave is good", "case is for a single date")
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("Sun is warm")
+        val responseFromModel = ActionComment(action = USER_ACTION, message = message).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then the condition just added is not offered again
+        responseToUser shouldBe ChatResponse(message, listOf("Wave is good", "case is for a single date"))
+    }
+
+    @Test
+    fun `should match an editable suggestion against the conditions of the rule ignoring the editable marker`() =
+        runTest {
+            // Given an editable suggestion whose condition text is already a condition of the rule
+            val message = "Added the condition. Do you want to provide any more reasons?"
+            suggestionsBuffer.suggestions = listOf(
+                "wave height >= 1.5$EDITABLE_SUFFIX",
+                "Sun is warm$EDITABLE_SUFFIX"
+            )
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("wave height >= 1.5")
+            val responseFromModel = ActionComment(action = USER_ACTION, message = message).toJsonString()
+            coEvery { conversationService.startConversation() } returns responseFromModel
+
+            // When
+            val responseToUser = chatManager.startConversation(viewableCase)
+
+            // Then only the editable suggestion that is not yet a condition survives, marker intact
+            responseToUser shouldBe ChatResponse(message, listOf("Sun is warm$EDITABLE_SUFFIX"))
+        }
+
+    @Test
+    fun `should not re-offer a condition of the rule echoed back by the model in its own suggestions`() = runTest {
+        // Given the model listed the suggestions itself, having ignored the instruction not to,
+        // and its list still holds a condition that has already been added
+        val message = "Here are some suggestions."
+        val responseFromModel = ActionComment(
+            action = USER_ACTION,
+            message = message,
+            suggestions = listOf("Sun is warm", "Wave is good")
+        ).toJsonString()
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("Sun is warm")
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then the model's echoed list is filtered too
+        responseToUser shouldBe ChatResponse(message, listOf("Wave is good"))
+    }
+
+    @Test
+    fun `should keep the order of the suggestions that are not yet conditions of the rule`() = runTest {
+        // Given several suggestions, two of which are already conditions of the rule
+        val message = "Here are some suggestions."
+        suggestionsBuffer.suggestions = listOf("one", "two", "three", "four")
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("three", "one")
+        val responseFromModel = ActionComment(action = USER_ACTION, message = message).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then the survivors are in their original order
+        responseToUser shouldBe ChatResponse(message, listOf("two", "four"))
+    }
+
+    @Test
+    fun `should offer no suggestions when every one of them is already a condition of the rule`() = runTest {
+        // Given
+        val message = "Do you want to provide any more reasons?"
+        suggestionsBuffer.suggestions = listOf("Sun is warm", "Wave is good")
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("Sun is warm", "Wave is good")
+        val responseFromModel = ActionComment(action = USER_ACTION, message = message).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, emptyList())
+    }
+
+    @Test
+    fun `should leave the suggestions alone when the rule has no conditions yet`() = runTest {
+        // Given a session in which no condition has been added
+        val message = "Here are some suggestions."
+        val suggestions = listOf("Sun is warm", "Wave is good")
+        suggestionsBuffer.suggestions = suggestions
+        every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
+        val responseFromModel = ActionComment(action = USER_ACTION, message = message).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, suggestions)
+    }
+
+    @Test
+    fun `should keep a suggestion that merely resembles a condition of the rule`() = runTest {
+        // Given a condition text that is a prefix of a suggestion: only an exact match is a repeat
+        val message = "Here are some suggestions."
+        suggestionsBuffer.suggestions = listOf("Sun is warm and dry")
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("Sun is warm")
+        val responseFromModel = ActionComment(action = USER_ACTION, message = message).toJsonString()
+        coEvery { conversationService.startConversation() } returns responseFromModel
+
+        // When
+        val responseToUser = chatManager.startConversation(viewableCase)
+
+        // Then
+        responseToUser shouldBe ChatResponse(message, listOf("Sun is warm and dry"))
     }
 
     @Test
@@ -401,6 +525,49 @@ class ChatManagerTest {
 
             // Then - the suggestions are attached deterministically even though the model never asked for them
             responseToUser.suggestions shouldBe suggestions
+        }
+
+    @Test
+    fun `should filter the deterministically-populated suggestions against the conditions of the rule`() =
+        runTest {
+            // Given a suggested-conditions handler that fills the shared buffer with a condition that
+            // the rule already has - as it would if it ran before the condition was added
+            val suggestedConditionsHandler = object : FunctionCallHandler {
+                override suspend fun handle(args: Map<String, Any?>): String {
+                    suggestionsBuffer.suggestions = listOf("wave height > 0.5", "wave height is \"2\"")
+                    return "delivered"
+                }
+            }
+            chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer, suggestedConditionsHandler)
+            setupLogger()
+
+            var sessionActive = false
+            every { ruleService.isRuleSessionActive() } answers { sessionActive }
+            every { ruleService.startRuleSessionToAddComment(any(), any(), any()) } answers {
+                sessionActive = true
+                CornerstoneStatus()
+            }
+            every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+            every { ruleService.sendCornerstoneStatus() } returns Unit
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("wave height > 0.5")
+
+            val initialResponseFromModel =
+                ActionComment(USER_ACTION, message = "What do you want to add?").toJsonString()
+            coEvery { conversationService.startConversation() } returns initialResponseFromModel
+            chatManager.startConversation(viewableCase) //to set the current case
+
+            val addComment = ActionComment(action = ADD_COMMENT, comment = "Let's surf.").toJsonString()
+            val askForReason = ActionComment(
+                USER_ACTION,
+                message = "Would you like to provide a reason for adding this comment?"
+            ).toJsonString()
+            coEvery { conversationService.response(any<String>()) } returnsMany listOf(addComment, askForReason)
+
+            // When
+            val responseToUser = chatManager.response("Add the comment: \"Let's surf.\"")
+
+            // Then
+            responseToUser.suggestions shouldBe listOf("wave height is \"2\"")
         }
 
     @Test
