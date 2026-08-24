@@ -12,7 +12,7 @@ Feature: Creation of cornerstone cases when rules are built
       | x > 0 |
     And the interpretation should be "Go to the beach."
     And the cornerstone case count should be 1
-    When I build another rule to append the comment "Shoot some tubes." with condition
+    When I build another rule to add the comment "Shoot some tubes." with condition
       | y > 0 |
     And the interpretation should be "Go to the beach. Shoot some tubes."
     Then the cornerstone case count should be 1

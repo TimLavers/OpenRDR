@@ -43,7 +43,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     /**
      * The comments of the table read as one string, as they were shown before
-     * the comments became a table, so that an expectation of the whole
+     * the comments became a list, so that an expectation of the whole
      * interpretation can still be written as one string.
      */
     fun interpretationText(): String = commentsShown().joinToString(" ")

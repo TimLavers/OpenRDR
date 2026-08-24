@@ -7,7 +7,7 @@ Feature: Report generation by the AI
     And I build a rule to add the comment "MCV value of {mcv} is concerning." with condition
       | MCV is high    |
       | MCV increasing |
-    And I build another rule to append the comment "Haemoglobin is way too high." with conditions
+    And I build another rule to add the comment "Haemoglobin is way too high." with conditions
       | HAEMOGLOBIN >=190 |
     When I click to show the report panel
     Then the report should contain the phrases:

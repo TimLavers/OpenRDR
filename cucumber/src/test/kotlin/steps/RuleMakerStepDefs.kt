@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 
 class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
-    @And("I build a rule to add the comment {string}")
+    @And("I build (a )(another )rule to add the comment {string}")
     fun buildRuleToAddNewComment(comment: String) {
         with(chatDefs) {
             requestCommentBeAdded(comment)
@@ -131,24 +131,17 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I start to build a rule to add the comment {string} for case {word}")
     fun startToBuildARuleToAddTheCommentForCase(comment: String, caseName: String) {
-        caseListPO().select(caseName)
+        processedCaseListPO().select(caseName)
         chatDefs.requestCommentBeAdded(comment)
     }
 
     @And("I build a rule to add the comment {string} for case {word}")
     fun buildARuleToAddCommentForCase(comment: String, caseName: String) {
-        caseListPO().select(caseName)
+        processedCaseListPO().select(caseName)
         buildRuleToAddNewComment(comment)
     }
 
-    @And("I build another rule to append the comment {string}")
-    fun buildAnotherRuleToAppendTheComment(comment: String) {
-        chatDefs.addCommentWithoutConfirmation(comment)
-        chatDefs.confirm()
-        completeRule()
-    }
-
-    @And("I build another rule to append the comment {string} with condition(s)")
+    @And("I build another rule to add the comment {string} with condition(s)")
     fun buildAnotherRuleToAppendTheCommentWithConditions(comment: String, conditions: DataTable) {
         with(chatDefs) {
             // A previous rule in this session has already shown a suggestion list, so

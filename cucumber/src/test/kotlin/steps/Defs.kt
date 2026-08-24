@@ -335,7 +335,7 @@ class Defs {
         dataTable.cells().forEach { row ->
             val case = row[0]
             val expectedInterpretation = row[1] ?: ""
-            caseListPO().select(case)
+            processedCaseListPO().select(case)
             caseViewPO().waitForNameToShow(case)
             interpretationViewPO().waitForInterpretationText(expectedInterpretation)
         }
