@@ -1,6 +1,5 @@
 Feature: The user should be able to determine the order of comments in a report
 
-  @single
   Scenario: When building a rule to append a comment to the report, the comment should appear at the end of the report
     Given case Manly is provided having data:
       | Wave | good |
