@@ -26,7 +26,6 @@ Feature: Naming comments, and renaming comments and derived attributes
     When I see the case Bondi as the current case
     Then the comment "Let's surf." should be shown with the name "C1"
 
-  @single
   Scenario: Two comments added in one session are named C1 then C2
     Given case Bondi is provided having data:
       | wave height | 2 |
@@ -36,7 +35,6 @@ Feature: Naming comments, and renaming comments and derived attributes
     When I see the case Bondi as the current case
     Then the comment "Let's surf." should be shown with the name "C1"
     And the comment "Surf's up." should be shown with the name "C2"
-    And pause
 
   Scenario: The user can rename a comment through the chat
     Given case Bondi is provided having data:
