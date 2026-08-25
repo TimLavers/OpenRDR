@@ -35,7 +35,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      */
     internal fun allSuggestions(): List<SuggestedCondition> {
         val generated = caseStructureSuggestions() + episodicConditionSuggestions() + seriesConditionSuggestions() +
-                derivedAttributeSuggestions()
+                derivedAttributeSuggestions() + commentAttributeSuggestions()
         val withHistorical = generated + historicalConditionSuggestions(generated)
         return RelevanceRanker(ctx).rank(pruneSubsumed(pruneCycleCreating(withHistorical)))
     }
@@ -127,9 +127,16 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
 
     private fun seriesConditionSuggestions() = createSuggestions(trendFactories())
 
+    /**
+     * Comment attributes are excluded: a comment attribute's value is its own
+     * definition, so a value condition on it, e.g. `C1 is "Let's surf."`, only
+     * restates that the case was given the comment — and stops holding as soon
+     * as the comment has a variable, since it then renders differently from
+     * case to case. [commentAttributeSuggestions] offers the honest form.
+     */
     private fun createSuggestions(factories: List<SuggestionFunction>): Set<SuggestedCondition> {
         val firstCut = mutableSetOf<SuggestedCondition>()
-        attributesInCase.forEach { attribute ->
+        attributesInCase.filter { it.kind != AttributeKind.COMMENT }.forEach { attribute ->
             val currentValue = sessionCase.getLatest(attribute)
             factories.forEach {
                 val suggestedCondition = it(attribute, currentValue)
@@ -151,6 +158,23 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
                 NonEditableSuggestedCondition(CaseStructureCondition(IsAbsentFromCase(attr)))
             )
         }
+        return candidates.filter { it.shouldBeSuggestedForCase(sessionCase) }
+    }
+
+    /**
+     * Presence conditions for the comments the case was given, which is all
+     * that can usefully be asked of a comment attribute.
+     *
+     * Absence is not offered, unlike for derived attributes: a knowledge base
+     * accumulates a comment attribute per comment text, so all but a handful
+     * are absent from any one case, and offering each of them would crowd out
+     * the candidates that bear on the case in hand. A user who wants one can
+     * type it.
+     */
+    private fun commentAttributeSuggestions(): List<SuggestedCondition> {
+        val candidates = ctx.attributes
+            .filter { it.kind == AttributeKind.COMMENT }
+            .map { NonEditableSuggestedCondition(CaseStructureCondition(IsPresentInCase(it))) }
         return candidates.filter { it.shouldBeSuggestedForCase(sessionCase) }
     }
 

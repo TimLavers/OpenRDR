@@ -142,6 +142,18 @@ because they reliably waste the 20-slot budget:
   `IsAbsentFromCase` were judged to add no clinical value and removed from the
   factory list.
 
+**Attributes the knowledge base assigns itself.** Presence *is* the interesting question for a derived or comment
+attribute, unlike for case data, because it says that some other rule fired. Those two kinds are therefore generated
+separately from the factory list above:
+
+- A **derived** attribute is offered `is in case` and `is not in case`, whichever holds for the session case, on top of
+  the ordinary value conditions on its value.
+- A **comment** attribute is offered `is in case` only, and no value condition at all. A comment attribute's value is
+  its own definition, so `C1 is "Let's surf."` merely restates that the case was given the comment, and it stops holding
+  as soon as the comment has a variable, since the text then differs from case to case. Absence is not offered because a
+  knowledge base accumulates one comment attribute per comment text, so nearly all of them are absent from any one case
+  and offering each would crowd out the candidates that bear on the case in hand.
+
 ### Scorers
 
 Each scorer returns an integer per candidate (`ScoredSuggestion`):
