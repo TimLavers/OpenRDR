@@ -11,7 +11,6 @@ import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
-import javax.swing.SwingUtilities
 
 class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
 
@@ -77,22 +76,19 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
     fun importKB(filePath: String) {
         openDropdownMenu()
         clickDropdownItem(IMPORT_KB_TEXT)
-        // Wait for the dialog *off* the EDT — `waitForComposeDialogToShow`
-        // sleeps in a poll loop, and blocking the EDT would prevent Compose
-        // from ever creating the dialog window.
+        // Drive the dialog *off* the EDT: the EDT is inside the modal
+        // dialog's event pump, so blocking it stops Compose from applying the
+        // typed text or recomposing. Each accessibility access hops to the EDT
+        // individually.
         val dialog = waitForComposeDialogToShow()
-        SwingUtilities.invokeAndWait {
-            ImportKbOperator(dialog).importKB(filePath)
-        }
+        ImportKbOperator(dialog).importKB(filePath)
     }
 
     fun exportKB(filePath: String) {
         openDropdownMenu()
         clickDropdownItem(EXPORT_KB_TEXT)
         val dialog = waitForComposeDialogToShow()
-        SwingUtilities.invokeAndWait {
-            ExportKbOperator(dialog).importKB(filePath)
-        }
+        ExportKbOperator(dialog).importKB(filePath)
     }
 
     private fun openDropdownMenu() {

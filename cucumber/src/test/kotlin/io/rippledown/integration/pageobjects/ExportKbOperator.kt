@@ -4,17 +4,15 @@ import androidx.compose.ui.awt.ComposeDialog
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.main.EXPORT_KB_NAME_FIELD_DESCRIPTION
 import io.rippledown.constants.main.EXPORT_KB_OK_BUTTON_DESCRIPTION
+import io.rippledown.integration.utils.enterTextIntoTextField
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAsserted
-import javax.accessibility.AccessibleRole
 
 class ExportKbOperator(private val dialog: ComposeDialog) {
 
     fun importKB(path: String) {
         enterPath(path)
-        Thread.sleep(1000)
         clickExportButton()
-        Thread.sleep(1000)
     }
 
     // The OK button can be absent from the accessibility tree for the first
@@ -33,8 +31,7 @@ class ExportKbOperator(private val dialog: ComposeDialog) {
         }
     }
 
-    private fun enterPath(name: String) {
-        val nameFieldContext = dialog.accessibleContext.find(EXPORT_KB_NAME_FIELD_DESCRIPTION, AccessibleRole.TEXT)
-        nameFieldContext!!.accessibleEditableText.setTextContents(name)
+    private fun enterPath(path: String) {
+        dialog.accessibleContext.enterTextIntoTextField(EXPORT_KB_NAME_FIELD_DESCRIPTION, path)
     }
 }

@@ -6,6 +6,7 @@ import com.google.genai.Client
 import com.google.genai.types.Blob
 import com.google.genai.types.Content
 import com.google.genai.types.Part
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -100,6 +101,25 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
     return find(matcher)
 }
 
+
+/**
+ * Set the contents of the text field carrying the given content description,
+ * clicking it first so that it holds native focus, and failing if the text does
+ * not take.
+ */
+fun AccessibleContext.enterTextIntoTextField(description: String, text: String) {
+    waitUntilAsserted {
+        val field = execute<AccessibleContext?> { find(description, AccessibleRole.TEXT) }
+        field shouldNotBe null
+        field!!.mouseClickAtCentre()
+        execute { field.accessibleEditableText.setTextContents(text) }
+        contentsOfTextField(field) shouldBe text
+    }
+}
+
+private fun contentsOfTextField(field: AccessibleContext) = execute<String> {
+    field.accessibleEditableText.getTextRange(0, field.accessibleText.charCount)
+}
 
 fun waitForContextToBeNotNull(contextProvider: () -> AccessibleContext, description: String) {
     waitUntilAsserted { execute<AccessibleContext?> { contextProvider().find(description) } shouldNotBe null }
