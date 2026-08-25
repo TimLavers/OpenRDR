@@ -9,7 +9,9 @@ import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
+import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -29,6 +31,12 @@ import kotlinx.coroutines.runBlocking
  * an attribute not in the KB.
  */
 const val UNKNOWN_VARIABLE_NAME = "unknown"
+
+/**
+ * The characters that make a value expression worth offering to the formula
+ * parser. Without one of these the text is a value, not arithmetic.
+ */
+private val FORMULA_OPERATORS = Regex("""[+\-*/()^]""")
 
 class RuleSessionManager(
     private val kb: KB,
@@ -433,8 +441,21 @@ class RuleSessionManager(
 
     /**
      * The value expression for the given user-entered text: a quoted string
-     * is a literal, text that parses as arithmetic over attribute names is a
-     * formula, and anything else is a literal.
+     * is a literal, text that parses as arithmetic over the names of existing
+     * attributes is a formula, and anything else is a literal.
+     *
+     * Names are resolved with [attributeForName], so a formula survives the
+     * small misspellings the chat tolerates everywhere else, and no attribute
+     * is ever invented to make a formula parse: a name that is no attribute is
+     * far more often a typo than an attribute the user means to fill in later,
+     * and inventing it yields a formula that can never evaluate, with nothing
+     * to tell the user why.
+     *
+     * Text that names no attribute at all was never meant as a formula, so it
+     * is simply a literal — `non-diabetic` is a value, not a subtraction. But
+     * text that names some attributes and one non-attribute is genuinely
+     * ambiguous, and both readings would mislead if guessed at, so the reading
+     * is put back to the user to confirm.
      */
     internal fun valueExpressionFor(expressionText: String): ValueExpression {
         val trimmed = expressionText.trim()
@@ -442,20 +463,45 @@ class RuleSessionManager(
             return Literal(trimmed.substring(1, trimmed.length - 1))
         }
         // Only treat text as a formula if it contains arithmetic operators, so
-        // that plain text like "diabetic" remains a literal. Formulas may
-        // reference attributes that are not yet in the KB; those attributes are
-        // created so the formula can be evaluated against future cases.
-        val hasArithmeticOperators = trimmed.contains(Regex("""[+\-*/()^]"""))
-        val parsed = if (hasArithmeticOperators) {
-            val attributeFor: (String) -> Attribute = { name ->
-                kb.attributeManager.all()
-                    .firstOrNull { it.name.equals(name, ignoreCase = true) }
-                    ?: kb.attributeManager.getOrCreate(name)
-            }
-            FormulaParser(attributeFor).parse(trimmed)
-        } else null
-        return if (parsed != null) Formula(parsed) else Literal(trimmed)
+        // that plain text, and a bare attribute name, remain literals.
+        if (!trimmed.contains(FORMULA_OPERATORS)) return Literal(trimmed)
+        var resolvedAName = false
+        var unresolvedName: String? = null
+        val attributeFor: (String) -> Attribute? = { name ->
+            val found = attributeForName(name)
+            if (found == null) unresolvedName = name else resolvedAName = true
+            found
+        }
+        val parsed = FormulaParser(attributeFor).parse(trimmed)
+        if (parsed != null) return Formula(parsed)
+        // The parser stops at the first name it cannot resolve, so there is at
+        // most one to report.
+        val unresolved = unresolvedName
+        if (resolvedAName && unresolved != null) {
+            val nearest = nearestAttributeName(unresolved)
+            error(
+                if (nearest == null) unknownAttributeInFormulaMessage(unresolved, trimmed)
+                else didYouMeanFormulaMessage(unresolved, trimmed.replace(unresolved, nearest))
+            )
+        }
+        return Literal(trimmed)
     }
+
+    /**
+     * The name of the attribute nearest [name], for suggesting the correction
+     * the user is likely to have meant, or null if nothing is close. The
+     * threshold is looser than [attributeForName]'s because the two answer
+     * different questions: that one decides silently, so it accepts only a
+     * single slip, whereas this one merely asks, so it can afford the distance
+     * of two that classic Levenshtein scores a transposition such as
+     * "hieght".
+     */
+    private fun nearestAttributeName(name: String): String? =
+        kb.attributeManager.all()
+            .map { it to levenshtein(it.name.lowercase(), name.lowercase()) }
+            .filter { (attribute, distance) -> distance <= maxOf(2, attribute.name.length / 3) }
+            .minByOrNull { it.second }
+            ?.first?.name
 
     /**
      * How an assignment reads to the user: a comment as its (truncated) text,

@@ -45,6 +45,10 @@ class RenameAttributeTest {
     )
 
     private fun bmiDefinedByRule(): Attribute {
+        // The attributes the definition references have to be in the KB, since a
+        // formula naming an attribute that does not exist is refused.
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
         val bmi = kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
         kb.derivedDefinitionManager.store(bmi.id, rsm.valueExpressionFor("weight / (height * height)"))
         kb.ruleManager.createRuleAndAddToParent(kb.ruleTree.root, AssignValue(bmi, ByDefinition), emptySet())

@@ -79,10 +79,28 @@ There are two other reasons why a derived attribute can be absent from a case:
 1. the rule assigning its value is not satisfied, or
 2. there is a rule that removes it
 
-The expression language for formulas is deliberately small at first: arithmetic on the
-latest values of attributes (`+ - * / **`, parentheses, numeric literals). Functions, episode indexing, and text
+The expression language for formulas is deliberately small at first: arithmetic on the latest values of attributes
+(`+ - * / ** ^`, parentheses, numeric literals). Functions, episode indexing, and text
 manipulation can be added later if
 needed.
+
+Telling a formula from a literal is a guess about what the user meant, so
+`valueExpressionFor` makes it conservatively. Quoted text is always a literal. Otherwise the text is offered to the
+formula parser only if it contains an operator character, and every name in it must resolve to an attribute the KB
+already has — resolved by `attributeForName`, so the small misspellings the chat tolerates elsewhere are tolerated here
+too. No attribute is invented to make a formula parse: a name that is no attribute is far more often a typo than an
+attribute to be filled in later, and inventing it yields a formula that can never evaluate, with nothing to tell the
+user why.
+
+That leaves two failure modes, distinguished by whether *any* name resolved:
+
+- No name resolved, so the text was never a formula. `non-diabetic` is a value, not a subtraction, and becomes a literal
+  with nothing created.
+- Some names resolved and one did not, which is genuinely ambiguous. Both readings would mislead if guessed at, so the
+  reading is put back to the user to confirm — naming the nearest attribute if one is close ("Did you mean
+  `weight / height`?"), otherwise offering the text ("Do you want to assign the text `weight / age`?"). The nearest-name
+  threshold is looser than
+  `attributeForName`'s, since suggesting costs less than deciding.
 
 ### Comments are attributes
 

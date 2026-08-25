@@ -124,8 +124,8 @@ Behaviour in `RuleService`/`RuleSessionManager`:
 
 - Resolve the attribute (`attributeForName`); require `kind == DERIVED`.
 - Parse `valueExpression` via the existing `valueExpressionFor`
-  (`RuleSessionManager.kt`) — literal-vs-formula rules and auto-creation of
-  referenced attributes come for free.
+  (`RuleSessionManager.kt`) — the literal-vs-formula rules come for free, including the refusal of a formula that names
+  an attribute the KB does not have.
 - Cycle guard: reuse `checkActionExpressionIsAcyclic`, but reading references
   from the attribute definition (see supporting changes).
 - `definitionManager.store(attr.id, expression)`; re-interpret; push updated

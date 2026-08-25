@@ -5,6 +5,8 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
+import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
+import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
 import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -143,20 +145,74 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
-    fun `an arithmetic expression referencing a missing attribute is a formula that evaluates to null`() {
-        // Given an expression that references an attribute not yet in the KB
+    fun `a formula naming an attribute that does not exist is put back to the user`() {
+        // Given a KB whose attributes do not include "age"
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When an expression referencing "age" is parsed
+        // Then the user is asked whether they meant to assign the text
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / age")
+        }.message shouldBe unknownAttributeInFormulaMessage("age", "weight / age")
+    }
+
+    @Test
+    fun `a formula misspelling an attribute is put back to the user as a correction`() {
+        // Given a KB with "height", which "hieght" transposes: distance two, so
+        // attributeForName does not accept it
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When an expression misspelling "height" is parsed
+        // Then the corrected expression is put to the user
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / hieght")
+        }.message shouldBe didYouMeanFormulaMessage("hieght", "weight / height")
+    }
+
+    @Test
+    fun `a formula naming an attribute that does not exist creates no attribute`() {
+        // Given a KB with two attributes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+        val before = kb.attributeManager.all()
+
+        // When an expression referencing a name that is not an attribute is refused
+        shouldThrow<IllegalStateException> { rsm.valueExpressionFor("weight / age") }
+
+        // Then no attribute was invented to make it parse
+        kb.attributeManager.all() shouldBe before
+    }
+
+    @Test
+    fun `text whose words are not attributes is a literal, whatever punctuation it has`() {
+        // Given a KB with two attributes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When text containing an operator character is parsed but names no
+        // attribute at all, so it was never meant as a formula
+        val expression = rsm.valueExpressionFor("non-diabetic")
+
+        // Then it is the literal text, and no attribute was invented for it
+        expression shouldBe Literal("non-diabetic")
+        kb.attributeManager.all().map { it.name }.toSet() shouldBe setOf("weight", "height")
+    }
+
+    @Test
+    fun `a small misspelling in a formula is corrected without asking`() {
+        // Given a KB with "weight", one deletion away from "weigt"
         val weight = kb.attributeManager.getOrCreate("weight")
-        val expression = rsm.valueExpressionFor("weight / age")
+        val height = kb.attributeManager.getOrCreate("height")
 
-        // Then it is parsed as a formula
+        // When an expression with that misspelling is parsed
+        val expression = rsm.valueExpressionFor("weigt / height")
+
+        // Then it is a formula over the intended attributes, the same tolerance
+        // attributeForName applies to an attribute name anywhere else
         (expression is Formula) shouldBe true
-
-        // And evaluating it against a case without the referenced attribute makes no assignment
-        val case = with(RDRCaseBuilder()) {
-            addValue(weight, defaultDate, "93.0")
-            build("Case")
-        }
-        expression.evaluate(case).shouldBeNull()
+        expression.referencedAttributes() shouldBe setOf(weight, height)
     }
 
     // --- assign value sessions ---
