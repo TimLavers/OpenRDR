@@ -445,7 +445,7 @@ class RuleSessionManager(
         // that plain text like "diabetic" remains a literal. Formulas may
         // reference attributes that are not yet in the KB; those attributes are
         // created so the formula can be evaluated against future cases.
-        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()]"""))
+        val hasArithmeticOperators = trimmed.contains(Regex("""[+\-*/()^]"""))
         val parsed = if (hasArithmeticOperators) {
             val attributeFor: (String) -> Attribute = { name ->
                 kb.attributeManager.all()

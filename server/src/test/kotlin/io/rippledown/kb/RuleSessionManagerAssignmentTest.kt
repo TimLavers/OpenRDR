@@ -108,6 +108,41 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
+    fun `an exponentiation expression using a caret is a formula`() {
+        // Given an attribute referenced by an expression whose only operator is
+        // the caret, the exponentiation DERIVED_ATTRIBUTES_HELP_TEXT recommends
+        val height = kb.attributeManager.getOrCreate("height")
+
+        // When the expression is parsed
+        val expression = rsm.valueExpressionFor("height ^ 2")
+
+        // Then it is a formula that evaluates against a case
+        val case = with(RDRCaseBuilder()) {
+            addValue(height, defaultDate, "3.0")
+            build("Case")
+        }
+        (expression is Formula) shouldBe true
+        expression.evaluate(case) shouldBe "9"
+    }
+
+    @Test
+    fun `an exponentiation expression using a double asterisk is a formula`() {
+        // Given an attribute referenced by an expression
+        val weight = kb.attributeManager.getOrCreate("weight")
+
+        // When the expression is parsed
+        val expression = rsm.valueExpressionFor("weight ** 3")
+
+        // Then it is a formula that evaluates against a case
+        val case = with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "2")
+            build("Case")
+        }
+        (expression is Formula) shouldBe true
+        expression.evaluate(case) shouldBe "8"
+    }
+
+    @Test
     fun `an arithmetic expression referencing a missing attribute is a formula that evaluates to null`() {
         // Given an expression that references an attribute not yet in the KB
         val weight = kb.attributeManager.getOrCreate("weight")
