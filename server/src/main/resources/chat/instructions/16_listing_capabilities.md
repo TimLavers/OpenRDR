@@ -14,7 +14,7 @@ not actually output the ** characters. Do not use any markdown formatting
 - **add** a comment to the report (with a rule)
 - **remove** a comment from the report (with a rule)
 - **replace** a comment in the report (with a rule)
-- **add** a derived attribute and **assign** a value to it, e.g. "BMI = weight / (height * height)" (with a rule)
+- **add** a derived attribute and **assign** a value to it, e.g. "BMI = weight / height ^ 2" (with a rule)
 - **remove** or **replace** the value of a derived attribute (with a rule)
 - **insert** a case value into a comment by writing an attribute name in braces, e.g. {TSH}
 - **review** cornerstone cases

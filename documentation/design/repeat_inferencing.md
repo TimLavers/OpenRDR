@@ -86,11 +86,21 @@ needed.
 
 Telling a formula from a literal is a guess about what the user meant, so
 `valueExpressionFor` makes it conservatively. Quoted text is always a literal. Otherwise the text is offered to the
-formula parser only if it contains an operator character, and every name in it must resolve to an attribute the KB
-already has — resolved by `attributeForName`, so the small misspellings the chat tolerates elsewhere are tolerated here
-too. No attribute is invented to make a formula parse: a name that is no attribute is far more often a typo than an
-attribute to be filled in later, and inventing it yields a formula that can never evaluate, with nothing to tell the
-user why.
+formula parser only if it contains an operator character, and every name in it must resolve *exactly* — differing at
+most in case or punctuation — to an attribute the KB already has. No attribute is invented to make a formula parse: a
+name that is no attribute is far more often a typo than an attribute to be filled in later, and inventing it yields a
+formula that can never evaluate, with nothing to tell the user why.
+
+Exactly, and not by `attributeForName`, which tolerates a single edit. The tolerance that is right for a name mentioned
+in passing is wrong here, because a formula is stored as a definition and applied to every later case while its text is
+never put in front of the user again. Attribute names one edit apart are not a remote possibility either: `weight` and
+`height` differ by one character, and a KB holding both once computed `weight / (weight * weight)` from a formula whose
+author wrote `height`. A near-match is offered as a correction instead, never taken.
+
+Which names resolve is asked of every name the text uses, not of the ones the parse managed to reach. The parser stops
+at the first name that does not resolve, so reading the answer off the parse made `age / weight` a literal and
+`weight / age` a question — the same expression either way round. `namesInFormula` tokenises the text independently for
+this.
 
 That leaves two failure modes, distinguished by whether *any* name resolved:
 
@@ -98,9 +108,30 @@ That leaves two failure modes, distinguished by whether *any* name resolved:
   with nothing created.
 - Some names resolved and one did not, which is genuinely ambiguous. Both readings would mislead if guessed at, so the
   reading is put back to the user to confirm — naming the nearest attribute if one is close ("Did you mean
-  `weight / height`?"), otherwise offering the text ("Do you want to assign the text `weight / age`?"). The nearest-name
-  threshold is looser than
-  `attributeForName`'s, since suggesting costs less than deciding.
+  `weight / height`?"), otherwise offering the text ("Do you want to assign the text `weight / age`?").
+  `nearestAttributeName`
+  can afford a looser threshold than resolution does, since it only asks.
+
+Asking the user to confirm only works if the answer can then be acted on, so a refused assignment must leave the KB
+exactly as it was: `startRuleSessionToAssignValue` validates the expression *before* creating the attribute it defines.
+Creating it first left a derived attribute with no rule and no definition, and the name then clashed with the very
+request the user had just been asked to confirm — the question could be asked but not answered. Attributes are never
+deleted, so the only way to not create one is to not create it yet.
+
+The name being defined is the one name in an expression that can be unresolved for a good reason: it may not exist yet.
+An expression naming it is neither a typo nor a literal but a self-reference, and needs no dependency graph to detect,
+since a definition mentioning its own attribute is circular by inspection. `valueExpressionFor` is therefore told the
+name being defined, and refuses such an expression with the same cycle wording used everywhere else.
+
+None of this ladder means anything unless the expression reaches the server as the user wrote it, so over the chat the
+model is a transcriber: the instructions forbid it to correct a name, rewrite an operator, or substitute a formula of
+its own. It is not that the model corrects badly — asked for `weight/hieght^2` it produced `weight / (height * height)`,
+which is the formula the instructions themselves used as their BMI example, for any BMI request whatever the user typed.
+Tolerance for misspelling is not thereby lost, only moved to where it can be stated and tested: within a formula every
+name that does not resolve exactly is put to the user, with the nearest attribute named when there is one. Nothing about
+a formula is decided silently on the user's behalf. The model may send an expression other than the user's own words in
+exactly one case: when the server asked "Did you mean ...?" and the user accepted, it sends the server's corrected
+expression, since re-sending the original would fetch the same question and the two of them would loop.
 
 ### Comments are attributes
 

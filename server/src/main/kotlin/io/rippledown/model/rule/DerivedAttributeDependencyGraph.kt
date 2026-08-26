@@ -131,7 +131,15 @@ class DerivedAttributeDependencyGraph(
  * The message explaining why a cycle-creating condition or assignment is
  * refused, naming the cycle.
  */
-fun cycleMessage(cycle: List<Attribute>): String {
-    val cycleText = cycle.joinToString(" → ") { it.name }
-    return "it would make \"${cycle.first().name}\" depend on itself ($cycleText)"
+fun cycleMessage(cycle: List<Attribute>): String = cycleMessageForNames(cycle.map { it.name })
+
+/**
+ * The same message for a cycle that can only be named, not walked: an attribute
+ * whose own definition names it does not have to exist for the cycle to be
+ * certain, and refusing the definition before creating the attribute is what
+ * keeps a refused request from leaving one behind.
+ */
+fun cycleMessageForNames(cycle: List<String>): String {
+    val cycleText = cycle.joinToString(" → ")
+    return "it would make \"${cycle.first()}\" depend on itself ($cycleText)"
 }

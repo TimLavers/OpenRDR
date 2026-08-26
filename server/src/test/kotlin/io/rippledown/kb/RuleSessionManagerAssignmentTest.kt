@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
@@ -85,6 +86,21 @@ class RuleSessionManagerAssignmentTest {
     fun `text that is not arithmetic over attributes is a literal`() {
         rsm.valueExpressionFor("diabetic") shouldBe Literal("diabetic")
         rsm.valueExpressionFor("not a formula") shouldBe Literal("not a formula")
+    }
+
+    @Test
+    fun `a name in a formula is never bound to a merely similar attribute`() {
+        // Given a KB with "weight" but no "height" — names one edit apart, and both
+        // commonplace, so a near-match here is not a rare accident
+        kb.attributeManager.getOrCreate("weight")
+
+        // When a formula names height
+        // Then it is put back to the user rather than silently computed from weight:
+        // a definition is stored and applied to every later case, and its text is
+        // never shown again, so a wrong binding would go on being wrong in silence
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / (height * height)")
+        }.message!! shouldContain "There is no attribute named \"height\""
     }
 
     @Test
@@ -201,18 +217,35 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
-    fun `a small misspelling in a formula is corrected without asking`() {
+    fun `an unresolvable name is reported wherever it appears in the expression`() {
+        // Given a KB with weight, and no attribute named age
+        kb.attributeManager.getOrCreate("weight")
+
+        // When the unresolvable name comes first, and when it comes last
+        // Then both readings are the same. The parse stops at the first name it
+        // cannot resolve, so taking the answer from it made "age / weight" a
+        // literal while "weight / age" was asked about
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("age / weight")
+        }.message shouldBe unknownAttributeInFormulaMessage("age", "age / weight")
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / age")
+        }.message shouldBe unknownAttributeInFormulaMessage("age", "weight / age")
+    }
+
+    @Test
+    fun `a small misspelling in a formula is offered as a correction, not applied`() {
         // Given a KB with "weight", one deletion away from "weigt"
-        val weight = kb.attributeManager.getOrCreate("weight")
-        val height = kb.attributeManager.getOrCreate("height")
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
 
         // When an expression with that misspelling is parsed
-        val expression = rsm.valueExpressionFor("weigt / height")
-
-        // Then it is a formula over the intended attributes, the same tolerance
-        // attributeForName applies to an attribute name anywhere else
-        (expression is Formula) shouldBe true
-        expression.referencedAttributes() shouldBe setOf(weight, height)
+        // Then the correction is put to the user rather than made for them. The
+        // tolerance attributeForName grants a name mentioned in passing is
+        // withdrawn here: this text becomes a stored definition
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weigt / height")
+        }.message shouldBe didYouMeanFormulaMessage("weigt", "weight / height")
     }
 
     // --- assign value sessions ---

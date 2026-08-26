@@ -68,7 +68,13 @@ Feature: Repeat inferencing via derived attributes.
     Then the interpretation report should be "Elevated BMI."
 
   Scenario: A formula referencing an attribute with no value makes no assignment
-    Given case Dirac is provided having data:
+    # Bohr is here to make height an attribute of the knowledge base. Without it
+    # the formula would name nothing at all, which is a different case: what is
+    # under test is an attribute the case has no value for.
+    Given case Bohr is provided having data:
+      | weight | 80.0 |
+      | height | 1.9  |
+    And case Dirac is provided having data:
       | weight | 93.0 |
     And I start the client application
     And a backdoor rule is built for case Dirac to assign the formula "weight / (height * height)" to the derived attribute "BMI" with no conditions

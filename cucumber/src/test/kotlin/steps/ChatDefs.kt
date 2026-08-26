@@ -473,6 +473,21 @@ class ChatDefs {
         waitForBotTextToContainAnyOf("cycle", "depend on itself")
     }
 
+    /**
+     * The two shapes of the question asked when a value expression names some
+     * attributes and one non-attribute. The message is returned to the user
+     * verbatim, not paraphrased by the model, so it can be matched exactly.
+     */
+    @Then("the chat should say there is no attribute named {string} and suggest the formula {string}")
+    fun chatSuggestsCorrectedFormula(unknownName: String, correctedFormula: String) {
+        waitForBotText("no attribute named", unknownName, "Did you mean", correctedFormula)
+    }
+
+    @Then("the chat should say there is no attribute named {string} and offer to assign the text {string}")
+    fun chatOffersToAssignFormulaAsText(unknownName: String, text: String) {
+        waitForBotText("no attribute named", unknownName, "assign the text", text)
+    }
+
     @Then("the chat should explain that the name {string} already exists")
     fun chatExplainsNameAlreadyExists(name: String) {
         waitForBotText(name)
