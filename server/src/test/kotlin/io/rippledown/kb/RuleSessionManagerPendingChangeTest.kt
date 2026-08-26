@@ -101,13 +101,13 @@ class RuleSessionManagerPendingChangeTest {
             "Surf's flat.",
         )
         // The name a replacement carries is that of the replacing attribute
-        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "C2")
+        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "C2", "C1")
 
         // When the replacing comment is renamed
         rsm.renameAttribute("C2", "Lake")
 
         // Then the pending change shows the new name
-        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "Lake")
+        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "Lake", "C1")
     }
 
     @Test
@@ -124,8 +124,9 @@ class RuleSessionManagerPendingChangeTest {
         // When the comment being replaced is renamed
         rsm.renameAttribute("C1", "Beach")
 
-        // Then the pending change still names the replacing attribute
-        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "C2")
+        // Then the pending change still names the replacing attribute, and shows the
+        // new name of the one being replaced, by which the panel finds its row
+        rsm.pendingChange shouldBe Replacement("Surf's up.", "Surf's flat.", "C2", "Beach")
     }
 
     /**

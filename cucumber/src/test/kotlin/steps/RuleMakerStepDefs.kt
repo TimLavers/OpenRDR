@@ -219,6 +219,33 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
     }
 
+    @When("I start to build a rule to add the comment with variables {string}")
+    fun startRuleToAddCommentWithVariables(comment: String) {
+        with(chatDefs) {
+            waitForBotQuestionOrCompletedAction()
+            addCommentWithoutConfirmation(comment)
+            waitForRuleSessionToStart()
+        }
+    }
+
+    @When("I start to build a rule to remove the comment with variables {string}")
+    fun startRuleToRemoveCommentWithVariables(comment: String) {
+        with(chatDefs) {
+            waitForBotQuestionOrCompletedAction()
+            removeSpecificCommentWithoutConfirmation(comment)
+            waitForRuleSessionToStart()
+        }
+    }
+
+    @When("I start to build a rule to replace the comment with variables {string} by {string}")
+    fun startRuleToReplaceCommentWithVariables(toBeReplaced: String, replacement: String) {
+        with(chatDefs) {
+            waitForBotQuestionOrCompletedAction()
+            enterChatTextAndSend("Replace the comment \"$toBeReplaced\" by \"$replacement\"")
+            waitForRuleSessionToStart()
+        }
+    }
+
     @When("I try to build a rule to replace the non-existing comment {string}")
     fun startRuleToReplaceNonExistingComment(toBeReplaced: String) {
         with(chatDefs) {
@@ -288,19 +315,9 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 
-    @Then("the message indicating the comment {string} is being added should be shown")
-    fun `require message indicating comment is being added`(addedComment: String) {
-        ruleMakerPO().requireMessageForAddingComment(addedComment)
-    }
-
-    @Then("the message indicating the comment {string} is being removed should be shown")
-    fun `require message indicating comment is being removed`(removedComment: String) {
-        ruleMakerPO().requireMessageForRemovingComment(removedComment)
-    }
-
-    @Then("the message indicating the comment {string} is being replaced by {string} should be shown")
-    fun `require message indicating comment is being replaced`(replacedComment: String, replacementComment: String) {
-        ruleMakerPO().requireMessageForReplacingComment(replacedComment, replacementComment)
+    @Then("the comments panel should show exactly:")
+    fun `require comments shown to be`(expected: DataTable) {
+        interpretationViewPO().requireCommentsShownToBe(expected.asList())
     }
 
     @Then("I enter the expression {string}")

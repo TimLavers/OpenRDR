@@ -34,7 +34,9 @@ data class CommentRowState(
  * A pending addition is not on the case yet, so a row for it is appended: a new
  * comment attribute has the highest id, and comments are shown in attribute id
  * order, so this is where the comment will sit once the rule is committed. A
- * pending removal or replacement applies to a row that is already there.
+ * pending removal or replacement applies to a row that is already there, and
+ * that row shows the comment as the change gives it: a comment with variables is
+ * previewed as the template its rule defines, not as it renders for this case.
  *
  * @param ruleConditions the conditions of the rule being built, shown in the
  *   tooltip of a comment that is being added or is replacing another, since
@@ -48,23 +50,27 @@ fun commentRowsToDisplay(
     if (diff == null) return comments.map { CommentRowState(it) }
 
     return when (diff) {
-        // The row shows the conditions of the rule being built, rather than
-        // those of the rule that gave the comment, because it is the removal
-        // that the user is reviewing.
+        // The row shows the comment as the change gives it, and the conditions
+        // of the rule being built rather than those of the rule that gave the
+        // comment, because it is the removal that the user is reviewing.
         is Removal -> comments.map {
             if (it.isThatOf(diff.removedText, diff.attributeName)) {
-                CommentRowState(it.copy(conditions = ruleConditions), CommentHighlight.REMOVED)
+                CommentRowState(
+                    it.copy(text = diff.removedText, conditions = ruleConditions),
+                    CommentHighlight.REMOVED
+                )
             } else {
                 CommentRowState(it)
             }
         }
 
-        // The diff names the replacing attribute, which is a different attribute
-        // from the one being replaced, so the row to preview is found by its text.
+        // The row being replaced is found by the name of the attribute going,
+        // since diff.attributeName is that of the one coming in its place, and
+        // shows the comment as the change gives it.
         is Replacement -> comments.map {
-            if (it.text == diff.originalText) {
+            if (it.isThatOf(diff.originalText, diff.replacedAttributeName)) {
                 CommentRowState(
-                    comment = it,
+                    comment = it.copy(text = diff.originalText),
                     highlight = CommentHighlight.REPLACED,
                     replacement = RenderedComment(
                         text = diff.replacementText,

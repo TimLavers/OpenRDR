@@ -12,6 +12,7 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
 import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
+import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -64,7 +65,10 @@ class RuleSessionManager(
         get() = when (val change = currentChange) {
             is Addition -> change.copy(attributeName = currentAttributeName(change.attributeName))
             is Removal -> change.copy(attributeName = currentAttributeName(change.attributeName))
-            is Replacement -> change.copy(attributeName = currentAttributeName(change.attributeName))
+            is Replacement -> change.copy(
+                attributeName = currentAttributeName(change.attributeName),
+                replacedAttributeName = replacedDiffAttribute?.name ?: change.replacedAttributeName
+            )
             else -> change
         }
 
@@ -95,6 +99,14 @@ class RuleSessionManager(
      * taken when the session started.
      */
     private var diffAttribute: Attribute? = null
+
+    /**
+     * The comment attribute a pending replacement is replacing, held for the same
+     * reason as [diffAttribute]: the replacement names it so that the panel can
+     * find the row to preview, and a rename during the session must not leave
+     * that name stale.
+     */
+    private var replacedDiffAttribute: Attribute? = null
 
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
@@ -160,7 +172,7 @@ class RuleSessionManager(
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
         return startCommentSession(
             case,
-            Removal(renderedComment(attribute, case), attribute.name),
+            Removal(commentTemplateText(attribute), attribute.name),
             null, //a removal assigns no comment
             attribute,
             ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition))
@@ -199,18 +211,30 @@ class RuleSessionManager(
         return startCommentSession(
             case,
             Replacement(
-                renderedComment(replacedAttribute, case),
+                commentTemplateText(replacedAttribute),
                 replacementTemplate.textWithVariableNames(),
-                replacementAttribute.name
+                replacementAttribute.name,
+                replacedAttribute.name
             ),
             replacementAttribute,
             replacementAttribute,
             ChangeTreeToReplaceAssignment(
                 AssignValue(replacedAttribute, ByDefinition),
                 AssignValue(replacementAttribute, ByDefinition)
-            )
+            ),
+            replacedAttribute
         )
     }
+
+    /**
+     * The internal form of a comment written by a client of the rule-building
+     * API, whose variables are given as `{attributeName}` placeholders. That is
+     * the form the server itself writes a comment in when it reports a change,
+     * so a comment handed back to it has to be read the same way; without this a
+     * placeholder would be stored as literal text, and a removal or replacement
+     * naming one would match no comment at all.
+     */
+    private fun internalForm(comment: String) = resolveCommentVariables(comment, emptyList(), this)
 
     /**
      * The definition of a comment with variables. A variable naming no attribute
@@ -247,8 +271,15 @@ class RuleSessionManager(
             (kb.derivedDefinitionManager.definitionFor(it.id) as? CommentTemplate)?.text == text
         }
 
-    private fun renderedComment(attribute: Attribute, case: RDRCase): String =
-        (kb.derivedDefinitionManager.definitionFor(attribute.id) as? CommentTemplate)?.render(case)?.text ?: ""
+    /**
+     * The comment of the given attribute as its rule defines it, each variable
+     * shown as `{attributeName}`. A change to a comment is previewed in this
+     * form, rather than as the comment renders for the case the rule is being
+     * built on, because it is the rule that the user is reviewing.
+     */
+    private fun commentTemplateText(attribute: Attribute): String =
+        (kb.derivedDefinitionManager.definitionFor(attribute.id) as? CommentTemplate)
+            ?.textWithVariableNames { id -> attributeById(id) } ?: ""
 
     /**
      * Starts a session for a rule assigning the attribute by its definition:
@@ -336,7 +367,7 @@ class RuleSessionManager(
         case: RDRCase,
         change: DerivedValueChange,
         action: RuleTreeChange
-    ): CornerstoneStatus = startSession(case, change, null, null, action)
+    ): CornerstoneStatus = startSession(case, change, null, null, action, null)
 
     /**
      * Starts a session that will change the comments, previewing [change] in the
@@ -347,8 +378,10 @@ class RuleSessionManager(
         change: Diff,
         commentAttribute: Attribute?,
         attributeNamingTheChange: Attribute,
-        action: RuleTreeChange
-    ): CornerstoneStatus = startSession(case, change, commentAttribute, attributeNamingTheChange, action)
+        action: RuleTreeChange,
+        replacedAttribute: Attribute? = null
+    ): CornerstoneStatus =
+        startSession(case, change, commentAttribute, attributeNamingTheChange, action, replacedAttribute)
 
     /**
      * Starts a session, previewing the change it is about to make. The preview is
@@ -365,20 +398,24 @@ class RuleSessionManager(
         change: PendingChange,
         commentAttribute: Attribute?,
         attributeNamingTheChange: Attribute?,
-        action: RuleTreeChange
+        action: RuleTreeChange,
+        replacedAttribute: Attribute?
     ): CornerstoneStatus {
         val previousChange = currentChange
         val previousCommentAttribute = commentAttributeInSession
         val previousDiffAttribute = diffAttribute
+        val previousReplacedDiffAttribute = replacedDiffAttribute
         currentChange = change
         commentAttributeInSession = commentAttribute
         diffAttribute = attributeNamingTheChange
+        replacedDiffAttribute = replacedAttribute
         return try {
             startRuleSession(case, action)
         } catch (e: Throwable) {
             currentChange = previousChange
             commentAttributeInSession = previousCommentAttribute
             diffAttribute = previousDiffAttribute
+            replacedDiffAttribute = previousReplacedDiffAttribute
             throw e
         }
     }
@@ -633,6 +670,7 @@ class RuleSessionManager(
         currentChange = null
         commentAttributeInSession = null
         diffAttribute = null
+        replacedDiffAttribute = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -677,6 +715,7 @@ class RuleSessionManager(
         currentChange = null
         commentAttributeInSession = null
         diffAttribute = null
+        replacedDiffAttribute = null
         checkRuleSessionHistoryConsistency()
         sendCasesInfo()
     }
@@ -912,9 +951,17 @@ class RuleSessionManager(
         // unnamed one, because every CornerstoneStatus built during the session
         // carries it to the Comments panel.
         return when (diff) {
-            is Addition -> startRuleSessionToAddComment(case, diff.right())
-            is Removal -> startRuleSessionToRemoveComment(case, diff.left())
-            is Replacement -> startRuleSessionToReplaceComment(case, diff.left(), diff.right())
+            is Addition -> {
+                val (comment, variables) = internalForm(diff.right())
+                startRuleSessionToAddComment(case, comment, variables)
+            }
+
+            is Removal -> startRuleSessionToRemoveComment(case, internalForm(diff.left()).first)
+
+            is Replacement -> {
+                val (replacement, variables) = internalForm(diff.right())
+                startRuleSessionToReplaceComment(case, internalForm(diff.left()).first, replacement, variables)
+            }
         }
     }
 
@@ -951,13 +998,22 @@ class RuleSessionManager(
             startRuleSessionToAssignValue(viewableCase.case, assignAttribute, request.assignExpression ?: "")
         } else {
             when (val diff = request.diff) {
-                is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
-                is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
-                is Replacement -> startRuleSessionToReplaceComment(
-                    viewableCase,
-                    diff.originalText,
-                    diff.replacementText
-                )
+                is Addition -> {
+                    val (comment, variables) = internalForm(diff.addedText)
+                    startRuleSessionToAddComment(viewableCase, comment, variables)
+                }
+
+                is Removal -> startRuleSessionToRemoveComment(viewableCase, internalForm(diff.removedText).first)
+
+                is Replacement -> {
+                    val (replacement, variables) = internalForm(diff.replacementText)
+                    startRuleSessionToReplaceComment(
+                        viewableCase,
+                        internalForm(diff.originalText).first,
+                        replacement,
+                        variables
+                    )
+                }
             }
         }
         try {

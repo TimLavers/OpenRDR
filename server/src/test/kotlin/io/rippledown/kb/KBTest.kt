@@ -1804,8 +1804,9 @@ class KBTest {
         rsm.startRuleSessionToReplaceComment(viewableCase, original, replacement)
 
         //Then
-        // The replacing comment is a new comment attribute, so it is auto-named C2.
-        rsm.currentDiff shouldBe Replacement(original, replacement, "C2")
+        // The replacing comment is a new comment attribute, so it is auto-named C2,
+        // and the change names the attribute being replaced.
+        rsm.currentDiff shouldBe Replacement(original, replacement, "C2", "C1")
     }
 
     @Test

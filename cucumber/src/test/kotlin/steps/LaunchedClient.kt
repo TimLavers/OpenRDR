@@ -85,7 +85,6 @@ class LaunchedClient {
     fun cornerstonePO() = rdUiOperator.cornerstonePO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
     fun chatPO() = rdUiOperator.chatPO()
-    fun ruleMakerPO() = rdUiOperator.ruleMakerPO()
     fun reportPO() = rdUiOperator.reportPO()
     fun screenshot(file: File) {
         file.parentFile?.mkdirs()

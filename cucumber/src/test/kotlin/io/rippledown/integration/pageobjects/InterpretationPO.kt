@@ -49,6 +49,17 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     fun interpretationText(): String = commentsShown().joinToString(" ")
 
     /**
+     * Requires the table to show these comments, in this order, and no others.
+     * Read as a list rather than as one string so that a comment shown twice,
+     * or shown alongside another rendering of itself, is a failure.
+     */
+    fun requireCommentsShownToBe(expected: List<String>) {
+        waitUntilAsserted {
+            commentsShown() shouldBe expected
+        }
+    }
+
+    /**
      * The names shown in the name column, in the order of the rows, being the
      * names of the comment attributes that gave the comments.
      */

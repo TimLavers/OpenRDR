@@ -340,8 +340,8 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToRemoveComment(viewableCase, template)
 
         // Then the existing comment is matched (so the action is applicable) and the diff shows the
-        // rendered text rather than the raw template.
-        rsm.currentDiff shouldBe Removal("Glucose is 5.0", "C1")
+        // comment as its rule defines it, with the variable named.
+        rsm.currentDiff shouldBe Removal("Glucose is {Glucose}", "C1")
     }
 
     // --- startRuleSessionToReplaceComment ---
@@ -360,7 +360,7 @@ class RuleSessionManagerTest {
 
         // Then
         // The replacing comment is a new comment attribute, so it is auto-named C2.
-        rsm.currentDiff shouldBe Replacement(original, replacement, "C2")
+        rsm.currentDiff shouldBe Replacement(original, replacement, "C2", "C1")
     }
 
     @Test
@@ -377,7 +377,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToReplaceComment(viewableCase, original, template, variables)
 
         // Then - the pending replacement shows the template, with the variable named
-        rsm.currentDiff shouldBe Replacement(original, "Glucose is {Glucose}", "C2")
+        rsm.currentDiff shouldBe Replacement(original, "Glucose is {Glucose}", "C2", "C1")
     }
 
     @Test
@@ -398,8 +398,8 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToReplaceComment(viewableCase, template, replacement)
 
         // Then the existing comment is matched (so the action is applicable) and the diff shows the
-        // rendered original rather than the raw template.
-        rsm.currentDiff shouldBe Replacement("Glucose is 5.0", replacement, "C2")
+        // comment being replaced as its rule defines it, with the variable named.
+        rsm.currentDiff shouldBe Replacement("Glucose is {Glucose}", replacement, "C2", "C1")
     }
 
     // --- attributeForName ---
@@ -989,9 +989,10 @@ class RuleSessionManagerTest {
         // When
         rsm.startRuleSession(request)
 
-        // Then the replacing comment is a new comment attribute, so it is auto-named C2
+        // Then the replacing comment is a new comment attribute, so it is auto-named C2,
+        // and the change names the attribute being replaced
         rsm.isRuleSessionActive() shouldBe true
-        rsm.currentDiff shouldBe diff.copy(attributeName = "C2")
+        rsm.currentDiff shouldBe diff.copy(attributeName = "C2", replacedAttributeName = "C1")
     }
 
     @Test

@@ -327,6 +327,24 @@ class ChatDefs {
         enterChatTextAndSend("Add the comment: \"$comment\"")
     }
 
+    /**
+     * Waits until the rule session for the change just requested is under way, which is when its
+     * preview can be read from the Comments panel. A change to a comment with variables prompts the
+     * model to confirm the comment first, so confirm if it asks, then wait for the suggestions of
+     * this request rather than of an earlier rule session.
+     */
+    fun waitForRuleSessionToStart() {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) || chatPO().suggestionsAreForLatestRequest()
+        }
+        if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+            confirm()
+        }
+        await().atMost(ofSeconds(90)).until {
+            chatPO().suggestionsAreForLatestRequest()
+        }
+    }
+
     fun addCommentThenConfirm(comment: String) {
         addCommentWithoutConfirmation(comment)
         // The model is instructed to ask for confirmation when a comment contains a variable, but it

@@ -35,6 +35,42 @@ Feature: Add, replace or remove comments with variables
     When I build another rule to remove the comment "The wave quality is {wave}"
     Then the report should be empty
 
+  Scenario: The preview of a comment being added should show the template, not the values of its variables
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the report is empty
+    When I start to build a rule to add the comment with variables "The wave quality is {Wave}"
+    Then the comments panel should show exactly:
+      | The wave quality is {Wave} |
+
+  Scenario: The preview of a comment being removed should show the template, not the values of its variables
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And the interpretation of the case Bondi includes "The wave quality is {Wave}" because of condition "Wave is in case"
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the report should be "The wave quality is excellent"
+    When I start to build a rule to remove the comment with variables "The wave quality is {Wave}"
+    Then the comments panel should show exactly:
+      | The wave quality is {Wave} |
+
+  Scenario: The preview of a comment being replaced should show the templates, not the values of their variables
+    Given case Bondi is provided having data:
+      | Wave | excellent |
+      | Sun  | hot       |
+    And the interpretation of the case Bondi includes "The wave quality is {Wave}" because of condition "Wave is in case"
+    And I start the client application
+    And I see the case Bondi as the current case
+    And the report should be "The wave quality is excellent"
+    When I start to build a rule to replace the comment with variables "The wave quality is {Wave}" by "The air temperature is {Sun}"
+    Then the comments panel should show exactly:
+      | The wave quality is {Wave}   |
+      | The air temperature is {Sun} |
+
   Scenario: The user should be able to use the chat to add a comment with multiple variables
     Given case Bondi is provided having data:
       | Wave | excellent |

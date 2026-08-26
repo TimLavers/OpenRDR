@@ -151,6 +151,41 @@ class CommentRowsTest {
         rows.single().highlight shouldBe CommentHighlight.REMOVED
     }
 
+    /**
+     * A comment with variables is previewed as the template its rule defines, so
+     * that the user sees what the rule does rather than what it happens to say
+     * for the case in front of them.
+     */
+    @Test
+    fun `a row being removed shows the comment as the change gives it`() {
+        // Given a comment rendered for this case, and a removal naming it as a template
+        val forThisCase = RenderedComment(text = "Glucose is 12.0.", name = "C1")
+
+        // When the rows are computed
+        val rows = commentRowsToDisplay(listOf(forThisCase), Removal("Glucose is {Glucose}.", "C1"))
+
+        // Then the row shows the template
+        rows.single().comment.text shouldBe "Glucose is {Glucose}."
+        rows.single().highlight shouldBe CommentHighlight.REMOVED
+    }
+
+    @Test
+    fun `a row being replaced shows the comment as the change gives it`() {
+        // Given a comment rendered for this case, and a replacement naming it as a template
+        val forThisCase = RenderedComment(text = "Glucose is 12.0.", name = "C1")
+
+        // When the rows are computed
+        val rows = commentRowsToDisplay(
+            listOf(forThisCase),
+            Replacement("Glucose is {Glucose}.", "Glucose is fine.", "C2", "C1")
+        )
+
+        // Then the row shows the template, and carries the replacing comment
+        rows.single().comment.text shouldBe "Glucose is {Glucose}."
+        rows.single().highlight shouldBe CommentHighlight.REPLACED
+        rows.single().replacement?.text shouldBe "Glucose is fine."
+    }
+
     @Test
     fun `a removal without an attribute name falls back to matching the text`() {
         // Given a change made without a name, as an older client would send

@@ -535,8 +535,10 @@ internal class KBEndpointTest {
         //When
         endpoint.startRuleSession(sessionStartRequest)
 
-        //Then the replacing comment is a new comment attribute, so it is auto-named C2
-        endpoint.session.ruleSessionManager.currentDiff shouldBe diff.copy(attributeName = "C2")
+        //Then the replacing comment is a new comment attribute, so it is auto-named C2,
+        //and the change names the attribute being replaced
+        endpoint.session.ruleSessionManager.currentDiff shouldBe
+                diff.copy(attributeName = "C2", replacedAttributeName = "C1")
     }
 
     @Test
@@ -612,6 +614,52 @@ internal class KBEndpointTest {
 
         // Then
         commentsForCase(id) shouldBe listOf("TSH normal.")
+    }
+
+    @Test
+    fun `buildRule should read a placeholder in a comment as a variable`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+
+        // When
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667""""))
+        )
+
+        // Then
+        commentsForCase(case1.caseId.id!!) shouldBe listOf("TSH is 0.667.")
+    }
+
+    @Test
+    fun `buildRule should remove a comment that has a variable`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667""""))
+        )
+        commentsForCase(id) shouldBe listOf("TSH is 0.667.")
+
+        // When
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Removal("TSH is {TSH}."), listOf("""ABC is "6.7""""))
+        )
+
+        // Then
+        commentsForCase(id) shouldBe emptyList()
+    }
+
+    @Test
+    fun `startRuleSession should read a placeholder in a comment as a variable`() {
+        // Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+
+        // When
+        endpoint.startRuleSession(SessionStartRequest(id, Addition("TSH is {TSH}.")))
+        endpoint.commitCurrentRuleSession()
+
+        // Then
+        commentsForCase(id) shouldBe listOf("TSH is 0.667.")
     }
 
     @Test

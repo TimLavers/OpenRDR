@@ -88,7 +88,8 @@ Feature: The user can make rules that change the interpretive report
     And I start the client application
     And I see the case Bondi as the current case
     When I request that the comment "Let's surf." be added
-    Then the message indicating the comment "Let's surf." is being added should be shown
+    Then the comments panel should show exactly:
+      | Let's surf. |
 
   Scenario: When the user starts to build a rule to remove a comment, the rule action should be shown
     Given case Bondi is provided having data:
@@ -98,7 +99,8 @@ Feature: The user can make rules that change the interpretive report
     And I start the client application
     And I see the case Bondi as the current case
     When I start to build a rule to remove the comment "Let's surf."
-    Then the message indicating the comment "Let's surf." is being removed should be shown
+    Then the comments panel should show exactly:
+      | Let's surf. |
 
   Scenario: When the user starts to build a rule to replace a comment, the rule action should be shown
     Given case Bondi is provided having data:
@@ -108,7 +110,9 @@ Feature: The user can make rules that change the interpretive report
     And I start the client application
     And I see the case Bondi as the current case
     When I start to build a rule to replace the comment "Let's surf." by "Let's swim."
-    Then the message indicating the comment "Let's surf." is being replaced by "Let's swim." should be shown
+    Then the comments panel should show exactly:
+      | Let's surf. |
+      | Let's swim. |
 
   Scenario: The user should be prevented from starting a new rule session if a previous session is not completed
     Given case Bondi is provided having data:

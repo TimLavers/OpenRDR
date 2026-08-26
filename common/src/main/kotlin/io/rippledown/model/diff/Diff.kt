@@ -26,11 +26,19 @@ sealed interface Diff : PendingChange {
     val attributeName: String
 }
 
+/**
+ * @param replacedAttributeName the name of the comment attribute being replaced.
+ *   [attributeName] names the replacing one, and [originalText] is the comment
+ *   being replaced as its rule defines it, which for a comment with variables is
+ *   not the text shown for any case, so the row to preview can only be found by
+ *   this name. Empty when the replacement was not made for a comment attribute.
+ */
 @Serializable
 data class Replacement(
     val originalText: String = "",
     val replacementText: String = "",
-    override val attributeName: String = ""
+    override val attributeName: String = "",
+    val replacedAttributeName: String = ""
 ) : Diff {
     override fun left() = originalText
     override fun right() = replacementText
