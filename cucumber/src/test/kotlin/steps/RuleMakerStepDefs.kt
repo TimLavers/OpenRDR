@@ -11,6 +11,8 @@ import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.SECONDS
 
+private const val WAIT_PERIOD_SECS = 30L
+
 class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I build (a )(another )rule to add the comment {string}")
@@ -30,14 +32,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             addCommentWithoutConfirmation(comment)
             // The model sometimes asks to confirm a further comment before starting the rule session.
             // Wait until it either asks to confirm or presents the new suggestions.
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             decline()
@@ -61,14 +63,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             // A replacement comment that contains a variable prompts the model to confirm before
             // starting the rule session. Wait until it either asks to confirm or presents the new
             // suggestions.
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             decline()
@@ -151,14 +153,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             // NEW suggestion row (or a CONFIRM prompt) before providing conditions.
             val suggestionsBefore = chatPO().numberOfSuggestionRows()
             addCommentWithoutConfirmation(comment)
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
         }
@@ -193,14 +195,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             // Removing a comment that contains a variable can prompt the model to confirm the comment
             // before starting the rule session. Wait until it either asks to confirm or presents the
             // new suggestions.
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             decline()
