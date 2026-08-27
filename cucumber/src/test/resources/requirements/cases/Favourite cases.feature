@@ -1,4 +1,5 @@
 Feature: Show a list of favourite cases
+
   Scenario: The favourite cases list is initially empty
     Given I start the client application
     Then I should see no cases in the favourites case list
@@ -56,7 +57,7 @@ Feature: Show a list of favourite cases
       | 2022-08-05 12:31 |
       | 2022-08-06 02:25 |
     And I should see these attributes:
-      | TSH |
+      | TSH   |
       | Stuff |
     And I should see these values for 'TSH':
       | 0.67 |

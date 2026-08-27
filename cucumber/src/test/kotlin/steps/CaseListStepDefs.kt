@@ -13,22 +13,22 @@ class CaseListStepDefs {
 
     @And("I select case {word}( on the processed case list)")
     fun selectCase(caseName: String) {
-        caseListPO().select(caseName)
+        processedCaseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
+        refocusLastSelectedCase = { processedCaseListPO().mouseClick(caseName) }
     }
 
     @And("I select case {word} on the favourites case list")
     fun selectFavouritesCase(caseName: String) {
         favouriteCaseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
+        refocusLastSelectedCase = { favouriteCaseListPO().mouseClick(caseName) }
     }
 
     @Then("I (should )see the following cases in the case list:")
     fun IShouldSeeTheFollowingCasesInTheCaseList(dataTable: DataTable) {
         val expectedCaseNames = dataTable.asList()
-        caseListPO().requireCaseNamesToBe(expectedCaseNames)
+        processedCaseListPO().requireCaseNamesToBe(expectedCaseNames)
     }
 
     @Then("I should see no cases in the case list")
@@ -87,9 +87,9 @@ class CaseListStepDefs {
 
     @And("(I )select the case {word}")
     fun ISelectTheCaseWord(caseName: String) {
-        caseListPO().select(caseName)
+        processedCaseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
-        refocusLastSelectedCase = { caseListPO().mouseClick(caseName) }
+        refocusLastSelectedCase = { processedCaseListPO().mouseClick(caseName) }
     }
 
     @And("I select the case {word} on the cornerstone case list")
@@ -97,6 +97,11 @@ class CaseListStepDefs {
         cornerstoneCaseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
         refocusLastSelectedCase = { cornerstoneCaseListPO().mouseClick(caseName) }
+    }
+
+    @Then("the selected case should (still )be {word}")
+    fun theSelectedCaseShouldStillBe(caseName: String) {
+        processedCaseListPO().requireCaseToBeSelected(caseName)
     }
 
     @When("I press the down arrow key")

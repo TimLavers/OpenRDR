@@ -74,3 +74,22 @@ fun alreadyAssignedForCaseMessage(
 
 fun nameClashWithExistingExternalAttributeMessage(existingAttributeName: String): String =
     "An externally supplied attribute named \"${existingAttributeName}\" already exists.\nPlease choose a different name."
+
+/**
+ * Asked when a value expression names some attributes but one of its names is
+ * no attribute at all, and something close enough to suggest exists. Building
+ * the corrected formula unasked could give the user a formula they never
+ * wrote, so the correction is put to them to accept with a plain yes.
+ */
+fun didYouMeanFormulaMessage(unknownName: String, correctedExpression: String): String =
+    "There is no attribute named \"$unknownName\".\nDid you mean \"$correctedExpression\"?"
+
+/**
+ * Asked in the same situation as [didYouMeanFormulaMessage] when no attribute
+ * name is close enough to suggest. The alternative reading is that the text was
+ * never a formula, so that is what is offered — silently assigning it as text
+ * would leave the user with a nonsense value and no hint as to why their
+ * formula never evaluated.
+ */
+fun unknownAttributeInFormulaMessage(unknownName: String, expression: String): String =
+    "There is no attribute named \"$unknownName\".\nDo you want to assign the text \"$expression\"?"

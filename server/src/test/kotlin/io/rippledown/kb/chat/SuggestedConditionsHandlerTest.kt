@@ -120,6 +120,30 @@ class SuggestedConditionsHandlerTest {
     }
 
     @Test
+    fun `conditionTextOf should strip the editable marker`() {
+        // Given an editable suggestion, as it is buffered for the client
+        val suggestion = "wave height >= 1.5${SuggestedConditionsHandler.EDITABLE_SUFFIX}"
+
+        // When / Then the bare condition text is recovered
+        SuggestedConditionsHandler.conditionTextOf(suggestion) shouldBe "wave height >= 1.5"
+    }
+
+    @Test
+    fun `conditionTextOf should leave a non-editable suggestion unchanged`() {
+        // Given / When / Then
+        SuggestedConditionsHandler.conditionTextOf("case is for a single date") shouldBe "case is for a single date"
+    }
+
+    @Test
+    fun `conditionTextOf should only strip the marker from the end`() {
+        // Given a condition whose own text mentions the marker
+        val suggestion = "Note is \"${SuggestedConditionsHandler.EDITABLE_MARKER} pending\""
+
+        // When / Then nothing is stripped, since the marker is not a suffix
+        SuggestedConditionsHandler.conditionTextOf(suggestion) shouldBe suggestion
+    }
+
+    @Test
     fun `should return no suggestions message when all conditions already added`() = runTest {
         // Given
         every { ruleService.isRuleSessionActive() } returns true

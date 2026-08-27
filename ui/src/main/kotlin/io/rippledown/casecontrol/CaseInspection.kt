@@ -153,6 +153,7 @@ fun CaseInspection(
                     interpretation = case.viewableInterpretation,
                     diff = diff,
                     ruleConditions = ruleConditions,
+                    columnWidths = columnWidths,
                     handler = handler
                 )
                 if (showReport) {

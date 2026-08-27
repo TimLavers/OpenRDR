@@ -4,7 +4,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
+import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
+import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
 import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -86,6 +89,21 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
+    fun `a name in a formula is never bound to a merely similar attribute`() {
+        // Given a KB with "weight" but no "height" — names one edit apart, and both
+        // commonplace, so a near-match here is not a rare accident
+        kb.attributeManager.getOrCreate("weight")
+
+        // When a formula names height
+        // Then it is put back to the user rather than silently computed from weight:
+        // a definition is stored and applied to every later case, and its text is
+        // never shown again, so a wrong binding would go on being wrong in silence
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / (height * height)")
+        }.message!! shouldContain "There is no attribute named \"height\""
+    }
+
+    @Test
     fun `an arithmetic expression resolves attribute names case-insensitively`() {
         // Given existing attributes with capitalised names
         val weight = kb.attributeManager.getOrCreate("Weight")
@@ -108,20 +126,190 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
-    fun `an arithmetic expression referencing a missing attribute is a formula that evaluates to null`() {
-        // Given an expression that references an attribute not yet in the KB
-        val weight = kb.attributeManager.getOrCreate("weight")
-        val expression = rsm.valueExpressionFor("weight / age")
+    fun `an exponentiation expression using a caret is a formula`() {
+        // Given an attribute referenced by an expression whose only operator is
+        // the caret, the exponentiation DERIVED_ATTRIBUTES_HELP_TEXT recommends
+        val height = kb.attributeManager.getOrCreate("height")
 
-        // Then it is parsed as a formula
-        (expression is Formula) shouldBe true
+        // When the expression is parsed
+        val expression = rsm.valueExpressionFor("height ^ 2")
 
-        // And evaluating it against a case without the referenced attribute makes no assignment
+        // Then it is a formula that evaluates against a case
         val case = with(RDRCaseBuilder()) {
-            addValue(weight, defaultDate, "93.0")
+            addValue(height, defaultDate, "3.0")
             build("Case")
         }
-        expression.evaluate(case).shouldBeNull()
+        (expression is Formula) shouldBe true
+        expression.evaluate(case) shouldBe "9"
+    }
+
+    @Test
+    fun `an exponentiation expression using a double asterisk is a formula`() {
+        // Given an attribute referenced by an expression
+        val weight = kb.attributeManager.getOrCreate("weight")
+
+        // When the expression is parsed
+        val expression = rsm.valueExpressionFor("weight ** 3")
+
+        // Then it is a formula that evaluates against a case
+        val case = with(RDRCaseBuilder()) {
+            addValue(weight, defaultDate, "2")
+            build("Case")
+        }
+        (expression is Formula) shouldBe true
+        expression.evaluate(case) shouldBe "8"
+    }
+
+    @Test
+    fun `a formula naming an attribute that does not exist is put back to the user`() {
+        // Given a KB whose attributes do not include "age"
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When an expression referencing "age" is parsed
+        // Then the user is asked whether they meant to assign the text
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / age")
+        }.message shouldBe unknownAttributeInFormulaMessage("age", "weight / age")
+    }
+
+    @Test
+    fun `a formula misspelling an attribute is put back to the user as a correction`() {
+        // Given a KB with "height", which "hieght" transposes: distance two, so
+        // attributeForName does not accept it
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When an expression misspelling "height" is parsed
+        // Then the corrected expression is put to the user
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / hieght")
+        }.message shouldBe didYouMeanFormulaMessage("hieght", "weight / height")
+    }
+
+    @Test
+    fun `a formula naming an attribute that does not exist creates no attribute`() {
+        // Given a KB with two attributes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+        val before = kb.attributeManager.all()
+
+        // When an expression referencing a name that is not an attribute is refused
+        shouldThrow<IllegalStateException> { rsm.valueExpressionFor("weight / age") }
+
+        // Then no attribute was invented to make it parse
+        kb.attributeManager.all() shouldBe before
+    }
+
+    @Test
+    fun `text whose words are not attributes is a literal, whatever punctuation it has`() {
+        // Given a KB with two attributes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When text containing an operator character is parsed but names no
+        // attribute at all, so it was never meant as a formula
+        val expression = rsm.valueExpressionFor("non-diabetic")
+
+        // Then it is the literal text, and no attribute was invented for it
+        expression shouldBe Literal("non-diabetic")
+        kb.attributeManager.all().map { it.name }.toSet() shouldBe setOf("weight", "height")
+    }
+
+    @Test
+    fun `an unresolvable name is reported wherever it appears in the expression`() {
+        // Given a KB with weight, and no attribute named age
+        kb.attributeManager.getOrCreate("weight")
+
+        // When the unresolvable name comes first, and when it comes last
+        // Then both readings are the same. The parse stops at the first name it
+        // cannot resolve, so taking the answer from it made "age / weight" a
+        // literal while "weight / age" was asked about
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("age / weight")
+        }.message shouldBe unknownAttributeInFormulaMessage("age", "age / weight")
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weight / age")
+        }.message shouldBe unknownAttributeInFormulaMessage("age", "weight / age")
+    }
+
+    @Test
+    fun `a small misspelling in a formula is offered as a correction, not applied`() {
+        // Given a KB with "weight", one deletion away from "weigt"
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When an expression with that misspelling is parsed
+        // Then the correction is put to the user rather than made for them. The
+        // tolerance attributeForName grants a name mentioned in passing is
+        // withdrawn here: this text becomes a stored definition
+        shouldThrow<IllegalStateException> {
+            rsm.valueExpressionFor("weigt / height")
+        }.message shouldBe didYouMeanFormulaMessage("weigt", "weight / height")
+    }
+
+    // --- formulaQuestionFor ---
+
+    @Test
+    fun `a misspelling is offered as the corrected expression`() {
+        // Given a KB with "height", which "hieght" transposes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When the question about the misspelling is asked for
+        val question = rsm.formulaQuestionFor("weight/hieght^2")
+
+        // Then the corrected formula is what the user accepts by saying yes, so
+        // that their acceptance can be acted on without the model re-sending it
+        question shouldBe FormulaQuestion(
+            didYouMeanFormulaMessage("hieght", "weight/height^2"),
+            "weight/height^2"
+        )
+    }
+
+    @Test
+    fun `a name with nothing near it offers the text as a quoted literal`() {
+        // Given a KB with weight, and nothing resembling "age"
+        kb.attributeManager.getOrCreate("weight")
+
+        // When the question about the expression is asked for
+        val question = rsm.formulaQuestionFor("weight / age")
+
+        // Then what is offered is the text as a value, which is what quoting it
+        // makes it: the offer is accepted by assigning it, not by parsing it
+        question shouldBe FormulaQuestion(
+            unknownAttributeInFormulaMessage("age", "weight / age"),
+            "\"weight / age\""
+        )
+    }
+
+    @Test
+    fun `the question is the one raised when the expression is refused`() {
+        // Given a KB in which one name of the expression does not resolve
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When the expression is refused
+        val refusal = shouldThrow<IllegalStateException> { rsm.valueExpressionFor("weigt / height") }
+
+        // Then the refusal says exactly what the question says. The two are one
+        // so that the offer can never name an expression other than the one the
+        // user was shown
+        refusal.message shouldBe rsm.formulaQuestionFor("weigt / height")?.message
+    }
+
+    @Test
+    fun `text that raises no question has none`() {
+        // Given a KB with two attributes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // Then a quoted literal, text with no operator, a formula that parses,
+        // and text naming no attribute at all are all unquestioned
+        rsm.formulaQuestionFor("\"weight / age\"").shouldBeNull()
+        rsm.formulaQuestionFor("diabetic").shouldBeNull()
+        rsm.formulaQuestionFor("weight / height").shouldBeNull()
+        rsm.formulaQuestionFor("non-diabetic").shouldBeNull()
     }
 
     // --- assign value sessions ---
@@ -509,7 +697,7 @@ class RuleSessionManagerAssignmentTest {
 
         // Then only the comment preview is set, so the Derived attributes panel
         // shows nothing pending
-        rsm.currentDiff shouldBe Addition("Go to Bondi.")
+        rsm.currentDiff shouldBe Addition("Go to Bondi.", "C1")
         rsm.currentDerivedValueChange.shouldBeNull()
     }
 

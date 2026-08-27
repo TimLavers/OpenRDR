@@ -1,6 +1,7 @@
 package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeDialog
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -11,7 +12,6 @@ import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.awt.Dimension
 import java.awt.Point
-import java.awt.Rectangle
 import java.awt.Robot
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
@@ -20,41 +20,97 @@ import javax.swing.SwingUtilities.invokeLater
 // ORD2
 class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
-    private fun interpretationTextContext() =
-        execute<AccessibleContext> { contextProvider().find(INTERPRETATION_TEXT_FIELD) }
-
+    /**
+     * Move the pointer over the row showing the given comment, which is what
+     * shows that comment's conditions.
+     */
     fun movePointerToComment(comment: String) {
         waitForInterpretationTextToContain(comment)
-        val interpretation = interpretationText()
-        val index = interpretation.indexOf(comment)
-        movePointerToCharacterPosition(index)
+        val cell = commentCellShowing(comment)
+            ?: throw AssertionError("No comment row showing \"$comment\". Showing: ${commentsShown()}")
+        movePointerOverCentreOf(cell)
     }
 
-    fun movePointerToCharacterPosition(characterPosition: Int) {
-        val interpretationTextContext = interpretationTextContext()
-            ?: throw AssertionError("Interpretation text field not found in accessibility tree")
-        val rectangle =
-            execute<Rectangle> { interpretationTextContext.accessibleText?.getCharacterBounds(characterPosition) }
-                ?: return
-        val loc = interpretationTextContext.accessibleComponent?.locationOnScreen ?: return
-        Robot().mouseMove(loc.x + rectangle.x, loc.y)
+    /**
+     * The comments shown by the Comments table, in the order of its rows,
+     * including any comment that the rule being built is about to add or to put
+     * in place of another.
+     */
+    fun commentsShown(): List<String> =
+        execute<List<String>> {
+            commentCells().map { renderedText(it) }
+        }
+
+    /**
+     * The comments of the table read as one string, as they were shown before
+     * the comments became a list, so that an expectation of the whole
+     * interpretation can still be written as one string.
+     */
+    fun interpretationText(): String = commentsShown().joinToString(" ")
+
+    /**
+     * Requires the table to show these comments, in this order, and no others.
+     * Read as a list rather than as one string so that a comment shown twice,
+     * or shown alongside another rendering of itself, is a failure.
+     */
+    fun requireCommentsShownToBe(expected: List<String>) {
+        waitUntilAsserted {
+            commentsShown() shouldBe expected
+        }
     }
 
-    fun interpretationText(): String =
-        execute<String> {
-            // From Compose 1.11 the Java accessibility bridge uses the
-            // contentDescription as the accessible name on Text nodes,
-            // overriding the rendered text. Read the rendered text via
-            // AccessibleText (which exposes the actual characters) instead.
-            val ctx = contextProvider().find(INTERPRETATION_TEXT_FIELD) ?: return@execute ""
-            val text = ctx.accessibleText ?: return@execute ctx.accessibleName ?: ""
-            buildString {
-                for (i in 0 until text.charCount) {
-                    val ch = text.getAtIndex(javax.accessibility.AccessibleText.CHARACTER, i)
-                    if (ch != null) append(ch)
-                }
+    /**
+     * The names shown in the name column, in the order of the rows, being the
+     * names of the comment attributes that gave the comments.
+     */
+    fun commentNamesShown(): List<String> =
+        execute<List<String>> {
+            contextProvider().findAllByDescriptionPrefixesInOrder(
+                COMMENT_NAME_PREFIX,
+                COMMENT_REPLACEMENT_NAME_PREFIX
+            ).map { renderedText(it) }
+        }
+
+    /**
+     * The name shown beside the given comment, or null if the comment is not
+     * shown. The name and text cells of a row are read in the same order, so
+     * they can be paired off.
+     */
+    fun nameShownForComment(comment: String): String? {
+        val names = commentNamesShown()
+        val index = commentsShown().indexOfFirst { it == comment }
+        return if (index in names.indices) names[index] else null
+    }
+
+    fun waitForCommentToBeNamed(comment: String, name: String) {
+        waitUntilAsserted {
+            withClue("the name shown for the comment \"$comment\", of ${commentsShown()} named ${commentNamesShown()}") {
+                nameShownForComment(comment) shouldBe name
             }
         }
+    }
+
+    private fun commentCells(): List<AccessibleContext> =
+        contextProvider().findAllByDescriptionPrefixesInOrder(
+            COMMENT_TEXT_PREFIX,
+            COMMENT_PENDING_ADD_PREFIX,
+            COMMENT_PENDING_REMOVE_PREFIX,
+            COMMENT_PENDING_REPLACE_PREFIX,
+            COMMENT_REPLACEMENT_TEXT_PREFIX
+        )
+
+    private fun commentCellShowing(comment: String): AccessibleContext? =
+        execute<AccessibleContext?> {
+            commentCells().firstOrNull { renderedText(it) == comment }
+                ?: commentCells().firstOrNull { renderedText(it).contains(comment) }
+        }
+
+    private fun movePointerOverCentreOf(context: AccessibleContext) {
+        val component = context.accessibleComponent ?: return
+        val location = execute<Point> { component.locationOnScreen } ?: return
+        val size = execute<Dimension> { component.size } ?: return
+        Robot().mouseMove(location.x + size.width / 2, location.y + size.height / 2)
+    }
 
     fun waitForInterpretationText(expected: String): InterpretationPO {
         // Track the most recent observed text so we can include it in
@@ -171,11 +227,7 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
     fun waitForConditionsForComment(comment: String, conditions: List<String>) {
         waitUntilAsserted {
             // Re-trigger the mouse move on each retry to ensure the tooltip appears
-            val interpretation = interpretationText()
-            val index = interpretation.indexOf(comment)
-            if (index >= 0) {
-                movePointerToCharacterPosition(index)
-            }
+            commentCellShowing(comment)?.let { movePointerOverCentreOf(it) }
             conditions.forEach { condition ->
                 execute<AccessibleContext> { contextProvider().find("$CONDITION_PREFIX$condition") } shouldNotBe null
             }

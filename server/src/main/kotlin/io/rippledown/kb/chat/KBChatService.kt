@@ -15,6 +15,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.Attribute
 import io.rippledown.model.Interpretation
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.toJsonString
 
 object KBChatService {
@@ -28,10 +29,11 @@ object KBChatService {
 
     private fun String.replacePlaceholders(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute?
+        attributeById: (Int) -> Attribute?,
+        allAttributes: Set<Attribute>
     ): String {
         var result = this
-        systemPromptVariables(viewableCase, attributeById).forEach { key, value ->
+        systemPromptVariables(viewableCase, attributeById, allAttributes).forEach { key, value ->
             result = result.replace("{{$key}}", value)
         }
         return result
@@ -89,9 +91,10 @@ object KBChatService {
 
     fun createKBChatService(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute? = { null }
+        attributeById: (Int) -> Attribute? = { null },
+        allAttributes: Set<Attribute> = emptySet()
     ): ChatService {
-        val systemInstruction = systemPrompt(viewableCase, attributeById)
+        val systemInstruction = systemPrompt(viewableCase, attributeById, allAttributes)
         return GeminiChatService(
             systemInstruction = systemInstruction,
             functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
@@ -117,6 +120,7 @@ object KBChatService {
         "16_listing_capabilities.md",
         "17_assigning_derived_values.md",
         "18_editing_derived_definition.md",
+        "19_naming_and_renaming.md",
         "25_favourite_cases.md",
     )
     val systemPromptExampleSections = listOf(
@@ -129,12 +133,14 @@ object KBChatService {
 
     fun systemPromptVariables(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute? = { null }
+        attributeById: (Int) -> Attribute? = { null },
+        allAttributes: Set<Attribute> = emptySet()
     ) = mapOf(
         "ADD" to ADD,
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
         "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
+        "ALL_ATTRIBUTES" to allAttributes.joinToString("\n") { it.name },
         // The viewable interpretation holds the resolved copy of the case's
         // interpretation, in which ByDefinition comment assignments have been
         // substituted with their stored definitions.
@@ -171,6 +177,7 @@ object KBChatService {
         "UNDO_LAST_RULE" to UNDO_LAST_RULE,
         "SHOW_LAST_RULE_FOR_UNDO" to SHOW_LAST_RULE_FOR_UNDO,
         "MOVE_ATTRIBUTE" to MOVE_ATTRIBUTE,
+        "RENAME_ATTRIBUTE" to RENAME_ATTRIBUTE,
         "REMOVE_REASON" to REMOVE_REASON,
         "CANCEL_RULE" to CANCEL_RULE,
         "SELECT_SUGGESTION" to SELECT_SUGGESTED_CONDITION,
@@ -181,16 +188,24 @@ object KBChatService {
 
     fun systemPrompt(
         viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute? = { null }
+        attributeById: (Int) -> Attribute? = { null },
+        allAttributes: Set<Attribute> = emptySet()
     ): String {
         val mainSection = systemPromptMainSections.map { it ->
-            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase, attributeById)
+            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase, attributeById, allAttributes)
         }
         val exampleSection = systemPromptExampleSections.map { it ->
-            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(viewableCase, attributeById)
+            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(
+                viewableCase,
+                attributeById,
+                allAttributes
+            )
         }
         return (mainSection + exampleSection).joinToString(separator = "\n")
     }
 }
 
-private fun Interpretation.toComments() = conclusionTexts().toJsonString()
+private fun Interpretation.toComments() = assignments()
+    .mapNotNull { (it.expression as? CommentTemplate)?.textWithVariableNames() }
+    .toSet()
+    .toJsonString()

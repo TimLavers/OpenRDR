@@ -11,11 +11,9 @@ import kotlin.test.Test
 class PostgresRuleSessionRecordStoreTest: PostgresStoreTest() {
     private lateinit var store: RuleSessionRecordStore
 
-    override fun tablesInDropOrder() = listOf(RULE_SESSIONS_TABLE)
-
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.ruleSessionRecordStore()
     }
 

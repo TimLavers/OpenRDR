@@ -6,20 +6,27 @@ cases that are presented to them.
 Current and future versions of OpenRDR should support the following lists of cases within each Knowledge Base:
 1. Cornerstone Cases: The cases that have been used to build rules are retained in the KB and are used to test the effect of new rules.
 2. Archived Cases: When cases are sent to a KB for interpretation, the cases are kept so that users can review their interpretations and build rules as necessary.
-3. Favourite Cases*: Especially interesting cases can be copied from the Archived Cases list for easy access.
-4. Search Results*: To store the results of condition- or conclusion-based case searches.
+3. Favourite Cases: Especially interesting cases can be copied for easy access.
+   See [favourite_cases.md](favourite_cases.md).
+4. Search Results*: To store the results of condition- or comment-based case searches.
 
  \* Not yet implemented.
 
 ## Case editing
 
-*Not yet implemented.* The following describes the intended behaviour once the Favourite Cases list (see above) exists.
+*Not yet implemented.*
 
-It is useful to edit cases so that the effects of different values on case interpreation can be assessed. The following restrictions apply:
-- It is not possible to edit cases that are in the Favourite Cases list.
-- It is not possible to copy cases from the other case lists to the Favourites list.
-- When editing a Favourites case, it is possible to save the changed case with a new name and keep the original version of the case.
-- It is possible to rename a Favourites case.
+It is useful to edit cases so that the effects of different values on case interpreation can be assessed. Editing is to
+be confined to the Favourite Cases list, which the user curates: the archived cases are the record of what the external
+system sent, and the cornerstones are the record of what the rules were built on, so neither may be edited. The intended
+behaviour is:
+
+- a case in the Favourite Cases list can be edited, through the chat interface;
+- the changed case can be saved under a new name, keeping the original;
+- a case in the Favourite Cases list can be renamed.
+
+Copying the current case to the Favourite Cases list **is** implemented; see
+[favourite_cases.md](favourite_cases.md), which is the current specification of that list.
 
 ## Case deletion
 To de-clutter a KB it is sometimes necessary to delete cases.

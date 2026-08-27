@@ -11,14 +11,19 @@ attributes. Whichever it is, the relevant panel previews the change in place,
 using a green background for something being added and red for something being
 removed.
 
-| Rule action             | Panel              | Preview                                                         |
-|-------------------------|--------------------|-----------------------------------------------------------------|
-| Add a comment           | Comments           | the new comment appended, **green**                             |
-| Remove a comment        | Comments           | the existing comment, **red**                                   |
-| Replace a comment       | Comments           | the old comment **red**, then the new one **green**             |
-| Assign a derived value  | Derived attributes | a new name/value row, **green**                                 |
-| Remove a derived value  | Derived attributes | the existing row, **red**                                       |
-| Replace a derived value | Derived attributes | in the value cell, the old value **red** then the new **green** |
+| Rule action             | Panel              | Preview                                                             |
+|-------------------------|--------------------|---------------------------------------------------------------------|
+| Add a comment           | Comments           | a new name/comment row appended, **green**                          |
+| Remove a comment        | Comments           | the existing row, **red**                                           |
+| Replace a comment       | Comments           | in one row, the old name and comment **red** then the new **green** |
+| Assign a derived value  | Derived attributes | a new name/value row, **green**                                     |
+| Remove a derived value  | Derived attributes | the existing row, **red**                                           |
+| Replace a derived value | Derived attributes | in the value cell, the old value **red** then the new **green**     |
+
+The two panels preview a change the same way because they show the same kind of thing: a named value the rules gave the
+case. A comment being added is a new row rather than text appended to a paragraph, since each comment has its own
+attribute and so its own row (see
+[repeat_inferencing.md](repeat_inferencing.md), Phase 2).
 
 The preview disappears when the session is committed or cancelled.
 
@@ -40,9 +45,14 @@ The pending change therefore travels from server to client as its own value.
 `PendingChange` is the change a rule session is about to make. It has two
 families of subtype, one per panel:
 
-- **`Diff`** - a comment change: `Addition`, `Removal`, `Replacement`, each
-  carrying comment text. This type is also used elsewhere for rule building and
-  for diffing lists of sentences.
+- **`Diff`** - a comment change: `Addition`, `Removal`, `Replacement`, each carrying comment text and the
+  `attributeName` of the comment attribute concerned, so that the Comments table can show the name beside the comment
+  before the rule is committed. For a replacement the name is that of the *replacing* attribute, the two comments having
+  an attribute each. The name is empty when the change did not come from a comment attribute, as when this type is used
+  elsewhere for diffing lists of sentences. The name a client is sent is read from the attribute at the moment the
+  status is built (`RuleSessionManager.pendingChange`), not snapshotted when the session started, because the user can
+  rename a comment while its rule is being built; `RenameAttribute` pushes a fresh status during a session so that the
+  panel shows the new name straight away.
 - **`DerivedValueChange`** - a derived attribute change, carrying an
   `attributeName`:
     - `DerivedValueAddition(attributeName, value, formula)`
@@ -106,9 +116,31 @@ kind, and no panel has to guess from content what it has been given.
 
 ### Comments
 
-`InterpretationView` walks the real comments and, driven by the `Diff`, appends
-the added text on `DIFF_ADDITION_COLOR` or restyles a matching existing comment
-with `DIFF_REMOVAL_COLOR`.
+`commentRowsToDisplay` is a pure function merging the case's comments with the pending change into the rows to draw,
+each carrying a highlight of `NONE`,
+`ADDED`, `REMOVED` or `REPLACED`. It mirrors `rowsToDisplay` below and, being free of Compose, is unit tested directly.
+
+| Change      | Effect on the rows                                                                                                                              |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| none        | every row `NONE`                                                                                                                                |
+| addition    | a row is **appended** and marked `ADDED`, taking the in-progress rule conditions as its tooltip conditions, since it has no rule of its own yet |
+| removal     | the matching row becomes `REMOVED`, likewise taking the rule conditions, since the removal is what the user is reviewing                        |
+| replacement | the matching row becomes `REPLACED`, carrying the replacing comment beside the one going, which takes the rule conditions                       |
+
+A pending addition is appended rather than inserted in name order because a new comment attribute has the highest id and
+comments are shown in attribute id order: appending is where the comment will sit once the rule is committed.
+
+A removal is matched by attribute name, falling back to the comment's text for a change that carries no name. Matching
+by name matters for a comment with a variable, whose rendered text differs from case to case, so that the text of the
+change — rendered against the case the rule is being built on — need not match the text shown for a cornerstone.
+
+`CommentRow` then renders each row, with `CommentPart` drawing a name chip and the comment beside it:
+
+- `ADDED` / `REMOVED` - the whole row is tinted, the analogue of the derived attributes panel tinting a whole name/value
+  pair.
+- `REPLACED` - the row shows two halves, the comment going in red and the one coming in green, **each with its own
+  name**. Unlike a derived value replacement, which changes one attribute's value and so need not repeat the name, a
+  comment replacement is a change of attribute: two names, and a name separated from its comment would be unreadable.
 
 ### Derived attributes
 
@@ -159,19 +191,30 @@ KB but have no value on this case.
 ## 7. Testability
 
 Background colour is invisible to both the Compose semantics tree and the
-accessibility bridge the cucumber page objects use, so the highlight is also
-exposed as a content description. The row keeps `DERIVED_VALUE_ROW_<name>` in
-every state; the value cell carries the state:
+accessibility bridge the cucumber page objects use, so the highlight is also exposed as a content description. Each
+panel keeps its row id in every state and puts the state on the cell that changes:
 
-| Highlight  | Value cell content description         |
-|------------|----------------------------------------|
-| `NONE`     | `DERIVED_VALUE_VALUE_<name>`           |
-| `ADDED`    | `DERIVED_VALUE_PENDING_ADD_<name>`     |
-| `REMOVED`  | `DERIVED_VALUE_PENDING_REMOVE_<name>`  |
-| `REPLACED` | `DERIVED_VALUE_PENDING_REPLACE_<name>` |
+| Highlight  | Derived value cell                     | Comment text cell                |
+|------------|----------------------------------------|----------------------------------|
+| `NONE`     | `DERIVED_VALUE_VALUE_<name>`           | `COMMENT_TEXT_<name>`            |
+| `ADDED`    | `DERIVED_VALUE_PENDING_ADD_<name>`     | `COMMENT_PENDING_ADD_<name>`     |
+| `REMOVED`  | `DERIVED_VALUE_PENDING_REMOVE_<name>`  | `COMMENT_PENDING_REMOVE_<name>`  |
+| `REPLACED` | `DERIVED_VALUE_PENDING_REPLACE_<name>` | `COMMENT_PENDING_REPLACE_<name>` |
+
+The rows themselves are `DERIVED_VALUE_ROW_<name>` and `COMMENT_ROW_<name>`. The second half of a comment replacement
+carries
+`COMMENT_REPLACEMENT_TEXT_<name>` and `COMMENT_REPLACEMENT_NAME_<name>`, named for the replacing attribute.
 
 Tests find the node and assert its rendered text is the expected value, or
-`"<old> <new>"` for a replacement.
+`"<old> <new>"` for a derived value replacement.
+
+Two further hooks are peculiar to the Comments table:
+
+- **Hover highlighting** is a background too, so a comment row's `testTag` is
+  `COMMENT_ROW_HOVERED_<name>` while the pointer is over it and
+  `COMMENT_ROW_<name>` otherwise.
+- **Two tables can be on screen at once**, the case's and the cornerstone's, so every id above takes an `idPrefix`,
+  which is `CORNERSTONE_` for the cornerstone's.
 
 ## 8. Where the code lives
 
@@ -184,6 +227,9 @@ Tests find the node and assert its rendered text is the expected value, or
 | `server/.../kb/RuleSessionManager.kt`             | sets, clears and sends `currentChange`         |
 | `server/.../kb/chat/action/AssignDerivedValue.kt` | asks before replacing an existing value        |
 | `ui/.../casecontrol/CaseControl.kt`               | splits the change into the two panel inputs    |
-| `ui/.../interpretation/InterpretationView.kt`     | renders the comment preview                    |
+| `ui/.../interpretation/CommentRows.kt`            | `commentRowsToDisplay` merge logic             |
+| `ui/.../interpretation/CommentRow.kt`             | renders one row of the Comments table          |
+| `ui/.../interpretation/CommentPart.kt`            | a name chip and the comment beside it          |
+| `ui/.../interpretation/InterpretationView.kt`     | the Comments panel                             |
 | `ui/.../interpretation/DerivedValueRows.kt`       | `rowsToDisplay` merge logic                    |
 | `ui/.../interpretation/DerivedValuesPanel.kt`     | renders the derived attribute rows             |

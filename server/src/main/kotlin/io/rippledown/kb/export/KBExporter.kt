@@ -10,7 +10,7 @@ open class KBExportImport(val destination: File) {
     val caseViewFile = File(destination, "CaseView.txt")
     val casesDirectory = File(destination, "CornerstoneCases")
     val processedCasesDirectory = File(destination, "ProcessedCases")
-    val conclusionsDirectory = File(destination, "Conclusions")
+    val definitionsDirectory = File(destination, "Definitions")
     val conditionsDirectory = File(destination, "Conditions")
     val rulesDirectory = File(destination, "Rules")
     val ruleSessionsDirectory = File(destination, "RuleSessions")
@@ -35,9 +35,9 @@ class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
         // Case view.
         CaseViewExporter(caseViewFile, kb.caseViewManager.allInOrder()).export()
 
-        // Conclusions.
-        conclusionsDirectory.mkdirs()
-        IdentifiedObjectExporter(conclusionsDirectory, ConclusionSource(kb.conclusionManager)).export()
+        // Definitions of the derived and comment attributes.
+        definitionsDirectory.mkdirs()
+        IdentifiedObjectExporter(definitionsDirectory, DefinitionSource(kb.derivedDefinitionManager)).export()
 
         // Conditions.
         conditionsDirectory.mkdirs()

@@ -1,7 +1,6 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
@@ -130,7 +129,7 @@ open class RuleTree(val root: Rule = rootRule()) {
         return "RuleTree(root=$root)"
     }
 
-    open fun rule(conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        return Rule(Random.Default.nextInt(), null, conclusion, conditions)
+    open fun rule(assignment: AssignValue?, conditions: Set<Condition>): Rule {
+        return Rule(Random.Default.nextInt(), null, conditions, mutableSetOf(), assignment)
     }
 }

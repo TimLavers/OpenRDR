@@ -46,7 +46,6 @@ open class OpenRDRServerTestBase {
             caseManagement(serverApplication)
             interpreter(serverApplication)
             attributeManagement(serverApplication)
-            conclusionManagement(serverApplication)
             conditionManagement(serverApplication)
             ruleSession(serverApplication)
             chatManagement(serverApplication)

@@ -296,6 +296,96 @@ class AttributeManagerTest {
     }
 
     @Test
+    fun `rename changes the name of the attribute, in the manager and the store`() {
+        // Given a comment attribute
+        val comment = attributeManager.createCommentAttribute()
+
+        // When it is renamed
+        val renamed = attributeManager.rename(comment, "Diabetes advice")
+
+        // Then it has the new name everywhere, and the old name is free
+        renamed.id shouldBe comment.id
+        renamed.name shouldBe "Diabetes advice"
+        comment.name shouldBe "Diabetes advice"
+        attributeManager.byName("Diabetes advice") shouldBe comment
+        attributeManager.byName("C1").shouldBeNull()
+        attributeStore.all().single().name shouldBe "Diabetes advice"
+    }
+
+    @Test
+    fun `rename trims the new name`() {
+        // Given an attribute
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When it is renamed with a padded name
+        attributeManager.rename(bmi, "  Body mass index  ")
+
+        // Then the name is trimmed
+        bmi.name shouldBe "Body mass index"
+    }
+
+    @Test
+    fun `rename refuses a blank name`() {
+        // Given an attribute
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When it is renamed to a blank name
+        // Then the request is refused and the name is unchanged
+        shouldThrow<IllegalArgumentException> {
+            attributeManager.rename(bmi, "  ")
+        }.message shouldBe "An attribute name cannot be blank."
+        bmi.name shouldBe "BMI"
+    }
+
+    @Test
+    fun `rename refuses a name in use by another attribute, ignoring case`() {
+        // Given two attributes
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+        attributeManager.getOrCreate("Glucose")
+
+        // When one is renamed to the other's name in a different case
+        // Then the request is refused and the name is unchanged
+        shouldThrow<IllegalStateException> {
+            attributeManager.rename(bmi, "glucose")
+        }.message shouldBe "An attribute with name \"Glucose\" already exists. Choose a different name."
+        bmi.name shouldBe "BMI"
+    }
+
+    @Test
+    fun `rename allows a change of case of the attribute's own name`() {
+        // Given an attribute
+        val bmi = attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
+
+        // When only the case of its name is changed
+        attributeManager.rename(bmi, "Bmi")
+
+        // Then the change is made
+        bmi.name shouldBe "Bmi"
+        attributeManager.byName("Bmi") shouldBe bmi
+        attributeManager.byName("BMI").shouldBeNull()
+    }
+
+    @Test
+    fun `rename refuses an attribute the manager does not hold`() {
+        shouldThrow<IllegalStateException> {
+            attributeManager.rename(Attribute(99, "Whatever", AttributeKind.DERIVED), "Something")
+        }.message shouldBe "No attribute with name \"Whatever\" exists."
+    }
+
+    @Test
+    fun `a renamed attribute frees its old name for reuse`() {
+        // Given a comment attribute that has been renamed
+        val comment = attributeManager.createCommentAttribute()
+        attributeManager.rename(comment, "Diabetes advice")
+
+        // When another comment attribute is auto-named
+        val second = attributeManager.createCommentAttribute()
+
+        // Then the freed name is used again
+        second.name shouldBe "C1"
+    }
+
+    @Test
     fun byName() {
         // Given an attribute
         val glucose = attributeManager.getOrCreate("Glucose")

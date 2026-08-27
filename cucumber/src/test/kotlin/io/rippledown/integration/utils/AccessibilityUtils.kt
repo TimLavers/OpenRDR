@@ -2,20 +2,21 @@ package io.rippledown.integration.utils
 
 import androidx.compose.ui.awt.ComposeDialog
 import androidx.compose.ui.awt.ComposeWindow
+import com.google.genai.Client
+import com.google.genai.types.Blob
+import com.google.genai.types.Content
+import com.google.genai.types.Part
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import java.awt.Rectangle
 import java.awt.Robot
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
 import javax.accessibility.AccessibleText
-import com.google.genai.Client
-import com.google.genai.types.Blob
-import com.google.genai.types.Content
-import com.google.genai.types.Part
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
 /**
@@ -101,6 +102,25 @@ fun AccessibleContext.find(description: String, role: AccessibleRole): Accessibl
 }
 
 
+/**
+ * Set the contents of the text field carrying the given content description,
+ * clicking it first so that it holds native focus, and failing if the text does
+ * not take.
+ */
+fun AccessibleContext.enterTextIntoTextField(description: String, text: String) {
+    waitUntilAsserted {
+        val field = execute<AccessibleContext?> { find(description, AccessibleRole.TEXT) }
+        field shouldNotBe null
+        field!!.mouseClickAtCentre()
+        execute { field.accessibleEditableText.setTextContents(text) }
+        contentsOfTextField(field) shouldBe text
+    }
+}
+
+private fun contentsOfTextField(field: AccessibleContext) = execute<String> {
+    field.accessibleEditableText.getTextRange(0, field.accessibleText.charCount)
+}
+
 fun waitForContextToBeNotNull(contextProvider: () -> AccessibleContext, description: String) {
     waitUntilAsserted { execute<AccessibleContext?> { contextProvider().find(description) } shouldNotBe null }
 }
@@ -155,6 +175,39 @@ fun AccessibleContext.findAll(matcher: (AccessibleContext) -> Boolean, debug: Bo
     val result = mutableSetOf<AccessibleContext>()
     this.findAll(result, matcher, debug)
     return result
+}
+
+/**
+ * The matching descendants, in the order in which they are laid out, which a
+ * set of matches cannot give. Use this where the order matters, as it does for
+ * the rows of the Comments table.
+ */
+fun AccessibleContext.findAllInOrder(matcher: (AccessibleContext) -> Boolean): List<AccessibleContext> {
+    val result = mutableListOf<AccessibleContext>()
+    collectAllInOrder(result, matcher)
+    return result
+}
+
+fun AccessibleContext.findAllByDescriptionPrefixesInOrder(vararg prefixes: String): List<AccessibleContext> =
+    findAllInOrder { context ->
+        val description = context.accessibleDescription
+        description != null && prefixes.any { description.startsWith(it) }
+    }
+
+private fun AccessibleContext.collectAllInOrder(
+    holder: MutableList<AccessibleContext>,
+    matcher: (AccessibleContext) -> Boolean
+) {
+    if (matcher(this)) {
+        holder.add(this)
+    }
+    for (i in 0..<accessibleChildrenCount) {
+        try {
+            getAccessibleChild(i).accessibleContext.collectAllInOrder(holder, matcher)
+        } catch (_: Exception) {
+            //ignore. This is a workaround for a possible bug in the Java AccessibleContext API
+        }
+    }
 }
 
 fun AccessibleContext.findAll(

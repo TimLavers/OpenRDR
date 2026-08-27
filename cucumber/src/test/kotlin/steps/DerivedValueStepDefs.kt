@@ -40,6 +40,17 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
         }
     }
 
+    @When("I accept the correction and give the reason {string}")
+    fun acceptCorrectionAndGiveReason(reason: String) {
+        with(chatDefs) {
+            confirm()
+            waitForBotSuggestions()
+            enterChatTextAndSend(reason)
+            decline() //no more reasons
+            waitForBotToSayDone()
+        }
+    }
+
     @Then("the derived value {string} should be {string}")
     fun derivedValueShouldBe(attributeName: String, expectedValue: String) {
         val actual = restClient().derivedValueFor(currentCaseName(), attributeName)

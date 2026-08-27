@@ -1,8 +1,7 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
-import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.rule.dsl.ruleTree
@@ -10,37 +9,37 @@ import io.rippledown.util.shouldBeEqualUsingSameAs
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase() {
+internal class RuleBuildingSessionForChangeToRemoveAssignmentTest : RuleTestBase() {
     private val sessionCase = clinicalNotesCase("123")
     private val cc1 = clinicalNotesCase("CC1")
     private val cc2 = clinicalNotesCase("CC2")
     private val cornerstones = mutableListOf(cc1, cc2)
     private val ruleFactory = DummyRuleFactory()
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionFactory: DummyConditionFactory
 
     @BeforeTest
     fun setup() {
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
     }
 
     @Test
     fun toStringTest() {
-        val addAction = ChangeTreeToRemoveConclusion(Conclusion(4, "Whatever"))
-        addAction.toString() shouldBe "ChangeTreeToRemoveConclusion(toBeRemoved=Conclusion(id=4, text=Whatever, variables=[]))"
+        val removeAction = ChangeTreeToRemoveAssignment(comment("Whatever"))
+        removeAction.toString() shouldBe "ChangeTreeToRemoveAssignment(toBeRemoved=AssignValue(attribute=Attribute(id=1000, name=C1, kind=COMMENT), expression=CommentTemplate(text=Whatever, variables=[])))"
     }
 
     @Test
     fun a_session_for_a_REMOVE_COMMENT_should_present_those_cornerstones_which_satisfy_the_conditions() {
         val tree = RuleTree()
-        val conclusionA = conclusionFactory.getOrCreate("A")
-        val removeAction = ChangeTreeToRemoveConclusion(conclusionA)
-        val ruleGivingA = Rule(5,null, conclusionA)
+        val commentA = commentFactory.comment("A")
+        val removeAction = ChangeTreeToRemoveAssignment(commentA)
+        val ruleGivingA = Rule(5, null, mutableSetOf(), mutableSetOf(), commentA)
         tree.root.addChild(ruleGivingA)
-        val ruleGivingB = Rule(6,null, conclusionFactory.getOrCreate("B"))
+        val ruleGivingB = Rule(6, null, mutableSetOf(), mutableSetOf(), commentFactory.comment("B"))
         tree.root.addChild(ruleGivingB)
-        val ruleGivingC = Rule(7,null , conclusionFactory.getOrCreate("C"))
+        val ruleGivingC = Rule(7, null, mutableSetOf(), mutableSetOf(), commentFactory.comment("C"))
         tree.root.addChild(ruleGivingC)
 
         val session = RuleBuildingSession(ruleFactory, tree, sessionCase,  removeAction, cornerstones)
@@ -52,21 +51,21 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
     @Test
     fun a_session_for_a_REMOVE_COMMENT_should_only_present_those_cornerstones_whose_interpretations_would_change() {
         val tree = RuleTree()
-        val ruleGivingA = Rule(7, null, conclusionFactory.getOrCreate("A"))
+        val ruleGivingA = Rule(7, null, mutableSetOf(), mutableSetOf(), commentFactory.comment("A"))
         tree.root.addChild(ruleGivingA)
-        val ruleGivingB = Rule(8, null, conclusionFactory.getOrCreate("b"))
+        val ruleGivingB = Rule(8, null, mutableSetOf(), mutableSetOf(), commentFactory.comment("b"))
         tree.root.addChild(ruleGivingB)
-        val ruleGivingC = Rule(8, null, conclusionFactory.getOrCreate("C"))
+        val ruleGivingC = Rule(8, null, mutableSetOf(), mutableSetOf(), commentFactory.comment("C"))
         tree.root.addChild(ruleGivingC)
 
-        val removeAction = ChangeTreeToRemoveConclusion(conclusionFactory.getOrCreate("A"))
+        val removeAction = ChangeTreeToRemoveAssignment(commentFactory.comment("A"))
         val session = RuleBuildingSession(ruleFactory, tree, sessionCase, removeAction, cornerstones)
         session.cornerstoneCases() shouldBe setOf(cc1, cc2)
     }
 
     @Test
     fun updating_the_rule_tree_for_a_REMOVE_COMMENT_should_add_the_rule_under_the_rule_to_be_stopped() {
-        val tree = ruleTree(conclusionFactory) {
+        val tree = ruleTree(commentFactory) {
             child {
                 +"A"
                 condition(conditionFactory) {
@@ -86,7 +85,7 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         tree.root.childRules().size shouldBe 2 //sanity
         val rulesBefore = tree.rules()
 
-        val removeAction = ChangeTreeToRemoveConclusion(conclusionFactory.getOrCreate("A"))
+        val removeAction = ChangeTreeToRemoveAssignment(commentFactory.comment("A"))
         val case = clinicalNotesCase("a")
         RuleBuildingSession(ruleFactory, tree, case, removeAction, listOf())
             .addCondition(containsText(null, clinicalNotes, "a"))
@@ -98,13 +97,13 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
         val ruleAdded = rulesAdded.random()
         ruleAdded.childRules() shouldBe emptySet()
         ruleAdded.conditions shouldBeEqualUsingSameAs setOf(containsText(null, clinicalNotes, "a"))
-        ruleAdded.conclusion shouldBe null
-        ruleAdded.parent!!.conclusion!!.text shouldBe "A"
+        ruleAdded.assignment shouldBe null
+        (ruleAdded.parent!!.assignment!!.expression as CommentTemplate).text shouldBe "A"
     }
 
     @Test
     fun isApplicable() {
-        val tree = ruleTree(conclusionFactory) {
+        val tree = ruleTree(commentFactory) {
             child {
                 +"A"
                 condition(conditionFactory) {
@@ -114,11 +113,11 @@ internal class RuleBuildingSessionForChangeToRemoveConclusionTest : RuleTestBase
             }
         }.build()
 
-        val removeAction = ChangeTreeToRemoveConclusion(conclusionFactory.getOrCreate("A"))
-        val caseWithConclusion = clinicalNotesCase("a")
-        removeAction.isApplicable(tree, caseWithConclusion) shouldBe true
+        val removeAction = ChangeTreeToRemoveAssignment(commentFactory.comment("A"))
+        val caseWithAssignment = clinicalNotesCase("a")
+        removeAction.isApplicable(tree, caseWithAssignment) shouldBe true
 
-        val caseWithoutConclusion = clinicalNotesCase("b")
-        removeAction.isApplicable(tree, caseWithoutConclusion) shouldBe false
+        val caseWithoutAssignment = clinicalNotesCase("b")
+        removeAction.isApplicable(tree, caseWithoutAssignment) shouldBe false
     }
 }

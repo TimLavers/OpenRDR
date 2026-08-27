@@ -1,6 +1,5 @@
 package io.rippledown.kb
 
-import io.rippledown.model.Conclusion
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.rule.AssignValue
@@ -10,8 +9,8 @@ import io.rippledown.persistence.PersistentRule
 import io.rippledown.persistence.RuleStore
 
 class RuleManager(
-    private val conclusionManager: ConclusionManager,
     private val conditionManager: ConditionManager,
+    private val attributeProvider: AttributeProvider,
     private val ruleStore: RuleStore
 ) : RuleFactory {
 
@@ -45,30 +44,16 @@ class RuleManager(
 
     fun ruleTree() = ruleTree
 
-    override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
+    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>): Rule {
         val parentInTree = ruleTree.rulesMatching { it.id == parent.id }.firstOrNull()
         require(parentInTree != null) {
             "Parent rule not in tree."
         }
         val storedConditions = storeConditionsAsNeeded(conditions)
         val conditionIds = conditionIds(storedConditions)
-        val toStore = PersistentRule(null, parent.id, conclusion?.id, conditionIds)
+        val toStore = PersistentRule(null, parent.id, conditionIds, assignment)
         val stored = ruleStore.create(toStore)
-        val newRule = Rule(storedRuleId(stored), parent, conclusion, storedConditions)
-        parent.addChild(newRule)
-        return newRule
-    }
-
-    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule {
-        val parentInTree = ruleTree.rulesMatching { it.id == parent.id }.firstOrNull()
-        require(parentInTree != null) {
-            "Parent rule not in tree."
-        }
-        val storedConditions = storeConditionsAsNeeded(conditions)
-        val conditionIds = conditionIds(storedConditions)
-        val toStore = PersistentRule(null, parent.id, null, conditionIds, assignment)
-        val stored = ruleStore.create(toStore)
-        val newRule = Rule(storedRuleId(stored), parent, null, storedConditions, mutableSetOf(), assignment)
+        val newRule = Rule(storedRuleId(stored), parent, storedConditions, mutableSetOf(), assignment)
         parent.addChild(newRule)
         return newRule
     }
@@ -93,15 +78,25 @@ class RuleManager(
     }
 
     private fun rebuildRuleButDoNotSetParent(persistentRule: PersistentRule): Rule {
-        val conclusion = if (persistentRule.conclusionId != null) conclusionManager.getById(persistentRule.conclusionId) else null
         val conditions = persistentRule.conditionIds.map { conditionManager.getById(it) }.toSet()
         return Rule(
             storedRuleId(persistentRule),
             null,
-            conclusion,
             conditions,
             mutableSetOf(),
-            persistentRule.assignment
+            aligned(persistentRule.assignment)
         )
+    }
+
+    /**
+     * The stored assignment with its attributes replaced by those held by the
+     * attribute manager, so that a rule built before an attribute was renamed
+     * shows the attribute's current name. An assignment referring to an
+     * attribute the manager does not know is left as it was stored.
+     */
+    private fun aligned(assignment: AssignValue?): AssignValue? {
+        if (assignment == null) return null
+        return runCatching { assignment.alignAttributes { id -> attributeProvider.getById(id) } }
+            .getOrDefault(assignment)
     }
 }

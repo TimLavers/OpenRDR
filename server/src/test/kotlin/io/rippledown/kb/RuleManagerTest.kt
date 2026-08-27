@@ -3,16 +3,16 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.isHigh
 import io.rippledown.model.condition.isLow
 import io.rippledown.model.condition.isNormal
+import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.PersistentRule
 import io.rippledown.persistence.RuleStore
 import io.rippledown.persistence.inmemory.InMemoryAttributeStore
-import io.rippledown.persistence.inmemory.InMemoryConclusionStore
 import io.rippledown.persistence.inmemory.InMemoryConditionStore
 import io.rippledown.persistence.inmemory.InMemoryRuleStore
 import kotlin.test.BeforeTest
@@ -20,15 +20,15 @@ import kotlin.test.Test
 
 class RuleManagerTest {
     private lateinit var attributeManager: AttributeManager
-    private lateinit var conclusionManager: ConclusionManager
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionManager: ConditionManager
     private lateinit var ruleStore: RuleStore
     private lateinit var ruleManager: RuleManager
     private lateinit var glucose: Attribute
     private lateinit var tsh: Attribute
-    private lateinit var coffeeConclusion: Conclusion
-    private lateinit var teaConclusion: Conclusion
-    private lateinit var champagneConclusion: Conclusion
+    private lateinit var coffeeAssignment: AssignValue
+    private lateinit var teaAssignment: AssignValue
+    private lateinit var champagneAssignment: AssignValue
     private lateinit var normalGlucose: Condition
     private lateinit var highTSH: Condition
     private lateinit var lowTSH: Condition
@@ -39,16 +39,16 @@ class RuleManagerTest {
     @BeforeTest
     fun setup() {
         attributeManager = AttributeManager(InMemoryAttributeStore())
-        conclusionManager = ConclusionManager(InMemoryConclusionStore())
+        commentFactory = CommentFactory()
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
         ruleStore = InMemoryRuleStore()
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
 
         glucose = attributeManager.getOrCreate("Glucose")
         tsh = attributeManager.getOrCreate("TSH")
-        coffeeConclusion = conclusionManager.getOrCreate(text1)
-        teaConclusion = conclusionManager.getOrCreate(text2)
-        champagneConclusion = conclusionManager.getOrCreate(text3)
+        coffeeAssignment = commentFactory.comment(text1)
+        teaAssignment = commentFactory.comment(text2)
+        champagneAssignment = commentFactory.comment(text3)
         normalGlucose = conditionManager.getOrCreate(isNormal(null, glucose))
         highTSH = conditionManager.getOrCreate(isHigh(null, tsh))
         lowTSH = conditionManager.getOrCreate(isLow(null, tsh))
@@ -59,26 +59,26 @@ class RuleManagerTest {
         ruleManager.ruleTree().size() shouldBe 1
         ruleManager.ruleTree().root.childRules() shouldBe emptySet()
         ruleManager.ruleTree().root.parent shouldBe null
-        ruleManager.ruleTree().root.conclusion shouldBe null
+        ruleManager.ruleTree().root.assignment shouldBe null
     }
 
     @Test
     fun createRuleAndAddToParent() {
         val root = ruleManager.ruleTree().root
 
-        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeAssignment, setOf(normalGlucose, highTSH))
         ruleManager.ruleTree().size() shouldBe 2
         coffeeRule.parent shouldBe root
-        coffeeRule.conclusion shouldBe coffeeConclusion
+        coffeeRule.assignment shouldBe coffeeAssignment
         coffeeRule.childRules() shouldBe emptySet()
         coffeeRule.conditions shouldBe setOf(normalGlucose, highTSH)
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 2
         val rebuiltCoffeeRule = ruleManager.ruleTree().root.childRules().single()
         rebuiltCoffeeRule.parent shouldBe ruleManager.ruleTree().root
-        rebuiltCoffeeRule.conclusion shouldBe coffeeConclusion
+        rebuiltCoffeeRule.assignment shouldBe coffeeAssignment
         rebuiltCoffeeRule.childRules() shouldBe emptySet()
         rebuiltCoffeeRule.conditions shouldBe setOf(normalGlucose, highTSH)
     }
@@ -87,14 +87,14 @@ class RuleManagerTest {
     fun deleteRule() {
         val root = ruleManager.ruleTree().root
 
-        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeAssignment, setOf(normalGlucose, highTSH))
         ruleManager.ruleTree().size() shouldBe 2
         coffeeRule.parent shouldBe root
         ruleManager.deleteLeafRule(coffeeRule)
         ruleManager.ruleTree().size() shouldBe 1
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 1
     }
 
@@ -102,11 +102,11 @@ class RuleManagerTest {
     fun cannotDeleteRuleThatIsNotALeaf() {
         val root = ruleManager.ruleTree().root
 
-        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeAssignment, setOf(normalGlucose, highTSH))
         ruleManager.ruleTree().size() shouldBe 2
         coffeeRule.parent shouldBe root
 
-        ruleManager.createRuleAndAddToParent(coffeeRule, teaConclusion, setOf(normalGlucose))
+        ruleManager.createRuleAndAddToParent(coffeeRule, teaAssignment, setOf(normalGlucose))
         ruleManager.ruleTree().size() shouldBe 3
 
         shouldThrow<Exception> {
@@ -114,31 +114,31 @@ class RuleManagerTest {
         }
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 3
     }
 
     @Test
-    fun `create rule with no conclusion`() {
+    fun `create rule with no assignment`() {
         val root = ruleManager.ruleTree().root
 
-        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeAssignment, setOf(normalGlucose, highTSH))
         val noCoffeeRule = ruleManager.createRuleAndAddToParent(coffeeRule, null, setOf(lowTSH))
         ruleManager.ruleTree().size() shouldBe 3
         coffeeRule.childRules() shouldBe setOf(noCoffeeRule)
         noCoffeeRule.parent shouldBe coffeeRule
-        noCoffeeRule.conclusion shouldBe null
+        noCoffeeRule.assignment shouldBe null
         noCoffeeRule.childRules() shouldBe emptySet()
         noCoffeeRule.conditions shouldBe setOf(lowTSH)
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 3
         val rebuiltCoffeeRule = ruleManager.ruleTree().root.childRules().single()
         val rebuiltNoCoffeeRule = rebuiltCoffeeRule.childRules().single()
         rebuiltCoffeeRule.childRules() shouldBe setOf(noCoffeeRule)
         rebuiltNoCoffeeRule.parent shouldBe coffeeRule
-        rebuiltNoCoffeeRule.conclusion shouldBe null
+        rebuiltNoCoffeeRule.assignment shouldBe null
         rebuiltNoCoffeeRule.childRules() shouldBe emptySet()
         rebuiltNoCoffeeRule.conditions shouldBe setOf(lowTSH)
     }
@@ -147,23 +147,23 @@ class RuleManagerTest {
     fun `create rule with no conditions`() {
         val root = ruleManager.ruleTree().root
 
-        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
-        val champagneRule = ruleManager.createRuleAndAddToParent(coffeeRule, champagneConclusion, setOf())
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeAssignment, setOf(normalGlucose, highTSH))
+        val champagneRule = ruleManager.createRuleAndAddToParent(coffeeRule, champagneAssignment, setOf())
         ruleManager.ruleTree().size() shouldBe 3
         coffeeRule.childRules() shouldBe setOf(champagneRule)
         champagneRule.parent shouldBe coffeeRule
-        champagneRule.conclusion shouldBe champagneConclusion
+        champagneRule.assignment shouldBe champagneAssignment
         champagneRule.childRules() shouldBe emptySet()
         champagneRule.conditions shouldBe emptySet()
 
         // Rebuild and check.
-        ruleManager = RuleManager(conclusionManager, conditionManager, ruleStore)
+        ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
         ruleManager.ruleTree().size() shouldBe 3
         val rebuiltCoffeeRule = ruleManager.ruleTree().root.childRules().single()
         val rebuiltChampagneRule = rebuiltCoffeeRule.childRules().single()
         rebuiltCoffeeRule.childRules() shouldBe setOf(champagneRule)
         rebuiltChampagneRule.parent shouldBe coffeeRule
-        rebuiltChampagneRule.conclusion shouldBe champagneConclusion
+        rebuiltChampagneRule.assignment shouldBe champagneAssignment
         rebuiltChampagneRule.childRules() shouldBe emptySet()
         rebuiltChampagneRule.conditions shouldBe emptySet()
     }
@@ -171,7 +171,7 @@ class RuleManagerTest {
     @Test
     fun `cannot create a rule that has parent not in tree`() {
         shouldThrow<IllegalArgumentException> {
-            ruleManager.createRuleAndAddToParent(Rule(100, null, null, mutableSetOf()), teaConclusion, setOf(lowTSH))
+            ruleManager.createRuleAndAddToParent(Rule(100, null, mutableSetOf()), teaAssignment, setOf(lowTSH))
         }.message shouldBe "Parent rule not in tree."
     }
 
@@ -179,12 +179,12 @@ class RuleManagerTest {
     fun `cannot restore if more than one rule has no parent`() {
         val root = ruleManager.ruleTree().root
 
-        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeConclusion, setOf(normalGlucose, highTSH))
-        ruleManager.createRuleAndAddToParent(coffeeRule, champagneConclusion, setOf())
-        ruleStore.create(PersistentRule(null, null, teaConclusion.id, emptySet()))
+        val coffeeRule = ruleManager.createRuleAndAddToParent(root, coffeeAssignment, setOf(normalGlucose, highTSH))
+        ruleManager.createRuleAndAddToParent(coffeeRule, champagneAssignment, setOf())
+        ruleStore.create(PersistentRule(null, null, emptySet(), teaAssignment))
 
         shouldThrow<IllegalArgumentException> {
-            RuleManager(conclusionManager, conditionManager, ruleStore)
+            RuleManager(conditionManager, attributeManager, ruleStore)
         }.message shouldBe "Rule tree could not be rebuilt as more than one rule lacks a parent."
     }
 }

@@ -1,7 +1,6 @@
 package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -11,8 +10,7 @@ import io.mockk.*
 import io.rippledown.CaseTestUtils
 import io.rippledown.kb.*
 import io.rippledown.kb.report.ReportService
-import io.rippledown.model.Conclusion
-import io.rippledown.model.RDRCase
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -21,7 +19,10 @@ import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.report.CaseReport
-import io.rippledown.model.rule.*
+import io.rippledown.model.rule.BuildRuleRequest
+import io.rippledown.model.rule.CommentTemplate
+import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.UndoRuleDescription
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.supplyCaseFromFile
 import io.rippledown.toJsonString
@@ -116,15 +117,14 @@ internal class KBEndpointTest {
         assertEquals(retrieved.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.data.size)
         // No rules added.
-        retrieved.interpretation.conclusions().size shouldBe 0
+        retrieved.interpretation.assignments().size shouldBe 0
         // Add a rule.
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("ABC ok.")
-        endpoint.session.ruleSessionManager.startRuleSession(retrieved, ChangeTreeToAddConclusion(conclusion))
+        val comment = "ABC ok."
+        endpoint.session.ruleSessionManager.startRuleSessionToAddComment(retrieved, comment)
         val abc = retrieved.getAttribute("ABC")
         endpoint.session.ruleSessionManager.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
         endpoint.session.ruleSessionManager.commitCurrentRuleSession()
-        val retrievedAgain = endpoint.case(caseId.id!!)
-        retrievedAgain.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+        endpoint.commentsForCase(caseId.id!!) shouldBe setOf(comment)
     }
 
     @Test
@@ -228,15 +228,15 @@ internal class KBEndpointTest {
         assertEquals(retrieved.case.getLatest("ABC")!!.value.text, "6.7")
         assertEquals(2, retrieved.attributes().size)
         // No rules added.
-        retrieved.viewableInterpretation.interpretation.conclusions().size shouldBe 0
+        retrieved.viewableInterpretation.interpretation.assignments().size shouldBe 0
         // Add a rule.
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("ABC ok.")
-        endpoint.session.ruleSessionManager.startRuleSession(retrieved.case, ChangeTreeToAddConclusion(conclusion))
+        val comment = "ABC ok."
+        endpoint.session.ruleSessionManager.startRuleSessionToAddComment(retrieved.case, comment)
         val abc = retrieved.case.getAttribute("ABC")
         endpoint.session.ruleSessionManager.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
         endpoint.session.ruleSessionManager.commitCurrentRuleSession()
         val retrievedAgain = endpoint.viewableCase(id)
-        retrievedAgain.viewableInterpretation.interpretation.conclusions() shouldContainExactly setOf(conclusion)
+        retrievedAgain.viewableInterpretation.renderedComments.map { it.text } shouldBe listOf(comment)
     }
 
     @Test
@@ -244,15 +244,6 @@ internal class KBEndpointTest {
         endpoint.kb.attributeManager.all() shouldBe emptySet()
         val attribute = endpoint.getOrCreateAttribute("stuff")
         endpoint.kb.attributeManager.all() shouldBe setOf(attribute)
-    }
-
-    @Test
-    fun getOrCreateConclusion() {
-        endpoint.kb.conclusionManager.all() shouldBe emptySet()
-        val text = "It is rainy."
-        val conclusion = endpoint.getOrCreateConclusion(text)
-        conclusion.text shouldBe text
-        endpoint.kb.conclusionManager.all() shouldBe setOf(conclusion)
     }
 
     @Test
@@ -304,8 +295,8 @@ internal class KBEndpointTest {
 
         // Get another case, with which to start a rule session.
         val case1Id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        endpoint.case(case1Id).interpretation.conclusions() shouldBe emptySet()
-        endpoint.startRuleSessionToAddConclusion(case1Id, endpoint.kb.conclusionManager.getOrCreate("Whatever"))
+        endpoint.commentsForCase(case1Id) shouldBe emptySet()
+        endpoint.startRuleSessionToAddComment(case1Id, "Whatever")
 
         // Re-order the attributes in the first case.
         val reordered = attributesBefore.reversed()
@@ -319,7 +310,7 @@ internal class KBEndpointTest {
 
         // Commit the rule session.
         endpoint.commitCurrentRuleSession()
-        endpoint.case(case1Id).interpretation.conclusionTexts() shouldBe setOf("Whatever")
+        endpoint.commentsForCase(case1Id) shouldBe setOf("Whatever")
 
         // Get the case again and check that the order has been applied.
         val retrievedAfterRuleSession = endpoint.viewableCase(case5Id)
@@ -337,8 +328,8 @@ internal class KBEndpointTest {
         val attributesBefore = viewableCase5.attributes()
         attributesBefore.size shouldBe 4
 
-        viewableCase5.case.interpretation.conclusions() shouldBe emptySet()
-        endpoint.startRuleSessionToAddConclusion(caseId, endpoint.kb.conclusionManager.getOrCreate("Whatever"))
+        viewableCase5.case.interpretation.assignments() shouldBe emptySet()
+        endpoint.startRuleSessionToAddComment(caseId, "Whatever")
 
         endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[3].id)
         val attributesAfterMove = endpoint.viewableCase(caseId).attributes()
@@ -350,9 +341,13 @@ internal class KBEndpointTest {
 
         // Commit the rule session.
         endpoint.commitCurrentRuleSession()
-        endpoint.viewableCase(caseId).case.interpretation.conclusionTexts() shouldBe setOf("Whatever")
+        endpoint.commentsForCase(caseId) shouldBe setOf("Whatever")
 
-        val attributesAfterRule = endpoint.viewableCase(caseId).attributes()
+        // The comment given by the rule is a comment attribute whose value is
+        // materialised onto the case, so it is one of the case's attributes too.
+        // The ordering under test is that of the case's external attributes.
+        val attributesAfterRule =
+            endpoint.viewableCase(caseId).attributes().filter { it.kind == AttributeKind.EXTERNAL }
         attributesAfterRule.size shouldBe 4
         attributesAfterRule[0] shouldBe attributesBefore[1]
         attributesAfterRule[1] shouldBe attributesBefore[2]
@@ -384,8 +379,7 @@ internal class KBEndpointTest {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         endpoint.waitingCasesInfo().cornerstoneCaseIds shouldHaveSize 0
 
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
-        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.startRuleSessionToAddComment(id, "Whatever")
         endpoint.commitCurrentRuleSession()
 
         val info = endpoint.waitingCasesInfo()
@@ -400,47 +394,46 @@ internal class KBEndpointTest {
     }
 
     @Test
-    fun startRuleSessionToAddConclusion() {
+    fun startRuleSessionToAddComment() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        endpoint.case(id).interpretation.conclusions() shouldBe emptySet()
-        endpoint.startRuleSessionToAddConclusion(id, endpoint.kb.conclusionManager.getOrCreate("Whatever"))
+        endpoint.commentsForCase(id) shouldBe emptySet()
+        endpoint.startRuleSessionToAddComment(id, "Whatever")
         endpoint.commitCurrentRuleSession()
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf("Whatever")
+        endpoint.commentsForCase(id) shouldBe setOf("Whatever")
     }
 
     @Test
-    fun startSessionToRemoveConclusion() {
+    fun startSessionToRemoveComment() {
         val caseId = supplyCaseFromFile("Case1", endpoint).caseId
         val id = caseId.id!!
-        val conclusion1 = endpoint.kb.conclusionManager.getOrCreate("Whatever")
-        endpoint.startRuleSessionToAddConclusion(id, conclusion1)
+        val comment1 = "Whatever"
+        endpoint.startRuleSessionToAddComment(id, comment1)
         endpoint.commitCurrentRuleSession()
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
-        endpoint.startRuleSessionToRemoveConclusion(id, conclusion1)
+        endpoint.commentsForCase(id) shouldBe setOf(comment1)
+        endpoint.startRuleSessionToRemoveComment(id, comment1)
         endpoint.commitCurrentRuleSession()
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe emptySet()
+        endpoint.commentsForCase(id) shouldBe emptySet()
     }
 
     @Test
-    fun startSessionToReplaceConclusion() {
+    fun startSessionToReplaceComment() {
         val caseId = supplyCaseFromFile("Case1", endpoint).caseId
         val id = caseId.id!!
-        val conclusion1 = endpoint.kb.conclusionManager.getOrCreate("Whatever")
-        endpoint.startRuleSessionToAddConclusion(id, conclusion1)
+        val comment1 = "Whatever"
+        endpoint.startRuleSessionToAddComment(id, comment1)
         endpoint.commitCurrentRuleSession()
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
-        val conclusion2 = endpoint.kb.conclusionManager.getOrCreate("Blah")
-        endpoint.startRuleSessionToReplaceConclusion(id, conclusion1, conclusion2)
+        endpoint.commentsForCase(id) shouldBe setOf(comment1)
+        val comment2 = "Blah"
+        endpoint.startRuleSessionToReplaceComment(id, comment1, comment2)
         endpoint.commitCurrentRuleSession()
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion2.text)
+        endpoint.commentsForCase(id) shouldBe setOf(comment2)
     }
 
     @Test
     fun `should be able to cancel a rule session after it is started`() {
         //Given
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
-        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.startRuleSessionToAddComment(id, "Whatever")
 
         //When
         endpoint.cancelRuleSession()
@@ -454,9 +447,8 @@ internal class KBEndpointTest {
     @Test
     fun `After committing a rule the session case should be a cornerstone`() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val conclusion = endpoint.kb.conclusionManager.getOrCreate("Whatever")
         endpoint.kb.allCornerstoneCases() shouldHaveSize 0
-        endpoint.startRuleSessionToAddConclusion(id, conclusion)
+        endpoint.startRuleSessionToAddComment(id, "Whatever")
         endpoint.commitCurrentRuleSession()
         endpoint.kb.allCornerstoneCases() shouldHaveSize 1
     }
@@ -466,23 +458,23 @@ internal class KBEndpointTest {
         val id1 = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val id2 = supplyCaseFromFile("Case2", endpoint).caseId.id!!
         val id3 = supplyCaseFromFile("Case3", endpoint).caseId.id!!
-        val conclusion1 = endpoint.kb.conclusionManager.getOrCreate("Whatever 1")
-        val conclusion2 = endpoint.kb.conclusionManager.getOrCreate("Whatever 2")
-        val conclusion3 = endpoint.kb.conclusionManager.getOrCreate("Whatever 3")
+        val comment1 = "Whatever 1"
+        val comment2 = "Whatever 2"
+        val comment3 = "Whatever 3"
         with(endpoint) {
             kb.allCornerstoneCases() shouldHaveSize 0
-            startRuleSessionToAddConclusion(id1, conclusion1)
+            startRuleSessionToAddComment(id1, comment1)
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 1
 
             val viewableCase1 = endpoint.viewableCase(kb.allCornerstoneCases().first().id!!)
-            startRuleSessionToAddConclusion(id2, conclusion2)
+            startRuleSessionToAddComment(id2, comment2)
             selectCornerstone(0).cornerstoneToReview shouldBe viewableCase1
             commitCurrentRuleSession()
             kb.allCornerstoneCases() shouldHaveSize 2
 
             val viewableCase2 = endpoint.viewableCase(kb.allCornerstoneCases()[1].id!!)
-            startRuleSessionToAddConclusion(id3, conclusion3)
+            startRuleSessionToAddComment(id3, comment3)
             selectCornerstone(1).cornerstoneToReview shouldBe viewableCase2
         }
     }
@@ -491,13 +483,13 @@ internal class KBEndpointTest {
     fun exportKBToZip() {
         // Add a case and a rule to the KB.
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        val conclusion1 = endpoint.kb.conclusionManager.getOrCreate("Whatever")
+        val comment1 = "Whatever"
         val tsh = endpoint.kb.attributeManager.getOrCreate("TSH")
-        endpoint.startRuleSessionToAddConclusion(id, conclusion1)
+        endpoint.startRuleSessionToAddComment(id, comment1)
         val tshCondition = greaterThanOrEqualTo(null, tsh, 0.6)
         endpoint.addConditionToCurrentRuleBuildingSession(tshCondition)
         endpoint.commitCurrentRuleSession()
-        endpoint.case(id).interpretation.conclusionTexts() shouldBe setOf(conclusion1.text)
+        endpoint.commentsForCase(id) shouldBe setOf(comment1)
 
         // Get the exported KB.
         val exported = endpoint.exportKBToZip()
@@ -513,7 +505,8 @@ internal class KBEndpointTest {
         val conditions = rule.conditions
         conditions.size shouldBe 1
         conditions.single().sameAs(tshCondition) shouldBe true
-        rule.conclusion shouldBe conclusion1
+        endpoint.kb.derivedDefinitionManager.definitionFor(rule.assignment!!.attribute.id) shouldBe
+                CommentTemplate(comment1)
     }
 
     @Test
@@ -526,8 +519,8 @@ internal class KBEndpointTest {
         //When
         endpoint.startRuleSession(sessionStartRequest)
 
-        //Then
-        endpoint.session.ruleSessionManager.currentDiff shouldBe diff
+        //Then the recorded change names the comment attribute the server minted
+        endpoint.session.ruleSessionManager.currentDiff shouldBe diff.copy(attributeName = "C1")
     }
 
     @Test
@@ -542,8 +535,10 @@ internal class KBEndpointTest {
         //When
         endpoint.startRuleSession(sessionStartRequest)
 
-        //Then
-        endpoint.session.ruleSessionManager.currentDiff shouldBe diff
+        //Then the replacing comment is a new comment attribute, so it is auto-named C2,
+        //and the change names the attribute being replaced
+        endpoint.session.ruleSessionManager.currentDiff shouldBe
+                diff.copy(attributeName = "C2", replacedAttributeName = "C1")
     }
 
     @Test
@@ -557,71 +552,7 @@ internal class KBEndpointTest {
         val status = endpoint.startRuleSession(sessionStartRequest)
 
         //Then
-        status.commentDiff shouldBe diff
-    }
-
-    @Test
-    fun `startRuleSessionToAddConclusion should call startRuleSession`() {
-        // Given
-        val kb = mockk<KB>()
-        val rsm = mockk<RuleSessionManager>()
-        val case = mockk<RDRCase>()
-        val conclusion = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
-        every { kb.interpret(any()) } returns mockk()
-        val session = mockk<KBSession>()
-        every { session.kb } returns kb
-        every { session.ruleSessionManager } returns rsm
-        val endpoint = KBEndpoint(session)
-
-        // When
-        endpoint.startRuleSessionToAddConclusion(1L, conclusion)
-
-        // Then
-        verify { rsm.startRuleSession(case, any<ChangeTreeToAddConclusion>()) }
-    }
-
-    @Test
-    fun `startRuleSessionToRemoveConclusion should call startRuleSession`() {
-        // Given
-        val kb = mockk<KB>()
-        val rsm = mockk<RuleSessionManager>()
-        val case = mockk<RDRCase>()
-        val conclusion = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
-        every { kb.interpret(any()) } returns mockk()
-        val session = mockk<KBSession>()
-        every { session.kb } returns kb
-        every { session.ruleSessionManager } returns rsm
-        val endpoint = KBEndpoint(session)
-
-        // When
-        endpoint.startRuleSessionToRemoveConclusion(1L, conclusion)
-
-        // Then
-        verify { rsm.startRuleSession(case, any<ChangeTreeToRemoveConclusion>()) }
-    }
-
-    @Test
-    fun `startRuleSessionToReplaceConclusion should call startRuleSession`() {
-        // Given
-        val kb = mockk<KB>()
-        val rsm = mockk<RuleSessionManager>()
-        val case = mockk<RDRCase>()
-        val toGo = mockk<Conclusion>()
-        val replacement = mockk<Conclusion>()
-        every { kb.getProcessedCase(any()) } returns case
-        every { kb.interpret(any()) } returns mockk()
-        val session = mockk<KBSession>()
-        every { session.kb } returns kb
-        every { session.ruleSessionManager } returns rsm
-        val endpoint = KBEndpoint(session)
-
-        // When
-        endpoint.startRuleSessionToReplaceConclusion(1L, toGo, replacement)
-
-        // Then
-        verify { rsm.startRuleSession(case, any<ChangeTreeToReplaceConclusion>()) }
+        status.commentDiff shouldBe diff.copy(attributeName = "C1")
     }
 
     @Test
@@ -683,6 +614,52 @@ internal class KBEndpointTest {
 
         // Then
         commentsForCase(id) shouldBe listOf("TSH normal.")
+    }
+
+    @Test
+    fun `buildRule should read a placeholder in a comment as a variable`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+
+        // When
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667""""))
+        )
+
+        // Then
+        commentsForCase(case1.caseId.id!!) shouldBe listOf("TSH is 0.667.")
+    }
+
+    @Test
+    fun `buildRule should remove a comment that has a variable`() {
+        // Given
+        val case1 = supplyCaseFromFile("Case1", endpoint)
+        val id = case1.caseId.id!!
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667""""))
+        )
+        commentsForCase(id) shouldBe listOf("TSH is 0.667.")
+
+        // When
+        endpoint.buildRule(
+            BuildRuleRequest("Case1", Removal("TSH is {TSH}."), listOf("""ABC is "6.7""""))
+        )
+
+        // Then
+        commentsForCase(id) shouldBe emptyList()
+    }
+
+    @Test
+    fun `startRuleSession should read a placeholder in a comment as a variable`() {
+        // Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+
+        // When
+        endpoint.startRuleSession(SessionStartRequest(id, Addition("TSH is {TSH}.")))
+        endpoint.commitCurrentRuleSession()
+
+        // Then
+        commentsForCase(id) shouldBe listOf("TSH is 0.667.")
     }
 
     @Test

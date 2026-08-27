@@ -35,6 +35,8 @@ class KBModelIntegrationTest: KBTestBase() {
         val response = session.responseToUserMessage(userExpression)
 
         //Then
-        response.text.lowercase() shouldContain "suggestions"
+        // The model asks for a reason for the comment, sometimes offering
+        // suggestions and sometimes not, so only the request itself is asserted.
+        response.text.lowercase() shouldContain "reason"
     }
 }

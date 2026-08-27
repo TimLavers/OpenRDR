@@ -1,10 +1,10 @@
 package io.rippledown.interpretation
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.constants.interpretation.COMMENTS_INFO_ICON
 import io.rippledown.constants.interpretation.COMMENTS_NONE
@@ -146,7 +146,7 @@ class InterpretationViewTest {
     }
 
     @Test
-    fun `should keep the interpretation text field present and empty when there are no comments`() = runTest {
+    fun `should show no comment rows when there are no comments`() = runTest {
         val interpretation = createViewableInterpretation(mapOf())
         with(composeTestRule) {
             setContent {
@@ -156,7 +156,9 @@ class InterpretationViewTest {
                 )
             }
 
-            onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertTextEquals("")
+            //The empty state stands in place of the table, so there is no table at all
+            commentsShown() shouldBe emptyList()
+            onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD).assertDoesNotExist()
         }
     }
 

@@ -1,19 +1,19 @@
 package io.rippledown.model.rule
 
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.CommentFactory
 import io.rippledown.persistence.inmemory.InMemoryRuleSessionRecordStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 internal class RuleSessionRecorderTest : RuleTestBase() {
     private lateinit var recorder: RuleSessionRecorder
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
 
     @BeforeTest
     fun setup() {
         recorder = RuleSessionRecorder(InMemoryRuleSessionRecordStore())
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
     }
 
     @Test
@@ -23,15 +23,15 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
 
     @Test
     fun `record rule`() {
-        val conclusionA = conclusionFactory.getOrCreate("A")
-        val ruleGivingA = Rule(5, null, conclusionA)
+        val commentA = commentFactory.comment("A")
+        val ruleGivingA = Rule(5, null, setOf(), mutableSetOf(), commentA)
         recorder.recordRuleSessionCommitted(setOf(ruleGivingA))
 
         recorder.idsOfRulesAddedInMostRecentSession()!!.idsOfRulesAddedInSession shouldBe setOf(ruleGivingA.id)
-        val conclusionB = conclusionFactory.getOrCreate("A")
-        val rule1GivingB = Rule(6, null, conclusionB)
-        val rule2GivingB = Rule(7, null, conclusionB)
-        val rule3GivingB = Rule(8, null, conclusionB)
+        val commentB = commentFactory.comment("A")
+        val rule1GivingB = Rule(6, null, setOf(), mutableSetOf(), commentB)
+        val rule2GivingB = Rule(7, null, setOf(), mutableSetOf(), commentB)
+        val rule3GivingB = Rule(8, null, setOf(), mutableSetOf(), commentB)
         recorder.recordRuleSessionCommitted(setOf(rule1GivingB, rule2GivingB, rule3GivingB))
         recorder.idsOfRulesAddedInMostRecentSession()!!.idsOfRulesAddedInSession shouldBe setOf(rule1GivingB.id, rule2GivingB.id, rule3GivingB.id)
     }
@@ -40,8 +40,8 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
     fun `all rule session ids`() {
         recorder.allRuleSessionHistories() shouldBe listOf()
 
-        val a = conclusionFactory.getOrCreate("A")
-        val addA = Rule(5, null, a)
+        val a = commentFactory.comment("A")
+        val addA = Rule(5, null, setOf(), mutableSetOf(), a)
         recorder.recordRuleSessionCommitted(setOf(addA))
         with(recorder.allRuleSessionHistories())
         {
@@ -49,8 +49,8 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
             first().idsOfRulesAddedInSession shouldBe setOf(addA.id)
         }
 
-        val b = conclusionFactory.getOrCreate("B")
-        val addB = Rule(6, null, b)
+        val b = commentFactory.comment("B")
+        val addB = Rule(6, null, setOf(), mutableSetOf(), b)
         recorder.recordRuleSessionCommitted(setOf(addB))
         with(recorder.allRuleSessionHistories())
         {
@@ -59,7 +59,7 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
             get(1).idsOfRulesAddedInSession shouldBe setOf(addB.id)
         }
 
-        val removeA = Rule(7, addA,null)
+        val removeA = Rule(7, addA, setOf())
         recorder.recordRuleSessionCommitted(setOf(removeA))
         with(recorder.allRuleSessionHistories())
         {
@@ -69,7 +69,7 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
             get(2).idsOfRulesAddedInSession shouldBe setOf(removeA.id)
         }
 
-        val addBAgain = Rule(8, null, b)
+        val addBAgain = Rule(8, null, setOf(), mutableSetOf(), b)
         recorder.recordRuleSessionCommitted(setOf(addBAgain))
         with(recorder.allRuleSessionHistories())
         {
@@ -85,12 +85,12 @@ internal class RuleSessionRecorderTest : RuleTestBase() {
     fun `remove record`() {
         recorder.allRuleSessionHistories() shouldBe listOf()
 
-        val a = conclusionFactory.getOrCreate("A")
-        val addA = Rule(5, null, a)
+        val a = commentFactory.comment("A")
+        val addA = Rule(5, null, setOf(), mutableSetOf(), a)
         recorder.recordRuleSessionCommitted(setOf(addA))
 
-        val b = conclusionFactory.getOrCreate("B")
-        val addB = Rule(6, null, b)
+        val b = commentFactory.comment("B")
+        val addB = Rule(6, null, setOf(), mutableSetOf(), b)
         recorder.recordRuleSessionCommitted(setOf(addB))
         with(recorder.allRuleSessionHistories())
         {

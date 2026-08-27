@@ -3,29 +3,24 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.caseview.CASELIST_ID
-import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import io.rippledown.integration.utils.*
+import io.rippledown.integration.utils.Cyborg
+import io.rippledown.integration.utils.find
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
-import org.awaitility.Awaitility.await
-import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
-import javax.accessibility.AccessibleRole.LABEL
 import javax.accessibility.AccessibleRole.SCROLL_PANE
 
+/**
+ * The case list panel as a whole. Its sections all label their cases with the
+ * one [io.rippledown.constants.caseview.CASE_NAME_PREFIX], and a case can
+ * legitimately appear in more than one section (a cornerstone is normally also
+ * a processed case), so a case is never addressed from here: use the
+ * section-scoped [ProcessedCaseListPO], [CornerstoneCaseListPO] or
+ * [FavouriteCaseListPO] for that. This page object covers only the concerns of
+ * the whole panel.
+ */
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {
-    fun casesListed(): List<String> {
-        waitTillCaseListContextIsAccessible()
-        val context = caseListContext() ?: return emptyList()
-        return execute<List<String>> {
-            context.findAllByDescriptionPrefix(CASE_NAME_PREFIX)
-                .map { it.accessibleDescription.removePrefix(CASE_NAME_PREFIX) }
-        }
-    }
-
-    private fun waitTillCaseListContextIsAccessible() =
-        waitUntilAsserted { caseListContext() shouldNotBe null }
 
     private fun caseListContext(): AccessibleContext? {
         return execute<AccessibleContext?> {
@@ -52,45 +47,12 @@ class CaseListPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    fun requireCaseNamesToBe(expectedCaseNames: List<String>) {
-        await().atMost(ofSeconds(20)).until {
-            casesListed() == expectedCaseNames
-        }
-    }
-
-    fun select(caseName: String) {
-        waitForCaseListToContain(caseName)
-        requireCaseToBeShown(caseName)
-        val caseNameContext = caseNameContext(caseName)!!
-        execute {
-            caseNameContext.accessibleAction.doAccessibleAction(0)
-        }
-    }
-
-    /** See [CornerstoneCaseListPO.mouseClick]. */
-    fun mouseClick(caseName: String) {
-        waitForCaseListToContain(caseName)
-        val ctx = caseNameContext(caseName) ?: return
-        ctx.mouseClickAtCentre()
-    }
-
-    private fun caseNameContext(caseName: String) = contextProvider().find("$CASE_NAME_PREFIX$caseName", LABEL)
-
-    fun waitForCaseListToContain(name: String) {
-        await().atMost(ofSeconds(5)).until {
-            casesListed().contains(name)
-        }
-    }
-
     fun requireCaseListToBeHidden() {
         waitUntilAsserted { caseListContext() shouldBe null }
     }
 
     fun requireCaseListToBeShown() {
         waitUntilAsserted { caseListContext() shouldNotBe null }
-    }
-    fun requireCaseToBeShown(caseName: String) {
-        waitUntilAsserted { caseNameContext(caseName) shouldNotBe null }
     }
 
     fun pressDownArrow() {

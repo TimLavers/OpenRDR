@@ -23,7 +23,11 @@ class ChatSessionManager(
      * @return A string representing the conversation ID or initial response
      */
     suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
-        val chatService = KBChatService.createKBChatService(viewableCase, ruleSessionManager::attributeById)
+        val chatService = KBChatService.createKBChatService(
+            viewableCase,
+            ruleSessionManager::attributeById,
+            ruleSessionManager.allAttributes()
+        )
         // Use a lazy ModelResponder since chatManager isn't created until after Conversation
         val modelResponder = object : ModelResponder {
             override suspend fun response(message: String): ChatResponse = chatManager.response(message)

@@ -22,7 +22,7 @@ The prompt section `server/.../chat/instructions/4_comment_variables.md` instruc
 2. match the braced name against the attributes in the `ATTRIBUTES` prompt variable (case-insensitive, tolerant of
    small misspellings),
 3. auto-bind on an exact match, otherwise ask the user which attribute is meant, and
-4. emit the add-comment action with a `variables` array, one entry per placeholder, each carrying an `attributeName`.
+4. emit the add-comment action with a `variables` array, one entry per placeholder.
 
 The chat-level variable is `ChatCommentVariable(attributeName)`. `resolveCommentVariables(...)` then:
 
@@ -34,24 +34,36 @@ The chat-level variable is `ChatCommentVariable(attributeName)`. `resolveComment
 
 ## Internal representation
 
-A `Conclusion` (in `common`) stores:
+A comment is a comment attribute whose definition is a `CommentTemplate` (in
+`common/.../model/rule/ValueExpression.kt`), which stores:
 
 - `text` — the comment with each variable replaced by the `VARIABLE_TOKEN` (`${}`), and
-- `variables: List<CommentVariable>` — one `CommentVariable(attributeId)` per token, in order of appearance.
+- `variables: List<Attribute>` — one attribute per token, in order of appearance.
 
-An empty `variables` list means a plain comment, so existing comments remain backward-compatible.
+An empty `variables` list means a plain comment.
+
+Variables are held by attribute, and an attribute is identified by its id, so renaming an attribute changes how the
+comment reads without the comment having to be edited. `alignAttributes` re-points the variables when a knowledge base
+is loaded, since a deserialized variable may carry a stale name.
+
+*(The template took over from `Conclusion`, which held the same two fields as a text and a list of
+`CommentVariable(attributeId)`. See "Phase 2" in [repeat_inferencing.md](repeat_inferencing.md).)*
 
 ## Rendering
 
-`Conclusion.render(case, attributeById): RenderedComment` is a pure function shared by the UI and the server:
+`CommentTemplate.render(case): RenderedComment` is a pure function shared by the UI and the server:
 
 - it walks the `${}` tokens in order, substituting each with the attribute's latest value for the case
   (`RDRCase.latestValue`);
-- if the attribute is unknown, or has no value (or a blank value) for the case, it inserts a visible marker
-  (e.g. `{TSH: no value}` or `{no value}`) and records the marker's character range in
-  `RenderedComment.unresolvedRanges` so the UI can highlight it distinctly.
+- if the attribute has no value (or a blank value) for the case, it inserts a visible
+  `{TSH: no value}` marker and records the marker's character range in
+  `RenderedComment.unresolvedRanges`, which the Comments panel highlights and explains on hover.
 
 A comment with no variables renders as its text verbatim with no unresolved ranges.
+
+`textWithVariableNames(attributeById)` gives the other rendering, `{TSH}` rather than a value: the form the user and the
+chatbot see. It resolves each variable's name through the knowledge base where it can, falling back to the name the
+variable itself carries.
 
 ## Discoverability
 

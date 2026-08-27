@@ -8,15 +8,9 @@ import io.rippledown.model.rule.dsl.ruleTree
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class
-DummyRuleFactory: RuleFactory {
-    override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule {
-        return Rule(0, parent, conclusion, conditions)
-    }
-
-    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule {
-        return Rule(0, parent, null, conditions, mutableSetOf(), assignment)
-    }
+class DummyRuleFactory : RuleFactory {
+    override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>): Rule =
+        Rule(0, parent, conditions, mutableSetOf(), assignment)
 }
 
 internal class RuleTreeTest : RuleTestBase() {
@@ -24,43 +18,43 @@ internal class RuleTreeTest : RuleTestBase() {
     private val A = "A"
     private val B = "B"
     private val kase = clinicalNotesCase("abc")
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionFactory: DummyConditionFactory
 
     @BeforeTest
     fun init() {
         tree = RuleTree()
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
     }
 
     @Test
     fun rulesForId() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 1
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 11
-                    conclusion { "ConcB" }
+                    comment { "ConcB" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 111
-                        conclusion { "ConcC" }
+                        comment { "ConcC" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
                         }
                         child {
                             id = 1111
-                            conclusion { "ConcD" }
+                            comment { "ConcD" }
                             condition(conditionFactory) {
                                 attribute = clinicalNotes
                                 constant = "d"
@@ -71,10 +65,10 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.ruleForId(tree.root.id) shouldBe tree.root
-        tree.ruleForId(1).conclusion?.text shouldBe "ConcA"
-        tree.ruleForId(11).conclusion?.text shouldBe "ConcB"
-        tree.ruleForId(111).conclusion?.text shouldBe "ConcC"
-        tree.ruleForId(1111).conclusion?.text shouldBe "ConcD"
+        tree.ruleForId(1).assignment shouldBe commentFactory.comment("ConcA")
+        tree.ruleForId(11).assignment shouldBe commentFactory.comment("ConcB")
+        tree.ruleForId(111).assignment shouldBe commentFactory.comment("ConcC")
+        tree.ruleForId(1111).assignment shouldBe commentFactory.comment("ConcD")
     }
 
     @Test
@@ -90,7 +84,7 @@ internal class RuleTreeTest : RuleTestBase() {
     @Test
     fun no_conclusions_should_be_given_for_a_tree_with_only_the_root_rule() {
         tree.apply(kase)
-        kase.interpretation.conclusions() shouldBe setOf()
+        kase.interpretation.assignments() shouldBe setOf()
     }
 
     @Test
@@ -101,7 +95,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_to_empty_root() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 +A
                 condition(conditionFactory) {
@@ -111,14 +105,14 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.apply(kase)
-        val conclusion1 = tree.root.childRules().first().conclusion!!
-        checkInterpretation(kase.interpretation, conclusion1)
-        conclusion1.text shouldBe A
+        val assignment1 = tree.root.childRules().first().assignment!!
+        checkInterpretation(kase.interpretation, assignment1)
+        (assignment1.expression as CommentTemplate).text shouldBe A
     }
 
     @Test
     fun add_to_root_that_has_one_child() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 +A
                 condition(conditionFactory) {
@@ -135,14 +129,14 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         tree.apply(kase)
-        val conclusion1 = tree.root.childRules().first().conclusion!!
-        val conclusion2 = tree.root.childRules().last().conclusion!!
-        checkInterpretation(kase.interpretation, conclusion1, conclusion2)
+        val assignment1 = tree.root.childRules().first().assignment!!
+        val assignment2 = tree.root.childRules().last().assignment!!
+        checkInterpretation(kase.interpretation, assignment1, assignment2)
     }
 
     @Test
     fun add_to_two_leaf_rules() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 + "ConcA"
                 condition(conditionFactory) {
@@ -181,23 +175,23 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun add_to_root_with_two_children() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
-                conclusion { "ConcB" }
+                comment { "ConcB" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
                 }
             }
             child {
-                conclusion { "ConcC" }
+                comment { "ConcC" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "c"
@@ -219,9 +213,9 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun size_with_one_child() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
@@ -233,16 +227,16 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun size_with_two_children_of_root() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
             }
             child {
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
@@ -254,21 +248,21 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun size_with_depth_four() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
-                    conclusion { "ConcA" }
+                    comment { "ConcA" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
-                        conclusion { "ConcB" }
+                        comment { "ConcB" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
@@ -276,7 +270,7 @@ internal class RuleTreeTest : RuleTestBase() {
                     }
                 }
                 child {
-                    conclusion { "ConcD" }
+                    comment { "ConcD" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
@@ -289,24 +283,24 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun rules() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 1
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 11
-                    conclusion { "ConcA" }
+                    comment { "ConcA" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 111
-                        conclusion { "ConcB" }
+                        comment { "ConcB" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
@@ -315,7 +309,7 @@ internal class RuleTreeTest : RuleTestBase() {
                 }
                 child {
                     id = 12
-                    conclusion { "ConcD" }
+                    comment { "ConcD" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
@@ -330,28 +324,28 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun rulesWithConclusionTest() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 1
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
-                    conclusion { "ConcA" }
+                    comment { "ConcA" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
-                        conclusion { "ConcB" }
+                        comment { "ConcB" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
                         }
                         child {
-                            conclusion { "ConcA" }
+                            comment { "ConcA" }
                             condition(conditionFactory) {
                                 attribute = clinicalNotes
                                 constant = "d"
@@ -360,7 +354,7 @@ internal class RuleTreeTest : RuleTestBase() {
                     }
                 }
                 child {
-                    conclusion { "ConcD" }
+                    comment { "ConcD" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"
@@ -369,26 +363,26 @@ internal class RuleTreeTest : RuleTestBase() {
             }
         }.build()
         val predicate: ((Rule) -> Boolean) = { r ->
-            r.conclusion?.text == "ConcA"
+            (r.assignment?.expression as? CommentTemplate)?.text == "ConcA"
         }
         val rulesMatching = tree.rulesMatching(predicate)
         rulesMatching.size shouldBe 3
-        rulesMatching.forEach { it.conclusion?.text shouldBe "ConcA" }
+        rulesMatching.forEach { (it.assignment?.expression as CommentTemplate).text shouldBe "ConcA" }
     }
 
     @Test
     fun add_child_under_child_under_root() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 1
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 2
-                    conclusion { "ConcB" }
+                    comment { "ConcB" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
@@ -410,7 +404,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun copy_root() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
         }.build()
         tree.copy() shouldBe tree
         (tree.copy() !== tree) shouldBe true
@@ -418,9 +412,9 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun copy_tree_with_1_child() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
-                conclusion { "ConcA" }
+                comment { "ConcA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
@@ -433,7 +427,7 @@ internal class RuleTreeTest : RuleTestBase() {
 
     @Test
     fun copy_tree_with_2_children() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 + "ConcA"
                 condition(conditionFactory) {
@@ -442,7 +436,7 @@ internal class RuleTreeTest : RuleTestBase() {
                 }
             }
             child {
-                conclusion { "ConcB" }
+                comment { "ConcB" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "b"
@@ -456,6 +450,7 @@ internal class RuleTreeTest : RuleTestBase() {
     private fun checkInterpretationForCase(text: String, vararg conclusions: String) {
         val case = clinicalNotesCase(text)
         tree.apply(case)
-        case.interpretation.conclusions().map { it.text }.toSet() shouldBe conclusions.toSet()
+        case.interpretation.assignments().map { (it.expression as CommentTemplate).text }
+            .toSet() shouldBe conclusions.toSet()
     }
 }

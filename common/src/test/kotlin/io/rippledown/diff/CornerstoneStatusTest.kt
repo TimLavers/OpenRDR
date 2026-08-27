@@ -224,7 +224,7 @@ class CornerstoneStatusTest {
     @Test
     fun checkJsonWithRuleConditions() {
         val cornerstoneStatus = CornerstoneStatus(
-            pendingChange = Addition("Go to Bondi."),
+            pendingChange = Addition("Go to Bondi.", "C1"),
             ruleConditions = listOf("Sun is in case", "Wave is in case")
         )
 
@@ -235,7 +235,8 @@ class CornerstoneStatusTest {
                 "numberOfCornerstones": 0,
                 "pendingChange": {
                     "type": "io.rippledown.model.diff.Addition",
-                    "addedText": "Go to Bondi."
+                    "addedText": "Go to Bondi.",
+                    "attributeName": "C1"
                 },
                 "ruleConditions": [
                     "Sun is in case",

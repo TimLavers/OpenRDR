@@ -2,7 +2,6 @@ package io.rippledown.persistence.postgres
 
 import io.kotest.matchers.shouldBe
 import io.rippledown.persistence.OrderStore
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -12,16 +11,11 @@ class MultipleDBsAttributeOrderStoresTest: MultipleDBsTest() {
 
     @BeforeTest
     override fun setup() {
-        cleanup()
         super.setup()
         store1 = kb1.attributeOrderStore()
         store2 = kb2.attributeOrderStore()
     }
 
-    @AfterTest
-    override fun cleanup() {
-        super.cleanup()
-    }
 
     override fun reload() {
         super.reload()

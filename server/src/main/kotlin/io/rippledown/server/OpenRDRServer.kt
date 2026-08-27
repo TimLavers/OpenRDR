@@ -108,7 +108,6 @@ fun Application.module() {
     caseManagement(application)
     interpreter(application)
     attributeManagement(application)
-    conclusionManagement(application)
     conditionManagement(application)
     ruleSession(application)
     chatManagement(application)

@@ -36,13 +36,15 @@ numbers and formulas unquoted.
 ```json
 {
   "action": "{{EDIT_DERIVED_DEFINITION}}",
-  "attributeName": "BMI",
-  "valueExpression": "weight / (height * height)"
+  "attributeName": "Pulse pressure",
+  "valueExpression": "systolic - diastolic"
 }
 ```
 
-The server replies with a summary of the change (e.g. *Changed the definition of "BMI" from weight / height to
-weight / (height * height).*). Relay it to the user. There is no rule session, no reasons to collect, and no
+The expression is transcribed exactly as the user gave it, as in "Assigning derived values", step 3.
+
+The server replies with a summary of the change (e.g. *Changed the definition of "Pulse pressure" from systolic to
+systolic - diastolic.*). Relay it to the user. There is no rule session, no reasons to collect, and no
 cornerstones to review.
 
 ## Handling server refusals

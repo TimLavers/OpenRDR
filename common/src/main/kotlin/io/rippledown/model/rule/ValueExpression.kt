@@ -288,42 +288,57 @@ fun parseValueExpression(text: String, attributeFor: (String) -> Attribute?): Va
 class FormulaParser(private val attributeFor: (String) -> Attribute?) {
 
     fun parse(text: String): Expr? {
-        val tokens = tokenize(text) ?: return null
+        val tokens = tokenizeFormula(text) ?: return null
         return TokenParser(tokens, attributeFor).parse()
     }
+}
 
-    private fun tokenize(text: String): List<String>? {
-        val tokens = mutableListOf<String>()
-        val current = StringBuilder()
-        fun flush() {
-            val token = current.toString().trim()
-            if (token.isNotEmpty()) tokens.add(token)
-            current.clear()
-        }
-        var i = 0
-        while (i < text.length) {
-            val c = text[i]
-            when (c) {
-                '+', '-', '/', '(', ')', '^' -> {
-                    flush()
-                    tokens.add(c.toString())
-                }
+private val FORMULA_TOKENS = setOf("+", "-", "*", "/", "**", "^", "(", ")")
 
-                '*' -> {
-                    flush()
-                    if (i + 1 < text.length && text[i + 1] == '*') {
-                        tokens.add("**")
-                        i++
-                    } else {
-                        tokens.add("*")
-                    }
-                }
+/**
+ * The names [text] uses, in the order they appear: those of its tokens that are
+ * neither operators nor numbers. A failed parse cannot report these, because it
+ * stops at the first name that does not resolve, so whether the text names any
+ * attribute at all must be asked separately — taking it from the parse would
+ * make the answer depend on the order the names happen to appear in.
+ */
+fun namesInFormula(text: String): List<String> =
+    tokenizeFormula(text)
+        ?.filter { it !in FORMULA_TOKENS && it.toDoubleOrNull() == null }
+        ?: emptyList()
 
-                else -> current.append(c)
-            }
-            i++
-        }
-        flush()
-        return tokens.ifEmpty { null }
+internal fun tokenizeFormula(text: String): List<String>? {
+    val tokens = mutableListOf<String>()
+    val current = StringBuilder()
+    fun flush() {
+        val token = current.toString().trim()
+        if (token.isNotEmpty()) tokens.add(token)
+        current.clear()
     }
+
+    var i = 0
+    while (i < text.length) {
+        val c = text[i]
+        when (c) {
+            '+', '-', '/', '(', ')', '^' -> {
+                flush()
+                tokens.add(c.toString())
+            }
+
+            '*' -> {
+                flush()
+                if (i + 1 < text.length && text[i + 1] == '*') {
+                    tokens.add("**")
+                    i++
+                } else {
+                    tokens.add("*")
+                }
+            }
+
+            else -> current.append(c)
+        }
+        i++
+    }
+    flush()
+    return tokens.ifEmpty { null }
 }

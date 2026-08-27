@@ -6,7 +6,12 @@ import io.rippledown.persistence.PersistentRule
 import kotlinx.serialization.json.Json
 
 class RuleExporter: Exporter<Rule>, Importer<PersistentRule> {
-    private val json = Json { allowStructuredMapKeys = true }
+    // An export made before conclusions were retired has a conclusion id in
+    // each rule, which is ignored rather than refused.
+    private val json = Json {
+        allowStructuredMapKeys = true
+        ignoreUnknownKeys = true
+    }
 
     override fun exportToString(t: Rule) = json.encodeToString(PersistentRule(t))
 

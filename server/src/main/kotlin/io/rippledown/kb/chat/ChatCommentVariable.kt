@@ -16,19 +16,28 @@ val COMMENT_PLACEHOLDER_REGEX = Regex("\\{[^}]*\\}")
  * Convert an LLM-facing comment containing `{attributeName}` placeholders into its internal form
  * (placeholders replaced by [VARIABLE_TOKEN]) together with the resolved comment variables.
  *
- * The model occasionally supplies more variables than there are placeholders — e.g. attaching a
- * variable to a comment that merely mentions an attribute name but contains no placeholder. Variables
- * are therefore aligned to the number of placeholders actually present, so a comment with no
- * placeholders carries no variables.
+ * There is exactly one variable per placeholder, whatever the model supplied in [variables]: a
+ * placeholder names its attribute, so the name is taken from the placeholder itself, falling back to
+ * the variable the model supplied for that placeholder where the placeholder names no attribute.
+ * The model's list cannot be relied on — it sometimes supplies more variables than there are
+ * placeholders (attaching one to a comment that merely mentions an attribute name), and sometimes
+ * fewer or none at all, which would leave a token with no variable to substitute and so render the
+ * comment with a raw `${}` in it.
  */
 fun resolveCommentVariables(
     comment: String,
     variables: List<ChatCommentVariable>,
     ruleService: RuleService
 ): Pair<String, List<CommentVariable>> {
-    val placeholderCount = COMMENT_PLACEHOLDER_REGEX.findAll(comment).count()
     val internalComment = comment.replace(COMMENT_PLACEHOLDER_REGEX, Regex.escapeReplacement(VARIABLE_TOKEN))
-    val resolvedVariables = variables.take(placeholderCount).toCommentVariables(ruleService)
+    val resolvedVariables = COMMENT_PLACEHOLDER_REGEX.findAll(comment).toList()
+        .mapIndexed { index, placeholder ->
+            val nameInPlaceholder = placeholder.value.removeSurrounding("{", "}")
+            val attributeName = ruleService.attributeForName(nameInPlaceholder)?.name
+                ?: variables.getOrNull(index)?.attributeName
+            ChatCommentVariable(attributeName)
+        }
+        .toCommentVariables(ruleService)
     return internalComment to resolvedVariables
 }
 

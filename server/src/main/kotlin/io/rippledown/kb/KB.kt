@@ -17,8 +17,7 @@ class KB(persistentKB: PersistentKB) {
     val kbInfo = persistentKB.kbInfo()
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager = AttributeManager(persistentKB.attributeStore())
-    val conclusionManager = ConclusionManager(persistentKB.conclusionStore())
-    val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore())
+    val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
 
     /**
      * Resolves a derived attribute to its stored definition, so that
@@ -27,10 +26,10 @@ class KB(persistentKB: PersistentKB) {
      */
     val definitionResolver: DefinitionResolver = { attribute -> derivedDefinitionManager.definitionFor(attribute.id) }
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
-    val interpretationViewManager =
-        InterpretationViewManager(persistentKB.conclusionOrderStore(), conclusionManager, attributeManager)
+    val interpretationViewManager = InterpretationViewManager()
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
-    internal val ruleManager = RuleManager(conclusionManager, conditionManager, persistentKB.ruleStore())
+    internal val ruleManager =
+        RuleManager(conditionManager, attributeManager, persistentKB.ruleStore())
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
     internal val caseViewManager = CaseViewManager(persistentKB.attributeOrderStore(), attributeManager)
     val ruleTree = ruleManager.ruleTree()
@@ -92,7 +91,7 @@ class KB(persistentKB: PersistentKB) {
 
     fun copyCaseAsFavourite(id: Long, newName: String?): RDRCase {
         val case = caseManager.getCase(id) ?: throw NoSuchElementException("No case with id $id")
-        if (newName ==  null || newName.trim().isEmpty()) {
+        if (newName == null || newName.trim().isEmpty()) {
             return caseManager.add(case.copyWithoutId(CaseType.Favourite))
         } else {
             return caseManager.add(case.copyWithNewNameAndNoId(CaseType.Favourite, newName))

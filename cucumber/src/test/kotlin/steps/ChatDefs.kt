@@ -304,6 +304,20 @@ class ChatDefs {
         addCommentThenConfirm(comment)
     }
 
+    @And("I request that the comment with variable(s) {string} be added")
+    fun requestCommentWithVariableBeAdded(comment: String) {
+        waitForBotQuestionOrCompletedAction()
+        // The model is instructed to ask for confirmation when the comment
+        // contains a variable, and occasionally asks for other comments too;
+        // addCommentThenConfirm confirms only if the model actually asks.
+        addCommentWithoutConfirmation(comment)
+    }
+
+    @Then("the bot should ask which attribute to use for the placeholder")
+    fun requireBotToAskWhichAttributeToUseForPlaceholder() {
+        waitForBotText(WHICH_ATTRIBUTE)
+    }
+
     @And("I request that the comment {string} be added without being prompted")
     fun requestCommentBeAddedWithoutPrompt(comment: String) {
         addCommentWithoutConfirmation(comment)
@@ -311,6 +325,24 @@ class ChatDefs {
 
     fun addCommentWithoutConfirmation(comment: String) {
         enterChatTextAndSend("Add the comment: \"$comment\"")
+    }
+
+    /**
+     * Waits until the rule session for the change just requested is under way, which is when its
+     * preview can be read from the Comments panel. A change to a comment with variables prompts the
+     * model to confirm the comment first, so confirm if it asks, then wait for the suggestions of
+     * this request rather than of an earlier rule session.
+     */
+    fun waitForRuleSessionToStart() {
+        await().atMost(ofSeconds(90)).until {
+            chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) || chatPO().suggestionsAreForLatestRequest()
+        }
+        if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
+            confirm()
+        }
+        await().atMost(ofSeconds(90)).until {
+            chatPO().suggestionsAreForLatestRequest()
+        }
     }
 
     fun addCommentThenConfirm(comment: String) {
@@ -459,10 +491,64 @@ class ChatDefs {
         waitForBotTextToContainAnyOf("cycle", "depend on itself")
     }
 
+    /**
+     * The two shapes of the question asked when a value expression names some
+     * attributes and one non-attribute. The message is returned to the user
+     * verbatim, not paraphrased by the model, so it can be matched exactly.
+     */
+    @Then("the chat should say there is no attribute named {string} and suggest the formula {string}")
+    fun chatSuggestsCorrectedFormula(unknownName: String, correctedFormula: String) {
+        waitForBotText("no attribute named", unknownName, "Did you mean", correctedFormula)
+    }
+
+    @Then("the chat should say there is no attribute named {string} and offer to assign the text {string}")
+    fun chatOffersToAssignFormulaAsText(unknownName: String, text: String) {
+        waitForBotText("no attribute named", unknownName, "assign the text", text)
+    }
+
     @Then("the chat should explain that the name {string} already exists")
     fun chatExplainsNameAlreadyExists(name: String) {
         waitForBotText(name)
         waitForBotTextToContainAnyOf("already exists", "already used", "already given", "replace")
+    }
+
+    @When("I request that the attribute {string} be renamed to {string}")
+    fun requestAttributeBeRenamed(currentName: String, newName: String) {
+        waitForBotQuestionOrCompletedAction()
+        enterChatTextAndSend("Rename the attribute \"$currentName\" to \"$newName\"")
+    }
+
+    @When("I request that the comment just added be renamed to {string}")
+    fun requestCommentJustAddedBeRenamed(newName: String) {
+        // The name of the comment is chosen by the model, so the request refers to
+        // the comment rather than naming it: the model knows the name, having just
+        // been told it by the system.
+        enterChatTextAndSend("Rename that comment to \"$newName\"")
+    }
+
+    @Then("the chatbot tells me the name of the comment and that it can be renamed")
+    fun waitForBotToNameTheComment() {
+        waitForBotText(COMMENT_IS_NAMED, CAN_BE_RENAMED)
+    }
+
+    @Then("the chatbot does not tell me the name of the comment")
+    fun requireBotNotToNameTheComment() {
+        chatPO().mostRecentBotRowDoesNotContainTheTerm(COMMENT_IS_NAMED)
+    }
+
+    @Then("the chatbot confirms that {string} has been renamed to {string}")
+    fun waitForBotToConfirmRename(currentName: String, newName: String) {
+        waitForBotText(RENAMED, currentName, newName)
+    }
+
+    @Then("the chatbot confirms a rename to {string}")
+    fun waitForBotToConfirmRenameTo(newName: String) {
+        waitForBotText(RENAMED, newName)
+    }
+
+    @Then("the chatbot explains that the attribute {string} cannot be renamed")
+    fun waitForBotToRefuseRename(name: String) {
+        waitForBotText(name, CANNOT_BE_RENAMED)
     }
 
     @Then("the capabilities shown include:")
@@ -484,10 +570,6 @@ class ChatDefs {
 
     @Then("the chatbot does not mention the comment variable facility")
     fun requireCommentVariableTipNotShown() {
-        // Wait for the add-comment flow to present its suggestions; the tip (if it were going to
-        // be shown) is delivered in the same response, so by this point it would already be in the
-        // chat. We can then safely assert that none was shown.
-        waitForBotSuggestions()
         chatPO().numberOfTipMessages() shouldBe 0
     }
 

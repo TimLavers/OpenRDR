@@ -4,7 +4,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.edit.EditableSuggestedCondition
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -35,8 +35,9 @@ class HistoricalConditionInjectionTest {
     private val egfr = Attribute(12, "eGFR")
     private val tsh = Attribute(10, "TSH")
 
-    private val goToBondi = Conclusion(100, "Go to Bondi.")
-    private val otherConclusion = Conclusion(101, "Go to Manly.")
+    private val goToBondi = AssignValue(Attribute(100, "C1", AttributeKind.COMMENT), CommentTemplate("Go to Bondi."))
+    private val otherConclusion =
+        AssignValue(Attribute(101, "C2", AttributeKind.COMMENT), CommentTemplate("Go to Manly."))
 
     private fun ruleTreeWith(vararg rules: Rule): RuleTree {
         val root = Rule(0)
@@ -53,11 +54,11 @@ class HistoricalConditionInjectionTest {
         //Given a case whose eGFR reads 74 and a historical eGFR ≥ 70 rule
         val sessionCase = case(egfr to "74")
         val egfrGte70 = EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, goToBondi, setOf(egfrGte70))
+        val historical = Rule(1, null, setOf(egfrGte70), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -80,11 +81,11 @@ class HistoricalConditionInjectionTest {
         //not surface it.
         val sessionCase = case(egfr to "60")
         val egfrGte70 = EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, goToBondi, setOf(egfrGte70))
+        val historical = Rule(1, null, setOf(egfrGte70), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -101,11 +102,11 @@ class HistoricalConditionInjectionTest {
         //eGFR ≥ 70 rule for the action's target conclusion.
         val sessionCase = case(egfr to "74")
         val egfrGte70 = EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, goToBondi, setOf(egfrGte70))
+        val historical = Rule(1, null, setOf(egfrGte70), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -132,11 +133,11 @@ class HistoricalConditionInjectionTest {
         //identical entries. The editable form wins (user can still adjust).
         val sessionCase = case(egfr to "70")
         val egfrGte70 = EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, goToBondi, setOf(egfrGte70))
+        val historical = Rule(1, null, setOf(egfrGte70), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -160,11 +161,11 @@ class HistoricalConditionInjectionTest {
         //than the one the user is currently adding.
         val sessionCase = case(egfr to "74")
         val egfrGte70 = EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, otherConclusion, setOf(egfrGte70))
+        val historical = Rule(1, null, setOf(egfrGte70), mutableSetOf(), otherConclusion)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -183,11 +184,11 @@ class HistoricalConditionInjectionTest {
         //dedup against it rather than offering it twice.
         val sessionCase = makeCase(tsh to tr("12.0", rr("0", "10")))
         val tshHigh = EpisodicCondition(tsh, High, Current)
-        val historical = Rule(1, null, goToBondi, setOf(tshHigh))
+        val historical = Rule(1, null, setOf(tshHigh), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(tsh),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 
@@ -205,7 +206,7 @@ class HistoricalConditionInjectionTest {
         //today's behaviour (alphabetic fallback, no historical interference).
         val sessionCase = case(egfr to "74")
         val egfrGte70 = EpisodicCondition(egfr, GreaterThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, goToBondi, setOf(egfrGte70))
+        val historical = Rule(1, null, setOf(egfrGte70), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
@@ -226,11 +227,11 @@ class HistoricalConditionInjectionTest {
         //≥ but the injection must work for both directions.
         val sessionCase = case(egfr to "60")
         val egfrLte70 = EpisodicCondition(egfr, LessThanOrEquals(70.0), Current)
-        val historical = Rule(1, null, goToBondi, setOf(egfrLte70))
+        val historical = Rule(1, null, setOf(egfrLte70), mutableSetOf(), goToBondi)
         val ctx = SuggestionContext(
             sessionCase = sessionCase,
             attributes = setOf(egfr),
-            action = ChangeTreeToAddConclusion(goToBondi),
+            action = ChangeTreeToAddAssignment(goToBondi),
             ruleTree = ruleTreeWith(historical),
         )
 

@@ -72,13 +72,46 @@ class AssignValueDefinitionFlowTest {
     @Test
     fun `a self-referencing expression is refused before anything is stored`() {
         // When a self-referencing value is assigned
-        // Then it is refused, and no definition has been stored
+        // Then it is refused, and the attribute it would have defined was not even
+        // created: nothing is stored, as the name of this test has always claimed
         shouldThrow<IllegalStateException> {
             rsm.startRuleSessionToAssignValue(case(), "BMI", "BMI * 2")
         }.message shouldBe "This value cannot be assigned: it would make \"BMI\" depend on itself (BMI → BMI)."
-        val bmi = kb.attributeManager.byName("BMI")!!
-        kb.derivedDefinitionManager.definitionFor(bmi.id).shouldBeNull()
+        kb.attributeManager.byName("BMI").shouldBeNull()
         rsm.isRuleSessionActive() shouldBe false
+    }
+
+    @Test
+    fun `an expression naming an attribute the KB does not have creates no attribute`() {
+        // Given a case, and no attribute named BMI
+        val case = case()
+
+        // When the formula misspells "height", so that the request is refused
+        shouldThrow<IllegalStateException> {
+            rsm.startRuleSessionToAssignValue(case, "BMI", "weight / hieght")
+        }
+
+        // Then the attribute it would have defined was not created
+        kb.attributeManager.byName("BMI").shouldBeNull()
+    }
+
+    @Test
+    fun `the corrected expression can be assigned after a refusal`() {
+        // Given a request refused because its formula misspells "height"
+        val case = case()
+        shouldThrow<IllegalStateException> {
+            rsm.startRuleSessionToAssignValue(case, "BMI", "weight / hieght")
+        }
+
+        // When the user accepts the correction and the request is made again
+        rsm.startRuleSessionToAssignValue(case, "BMI", "weight / height")
+        rsm.commitCurrentRuleSession()
+
+        // Then it succeeds: the refused request left no attribute of that name to
+        // clash with, so the question the user was asked can actually be answered
+        val bmi = kb.attributeManager.byName("BMI")!!
+        kb.derivedDefinitionManager.definitionFor(bmi.id)!!.asText() shouldBe "weight / height"
+        kb.viewableCase(case).case.latestValue(bmi) shouldBe "51.67"
     }
 
     @Test

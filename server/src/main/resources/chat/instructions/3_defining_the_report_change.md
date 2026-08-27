@@ -4,6 +4,15 @@ For the current case, the list of comments given by rules is as follows:
 
 {{COMMENTS}}
 
+## Step 0: Act on a request that already says what the change is:
+
+- The steps below are for finding out what the user wants. If the user's message already says what the change is, act on
+  it: go straight to Step 3. NEVER answer such a message by listing the comments and asking what they would like to do.
+- This applies just as much to the first message after a rule has been committed as to the first message of the
+  conversation. Having completed one change, the user often asks for the next one immediately, for example
+  `Add the comment: "The water is cold"`. That message is a request to action, not an opening for you to summarise the
+  case's comments.
+
 ## Step 1: Ask the user if they want to change the comments for the case:
 
 - If there are no comments, ask the user if they want to add a comment.

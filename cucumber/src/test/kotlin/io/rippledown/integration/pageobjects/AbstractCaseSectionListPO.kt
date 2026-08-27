@@ -12,6 +12,7 @@ import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
+import javax.accessibility.AccessibleState.SELECTED
 
 /**
  * Base page object for a single named section of the case list (e.g.
@@ -74,6 +75,18 @@ abstract class AbstractCaseSectionListPO(private val contextProvider: () -> Acce
     fun waitForCaseListToContain(name: String) {
         await().atMost(ofSeconds(5)).until {
             casesListed().contains(name)
+        }
+    }
+
+    fun requireCaseToBeShown(caseName: String) {
+        waitUntilAsserted { caseNameContext(caseName) shouldNotBe null }
+    }
+
+    fun requireCaseToBeSelected(caseName: String) {
+        waitUntilAsserted {
+            val ctx = caseNameContext(caseName)
+            ctx shouldNotBe null
+            ctx!!.accessibleStateSet.contains(SELECTED)
         }
     }
 

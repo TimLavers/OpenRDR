@@ -10,7 +10,6 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.ByDefinition
-import io.rippledown.model.rule.ChangeTreeToAddConclusion
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
@@ -39,6 +38,10 @@ class EditDerivedDefinitionTest {
     )
 
     private fun bmiDefinedByRule(): Attribute {
+        // The attributes the definition references have to be in the KB, since a
+        // formula naming an attribute that does not exist is refused.
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
         val bmi = kb.attributeManager.getOrCreate("BMI", AttributeKind.DERIVED)
         kb.derivedDefinitionManager.store(bmi.id, rsm.valueExpressionFor("weight / height"))
         kb.ruleManager.createRuleAndAddToParent(kb.ruleTree.root, AssignValue(bmi, ByDefinition), emptySet())
@@ -126,7 +129,7 @@ class EditDerivedDefinitionTest {
         // Given an active rule session
         bmiDefinedByRule()
         val case = caseWith("weight" to "93.0", "height" to "1.8")
-        rsm.startRuleSession(case, ChangeTreeToAddConclusion(kb.conclusionManager.getOrCreate("Whatever.")))
+        rsm.startRuleSessionToAddComment(case, "Whatever.")
 
         // When a definition edit is attempted
         // Then it is refused

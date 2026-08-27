@@ -14,20 +14,46 @@ interface RuleService {
     fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,
         comment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
     ): CornerstoneStatus
     fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus
     fun startRuleSessionToReplaceComment(
         viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
     ): CornerstoneStatus
+
+    /**
+     * The name of the comment attribute that the session in progress will
+     * assign, or null if no session is in progress or it is not about adding
+     * or replacing a comment. Comments are named so that they can be referred
+     * to, so the name is told to the user when the comment is accepted. See
+     * step 14 of documentation/design/repeat_inferencing.md.
+     */
+    fun nameOfCommentAttributeInSession(): String?
+
+    /**
+     * Rename a KB-assigned attribute (a comment or a derived attribute),
+     * which changes its name only: everything that refers to it does so by
+     * id. Returns a summary of the change.
+     */
+    fun renameAttribute(currentName: String, newName: String): String
     fun startRuleSessionToAssignValue(
         viewableCase: ViewableCase,
         attributeName: String,
         valueExpression: String
     ): CornerstoneStatus
+
+    /**
+     * The value expression the user is being offered in place of
+     * [valueExpression], or null if it raises no question. An expression naming
+     * something that is no attribute is put back to the user, either as a
+     * correction or as text to assign, and this is what they accept by saying
+     * yes, so that the acceptance can be acted on without asking the model to
+     * re-send it.
+     */
+    fun offeredValueExpressionFor(valueExpression: String): String?
 
     fun startRuleSessionToRemoveAssignment(viewableCase: ViewableCase, attributeName: String): CornerstoneStatus
     fun startRuleSessionToReplaceAssignment(
@@ -74,6 +100,11 @@ interface RuleService {
      * whether the current case has a value for it, or null if there is no such attribute.
      */
     fun attributeById(id: Int): Attribute?
+
+    /**
+     * All attributes in the knowledge base, including those not present on the current case.
+     */
+    fun allAttributes(): Set<Attribute>
 
     fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase
     fun deleteCaseFromFavourites(case: ViewableCase)

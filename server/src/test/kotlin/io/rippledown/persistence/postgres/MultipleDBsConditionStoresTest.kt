@@ -5,7 +5,6 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.condition.isHigh
 import io.rippledown.persistence.ConditionStore
 import io.rippledown.util.shouldBeSameAs
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -24,10 +23,6 @@ class MultipleDBsConditionStoresTest : MultipleDBsTest() {
         store2 = kb2.conditionStore()
     }
 
-    @AfterTest
-    override fun cleanup() {
-        super.cleanup()
-    }
 
     override fun reload() {
         super.reload()

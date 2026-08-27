@@ -53,6 +53,34 @@ const val CANCEL_BUTTON_FOR_REMOVE_COMMENT = "$REMOVE_COMMENT_PREFIX$CANCEL"
 
 const val CONDITION_PREFIX = "CONDITION_PREFIX"
 
+// Comments panel table constants. Each comment is a row of the two column
+// table, identified by the name of the comment attribute that gave it.
+const val COMMENT_ROW_PREFIX = "COMMENT_ROW_"
+
+// Distinguishes the cornerstone view's comment rows from those of the case
+// being worked on, since both are on screen while a rule is being built.
+const val CORNERSTONE_COMMENT_ID_PREFIX = "CORNERSTONE_"
+const val COMMENT_NAME_PREFIX = "COMMENT_NAME_"
+
+// The text cell of a comment row. The prefix encodes whether the rule session
+// in progress is about to add, remove or replace the comment, so that the
+// highlighting, which is invisible to the semantics tree, can be asserted.
+const val COMMENT_TEXT_PREFIX = "COMMENT_TEXT_"
+const val COMMENT_PENDING_ADD_PREFIX = "COMMENT_PENDING_ADD_"
+const val COMMENT_PENDING_REMOVE_PREFIX = "COMMENT_PENDING_REMOVE_"
+const val COMMENT_PENDING_REPLACE_PREFIX = "COMMENT_PENDING_REPLACE_"
+
+// The replacing half of a pending replacement row, which carries its own name
+// chip and text beside the comment being replaced.
+const val COMMENT_REPLACEMENT_NAME_PREFIX = "COMMENT_REPLACEMENT_NAME_"
+const val COMMENT_REPLACEMENT_TEXT_PREFIX = "COMMENT_REPLACEMENT_TEXT_"
+
+// The tag of a comment row, which carries whether the pointer is over the row,
+// since the highlight that shows it is invisible to the semantics tree. The
+// row's content description stays fixed, so that it can always be found.
+const val COMMENT_ROW_TAG_PREFIX = "COMMENT_ROW_TAG_"
+const val COMMENT_ROW_HOVERED_TAG_PREFIX = "COMMENT_ROW_HOVERED_"
+
 const val UNRESOLVED_VARIABLE_TOOLTIP = "This attribute has no value in the current case."
 
 // Report panel constants

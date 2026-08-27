@@ -2,7 +2,10 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
+import io.rippledown.model.RDRCase
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isAbsent
 import io.rippledown.model.condition.isCondition
@@ -17,7 +20,8 @@ internal class RuleTreeFixpointTest {
     private val diabetesStatus = Attribute(10, "Diabetes status", AttributeKind.DERIVED)
     private val riskScore = Attribute(11, "Risk score", AttributeKind.DERIVED)
     private val bmi = Attribute(12, "BMI", AttributeKind.DERIVED)
-    private val advice = Conclusion(1, "Diabetic diet advice given.")
+    private val advice =
+        AssignValue(Attribute(20, "C1", AttributeKind.COMMENT), CommentTemplate("Diabetic diet advice given."))
 
     private var nextRuleId = 100
     private var nextConditionId = 1000
@@ -28,11 +32,10 @@ internal class RuleTreeFixpointTest {
     }
 
     private fun RuleTree.withRule(
-        conclusion: Conclusion? = null,
         assignment: AssignValue? = null,
         vararg conditions: io.rippledown.model.condition.Condition
     ): Rule {
-        val rule = Rule(nextRuleId++, null, conclusion, conditions.toSet(), mutableSetOf(), assignment)
+        val rule = Rule(nextRuleId++, null, conditions.toSet(), mutableSetOf(), assignment)
         root.addChild(rule)
         return rule
     }
@@ -90,7 +93,7 @@ internal class RuleTreeFixpointTest {
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
         )
         tree.withRule(
-            conclusion = advice,
+            assignment = advice,
             conditions = arrayOf(isCondition(nextConditionId++, diabetesStatus, "diabetic"))
         )
         val case = case(glucose to "12.0")
@@ -98,8 +101,9 @@ internal class RuleTreeFixpointTest {
         // When the case is interpreted
         val interpretation = tree.apply(case)
 
-        // Then the dependent conclusion is given
-        interpretation.conclusions() shouldBe setOf(advice)
+        // Then the dependent comment is given, along with the derived value it
+        // is conditioned on: a comment is an assignment like any other.
+        interpretation.assignments() shouldBe setOf(AssignValue(diabetesStatus, Literal("diabetic")), advice)
     }
 
     @Test
@@ -115,7 +119,7 @@ internal class RuleTreeFixpointTest {
             conditions = arrayOf(isCondition(nextConditionId++, diabetesStatus, "diabetic"))
         )
         tree.withRule(
-            conclusion = advice,
+            assignment = advice,
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, riskScore, 6.0))
         )
         val case = case(glucose to "12.0")
@@ -126,7 +130,11 @@ internal class RuleTreeFixpointTest {
         // Then the whole chain has fired
         materialised.latestValue(diabetesStatus) shouldBe "diabetic"
         materialised.latestValue(riskScore) shouldBe "7"
-        case.interpretation.conclusions() shouldBe setOf(advice)
+        case.interpretation.assignments() shouldBe setOf(
+            AssignValue(diabetesStatus, Literal("diabetic")),
+            AssignValue(riskScore, Literal("7")),
+            advice
+        )
     }
 
     @Test
@@ -137,9 +145,10 @@ internal class RuleTreeFixpointTest {
             assignment = AssignValue(diabetesStatus, Literal("diabetic")),
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
         )
-        val noEvidence = Conclusion(2, "No evidence of diabetes.")
+        val noEvidence =
+            AssignValue(Attribute(21, "C2", AttributeKind.COMMENT), CommentTemplate("No evidence of diabetes."))
         tree.withRule(
-            conclusion = noEvidence,
+            assignment = noEvidence,
             conditions = arrayOf(isAbsent(diabetesStatus, nextConditionId++))
         )
         val case = case(glucose to "5.0")
@@ -148,7 +157,7 @@ internal class RuleTreeFixpointTest {
         val interpretation = tree.apply(case)
 
         // Then the absence-conditioned rule has fired
-        interpretation.conclusions() shouldBe setOf(noEvidence)
+        interpretation.assignments() shouldBe setOf(noEvidence)
     }
 
     @Test
@@ -159,9 +168,10 @@ internal class RuleTreeFixpointTest {
             assignment = AssignValue(diabetesStatus, Literal("diabetic")),
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
         )
-        val noEvidence = Conclusion(2, "No evidence of diabetes.")
+        val noEvidence =
+            AssignValue(Attribute(21, "C2", AttributeKind.COMMENT), CommentTemplate("No evidence of diabetes."))
         tree.withRule(
-            conclusion = noEvidence,
+            assignment = noEvidence,
             conditions = arrayOf(isAbsent(diabetesStatus, nextConditionId++))
         )
         val case = case(glucose to "12.0")
@@ -169,8 +179,9 @@ internal class RuleTreeFixpointTest {
         // When the case is interpreted
         val interpretation = tree.apply(case)
 
-        // Then the absence-conditioned rule has been retracted on the later pass
-        interpretation.conclusions() shouldBe emptySet()
+        // Then the absence-conditioned comment has been retracted on the later
+        // pass, leaving only the derived value that was assigned
+        interpretation.assignments() shouldBe setOf(AssignValue(diabetesStatus, Literal("diabetic")))
     }
 
     @Test
@@ -178,9 +189,9 @@ internal class RuleTreeFixpointTest {
         // Given an unconditional BMI formula rule and a dependent rule
         val tree = RuleTree()
         tree.withRule(assignment = AssignValue(bmi, bmiFormula()))
-        val elevated = Conclusion(3, "Elevated BMI.")
+        val elevated = AssignValue(Attribute(22, "C3", AttributeKind.COMMENT), CommentTemplate("Elevated BMI."))
         tree.withRule(
-            conclusion = elevated,
+            assignment = elevated,
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, bmi, 28.0))
         )
         val case = case(weight to "93.0", height to "1.8")
@@ -190,7 +201,7 @@ internal class RuleTreeFixpointTest {
 
         // Then the computed value is assigned and the dependent rule fired
         materialised.latestValue(bmi) shouldBe "28.7"
-        case.interpretation.conclusions() shouldBe setOf(elevated)
+        case.interpretation.assignments() shouldBe setOf(AssignValue(bmi, bmiFormula()), elevated)
     }
 
     @Test
@@ -215,8 +226,7 @@ internal class RuleTreeFixpointTest {
         val formulaRule = tree.withRule(assignment = AssignValue(bmi, bmiFormula()))
         val corrected = AssignValue(bmi, Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0))))
         val child = Rule(
-            nextRuleId++, null, null,
-            setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(), corrected
+            nextRuleId++, null, setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(), corrected
         )
         formulaRule.addChild(child)
 
@@ -279,8 +289,7 @@ internal class RuleTreeFixpointTest {
         val byDefinitionRule = tree.withRule(assignment = AssignValue(bmi, ByDefinition))
         val override = AssignValue(bmi, Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0))))
         val child = Rule(
-            nextRuleId++, null, null,
-            setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(), override
+            nextRuleId++, null, setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(), override
         )
         byDefinitionRule.addChild(child)
 
@@ -300,7 +309,7 @@ internal class RuleTreeFixpointTest {
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
         )
         tree.withRule(
-            conclusion = advice,
+            assignment = advice,
             conditions = arrayOf(isCondition(nextConditionId++, diabetesStatus, "diabetic"))
         )
         val case = case(glucose to "12.0")
@@ -313,7 +322,7 @@ internal class RuleTreeFixpointTest {
         // Then the result is stable
         second.hasSameDataAs(first) shouldBe true
         third.hasSameDataAs(first) shouldBe true
-        case.interpretation.conclusions() shouldBe setOf(advice)
+        case.interpretation.assignments() shouldBe setOf(AssignValue(diabetesStatus, Literal("diabetic")), advice)
     }
 
     @Test
@@ -339,8 +348,7 @@ internal class RuleTreeFixpointTest {
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
         )
         val stopper = Rule(
-            nextRuleId++, null, null,
-            setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 20.0)), mutableSetOf(), null
+            nextRuleId++, null, setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 20.0)), mutableSetOf(), null
         )
         assigning.addChild(stopper)
 
@@ -362,8 +370,7 @@ internal class RuleTreeFixpointTest {
         )
         val scoring = tree.withRule(assignment = AssignValue(riskScore, Literal("7")))
         val stopper = Rule(
-            nextRuleId++, null, null,
-            setOf(isPresent(diabetesStatus, nextConditionId++)), mutableSetOf(), null
+            nextRuleId++, null, setOf(isPresent(diabetesStatus, nextConditionId++)), mutableSetOf(), null
         )
         scoring.addChild(stopper)
 
@@ -392,11 +399,11 @@ internal class RuleTreeFixpointTest {
     }
 
     @Test
-    fun `conclusion-only interpretation behaves as a single pass`() {
-        // Given a tree with only conclusion rules
+    fun `assignment-only interpretation behaves as a single pass`() {
+        // Given a tree with only assignment rules
         val tree = RuleTree()
         tree.withRule(
-            conclusion = advice,
+            assignment = advice,
             conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
         )
         val case = case(glucose to "12.0")
@@ -404,8 +411,11 @@ internal class RuleTreeFixpointTest {
         // When the case is interpreted
         val interpretation = tree.apply(case)
 
-        // Then the conclusion is given and the case data is unchanged
-        interpretation.conclusions() shouldBe setOf(advice)
-        tree.materialise(case).hasSameDataAs(case) shouldBe true
+        // Then the assignment is made, and the comment's value is written onto
+        // the case, which is stable under further passes.
+        interpretation.assignments() shouldBe setOf(advice)
+        val materialised = tree.materialise(case)
+        materialised.latestValue(advice.attribute) shouldBe "Diabetic diet advice given."
+        tree.materialise(materialised).hasSameDataAs(materialised) shouldBe true
     }
 }

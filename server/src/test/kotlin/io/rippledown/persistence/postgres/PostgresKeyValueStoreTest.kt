@@ -12,8 +12,6 @@ import kotlin.test.Test
 class PostgresKeyValueStoreTest: PostgresStoreTest() {
     private lateinit var store: KeyValueStore
 
-    override fun tablesInDropOrder() = listOf(META_DATA_STORE)
-
     override fun reload() {
         super.reload()
         store = postgresKB.metaDataStore()
@@ -21,7 +19,7 @@ class PostgresKeyValueStoreTest: PostgresStoreTest() {
 
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.metaDataStore()
     }
 

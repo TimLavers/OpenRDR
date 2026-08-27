@@ -11,11 +11,9 @@ then describes the design as currently implemented.
 
 Originally the suggester was blind to the rule action. It took only
 `(attributes, sessionCase)`, generated the cartesian product of
-predicates × attributes × signatures, kept those that held for the session
-case, and sorted them alphabetically (a `Sorter`). The comment text and the action type (`ChangeTreeToAddConclusion` /
-`…Remove…` / `…Replace…`, or after Phase 2 `ChangeTreeToAddAssignment` / `…Remove…` / `…Replace…` for comment
-attributes) were available to `RuleSessionManager` but never reached the suggester, so the list was long, generic, and
-in no useful order.
+predicates × attributes × signatures, kept those that held for the session case, and sorted them alphabetically (a
+`Sorter`). The comment text and the action type (`ChangeTreeToAddAssignment` / `…Remove…` / `…Replace…`) were available
+to `RuleSessionManager` but never reached the suggester, so the list was long, generic, and in no useful order.
 
 "Targeting" means threading the action context (and the session's cornerstone
 cases) into the suggester, then ranking, filtering, or generating using it.
@@ -28,11 +26,9 @@ cases) into the suggester, then ranking, filtering, or generating using it.
    from cornerstones. A few hundred lines, no new dependencies, fully
    testable — but heuristic, and the candidate set is still large.
 2. **Historical-rule mining.** In an RDR knowledge base, the best predictor
-   of a good condition for a comment is the conditions already used with that
-   comment. Collect the conditions of rules whose conclusion matches the
-   target comment and that hold on the session case, and surface them first.
-   Deterministic, explainable, strong fit for RDR; cold-start on a brand-new
-   conclusion.
+   of a good condition for a comment is the conditions already used with that comment. Collect the conditions of rules
+   whose action targets the same comment attribute and that hold on the session case, and surface them first.
+   Deterministic, explainable, strong fit for RDR; cold-start on a brand-new comment.
 3. **Cornerstone-based discrimination.** Good conditions are exactly those
    that separate the session case from the cornerstones that should *not* get
    the new comment. Score each candidate by how many cornerstones it excludes.
@@ -43,8 +39,8 @@ cases) into the suggester, then ranking, filtering, or generating using it.
    expressions that are then parsed and validated. Natural-language-aware and
    good on novel comments, but adds latency, non-determinism, and test
    plumbing.
-5. **Embedding retrieval.** Embed the comment and retrieve the nearest
-   historical conclusions to feed (2) when wording differs. Robust to
+5. **Embedding retrieval.** Embed the comment and retrieve the nearest historical comments to feed (2) when wording
+   differs. Robust to
    phrasing, but needs new infrastructure (a store and an embedder).
 6. **Pipeline redesign.** Model suggestions as a composable pipeline of
    strategies (deterministic generator, historical miner, cornerstone
@@ -61,8 +57,8 @@ cases) into the suggester, then ranking, filtering, or generating using it.
   pipeline refactor, no new infrastructure, no protocol change.
 - **Phase 2 (not built).** Refactor into the pluggable strategy pipeline of
   approach 6 and extract a standalone `suggestions` module.
-- **Phase 3 (not built, optional).** Add LLM rerank/generation and/or
-  embedding-based conclusion matching, driven by real usage of Phase 1.
+- **Phase 3 (not built, optional).** Add LLM rerank/generation and/or embedding-based comment matching, driven by real
+  usage of Phase 1.
 
 ## Current design (Phase 1)
 
@@ -122,7 +118,7 @@ there is no way to edit it so that it holds (e.g. `TSH ≥ _` is not offered
 when the case's latest `TSH` is non-numeric). On top of that:
 
 **Historical-condition injection.** The literal conditions of every rule whose action target matches the current
-action — by conclusion id for conclusion-based actions, or by comment-attribute id for assignment-based actions — and
+action — matched by the assigned attribute's id — and
 that `holds(sessionCase)`, are injected as candidates in their own right. In pathology the cutoffs in existing rules are
 usually the clinically defensible ones (e.g. a historical `eGFR ≥ 70`), whereas the generator's editable cutoff pins to
 the case's current reading (e.g.
@@ -146,28 +142,39 @@ because they reliably waste the 20-slot budget:
   `IsAbsentFromCase` were judged to add no clinical value and removed from the
   factory list.
 
+**Attributes the knowledge base assigns itself.** Presence *is* the interesting question for a derived or comment
+attribute, unlike for case data, because it says that some other rule fired. Those two kinds are therefore generated
+separately from the factory list above:
+
+- A **derived** attribute is offered `is in case` and `is not in case`, whichever holds for the session case, on top of
+  the ordinary value conditions on its value.
+- A **comment** attribute is offered `is in case` only, and no value condition at all. A comment attribute's value is
+  its own definition, so `C1 is "Let's surf."` merely restates that the case was given the comment, and it stops holding
+  as soon as the comment has a variable, since the text then differs from case to case. Absence is not offered because a
+  knowledge base accumulates one comment attribute per comment text, so nearly all of them are absent from any one case
+  and offering each would crowd out the candidates that bear on the case in hand.
+
 ### Scorers
 
 Each scorer returns an integer per candidate (`ScoredSuggestion`):
 
-- **`HistoricalRuleScorer`** — number of rules targeting the action's conclusion (for conclusion-based actions) or
-  comment attribute (for assignment-based actions) whose conditions `sameAs` the candidate. The strongest signal in an
-  RDR setting. For conclusion-based actions, Add uses
-  `toBeAdded`, Replace uses `replacement`, Remove uses `toBeRemoved`; for assignment-based actions the same convention
-  applies via the corresponding
-  `AssignValue`'s attribute. A null action scores 0.
+- **`HistoricalRuleScorer`** — number of rules assigning the action's target attribute whose conditions `sameAs` the
+  candidate. The strongest signal in an RDR setting. The target attribute is taken from the action
+  (`targetAttributeId()`): Add uses
+  `toBeAdded`, Replace uses `replacement`, Remove uses `toBeRemoved`, each via the corresponding
+  `AssignValue`'s attribute, and matching is by attribute id so it survives a KB reload. A null action scores 0.
 - **`CommentTokenOverlapScorer`** — size of the intersection between the comment's tokens and the candidate's tokens.
-  The comment text is extracted from the action: for conclusion-based actions it is the `Conclusion.text`; for
-  assignment-based actions the `AssignValue`'s expression is resolved through the `SuggestionContext`'s definition
+  The comment text is extracted from the action: the `AssignValue`'s expression is resolved through the
+  `SuggestionContext`'s definition
   resolver (to handle
   `ByDefinition` sentinels) and, if it is a `CommentTemplate`, the template text is used. The text is lowercased, split
   on non-alphanumerics, and stripped of a small stopword list; the candidate's tokens come from a hand-curated map of
   attribute name plus direction words (`high`, `low`,
   `normal`, `increasing`, …). Signature tokens are excluded. Value tokens from `Is`/`Contains` predicates are only
   counted when the value has at most
-  `MAX_VALUE_TOKENS` (= 3), so multi-sentence comment fields can't win on accidental word collisions. Non-comment
-  assignments (e.g. derived-value formulas) produce no tokens, so the scorer degrades to other signals for those
-  actions. Works at cold start.
+  `MAX_VALUE_TOKENS` (= 3), so multi-sentence comment fields can't win on accidental word collisions. For a non-comment
+  assignment (a derived-value formula or literal) the signal is instead the assigned attribute's name plus the formula's
+  referenced attributes (or the literal's value). Works at cold start.
 - **`CornerstoneDiscriminationScorer`** — number of cornerstones for which the
   candidate does *not* hold (i.e. cornerstones it would exclude from the new
   rule). Empty cornerstones → 0 for all.
@@ -181,7 +188,7 @@ The ranker orders candidates by the four scores, strongest first, with an
 alphabetic final tiebreak:
 
 ```
-historicalScore     desc   // KB has used this condition for this conclusion
+historicalScore     desc   // KB has used this condition for this comment
 commentOverlapScore desc   // attribute/direction the user just typed about
 discriminationScore desc   // separates the case from the cornerstones
 outOfRangeScore     desc   // abnormal-attribute tiebreak

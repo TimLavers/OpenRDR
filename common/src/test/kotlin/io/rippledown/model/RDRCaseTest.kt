@@ -4,6 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.rippledown.model.condition.containsText
+import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.model.rule.Rule
 import io.rippledown.utils.*
 import kotlin.test.Test
@@ -305,7 +307,7 @@ class RDRCaseTest {
         case.interpretation.caseId.name shouldBe case.name
         case.interpretation.caseId.id shouldBe null
 
-        case.interpretation.conclusions().size shouldBe 0
+        case.interpretation.assignments().size shouldBe 0
     }
 
     @Test
@@ -316,38 +318,38 @@ class RDRCaseTest {
         case.resetInterpretation()
         case.interpretation.caseId.name shouldBe case.name
         case.interpretation.caseId.id shouldBe null
-        case.interpretation.conclusions().size shouldBe 0
+        case.interpretation.assignments().size shouldBe 0
         case.interpretation shouldBeSameInstanceAs originalInterpretation
     }
 
     @Test
     fun serializedWithInterpretation() {
-        val conclusion = Conclusion(9, "Tea is good.")
-        val root = Rule(0, null, null, emptySet(), mutableSetOf())
+        val comment = AssignValue(Attribute(9, "C1", AttributeKind.COMMENT), CommentTemplate("Tea is good."))
+        val root = Rule(0, null, emptySet(), mutableSetOf())
         val conditions = setOf(containsText(100, tsh, "0.667"))
-        val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
+        val rule = Rule(1, root, conditions, mutableSetOf(), comment)
         val case = RDRCase(CaseId("1234"))
         case.interpretation.add(rule)
-        case.interpretation.conclusions().first() shouldBe conclusion
+        case.interpretation.assignments().first() shouldBe comment
 
         val sd = serializeDeserialize(case)
         sd shouldBe case
         sd.interpretation shouldBe case.interpretation
-        sd.interpretation.conclusions().first() shouldBe conclusion
+        sd.interpretation.assignments().first() shouldBe comment
     }
 
     @Test
     fun serializedWithInterpretation1() {
-        val conclusion = Conclusion(1, "Tea is good.")
-        val root = Rule(0, null, null, emptySet(), mutableSetOf())
+        val comment = AssignValue(Attribute(9, "C1", AttributeKind.COMMENT), CommentTemplate("Tea is good."))
+        val root = Rule(0, null, emptySet(), mutableSetOf())
         val conditions = setOf(containsText(1, tsh, "0.667"))
-        val rule = Rule(1, root, conclusion, conditions, mutableSetOf())
+        val rule = Rule(1, root, conditions, mutableSetOf(), comment)
         val case = RDRCase(CaseId(12, "Case"))
         case.interpretation = Interpretation(case.caseId).apply { add(rule) }
 
         val sd = serializeDeserialize(case)
         sd shouldBe case
-        sd.interpretation.conclusions().first() shouldBe conclusion
+        sd.interpretation.assignments().first() shouldBe comment
     }
 
     @Test
@@ -440,7 +442,7 @@ class RDRCaseTest {
         val copied = case.copyWithNewInterpretation()
         copied.interpretation.caseId.name shouldBe case.name
         copied.interpretation.caseId.id shouldBe null
-        copied.interpretation.conclusions().size shouldBe 0
+        copied.interpretation.assignments().size shouldBe 0
         copied.interpretation shouldNotBeSameInstanceAs  originalInterpretation
         copied.caseId shouldBeSameInstanceAs case.caseId
         copied.data shouldBeSameInstanceAs case.data

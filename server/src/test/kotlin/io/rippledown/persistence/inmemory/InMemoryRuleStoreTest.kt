@@ -27,9 +27,9 @@ class InMemoryRuleStoreTest {
 
     @Test
     fun `remove a rule`() {
-        val prRoot = store.create(pr(null, null, ""))
-        val pr2 = store.create(pr(prRoot.id, 10, "100,101"))
-        val pr3 = store.create(pr(prRoot.id, 12, "100,103"))
+        val prRoot = store.create(pr(null, ""))
+        val pr2 = store.create(pr(prRoot.id, "100,101"))
+        val pr3 = store.create(pr(prRoot.id, "100,103"))
         store.all() shouldBe listOf(prRoot, pr2, pr3)
         store.removeById(pr3.id!!)
         store.all() shouldBe listOf(prRoot, pr2)
@@ -39,13 +39,13 @@ class InMemoryRuleStoreTest {
 
     @Test
     fun `update a rule`() {
-        // Given a stored rule that gives a conclusion
-        val prRoot = store.create(pr(null, null, ""))
-        val stored = store.create(pr(prRoot.id, 10, "100,101"))
+        // Given a stored rule
+        val prRoot = store.create(pr(null, ""))
+        val stored = store.create(pr(prRoot.id, "100,101"))
 
         // When it is updated to assign a value instead
         val assignment = AssignValue(Attribute(7, "C1", AttributeKind.COMMENT), ByDefinition)
-        val updated = stored.copy(conclusionId = null, assignment = assignment)
+        val updated = stored.copy(assignment = assignment)
         store.update(updated)
 
         // Then the stored rule has the new form, same id
@@ -55,16 +55,16 @@ class InMemoryRuleStoreTest {
     @Test
     fun `updating a rule that is not in the store is not allowed`() {
         shouldThrow<IllegalArgumentException> {
-            store.update(PersistentRule(99, null, null, ""))
+            store.update(PersistentRule(99, null, ""))
         }
     }
 
     @Test
     fun `updating a rule with no id is not allowed`() {
         shouldThrow<IllegalArgumentException> {
-            store.update(pr(null, 10, ""))
+            store.update(pr(null, ""))
         }
     }
 
-    private fun pr(parentId: Int?, conclusionId: Int?, conditionIds: String) = PersistentRule(null, parentId, conclusionId, conditionIds )
+    private fun pr(parentId: Int?, conditionIds: String) = PersistentRule(null, parentId, conditionIds)
 }

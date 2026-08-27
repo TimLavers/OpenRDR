@@ -28,9 +28,21 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         attributesInOrder.forEachIndexed { index, attribute -> attributeIdToIndex[attribute.id] = index}
         persistentKB.attributeOrderStore().load(attributeIdToIndex)
 
-        // Extract the conclusions and store them.
-        val conclusions = DirectoryImporter(conclusionsDirectory, ConclusionExporter(), true).import()
-        persistentKB.conclusionStore().load(conclusions)
+        // Comments are comment attributes, so an export that still has
+        // conclusions predates that and cannot be imported. See step 16 of
+        // documentation/design/repeat_inferencing.md.
+        val conclusionsDirectory = File(destination, "Conclusions")
+        check(conclusionsDirectory.listFiles().isNullOrEmpty()) {
+            "This knowledge base was exported with conclusions, which are no longer supported."
+        }
+
+        // Extract the definitions of the derived and comment attributes and
+        // store them. An export made before definitions were exported has no
+        // such directory.
+        if (definitionsDirectory.isDirectory) {
+            val definitions = DirectoryImporter(definitionsDirectory, DefinitionExporter(), true).import()
+            persistentKB.derivedDefinitionStore().load(definitions.associate { it.attributeId to it.expression })
+        }
 
         // Extract the conditions and store them.
         val conditions = DirectoryImporter(conditionsDirectory, ConditionExporter(), true).import()

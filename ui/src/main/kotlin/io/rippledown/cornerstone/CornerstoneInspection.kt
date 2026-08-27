@@ -26,6 +26,7 @@ import io.rippledown.constants.cornerstone.CORNERSTONE_CASE_NAME_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_ID
 import io.rippledown.constants.cornerstone.CORNERSTONE_TITLE
 import io.rippledown.constants.interpretation.COMMENTS_TOGGLE_FOR_CORNERSTONE
+import io.rippledown.constants.interpretation.CORNERSTONE_COMMENT_ID_PREFIX
 import io.rippledown.decoration.ItalicGrey
 import io.rippledown.interpretation.DerivedValuesPanel
 import io.rippledown.interpretation.ReadonlyInterpretationView
@@ -144,6 +145,7 @@ fun CornerstoneInspection(case: ViewableCase, index: Int = 0, total: Int = 0, fi
                     ) {
                         ReadonlyInterpretationView(
                             case.viewableInterpretation,
+                            idPrefix = CORNERSTONE_COMMENT_ID_PREFIX,
                             modifier = Modifier.fillMaxWidth(),
                             handler = object : ReadonlyInterpretationViewHandler {}
                         )

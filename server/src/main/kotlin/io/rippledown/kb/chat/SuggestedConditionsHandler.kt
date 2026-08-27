@@ -24,7 +24,7 @@ class SuggestedConditionsHandler(
             return "No suggested conditions available for this case."
         }
         val suggestionTexts = suggestions.map { suggestion ->
-            val editable = if (suggestion.isEditable()) " $EDITABLE_MARKER" else ""
+            val editable = if (suggestion.isEditable()) EDITABLE_SUFFIX else ""
             "${suggestion.asText()}$editable"
         }
         suggestionsBuffer.suggestions = suggestionTexts
@@ -47,6 +47,17 @@ class SuggestedConditionsHandler(
                     "NOT write any prose, do NOT ask the user for a reason, and do NOT call any function — just " +
                     "emit the action JSON so the rule session is started."
         const val EDITABLE_MARKER = "[editable]"
+
+        /** The marker as it is appended to an editable suggestion's text. */
+        const val EDITABLE_SUFFIX = " $EDITABLE_MARKER"
+
+        /**
+         * The condition text of a suggestion, i.e. the suggestion as
+         * [io.rippledown.model.condition.Condition.asText] would give it, with the
+         * editable marker (if any) removed.
+         */
+        fun conditionTextOf(suggestion: String) = suggestion.removeSuffix(EDITABLE_SUFFIX)
+
         const val SUGGESTIONS_DELIVERED_PREAMBLE =
             "Suggested conditions have already been displayed to the user by the system. " +
                     "Do NOT include a 'suggestions' array in your JSON response and do NOT list these suggestions back in the 'message' field. " +

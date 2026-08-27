@@ -1,6 +1,6 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.Conclusion
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
@@ -16,16 +16,12 @@ const val WITH = "with:"
 open class Rule(
     val id: Int,
     var parent: Rule? = null,
-    val conclusion: Conclusion? = null,
     val conditions: Set<Condition> = mutableSetOf(),
     private val childRules: MutableSet<Rule> = mutableSetOf(),
     val assignment: AssignValue? = null
 ) {
 
     init {
-        require(conclusion == null || assignment == null) {
-            "A rule cannot both give a conclusion and assign a value."
-        }
         childRules.forEach { it.parent = this }
     }
 
@@ -34,39 +30,42 @@ open class Rule(
      * stopping rule, which retracts the action of its parent).
      */
     val action: RuleAction?
-        get() = assignment ?: conclusion?.let { AssignConclusion(it) }
+        get() = assignment
 
     fun summary(): RuleSummary {
-        return RuleSummary(id, conclusion, conditions, conditionTextsFromRoot(), assignment)
+        return RuleSummary(id, conditions, conditionTextsFromRoot(), assignment)
     }
 
-    fun actionSummary(conclusionRenderer: (Conclusion) -> String = { it.truncatedText { _ -> "unknown" } }): String {
+    /**
+     * How this rule reads to the user: adding, removing or replacing what
+     * its parent assigned, in the wording of comments if the attribute
+     * assigned is a comment attribute and of values otherwise. [describe]
+     * gives the text of an assignment, and is supplied by the knowledge
+     * base, which can resolve a by-definition assignment to its definition.
+     */
+    fun actionSummary(describe: (AssignValue) -> String = { it.asText() }): String {
         val parentRule = parent ?: return ""
-        if (assignment != null || parentRule.assignment != null) {
-            return assignmentSummary(parentRule)
-        }
-        val parentConclusion = parentRule.conclusion
-            ?: return "$RULE_TO_ADD_COMMENT\n${conclusion?.let(conclusionRenderer)}"
-        if (conclusion == null) {
-            return "$RULE_TO_REMOVE_COMMENT\n${conclusionRenderer(parentConclusion)}"
-        }
-        return "$RULE_TO_REPLACE_COMMENT\n${conclusionRenderer(parentConclusion)}\n$WITH\n${
-            conclusionRenderer(
-                conclusion
-            )
-        }"
-    }
-
-    private fun assignmentSummary(parentRule: Rule): String {
         val parentAssignment = parentRule.assignment
         if (parentAssignment == null) {
-            return "$RULE_TO_ASSIGN_VALUE\n${assignment?.asText()}"
+            val added = assignment ?: return ""
+            return "${addPrefix(added)}\n${describe(added)}"
         }
         if (assignment == null) {
-            return "$RULE_TO_RETRACT_ASSIGNMENT\n${parentAssignment.asText()}"
+            return "${removePrefix(parentAssignment)}\n${describe(parentAssignment)}"
         }
-        return "$RULE_TO_REPLACE_ASSIGNMENT\n${parentAssignment.asText()}\n$WITH\n${assignment.asText()}"
+        return "${replacePrefix(assignment)}\n${describe(parentAssignment)}\n$WITH\n${describe(assignment)}"
     }
+
+    private fun AssignValue.isComment() = attribute.kind == AttributeKind.COMMENT
+
+    private fun addPrefix(assignment: AssignValue) =
+        if (assignment.isComment()) RULE_TO_ADD_COMMENT else RULE_TO_ASSIGN_VALUE
+
+    private fun removePrefix(assignment: AssignValue) =
+        if (assignment.isComment()) RULE_TO_REMOVE_COMMENT else RULE_TO_RETRACT_ASSIGNMENT
+
+    private fun replacePrefix(assignment: AssignValue) =
+        if (assignment.isComment()) RULE_TO_REPLACE_COMMENT else RULE_TO_REPLACE_ASSIGNMENT
 
     fun conditionTextsFromRoot(): List<String> {
         val result = mutableListOf<String>()
@@ -129,7 +128,7 @@ open class Rule(
     fun copy(): Rule {
         val copyChildRules = mutableSetOf<Rule>()
         childRules().forEach { r -> copyChildRules.add(r.copy()) }
-        val rule = Rule(id, null, conclusion?.copy(), conditions.toSet(), copyChildRules, assignment)
+        val rule = Rule(id, null, conditions.toSet(), copyChildRules, assignment)
         rule.parent = parent
         return rule
     }
@@ -137,7 +136,6 @@ open class Rule(
     override fun toString(): String {
         val sb = StringBuilder().append("Rule($id, ")
         parent?.let { sb.append("parent=$parent") }
-        conclusion?.let { sb.append(" conclusion=$conclusion") }
         assignment?.let { sb.append(" assignment=$assignment") }
         if (conditions.isNotEmpty()) {
             sb.append(" conditions=$conditions")
@@ -147,7 +145,6 @@ open class Rule(
     }
 
     fun structurallyEqual(other: Rule): Boolean {
-        if (conclusion != other.conclusion) return false
         if (assignment != other.assignment) return false
         if (conditions != other.conditions) return false
         return parent == other.parent

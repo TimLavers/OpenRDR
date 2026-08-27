@@ -7,8 +7,6 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
 
     private val attributeStore = InMemoryAttributeStore()
     private val attributeOrderStore = InMemoryOrderStore()
-    private val conclusionStore = InMemoryConclusionStore()
-    private val conclusionOrderStore = InMemoryOrderStore()
     private val derivedDefinitionStore = InMemoryDerivedDefinitionStore()
     private val conditionStore = InMemoryConditionStore()
     private val ruleStore = InMemoryRuleStore()
@@ -21,10 +19,6 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     override fun attributeStore() = attributeStore
 
     override fun attributeOrderStore() = attributeOrderStore
-
-    override fun conclusionStore() = conclusionStore
-
-    override fun conclusionOrderStore() = conclusionOrderStore
 
     override fun derivedDefinitionStore() = derivedDefinitionStore
 

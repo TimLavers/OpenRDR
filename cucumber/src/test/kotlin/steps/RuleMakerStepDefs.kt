@@ -11,9 +11,11 @@ import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import java.util.concurrent.TimeUnit.SECONDS
 
+private const val WAIT_PERIOD_SECS = 30L
+
 class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
-    @And("I build a rule to add the comment {string}")
+    @And("I build (a )(another )rule to add the comment {string}")
     fun buildRuleToAddNewComment(comment: String) {
         with(chatDefs) {
             requestCommentBeAdded(comment)
@@ -30,14 +32,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             addCommentWithoutConfirmation(comment)
             // The model sometimes asks to confirm a further comment before starting the rule session.
             // Wait until it either asks to confirm or presents the new suggestions.
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             decline()
@@ -61,14 +63,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             // A replacement comment that contains a variable prompts the model to confirm before
             // starting the rule session. Wait until it either asks to confirm or presents the new
             // suggestions.
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             decline()
@@ -131,24 +133,17 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
 
     @And("I start to build a rule to add the comment {string} for case {word}")
     fun startToBuildARuleToAddTheCommentForCase(comment: String, caseName: String) {
-        caseListPO().select(caseName)
+        processedCaseListPO().select(caseName)
         chatDefs.requestCommentBeAdded(comment)
     }
 
     @And("I build a rule to add the comment {string} for case {word}")
     fun buildARuleToAddCommentForCase(comment: String, caseName: String) {
-        caseListPO().select(caseName)
+        processedCaseListPO().select(caseName)
         buildRuleToAddNewComment(comment)
     }
 
-    @And("I build another rule to append the comment {string}")
-    fun buildAnotherRuleToAppendTheComment(comment: String) {
-        chatDefs.addCommentWithoutConfirmation(comment)
-        chatDefs.confirm()
-        completeRule()
-    }
-
-    @And("I build another rule to append the comment {string} with condition(s)")
+    @And("I build another rule to add the comment {string} with condition(s)")
     fun buildAnotherRuleToAppendTheCommentWithConditions(comment: String, conditions: DataTable) {
         with(chatDefs) {
             // A previous rule in this session has already shown a suggestion list, so
@@ -158,14 +153,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             // NEW suggestion row (or a CONFIRM prompt) before providing conditions.
             val suggestionsBefore = chatPO().numberOfSuggestionRows()
             addCommentWithoutConfirmation(comment)
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
         }
@@ -200,14 +195,14 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
             // Removing a comment that contains a variable can prompt the model to confirm the comment
             // before starting the rule session. Wait until it either asks to confirm or presents the
             // new suggestions.
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM)) ||
                         chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             if (chatPO().mostRecentBotRowContainsTerms(listOf(CONFIRM))) {
                 confirm()
             }
-            await().atMost(ofSeconds(90)).until {
+            await().atMost(ofSeconds(WAIT_PERIOD_SECS)).until {
                 chatPO().numberOfSuggestionRows() > suggestionsBefore
             }
             decline()
@@ -224,6 +219,33 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
     @When("I start to build a rule to replace the comment {string} by {string}")
     fun startRuleToReplaceCommentBy(toBeReplaced: String, replacement: String) {
         chatDefs.requestCommentBeReplacedWithoutConfirmationBy(toBeReplaced, replacement)
+    }
+
+    @When("I start to build a rule to add the comment with variables {string}")
+    fun startRuleToAddCommentWithVariables(comment: String) {
+        with(chatDefs) {
+            waitForBotQuestionOrCompletedAction()
+            addCommentWithoutConfirmation(comment)
+            waitForRuleSessionToStart()
+        }
+    }
+
+    @When("I start to build a rule to remove the comment with variables {string}")
+    fun startRuleToRemoveCommentWithVariables(comment: String) {
+        with(chatDefs) {
+            waitForBotQuestionOrCompletedAction()
+            removeSpecificCommentWithoutConfirmation(comment)
+            waitForRuleSessionToStart()
+        }
+    }
+
+    @When("I start to build a rule to replace the comment with variables {string} by {string}")
+    fun startRuleToReplaceCommentWithVariables(toBeReplaced: String, replacement: String) {
+        with(chatDefs) {
+            waitForBotQuestionOrCompletedAction()
+            enterChatTextAndSend("Replace the comment \"$toBeReplaced\" by \"$replacement\"")
+            waitForRuleSessionToStart()
+        }
     }
 
     @When("I try to build a rule to replace the non-existing comment {string}")
@@ -295,19 +317,9 @@ class RuleMakerStepDefs(private val chatDefs: ChatDefs) {
         chatDefs.provideReasonsThenDeclineToAddMore(conditions)
     }
 
-    @Then("the message indicating the comment {string} is being added should be shown")
-    fun `require message indicating comment is being added`(addedComment: String) {
-        ruleMakerPO().requireMessageForAddingComment(addedComment)
-    }
-
-    @Then("the message indicating the comment {string} is being removed should be shown")
-    fun `require message indicating comment is being removed`(removedComment: String) {
-        ruleMakerPO().requireMessageForRemovingComment(removedComment)
-    }
-
-    @Then("the message indicating the comment {string} is being replaced by {string} should be shown")
-    fun `require message indicating comment is being replaced`(replacedComment: String, replacementComment: String) {
-        ruleMakerPO().requireMessageForReplacingComment(replacedComment, replacementComment)
+    @Then("the comments panel should show exactly:")
+    fun `require comments shown to be`(expected: DataTable) {
+        interpretationViewPO().requireCommentsShownToBe(expected.asList())
     }
 
     @Then("I enter the expression {string}")

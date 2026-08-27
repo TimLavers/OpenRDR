@@ -5,7 +5,7 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
-class CopyCaseToFavourites(): ChatAction {
+class CopyCaseToFavourites() : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
         currentCase: ViewableCase?,

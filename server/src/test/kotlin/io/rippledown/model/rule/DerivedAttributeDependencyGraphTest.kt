@@ -4,7 +4,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
-import io.rippledown.model.Conclusion
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -23,20 +23,21 @@ internal class DerivedAttributeDependencyGraphTest {
     private lateinit var ruleFactory: RuleFactory
     private var nextRuleId = 100
     private var nextConditionId = 1000
+    private val commentFactory = CommentFactory()
 
     @BeforeTest
     fun setup() {
         tree = RuleTree()
         ruleFactory = object : RuleFactory {
-            override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) =
-                Rule(nextRuleId++, parent, conclusion, conditions)
-
-            override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>) =
-                Rule(nextRuleId++, parent, null, conditions, mutableSetOf(), assignment)
+            override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>) =
+                Rule(nextRuleId++, parent, conditions, mutableSetOf(), assignment)
         }
     }
 
     private fun graph() = DerivedAttributeDependencyGraph(tree, setOf(glucose, a, b, c))
+
+    private fun graphKnowing(vararg alsoKnown: Attribute) =
+        DerivedAttributeDependencyGraph(tree, setOf(glucose, a, b, c) + alsoKnown)
 
     private fun assignmentRule(assigned: Attribute, vararg conditions: Condition): Rule {
         val rule = ruleFactory.createRuleAndAddToParent(
@@ -93,7 +94,7 @@ internal class DerivedAttributeDependencyGraphTest {
     fun `conditions of ancestor rules create dependencies`() {
         // Given an assignment of B by a child of a rule with a condition on A
         val parent = ruleFactory.createRuleAndAddToParent(
-            tree.root, null as Conclusion?, setOf(isPresent(a, nextConditionId++))
+            tree.root, null as AssignValue?, setOf(isPresent(a, nextConditionId++))
         )
         tree.root.addChild(parent)
         val child = ruleFactory.createRuleAndAddToParent(parent, AssignValue(b, Literal("x")), emptySet())
@@ -108,7 +109,7 @@ internal class DerivedAttributeDependencyGraphTest {
         // Given an assignment of A with a stopping child conditioned on B
         val assigning = assignmentRule(a, highGlucose())
         val stopper = ruleFactory.createRuleAndAddToParent(
-            assigning, null as Conclusion?, setOf(isPresent(b, nextConditionId++))
+            assigning, null as AssignValue?, setOf(isPresent(b, nextConditionId++))
         )
         assigning.addChild(stopper)
 
@@ -140,11 +141,34 @@ internal class DerivedAttributeDependencyGraphTest {
     }
 
     @Test
-    fun `actions that do not assign create no cycles`() {
+    fun `an action assigning a comment attribute that nothing depends on creates no cycle`() {
         assignmentRule(a, isPresent(b, nextConditionId++))
-        val action = ChangeTreeToAddConclusion(Conclusion(1, "Comment."))
+        val action = ChangeTreeToAddAssignment(commentFactory.comment("Comment."))
         graph().cycleCreatedBy(action, isPresent(a, nextConditionId++)).shouldBeNull()
         graph().cycleCreatedBy(null, isPresent(a, nextConditionId++)).shouldBeNull()
+    }
+
+    @Test
+    fun `a cycle through a comment attribute is detected`() {
+        // Given a rule assigning the derived attribute A, conditioned on a comment
+        val comment = commentFactory.attributeFor("Comment.")
+        assignmentRule(a, isPresent(comment, nextConditionId++))
+
+        // Then assigning that comment conditioned on A would make it depend on
+        // itself: a comment attribute is assigned by the KB like any other, so
+        // it is a node of the graph too.
+        graphKnowing(comment).cycleCreatedBy(comment, setOf(a)) shouldBe listOf(comment, a, comment)
+    }
+
+    @Test
+    fun `a cycle between two comment attributes is detected`() {
+        // Given a rule assigning one comment conditioned on another
+        val first = commentFactory.attributeFor("First.")
+        val second = commentFactory.attributeFor("Second.")
+        assignmentRule(first, isPresent(second, nextConditionId++))
+
+        // Then assigning the second conditioned on the first would create a cycle
+        graphKnowing(first, second).cycleCreatedBy(second, setOf(first)) shouldBe listOf(second, first, second)
     }
 
     @Test

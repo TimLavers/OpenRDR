@@ -15,11 +15,9 @@ import kotlin.test.Test
 class PostgresRuleStoreTest: PostgresStoreTest() {
     private lateinit var store: RuleStore
 
-    override fun tablesInDropOrder() = listOf(RULES_TABLE)
-
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.ruleStore()
     }
 
@@ -38,7 +36,6 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         val storedRoot = store.create(PersistentRule())
         storedRoot.id shouldNotBe null
         storedRoot.parentId shouldBe null
-        storedRoot.conclusionId shouldBe null
         storedRoot.conditionIds shouldBe emptySet()
 
         // Rebuild and check it's there.
@@ -48,10 +45,9 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
     @Test
     fun create() {
-        val pr1 = store.create(pr(0, 1, 1, 2, 3))
+        val pr1 = store.create(pr(0, 1, 2, 3))
         store.all() shouldContain pr1
         pr1.id shouldNotBe null
-        pr1.conclusionId shouldBe 1
         pr1.conditionIds shouldBe setOf(1, 2, 3)
 
         // Rebuild and check it's there.
@@ -62,12 +58,11 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
     }
 
     @Test
-    fun `create with null conclusion id`() {
-        val pr = PersistentRule(null, 7, null, setOf(23, 24))
+    fun `create with null parent id`() {
+        val pr = PersistentRule(null, 7, setOf(23, 24))
         val created = store.create(pr)
         store.all() shouldContain created
         created.id shouldNotBe null
-        created.conclusionId shouldBe null
         created.conditionIds shouldBe setOf(23, 24)
 
         // Rebuild and check it's there.
@@ -79,12 +74,11 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
     @Test
     fun `create with no condition ids`() {
-        val pr = PersistentRule(null, 7, 66, setOf())
+        val pr = PersistentRule(null, 7, setOf())
         val created = store.create(pr)
         store.all() shouldContain created
         created.id shouldNotBe null
         created.parentId shouldBe 7
-        created.conclusionId shouldBe 66
         created.conditionIds shouldBe setOf()
 
         // Rebuild and check it's there.
@@ -96,9 +90,9 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
     @Test
     fun `create multiple`() {
-        val pr1 = store.create(pr(12, 33, 8, 9, 10))
-        val pr3 = store.create(pr(12, 33, 8, 9, 10))
-        val pr2 = store.create(pr(pr1.id!!, 56, 8, 9, 5))
+        val pr1 = store.create(pr(12, 8, 9, 10))
+        val pr3 = store.create(pr(12, 8, 9, 10))
+        val pr2 = store.create(pr(pr1.id!!, 8, 9, 5))
         store.all() shouldContain pr1
         store.all() shouldContain pr2
         store.all() shouldContain pr3
@@ -115,9 +109,9 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
    @Test
     fun remove() {
-        val pr1 = store.create(pr(12, 33, 8, 9, 10))
-        val pr3 = store.create(pr(12, 33, 8, 9, 10))
-        val pr2 = store.create(pr(pr1.id!!, 56, 8, 9, 5))
+       val pr1 = store.create(pr(12, 8, 9, 10))
+       val pr3 = store.create(pr(12, 8, 9, 10))
+       val pr2 = store.create(pr(pr1.id!!, 8, 9, 5))
        with(store.all()) {
            this shouldContain pr1
            this shouldContain pr2
@@ -149,7 +143,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
     fun all() {
         val rulesCreated = mutableSetOf<PersistentRule>()
         repeat(100) {
-            rulesCreated.add(store.create(pr(it, 10, 100, 200)))
+            rulesCreated.add(store.create(pr(it, 100, 200)))
             store.all() shouldBe rulesCreated
         }
 
@@ -159,7 +153,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
     @Test
     fun `cannot load if not empty`() {
-        store.create(pr(1, 2, 3))
+        store.create(pr(1, 3))
         shouldThrow<IllegalArgumentException> {
             store.load(emptySet())
         }.message shouldBe "Cannot load persistent rules if there are some stored already."
@@ -167,9 +161,9 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
     @Test
     fun load() {
-        val pr1 = PersistentRule( 1,0, 10, setOf(200, 201))
-        val pr2 = PersistentRule(2, 1, 11, setOf(200, 201))
-        val pr3 = PersistentRule(3, 2, 11, setOf(201, 202))
+        val pr1 = PersistentRule(1, 0, setOf(200, 201))
+        val pr2 = PersistentRule(2, 1, setOf(200, 201))
+        val pr3 = PersistentRule(3, 2, setOf(201, 202))
         val toLoad = setOf(pr1, pr2, pr3)
         store.load(toLoad)
 
@@ -183,7 +177,7 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         // Given a persistent rule with an assignment
         val diabetesStatus = Attribute(10, "Diabetes status", AttributeKind.DERIVED)
         val assignment = AssignValue(diabetesStatus, Literal("diabetic"))
-        val pr = PersistentRule(null, 0, null, setOf(23), assignment)
+        val pr = PersistentRule(null, 0, setOf(23), assignment)
 
         // When it is stored
         val created = store.create(pr)
@@ -201,8 +195,8 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
         val bmi = Attribute(11, "BMI", AttributeKind.DERIVED)
         val weight = Attribute(1, "weight")
         val formula = AssignValue(bmi, Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0))))
-        val pr1 = PersistentRule(1, 0, 10, setOf(200, 201))
-        val pr2 = PersistentRule(2, 1, null, setOf(200), formula)
+        val pr1 = PersistentRule(1, 0, setOf(200, 201))
+        val pr2 = PersistentRule(2, 1, setOf(200), formula)
         val toLoad = setOf(pr1, pr2)
 
         // When they are loaded
@@ -216,12 +210,12 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
 
     @Test
     fun update() {
-        // Given a stored rule that gives a conclusion
-        val stored = store.create(pr(0, 10, 100, 101))
+        // Given a stored rule
+        val stored = store.create(pr(0, 100, 101))
 
         // When it is updated to assign a value instead
         val comment = Attribute(7, "C1", AttributeKind.COMMENT)
-        val updated = stored.copy(conclusionId = null, assignment = AssignValue(comment, ByDefinition))
+        val updated = stored.copy(assignment = AssignValue(comment, ByDefinition))
         store.update(updated)
 
         // Then the stored rule has the new form, same id, and survives a reload
@@ -233,16 +227,16 @@ class PostgresRuleStoreTest: PostgresStoreTest() {
     @Test
     fun `updating a rule that is not in the store is not allowed`() {
         shouldThrow<IllegalArgumentException> {
-            store.update(PersistentRule(99, null, null, emptySet()))
+            store.update(PersistentRule(99, null, emptySet()))
         }.message shouldBe "Cannot update a rule that is not in the store."
     }
 
     @Test
     fun `updating a rule with no id is not allowed`() {
         shouldThrow<IllegalArgumentException> {
-            store.update(PersistentRule(null, null, 10, emptySet()))
+            store.update(PersistentRule(null, null, emptySet()))
         }.message shouldBe "Cannot update a rule that has no id."
     }
 
-    private fun pr(parentId: Int, conclusionId: Int, vararg conditionIds: Int)  = PersistentRule(null, parentId, conclusionId, conditionIds.toSet())
+    private fun pr(parentId: Int, vararg conditionIds: Int) = PersistentRule(null, parentId, conditionIds.toSet())
 }

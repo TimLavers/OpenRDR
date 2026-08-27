@@ -52,7 +52,12 @@ fun OpenRDRUI(
     voiceRecognition: VoiceRecognition? = null
 ) {
     val api = handler.api
-    var currentCase by remember { mutableStateOf<ViewableCase?>(null) }
+    // An Attribute is equal to another with the same id, whatever its name (see
+    // Attribute.equals), so a case whose only change is a renamed attribute is
+    // structurally equal to the case it replaces. Under the default state policy
+    // that refresh would be discarded and the old name would stay on screen, so
+    // a refreshed case is always treated as a new value.
+    var currentCase by remember { mutableStateOf<ViewableCase?>(null, neverEqualPolicy()) }
     var currentCaseId by remember { mutableStateOf<Long?>(null) }
     var chatId by remember { mutableStateOf<Long>(-1) }
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
@@ -283,7 +288,8 @@ fun OpenRDRUI(
                             casesInfo.caseIds,
                             casesInfo.cornerstoneCaseIds,
                             caseSelectorHandler,
-                            casesInfo.favouriteCaseIds
+                            casesInfo.favouriteCaseIds,
+                            currentCaseId
                         )
                     }
 

@@ -27,11 +27,10 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
     private val case1 = createCase("Coffee Case", mapOf(a to "2", b to "3"))
     private val case2 = createCase("Beer Case", mapOf(a to "5", b to "8", c to "88"))
     private lateinit var store: PostgresCaseStore
-    override fun tablesInDropOrder() = listOf("cases_processed")
 
     @BeforeTest
     fun setup() {
-        dropTable()
+        clearTables()
         store = postgresKB.caseStore() as PostgresCaseStore
     }
 

@@ -21,7 +21,12 @@ When the user requests to add a comment with placeholders, you must:
 5. If there is an exact match, auto-bind that placeholder to the matching attribute WITHOUT asking the user
 6. ONLY ask the user which attribute a placeholder refers to if the placeholder is empty (`{}`) or its name matches no
    attribute. Never ask about a placeholder whose name matches an attribute
-7. The available attributes are listed in the ATTRIBUTES variable
+7. The available attributes are listed in the ALL_ATTRIBUTES variable, which contains every attribute in the knowledge
+   base. The ATTRIBUTES variable lists only the attributes on the current case
+
+## All Knowledge Base Attributes
+
+{{ALL_ATTRIBUTES}}
 
 ## Example Interaction
 
@@ -64,7 +69,7 @@ Here, and only because the placeholders are empty and so name no attribute, ask 
 
 When emitting the `{{ADD_COMMENT}}` action for a comment with variables, include the `variables` field with one entry
 per placeholder, **in the order the placeholders appear in the comment**. Each entry binds a placeholder to an attribute
-by its **name** (taken from the ATTRIBUTES list):
+by its **name** (taken from the ALL_ATTRIBUTES list):
 
 ```json
 {
@@ -83,15 +88,15 @@ by its **name** (taken from the ATTRIBUTES list):
 
 Where:
 
-- `attributeName` is the name of the attribute to bind to that placeholder, exactly as it appears in the ATTRIBUTES
-  list. Do NOT send numeric ids; the system resolves names to attributes (tolerating case differences and small
-  spelling mistakes).
+- `attributeName` is the name of the attribute to bind to that placeholder, exactly as it appears in the ALL_ATTRIBUTES
+  list. Do NOT send numeric ids; the system resolves names to attributes (tolerating case differences and small spelling
+  mistakes).
 
 ## Important Notes
 
 - Placeholders are bound in the order they appear in the comment text
 - Each placeholder must have exactly one entry in `variables`, with its `attributeName`
-- The attribute name should correspond to a valid attribute from the ATTRIBUTES list
+- The attribute name should correspond to a valid attribute from the ALL_ATTRIBUTES list
 - If the user provides a comment without placeholders, do not ask for bindings and emit the action without the
   `variables` field
 - Keep the attribute names in the confirmation message clear and readable for the user

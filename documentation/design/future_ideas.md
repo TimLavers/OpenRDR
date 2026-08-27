@@ -2,6 +2,12 @@
 Improvements we might make in the future.
 
 ## Using AI to generate natural-language reports
+
+**Implemented.** The Report panel does this: see
+[ai_report_generation.md](ai_report_generation.md) for the design and
+[the requirements](../requirements/ai_report_generation.md) for what it must do. The reasoning that led to it is kept
+below.
+
 One of RippleDown's great strengths is that it can be used to assemble a set of conclusions
 for a case, with each conclusion being justified by a set of conditions that are comprehensible
 to humans.

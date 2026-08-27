@@ -15,6 +15,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
+import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.saveServerLogsOnFailure
@@ -24,10 +25,13 @@ import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
 import java.io.File
 import java.util.concurrent.TimeUnit.*
+import java.util.zip.ZipFile
 
+const val DELAY_AFTER_CUKE_SEC = 10L
 class Defs {
     private var exportedZip: File? = null
     private lateinit var stopwatch: Stopwatch
+
 
     // Restores keyboard focus to the last-selected case before an arrow-key press.
     // After a case is selected, ChatPanel's LaunchedEffect(id) steals focus to the
@@ -74,14 +78,14 @@ class Defs {
             Regex("rate_limit_(\\d+)s?").find(tag)?.groupValues?.get(1)?.toLongOrNull()
         }
         if (delaySecs != null) {
-            Thread.sleep(delaySecs * 1_000)
+            Thread.sleep(DELAY_AFTER_CUKE_SEC * 1_000)
         }
     }
 
     @After("@delay_after_cuke")
     fun afterGeminiScenario(scenario: Scenario) {
-        println("Delaying for 10 secs after scenario to avoid rate limiting")
-        Thread.sleep(10_000)
+        println("Delaying for $DELAY_AFTER_CUKE_SEC secs after scenario to avoid rate limiting")
+        Thread.sleep(DELAY_AFTER_CUKE_SEC * 1_000)
     }
 
     @When("A Knowledge Base called {word} has been created")
@@ -180,8 +184,21 @@ class Defs {
 
     @And("I export the current Knowledge Base")
     fun exportTheCurrentKnowledgeBase() {
-        exportedZip = File.createTempFile("Exported", ".zip")
-        kbControlsPO().exportKB(exportedZip!!.absolutePath)
+        val destination = File.createTempFile("Exported", ".zip")
+        exportedZip = destination
+        kbControlsPO().exportKB(destination.absolutePath)
+        // The client writes the zip asynchronously, and createTempFile has
+        // already made an empty file, so wait for the content rather than for
+        // the file to exist.
+        waitUntilAsserted { destination.holdsAnExportedKB() shouldBe true }
+    }
+
+    private fun File.holdsAnExportedKB() = try {
+        ZipFile(this).use { zip ->
+            zip.entries().asSequence().any { it.name.endsWith("Details.txt") }
+        }
+    } catch (_: Exception) {
+        false
     }
 
     @Given("I import the previously exported Knowledge Base")
@@ -333,7 +350,7 @@ class Defs {
         dataTable.cells().forEach { row ->
             val case = row[0]
             val expectedInterpretation = row[1] ?: ""
-            caseListPO().select(case)
+            processedCaseListPO().select(case)
             caseViewPO().waitForNameToShow(case)
             interpretationViewPO().waitForInterpretationText(expectedInterpretation)
         }
@@ -386,12 +403,5 @@ class Defs {
                     conditions = arrayOf(row[2])
                 )
             }
-    }
-
-    @And("the following comments have been defined in the project:")
-    fun createComments(dataTable: DataTable) {
-        dataTable.asList().forEach { comment ->
-            restClient().getOrCreateConclusion(comment)
-        }
     }
 }

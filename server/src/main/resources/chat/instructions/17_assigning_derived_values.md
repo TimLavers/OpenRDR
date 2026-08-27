@@ -4,7 +4,7 @@ A derived attribute (also known as a "derived value") is a named value that the 
 a case. Examples:
 
 - "Diabetes status" assigned the value `"diabetic"`
-- "BMI" calculated as `weight / (height * height)`
+- "Pulse pressure" calculated as `systolic - diastolic`
 - "Risk level" assigned `"low"`
 
 Use the operations below when the user wants to create, remove, or change such a value.
@@ -49,7 +49,16 @@ Examples:
 The value is sent to the server as a string.
 
 - Literal text values must be wrapped in double quotes, e.g. `"diabetic"`.
-- Numeric values and formulas over attribute names are sent unquoted, e.g. `7` or `weight / (height * height)`.
+- Numeric values and formulas over attribute names are sent unquoted, e.g. `7` or `systolic - diastolic`.
+- Send the expression **as the user wrote it**. Do not correct the spelling of an attribute name, do not rewrite an
+  operator (`height ^ 2` must not become `height * height`), and never substitute a formula appearing in these
+  instructions for the one the user gave. The server resolves each name against the knowledge base and asks the user
+  about any it cannot resolve, so a name you silently fix is a change the user is never shown, and an expression you
+  tidy is not the one they asked for.
+- There is one exception, and only one. When the server has asked "Did you mean ...?" and the user accepts, send the
+  corrected expression **from the server's question**, not the words the user originally typed. Re-sending the original
+  would fetch the same question again and the two of you would loop. The correction is allowed here because the server
+  proposed it and the user agreed to it in so many words; it is not you deciding what they meant.
 - The server decides whether the expression is a literal, number, or formula, so your job is only to apply the quoting
   rule above.
 
@@ -65,13 +74,13 @@ The value is sent to the server as a string.
 }
 ```
 
-For a formula:
+For a formula, where the user asked to calculate pulse pressure as `systolic - diastolic`:
 
 ```json
 {
   "action": "{{ASSIGN_DERIVED_VALUE}}",
-  "attributeName": "BMI",
-  "valueExpression": "weight / (height * height)"
+  "attributeName": "Pulse pressure",
+  "valueExpression": "systolic - diastolic"
 }
 ```
 
@@ -107,6 +116,12 @@ The server may refuse the request for one of three reasons:
   ask the user to pick a different name.
 - The value expression would create a dependency cycle (e.g. assigning BMI the value `BMI * 2`). Relay the message
   verbatim and ask the user to correct the expression.
+
+The server may also answer with a *question* rather than a refusal, when a name in the expression is no attribute:
+either
+"Did you mean ...?", naming a correction, or "Do you want to assign the text ...?". Relay it verbatim. If the user
+accepts, emit the action again with the expression exactly as the server wrote it in the question — quoted, if it
+offered the text. If the user declines, ask what they meant instead.
 
 ## Step 6: Cornerstone cases
 

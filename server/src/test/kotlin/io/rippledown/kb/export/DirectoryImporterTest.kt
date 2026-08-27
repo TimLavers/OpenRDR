@@ -3,7 +3,7 @@ package io.rippledown.kb.export
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.DummyConclusionFactory
+import io.rippledown.model.CommentFactory
 import io.rippledown.model.DummyConditionFactory
 import io.rippledown.model.rule.RuleTree
 import io.rippledown.model.rule.dsl.ruleTree
@@ -12,14 +12,14 @@ import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
 class DirectoryImporterTest: ExporterTestBase() {
-    private lateinit var conclusionFactory: DummyConclusionFactory
+    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionFactory: DummyConditionFactory
     private lateinit var tree: RuleTree
 
     @BeforeEach
     override fun init() {
         super.init()
-        conclusionFactory = DummyConclusionFactory()
+        commentFactory = CommentFactory()
         conditionFactory = DummyConditionFactory()
         tempDir.mkdirs()
         tree = RuleTree()
@@ -34,10 +34,10 @@ class DirectoryImporterTest: ExporterTestBase() {
 
     @Test
     fun `import size 2 tree`() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 51
-                conclusion { "ConclusionA" }
+                comment { "ConclusionA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
@@ -52,24 +52,24 @@ class DirectoryImporterTest: ExporterTestBase() {
 
     @Test
     fun `import complex tree`() {
-        tree = ruleTree(conclusionFactory) {
+        tree = ruleTree(commentFactory) {
             child {
                 id = 51
-                conclusion { "ConclusionA" }
+                comment { "ConclusionA" }
                 condition(conditionFactory) {
                     attribute = clinicalNotes
                     constant = "a"
                 }
                 child {
                     id = 456
-                    conclusion { "ConclusionA" }
+                    comment { "ConclusionA" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "b"
                     }
                     child {
                         id = 457
-                        conclusion { "ConclusionB" }
+                        comment { "ConclusionB" }
                         condition(conditionFactory) {
                             attribute = clinicalNotes
                             constant = "c"
@@ -78,7 +78,7 @@ class DirectoryImporterTest: ExporterTestBase() {
                 }
                 child {
                     id = 458
-                    conclusion { "ConclusionD" }
+                    comment { "ConclusionD" }
                     condition(conditionFactory) {
                         attribute = clinicalNotes
                         constant = "d"

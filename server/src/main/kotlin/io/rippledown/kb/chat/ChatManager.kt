@@ -6,6 +6,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.kb.chat.action.ExemptCornerstone
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
@@ -33,6 +34,16 @@ class ChatManager(
     // demonstrated they know the facility by using a variable in a comment. Reset implicitly because a
     // new ChatManager is created for each conversation (i.e. each case selection).
     private var commentVariableTipResolved = false
+
+    /**
+     * The assignment the user is being offered, when the server has refused the
+     * expression they gave and put another to them. Held so that their yes can be
+     * acted on here: the model is told to re-send the offered expression, but it
+     * re-sends the original often enough, and the two of them then ask and refuse
+     * the same thing for ever. Kept for one turn only, that being the turn in
+     * which the offer can be accepted.
+     */
+    private var offeredAssignment: ActionComment? = null
 
     suspend fun startConversation(viewableCase: ViewableCase): ChatResponse {
         currentCase = viewableCase
@@ -69,6 +80,25 @@ class ChatManager(
 
     private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
+        // Deterministic cornerstone exemption: when the user confirms allowing
+        // the report change to a cornerstone case, run the action directly
+        // instead of relying on the model to emit ExemptCornerstone. The model
+        // sometimes routes "allow" into a function call or a UserAction and
+        // never emits the exemption, leaving the cornerstone un-exempted.
+        if (ruleService.isRuleSessionActive()
+            && ReasonTransformHandler.isAllowConfirmation(message)
+            && ruleService.cornerstoneStatus().numberOfCornerstones > 0
+        ) {
+            return ExemptCornerstone().doIt(ruleService, currentCase, this)
+        }
+        // Deterministic acceptance of an expression the server itself offered.
+        val offered = offeredAssignment
+        offeredAssignment = null
+        if (offered != null && isAcceptance(message) && !ruleService.isRuleSessionActive()) {
+            // Through the whole pipeline, so that the assignment is followed by
+            // suggested conditions as it is when the model makes the request.
+            return processActionComment(offered)
+        }
         val messageToSend = augmentWithCornerstoneStatus(message)
         val response = try {
             conversationService.response(messageToSend)
@@ -109,6 +139,7 @@ class ChatManager(
             logger.error("Unknown actionComment: ${actionComment.action}")
             ChatResponse("")
         }
+        rememberAnyOfferedAssignment(actionComment)
         val tip = commentVariableTipFor(actionComment, chatResponse)
         val bufferedSuggestions = suggestionsBuffer.consume()
         val response = when {
@@ -121,7 +152,47 @@ class ChatManager(
 
             else -> chatResponse.copy(tip = tip ?: chatResponse.tip)
         }
-        return ensureSuggestionsAfterStartingRuleSession(actionComment, response)
+        return withoutConditionsAlreadyInTheRule(ensureSuggestionsAfterStartingRuleSession(actionComment, response))
+    }
+
+    /**
+     * Notes the assignment the user is being offered, when the request just made
+     * was for a value expression the server puts back to them. Nothing is noted
+     * for any other request, so an offer is only ever answered by the message
+     * that follows the question.
+     */
+    private fun rememberAnyOfferedAssignment(actionComment: ActionComment) {
+        if (actionComment.action != ASSIGN_DERIVED_VALUE) return
+        val attributeName = actionComment.attributeName ?: return
+        val valueExpression = actionComment.valueExpression ?: return
+        val offered = ruleService.offeredValueExpressionFor(valueExpression) ?: return
+        offeredAssignment = ActionComment(
+            action = ASSIGN_DERIVED_VALUE,
+            attributeName = attributeName,
+            valueExpression = offered
+        )
+    }
+
+    /**
+     * Drops any suggestion that is already a condition of the rule being built.
+     *
+     * [SuggestedConditionsHandler] does exclude the conditions added so far, but it does so when the
+     * *model* calls it, which can be earlier in the same turn than the condition is added. The model
+     * sometimes calls {@code getSuggestedConditions} and then {@code selectSuggestion} in the one turn,
+     * in which case the buffered list was computed before the selected condition existed and would
+     * re-offer the very condition the user just chose. Filtering here, as the response is assembled,
+     * uses the session's conditions as they finally stand, so it is immune to the order of the model's
+     * function calls. It also covers the list the model may echo back in its own JSON, which nothing
+     * else filters.
+     */
+    private fun withoutConditionsAlreadyInTheRule(response: ChatResponse): ChatResponse {
+        if (response.suggestions.isEmpty()) return response
+        val alreadyUsed = ruleService.currentRuleSessionConditionTexts()
+        if (alreadyUsed.isEmpty()) return response
+        val remaining = response.suggestions.filterNot {
+            SuggestedConditionsHandler.conditionTextOf(it) in alreadyUsed
+        }
+        return if (remaining.size == response.suggestions.size) response else response.copy(suggestions = remaining)
     }
 
     /**
@@ -192,6 +263,17 @@ class ChatManager(
             REMOVE_DERIVED_VALUE,
             REPLACE_DERIVED_VALUE,
         )
+
+        // Plain acceptances of a question the server asked, in which the user has
+        // nothing to say but yes. Anything else, including a correction of their
+        // own, goes to the model.
+        private val ACCEPTANCES = setOf(
+            "yes", "y", "yes please", "yep", "yeah", "ok", "okay", "sure",
+            "correct", "that's right", "do it", "please do",
+        )
+
+        fun isAcceptance(message: String) = message.trim().trimEnd('.', '!').lowercase() in ACCEPTANCES
+
         fun commentVariableTip(exampleAttributeName: String) =
             "Tip: you can include a case value in a comment by wrapping an attribute name in " +
                     "$COMMENT_VARIABLE_TIP_KEYWORD, e.g. {$exampleAttributeName}."

@@ -1,19 +1,19 @@
 # AI Report Generation
 
-When reviewing a case, the expert sees the interpretive report as a set of comments given by the
-rules in the knowledge base. These comments are concise, rule-authored sentences. The AI report
-generation facility produces a longer, well-worded prose **report** for the case, written by the
-application's large language model (LLM) from those comments together with the case's data.
+When reviewing a case, the expert sees the comments the rules in the knowledge base gave it, each with its name, in the
+**Comments** panel. These comments are concise, rule-authored sentences. The AI report generation facility produces a
+longer, well-worded prose **report** for the case, written by the application's large language model (LLM) from those
+comments together with the case's data.
 
-The report is presented in a collapsible **Report** panel shown beneath the existing Interpretation
-panel in the case view. It is intended as a readable, narrative summary of the case that a clinician
-could use directly, distinct from the terse rule comments.
+The report is presented in a collapsible **Report** panel shown beneath the Comments panel in the case view. It is
+intended as a readable, narrative summary of the case that a clinician could use directly, distinct from the terse rule
+comments.
 
 ## Functionality
 
 | Requirement            | Description                                                                                                                                                                                                                                              | Validation                     |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
-| Report panel           | A collapsible **Report** panel is shown beneath the Interpretation panel for the current case.                                                                                                                                                           | `Report.feature`               |
+| Report panel           | A collapsible **Report** panel is shown beneath the Comments panel for the current case.                                                                                                                                                                 | `Report.feature`               |
 | Toggle visibility      | The user can show or hide the report by clicking the panel's header (a chevron and the label "Report").                                                                                                                                                  | `Report.feature`               |
 | Report content         | When shown, the report is a well-worded prose narrative derived from the comments given by rules for the case, and may refer to the case's attribute values to make the wording concrete. It uses Australian medical terminology, phrasing and spelling. | `Report.feature`               |
 | Grounded in comments   | The report is based only on the comments given for the case; it does not introduce findings that are not implied by those comments.                                                                                                                      | not able to be reliably tested |

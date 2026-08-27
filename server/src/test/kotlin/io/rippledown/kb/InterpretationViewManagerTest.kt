@@ -2,74 +2,30 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.every
-import io.mockk.mockk
 import io.rippledown.model.*
 import io.rippledown.model.rule.*
-import io.rippledown.persistence.inmemory.InMemoryAttributeStore
-import io.rippledown.persistence.inmemory.InMemoryConclusionStore
-import io.rippledown.persistence.inmemory.InMemoryOrderStore
-import io.rippledown.persistence.inmemory.InMemoryVerifiedTextStore
 import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class InterpretationViewManagerTest {
     private lateinit var manager: InterpretationViewManager
-    private lateinit var verifiedTextStore: InMemoryVerifiedTextStore
 
     @BeforeTest
     fun init() {
-        val conclusionManager = ConclusionManager(InMemoryConclusionStore())
-        val attributeManager = AttributeManager(InMemoryAttributeStore())
-        val orderStore = InMemoryOrderStore()
-        verifiedTextStore = InMemoryVerifiedTextStore()
-        manager = InterpretationViewManager(orderStore, conclusionManager, attributeManager)
-    }
-
-    @Test
-    fun `should be no ordering when the interpretation view manager is created from an empty conclusion manager`() {
-        manager.allInOrder() shouldBe emptyList()
-    }
-
-    @Test
-    fun `should set the text given by rules according to the conclusion ordering`() {
-        //Given
-        val conclusion1 = Conclusion(1, "a")
-        val conclusion2 = Conclusion(2, "b")
-        val conclusion3 = Conclusion(3, "c")
-        val interpretation = mockk<Interpretation>()
-        val case = mockk<RDRCase>()
-        every { interpretation.conclusions() } returns setOf(conclusion1, conclusion2, conclusion3)
-        every { interpretation.assignments() } returns emptySet()
-        every { interpretation.conditionsForConclusion(any()) } returns emptyList()
-        every { interpretation.caseId } returns CaseId(42, "Hitch")
-        manager.insert(listOf(conclusion3, conclusion1, conclusion2))
-
-        //When
-        val viewableInterpretation = manager.viewableInterpretation(interpretation, case)
-
-        //Then
-        viewableInterpretation.textGivenByRules shouldBe "c a b"
+        manager = InterpretationViewManager()
     }
 
     @Test
     fun `should handle comment with variable when attribute lookup fails gracefully`() {
-        //Given
-        val glucose = Attribute(1, "Glucose")
-        val template = "Glucose is " + io.rippledown.model.VARIABLE_TOKEN
-        val variables = listOf(io.rippledown.model.CommentVariable(999)) // Bad ID
-        val conclusion = Conclusion(1, template, variables)
-        val interpretation = mockk<Interpretation>()
-        val case = mockk<RDRCase>()
-        every { interpretation.conclusions() } returns setOf(conclusion)
-        every { interpretation.assignments() } returns emptySet()
-        every { interpretation.conditionsForConclusion(any()) } returns emptyList()
-        every { interpretation.caseId } returns CaseId(42, "Hitch")
-        manager.insert(listOf(conclusion))
+        //Given a comment assignment whose variable attribute is not in the case
+        val template = CommentTemplate("Glucose is \${}", listOf(Attribute(999, "Unknown")))
+        val interpretation = interpretation(
+            RuleSummary(id = 1, assignment = AssignValue(c1, template))
+        )
 
         //When
-        val viewableInterpretation = manager.viewableInterpretation(interpretation, case)
+        val viewableInterpretation = manager.viewableInterpretation(interpretation, case())
 
         //Then - should not crash, should render with marker for unresolved variable
         viewableInterpretation.textGivenByRules shouldNotBe null
@@ -100,7 +56,7 @@ class InterpretationViewManagerTest {
 
         //Then
         viewable.textGivenByRules shouldBe "Diabetic diet advice given."
-        viewable.renderedComments shouldBe listOf(RenderedComment("Diabetic diet advice given."))
+        viewable.renderedComments shouldBe listOf(RenderedComment("Diabetic diet advice given.", name = c1.name))
     }
 
     @Test
@@ -113,29 +69,8 @@ class InterpretationViewManagerTest {
         val viewable = manager.viewableInterpretation(interpretation, case())
 
         //Then the rendered comment has the case value, and the raw text keeps the token
-        viewable.renderedComments shouldBe listOf(RenderedComment("Glucose is 12.0 today."))
+        viewable.renderedComments shouldBe listOf(RenderedComment("Glucose is 12.0 today.", name = c1.name))
         viewable.textGivenByRules shouldBe "Glucose is \${} today."
-    }
-
-    @Test
-    fun `comment assignments follow the ordered conclusions`() {
-        //Given an interpretation with a conclusion and a comment assignment
-        val conclusion = Conclusion(1, "From a conclusion.")
-        manager.insert(listOf(conclusion))
-        val interpretation = interpretation(
-            RuleSummary(id = 1, conclusion = conclusion),
-            RuleSummary(id = 2, assignment = AssignValue(c2, CommentTemplate("From an assignment.")))
-        )
-
-        //When
-        val viewable = manager.viewableInterpretation(interpretation, case())
-
-        //Then the conclusion comes first
-        viewable.textGivenByRules shouldBe "From a conclusion. From an assignment."
-        viewable.renderedComments shouldBe listOf(
-            RenderedComment("From a conclusion."),
-            RenderedComment("From an assignment.")
-        )
     }
 
     @Test
@@ -180,7 +115,7 @@ class InterpretationViewManagerTest {
 
         //Then
         viewable.textGivenByRules shouldBe "Plain comment."
-        viewable.renderedComments shouldBe listOf(RenderedComment("Plain comment."))
+        viewable.renderedComments shouldBe listOf(RenderedComment("Plain comment.", name = c1.name))
     }
 
     @Test
@@ -197,27 +132,23 @@ class InterpretationViewManagerTest {
 
         //Then the rendered comment carries the conditions for its tooltip
         viewable.renderedComments shouldBe listOf(
-            RenderedComment("Diabetic diet advice given.", conditions = conditions)
+            RenderedComment("Diabetic diet advice given.", conditions = conditions, name = c1.name)
         )
     }
 
     @Test
-    fun `a rendered comment from a conclusion carries the conditions of the rule that gave it`() {
-        //Given a conclusion given by a rule with conditions
-        val conclusion = Conclusion(1, "From a conclusion.")
-        manager.insert(listOf(conclusion))
-        val conditions = listOf("Glucose is high")
+    fun `each rendered comment carries the name of the comment attribute that gave it`() {
+        //Given comments given by two different comment attributes
         val interpretation = interpretation(
-            RuleSummary(id = 1, conclusion = conclusion, conditionTextsFromRoot = conditions)
+            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("First."))),
+            RuleSummary(id = 2, assignment = AssignValue(c2, CommentTemplate("Second.")))
         )
 
         //When
         val viewable = manager.viewableInterpretation(interpretation, case())
 
-        //Then the rendered comment carries the conditions for its tooltip
-        viewable.renderedComments shouldBe listOf(
-            RenderedComment("From a conclusion.", conditions = conditions)
-        )
+        //Then each rendered comment is named for its own attribute
+        viewable.renderedComments.map { it.name } shouldBe listOf(c1.name, c2.name)
     }
 
     @Test

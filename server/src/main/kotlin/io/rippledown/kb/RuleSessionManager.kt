@@ -1,5 +1,7 @@
 package io.rippledown.kb
 
+import io.rippledown.constants.chat.cannotRenameMessage
+import io.rippledown.constants.chat.renamedMessage
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
@@ -7,7 +9,10 @@ import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
+import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
+import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -22,6 +27,18 @@ import io.rippledown.suggestions.ConditionSuggester
 import io.rippledown.suggestions.SuggestionContext
 import kotlinx.coroutines.runBlocking
 
+/**
+ * The name a comment variable's marker is rendered with when the variable names
+ * an attribute not in the KB.
+ */
+const val UNKNOWN_VARIABLE_NAME = "unknown"
+
+/**
+ * The characters that make a value expression worth offering to the formula
+ * parser. Without one of these the text is a value, not arithmetic.
+ */
+private val FORMULA_OPERATORS = Regex("""[+\-*/()^]""")
+
 class RuleSessionManager(
     private val kb: KB,
     private val webSocketManager: WebSocketManager? = null
@@ -32,16 +49,64 @@ class RuleSessionManager(
 
     /**
      * The change the session in progress is about to make. A session makes one
-     * change, so this is one field; [currentDiff] and [currentDerivedValueChange]
-     * are read views of it for the code that handles only one kind.
+     * change, so this is one field; [pendingChange] is the read view of it, and
+     * [currentDiff] and [currentDerivedValueChange] narrow that to the code
+     * that handles only one kind.
      */
     internal var currentChange: PendingChange? = null
 
+    /**
+     * The change the session in progress is about to make, with the name of the
+     * comment attribute it concerns as that attribute is named *now*: the user
+     * can rename a comment while its rule is being built, and the panel showing
+     * the pending change must show the new name.
+     */
+    internal val pendingChange: PendingChange?
+        get() = when (val change = currentChange) {
+            is Addition -> change.copy(attributeName = currentAttributeName(change.attributeName))
+            is Removal -> change.copy(attributeName = currentAttributeName(change.attributeName))
+            is Replacement -> change.copy(
+                attributeName = currentAttributeName(change.attributeName),
+                replacedAttributeName = replacedDiffAttribute?.name ?: change.replacedAttributeName
+            )
+            else -> change
+        }
+
+    /**
+     * The current name of [diffAttribute], falling back to the name the change
+     * was made with when the change does not concern a comment attribute.
+     */
+    private fun currentAttributeName(nameWhenChangeWasMade: String) =
+        diffAttribute?.name ?: nameWhenChangeWasMade
+
     internal val currentDiff: Diff?
-        get() = currentChange as? Diff
+        get() = pendingChange as? Diff
 
     internal val currentDerivedValueChange: DerivedValueChange?
-        get() = currentChange as? DerivedValueChange
+        get() = pendingChange as? DerivedValueChange
+
+    /**
+     * The comment attribute that the session in progress will assign, held so
+     * that the user can be told its name when the comment is accepted.
+     */
+    private var commentAttributeInSession: Attribute? = null
+
+    /**
+     * The comment attribute whose name the pending diff shows: the attribute
+     * being assigned for an addition or a replacement, and the one being
+     * retracted for a removal. Held so that the name is read from the attribute
+     * itself, which a rename updates in place, rather than being a snapshot
+     * taken when the session started.
+     */
+    private var diffAttribute: Attribute? = null
+
+    /**
+     * The comment attribute a pending replacement is replacing, held for the same
+     * reason as [diffAttribute]: the replacement names it so that the panel can
+     * find the row to preview, and a rename during the session must not leave
+     * that name stale.
+     */
+    private var replacedDiffAttribute: Attribute? = null
 
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
@@ -59,13 +124,12 @@ class RuleSessionManager(
         action: RuleTreeChange
     ): CornerstoneStatus {
         logger.info("Starting rule session for case ${case.name} and action $action")
-        logger.info("Current conclusions are: ${case.interpretation.conclusionTexts()} ")
+        logger.info("Current comments are: ${case.interpretation.commentTexts(case)} ")
         check(ruleSession == null) { "Session already in progress." }
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         checkActionExpressionIsAcyclic(action)
-        val alignedAction = action.alignWith(kb.conclusionManager)
         ruleSession = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, case, alignedAction, kb.allCornerstoneCases(), kb.definitionResolver
+            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), kb.definitionResolver
         )
         logger.info("Rule session created")
         return cornerstoneStatus(null)
@@ -74,24 +138,30 @@ class RuleSessionManager(
     override fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,
         comment: String,
-        variables: List<CommentVariable>
+        variables: List<CommentVariable>,
     ): CornerstoneStatus = startRuleSessionToAddComment(viewableCase.case, comment, variables)
 
     /**
      * Comments are comment attributes: adding one gets or creates the
      * attribute whose definition is the comment's text, and builds a rule
-     * assigning it by definition. See "Phase 2 — comments become derived
-     * attributes" in documentation/design/repeat_inferencing.md.
+     * assigning it by definition. A new attribute is auto-named (C1, C2, …)
+     * and can be renamed by the user later. See "Phase 2 — comments become
+     * derived attributes" in documentation/design/repeat_inferencing.md.
      */
     internal fun startRuleSessionToAddComment(
         case: RDRCase,
         comment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
     ): CornerstoneStatus {
         val template = commentTemplate(comment, variables)
         val attribute = commentAttributeFor(template)
-        currentChange = Addition(template.textWithVariableNames())
-        return startRuleSession(case, ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition)))
+        return startCommentSession(
+            case,
+            Addition(template.textWithVariableNames(), attribute.name),
+            attribute,
+            attribute,
+            ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition))
+        )
     }
 
     override fun startRuleSessionToRemoveComment(viewableCase: ViewableCase, comment: String): CornerstoneStatus =
@@ -100,17 +170,27 @@ class RuleSessionManager(
     internal fun startRuleSessionToRemoveComment(case: RDRCase, comment: String): CornerstoneStatus {
         val attribute = commentAttributeForText(comment)
             ?: error("Cannot remove comment: no comment matching \"$comment\" exists.")
-        currentChange = Removal(renderedComment(attribute, case))
-        return startRuleSession(case, ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition)))
+        return startCommentSession(
+            case,
+            Removal(commentTemplateText(attribute), attribute.name),
+            null, //a removal assigns no comment
+            attribute,
+            ChangeTreeToRemoveAssignment(AssignValue(attribute, ByDefinition))
+        )
     }
 
     override fun startRuleSessionToReplaceComment(
         viewableCase: ViewableCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<CommentVariable>
+        variables: List<CommentVariable>,
     ): CornerstoneStatus =
-        startRuleSessionToReplaceComment(viewableCase.case, replacedComment, replacementComment, variables)
+        startRuleSessionToReplaceComment(
+            viewableCase.case,
+            replacedComment,
+            replacementComment,
+            variables,
+        )
 
     /**
      * Each comment text has its own attribute, so the replacement is a new
@@ -122,35 +202,65 @@ class RuleSessionManager(
         case: RDRCase,
         replacedComment: String,
         replacementComment: String,
-        variables: List<CommentVariable> = emptyList()
+        variables: List<CommentVariable> = emptyList(),
     ): CornerstoneStatus {
         val replacedAttribute = commentAttributeForText(replacedComment)
             ?: error("Cannot replace comment: no comment matching \"$replacedComment\" exists.")
         val replacementTemplate = commentTemplate(replacementComment, variables)
         val replacementAttribute = commentAttributeFor(replacementTemplate)
-        currentChange =
-            Replacement(renderedComment(replacedAttribute, case), replacementTemplate.textWithVariableNames())
-        return startRuleSession(
+        return startCommentSession(
             case,
+            Replacement(
+                commentTemplateText(replacedAttribute),
+                replacementTemplate.textWithVariableNames(),
+                replacementAttribute.name,
+                replacedAttribute.name
+            ),
+            replacementAttribute,
+            replacementAttribute,
             ChangeTreeToReplaceAssignment(
                 AssignValue(replacedAttribute, ByDefinition),
                 AssignValue(replacementAttribute, ByDefinition)
-            )
+            ),
+            replacedAttribute
         )
     }
 
+    /**
+     * The internal form of a comment written by a client of the rule-building
+     * API, whose variables are given as `{attributeName}` placeholders. That is
+     * the form the server itself writes a comment in when it reports a change,
+     * so a comment handed back to it has to be read the same way; without this a
+     * placeholder would be stored as literal text, and a removal or replacement
+     * naming one would match no comment at all.
+     */
+    private fun internalForm(comment: String) = resolveCommentVariables(comment, emptyList(), this)
+
+    /**
+     * The definition of a comment with variables. A variable naming no attribute
+     * in this KB is kept, so that its token still renders as an unresolved
+     * marker rather than being dropped, which would leave the raw token in the
+     * comment and misalign the variables that follow it.
+     */
     private fun commentTemplate(comment: String, variables: List<CommentVariable>) =
-        CommentTemplate(comment, variables.map { kb.attributeManager.getById(it.attributeId) })
+        CommentTemplate(comment, variables.map { variable ->
+            attributeById(variable.attributeId) ?: Attribute(variable.attributeId, UNKNOWN_VARIABLE_NAME)
+        })
 
     /**
      * The comment attribute whose definition is the given template,
-     * created if necessary.
+     * created if necessary. A new attribute is auto-named (C1, C2, …) and
+     * can be renamed by the user later. An existing attribute keeps the
+     * name it has.
      */
     private fun commentAttributeFor(template: CommentTemplate): Attribute =
         kb.attributeManager.commentAttributes()
             .firstOrNull { kb.derivedDefinitionManager.definitionFor(it.id) == template }
             ?: kb.attributeManager.createCommentAttribute()
                 .also { kb.derivedDefinitionManager.store(it.id, template) }
+
+    override fun nameOfCommentAttributeInSession(): String? =
+        if (ruleSession == null) null else commentAttributeInSession?.name
 
     /**
      * The comment attribute whose definition has the given (internal-form)
@@ -161,8 +271,15 @@ class RuleSessionManager(
             (kb.derivedDefinitionManager.definitionFor(it.id) as? CommentTemplate)?.text == text
         }
 
-    private fun renderedComment(attribute: Attribute, case: RDRCase): String =
-        (kb.derivedDefinitionManager.definitionFor(attribute.id) as? CommentTemplate)?.render(case)?.text ?: ""
+    /**
+     * The comment of the given attribute as its rule defines it, each variable
+     * shown as `{attributeName}`. A change to a comment is previewed in this
+     * form, rather than as the comment renders for the case the rule is being
+     * built on, because it is the rule that the user is reviewing.
+     */
+    private fun commentTemplateText(attribute: Attribute): String =
+        (kb.derivedDefinitionManager.definitionFor(attribute.id) as? CommentTemplate)
+            ?.textWithVariableNames { id -> attributeById(id) } ?: ""
 
     /**
      * Starts a session for a rule assigning the attribute by its definition:
@@ -180,8 +297,12 @@ class RuleSessionManager(
         if (existingAttribute != null && existingAttribute.kind == AttributeKind.EXTERNAL) {
             error(nameClashWithExistingExternalAttributeMessage(attributeName))
         }
+        // Everything that can refuse the request is done before the attribute is
+        // created, so that a refusal leaves nothing behind: an attribute with no
+        // rule and no definition would be litter, and worse, the name would then
+        // clash with the corrected request the user is being asked to confirm.
+        val expression = valueExpressionFor(expressionText, attributeName)
         val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
-        val expression = valueExpressionFor(expressionText)
         cycleForDefinition(attribute, expression)?.let {
             error("This value cannot be assigned: ${cycleMessage(it)}.")
         }
@@ -239,21 +360,62 @@ class RuleSessionManager(
 
     /**
      * Starts a session that will change a derived attribute, previewing [change]
-     * in the Derived attributes panel while it is in progress. The preview is
-     * set before the session starts so that the returned status carries it, and
-     * rolled back if the session is refused, so that a request that never became
-     * a session leaves nothing behind for the next one to show.
+     * in the Derived attributes panel while it is in progress. No comment
+     * attribute is in session, so the preview shows the name the change carries.
      */
     private fun startAssignmentSession(
         case: RDRCase,
         change: DerivedValueChange,
         action: RuleTreeChange
+    ): CornerstoneStatus = startSession(case, change, null, null, action, null)
+
+    /**
+     * Starts a session that will change the comments, previewing [change] in the
+     * Comments panel while it is in progress.
+     */
+    private fun startCommentSession(
+        case: RDRCase,
+        change: Diff,
+        commentAttribute: Attribute?,
+        attributeNamingTheChange: Attribute,
+        action: RuleTreeChange,
+        replacedAttribute: Attribute? = null
+    ): CornerstoneStatus =
+        startSession(case, change, commentAttribute, attributeNamingTheChange, action, replacedAttribute)
+
+    /**
+     * Starts a session, previewing the change it is about to make. The preview is
+     * set before the session starts so that the returned status carries it, and
+     * put back as it was if the session is refused, so that a request which never
+     * became a session leaves nothing behind for the next one to show.
+     *
+     * The previous preview is restored rather than cleared because one of the
+     * ways a session is refused is that another is already in progress, and that
+     * session's preview has to survive the refusal of the request it turned away.
+     */
+    private fun startSession(
+        case: RDRCase,
+        change: PendingChange,
+        commentAttribute: Attribute?,
+        attributeNamingTheChange: Attribute?,
+        action: RuleTreeChange,
+        replacedAttribute: Attribute?
     ): CornerstoneStatus {
+        val previousChange = currentChange
+        val previousCommentAttribute = commentAttributeInSession
+        val previousDiffAttribute = diffAttribute
+        val previousReplacedDiffAttribute = replacedDiffAttribute
         currentChange = change
+        commentAttributeInSession = commentAttribute
+        diffAttribute = attributeNamingTheChange
+        replacedDiffAttribute = replacedAttribute
         return try {
             startRuleSession(case, action)
         } catch (e: Throwable) {
-            currentChange = null
+            currentChange = previousChange
+            commentAttributeInSession = previousCommentAttribute
+            diffAttribute = previousDiffAttribute
+            replacedDiffAttribute = previousReplacedDiffAttribute
             throw e
         }
     }
@@ -308,6 +470,25 @@ class RuleSessionManager(
     }
 
     /**
+     * Renames a comment or derived attribute. Renaming is not part of rule
+     * building — it is allowed whether or not a session is in progress — and
+     * changes the attribute's name only, since everything refers to it by id.
+     * External attributes cannot be renamed until the alias map of step 20 of
+     * documentation/design/repeat_inferencing.md exists, because a case
+     * arriving with the old name would create a new attribute.
+     */
+    override fun renameAttribute(currentName: String, newName: String): String {
+        val attribute = attributeForName(currentName)
+            ?: error("No attribute with name \"$currentName\" exists.")
+        check(attribute.kind.isAssignedByKB()) {
+            cannotRenameMessage(attribute.name)
+        }
+        val oldName = attribute.name
+        val renamed = kb.attributeManager.rename(attribute, newName)
+        return renamedMessage(oldName, renamed.name)
+    }
+
+    /**
      * Refuses a definition edit that would make the attribute depend on
      * itself. The graph is built as if the edit had been made, so cycles
      * through other by-definition rules are detected too.
@@ -327,7 +508,7 @@ class RuleSessionManager(
             if (it.id == attribute.id) newExpression else kb.definitionResolver(it)
         }
         val graph = DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), editedResolver)
-        val referenced = newExpression.referencedAttributes().filter { it.kind == AttributeKind.DERIVED }.toSet()
+        val referenced = newExpression.referencedAttributes().filter { it.kind.isAssignedByKB() }.toSet()
         return graph.cycleCreatedBy(attribute, referenced)
     }
 
@@ -341,39 +522,133 @@ class RuleSessionManager(
 
     /**
      * The value expression for the given user-entered text: a quoted string
-     * is a literal, text that parses as arithmetic over attribute names is a
-     * formula, and anything else is a literal.
+     * is a literal, text that parses as arithmetic over the names of existing
+     * attributes is a formula, and anything else is a literal.
+     *
+     * Names must resolve exactly, by [attributeNamedExactly], and no attribute
+     * is ever invented to make a formula parse: a name that is no attribute is
+     * far more often a typo than an attribute the user means to fill in later,
+     * and inventing it yields a formula that can never evaluate, with nothing
+     * to tell the user why.
+     *
+     * Text that names no attribute at all was never meant as a formula, so it
+     * is simply a literal — `non-diabetic` is a value, not a subtraction. But
+     * text that names some attributes and one non-attribute is genuinely
+     * ambiguous, and both readings would mislead if guessed at, so the reading
+     * is put back to the user to confirm.
+     *
+     * [nameBeingDefined] is the attribute this expression is to define, given
+     * when it is being defined by an assignment. It may not exist yet, and an
+     * expression naming it is then the one unresolved name that is neither a
+     * typo nor a literal but a self-reference, which is refused as such.
      */
-    internal fun valueExpressionFor(expressionText: String): ValueExpression {
+    internal fun valueExpressionFor(expressionText: String, nameBeingDefined: String? = null): ValueExpression {
         val trimmed = expressionText.trim()
         if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
             return Literal(trimmed.substring(1, trimmed.length - 1))
         }
         // Only treat text as a formula if it contains arithmetic operators, so
-        // that plain text like "diabetic" remains a literal. Formulas may
-        // reference attributes that are not yet in the KB; those attributes are
-        // created so the formula can be evaluated against future cases.
-        val hasArithmeticOperators = trimmed.contains(Regex("""[\+\-\*/()]"""))
-        val parsed = if (hasArithmeticOperators) {
-            val attributeFor: (String) -> Attribute = { name ->
-                kb.attributeManager.all()
-                    .firstOrNull { it.name.equals(name, ignoreCase = true) }
-                    ?: kb.attributeManager.getOrCreate(name)
-            }
-            FormulaParser(attributeFor).parse(trimmed)
-        } else null
-        return if (parsed != null) Formula(parsed) else Literal(trimmed)
+        // that plain text, and a bare attribute name, remain literals.
+        if (!trimmed.contains(FORMULA_OPERATORS)) return Literal(trimmed)
+        val parsed = FormulaParser(::attributeNamedExactly).parse(trimmed)
+        if (parsed != null) return Formula(parsed)
+        // Asked of every name the text uses, not of the ones the parse reached:
+        // it stops at the first name that does not resolve, so "age / weight"
+        // and "weight / age" would otherwise be read differently.
+        val names = namesInFormula(trimmed)
+        val unresolved = names.firstOrNull { attributeNamedExactly(it) == null }
+        // The one name that fails to resolve for a good reason: the attribute
+        // being defined by this very expression, which does not exist yet. Its
+        // definition names it, so the cycle is certain without any graph.
+        if (unresolved != null && nameBeingDefined != null && unresolved.equals(nameBeingDefined, ignoreCase = true)) {
+            error("This value cannot be assigned: ${cycleMessageForNames(listOf(nameBeingDefined, nameBeingDefined))}.")
+        }
+        formulaQuestionFor(trimmed)?.let { error(it.message) }
+        return Literal(trimmed)
     }
 
     /**
-     * Render a conclusion for the given case, substituting any comment variables with their attribute
-     * values so that the diff/preview shows human-readable text rather than the internal token form.
+     * The question put to the user about [expressionText], paired with the
+     * expression they accept by answering yes, or null if the text raises no
+     * question.
+     *
+     * The two travel together so that the answer to a question the server asked
+     * can be acted on by the server: the model is told to re-send the offered
+     * expression when the user accepts, but it re-sends the original often
+     * enough, and the two of them then ask and refuse the same thing for ever.
      */
-    private fun renderedText(conclusion: Conclusion, case: RDRCase): String =
-        conclusion.render(case) { id -> attributeById(id) }.text
+    internal fun formulaQuestionFor(expressionText: String): FormulaQuestion? {
+        val trimmed = expressionText.trim()
+        if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) return null
+        if (!trimmed.contains(FORMULA_OPERATORS)) return null
+        if (FormulaParser(::attributeNamedExactly).parse(trimmed) != null) return null
+        val names = namesInFormula(trimmed)
+        val unresolved = names.firstOrNull { attributeNamedExactly(it) == null } ?: return null
+        if (names.none { attributeNamedExactly(it) != null }) return null
+        val nearest = nearestAttributeName(unresolved)
+            ?: return FormulaQuestion(
+                unknownAttributeInFormulaMessage(unresolved, trimmed),
+                // The offer is of the text as a value, so it is accepted as a
+                // literal, which is what quoting it makes it.
+                "\"$trimmed\""
+            )
+        val corrected = trimmed.replace(unresolved, nearest)
+        return FormulaQuestion(didYouMeanFormulaMessage(unresolved, corrected), corrected)
+    }
+
+    override fun offeredValueExpressionFor(valueExpression: String): String? =
+        formulaQuestionFor(valueExpression)?.offeredExpression
+
+    /**
+     * The attribute of exactly this name, differing at most in case or in
+     * punctuation and whitespace. Unlike [attributeForName] this tolerates no
+     * misspelling at all, because a formula is not a passing remark: it is
+     * stored as a definition, applied to every later case, and its text is
+     * never put in front of the user again. Attribute names one edit apart are
+     * commonplace — "weight" and "height" differ by a single character — so a
+     * silent near-match would quietly compute a plausible number from the wrong
+     * attribute for ever. A name that does not resolve exactly is asked about.
+     */
+    private fun attributeNamedExactly(name: String): Attribute? {
+        val attributes = kb.attributeManager.all()
+        attributes.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
+        val target = name.normalizeForComparison()
+        return attributes.firstOrNull { it.name.normalizeForComparison() == target }
+    }
+
+    /**
+     * The name of the attribute nearest [name], for suggesting the correction
+     * the user is likely to have meant, or null if nothing is close. This one
+     * merely asks, so it can afford the distance of two that classic
+     * Levenshtein scores a transposition such as "hieght".
+     */
+    private fun nearestAttributeName(name: String): String? =
+        kb.attributeManager.all()
+            .map { it to levenshtein(it.name.lowercase(), name.lowercase()) }
+            .filter { (attribute, distance) -> distance <= maxOf(2, attribute.name.length / 3) }
+            .minByOrNull { it.second }
+            ?.first?.name
+
+    /**
+     * How an assignment reads to the user: a comment as its (truncated) text,
+     * resolved through the attribute's definition when the rule assigns it by
+     * definition, and anything else as the assignment itself.
+     */
+    private fun describe(assignment: AssignValue): String {
+        if (assignment.attribute.kind != AttributeKind.COMMENT) return assignment.asText()
+        val expression = assignment.expression.resolvedFor(assignment.attribute, kb.definitionResolver)
+        val text = when (expression) {
+            is CommentTemplate -> expression.textWithVariableNames { id -> attributeById(id) }
+            is Literal -> expression.value
+            else -> assignment.attribute.name
+        }
+        return text.truncatedComment()
+    }
 
     override fun attributeById(id: Int): Attribute? =
         runCatching { kb.attributeManager.getById(id) }.getOrNull()
+
+    override fun allAttributes(): Set<Attribute> = kb.attributeManager.all()
 
     override fun attributeForName(name: String): Attribute? {
         val attributes = kb.attributeManager.all()
@@ -418,6 +693,9 @@ class RuleSessionManager(
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
         currentChange = null
+        commentAttributeInSession = null
+        diffAttribute = null
+        replacedDiffAttribute = null
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -460,6 +738,9 @@ class RuleSessionManager(
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
         ruleSession = null
         currentChange = null
+        commentAttributeInSession = null
+        diffAttribute = null
+        replacedDiffAttribute = null
         checkRuleSessionHistoryConsistency()
         sendCasesInfo()
     }
@@ -473,10 +754,7 @@ class RuleSessionManager(
             ?: return UndoRuleDescription("There are no rules to undo.", false)
         val idOfExemplar = record.idsOfRulesAddedInSession.random()
         val exemplar = kb.ruleTree.ruleForId(idOfExemplar)
-        val summary = exemplar.actionSummary { conclusion ->
-            conclusion.truncatedText { id -> attributeById(id)?.name ?: "unknown" }
-        }
-        return UndoRuleDescription(summary, true)
+        return UndoRuleDescription(exemplar.actionSummary { describe(it) }, true)
     }
 
     fun ruleSessionHistories() = kb.ruleSessionRecorder.allRuleSessionHistories()
@@ -595,7 +873,7 @@ class RuleSessionManager(
         val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
         val conditionTexts = ruleSession!!.conditions.map { it.asText() }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
-            pendingChange = currentChange,
+            pendingChange = pendingChange,
             ruleConditions = conditionTexts
         )
 
@@ -610,7 +888,7 @@ class RuleSessionManager(
         index = if (index >= 0) index else 0
         val cornerstone = cornerstones[index]
         val viewableCornerstone = kb.viewableCase(cornerstone)
-        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, currentChange, conditionTexts)
+        return CornerstoneStatus(viewableCornerstone, index, cornerstones.size, pendingChange, conditionTexts)
     }
 
     //Allow a mock parser to be set so we can avoid connecting to Gemini for all the tests
@@ -691,16 +969,25 @@ class RuleSessionManager(
         logger.info("startRuleSession with data $sessionStartRequest")
         val caseId = sessionStartRequest.caseId
         val diff = sessionStartRequest.diff
-        currentChange = diff
         val case = kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         kb.interpret(case)
-        val status = when (diff) {
-            is Addition -> startRuleSessionToAddComment(case, diff.right())
-            is Removal -> startRuleSessionToRemoveComment(case, diff.left())
-            is Replacement -> startRuleSessionToReplaceComment(case, diff.left(), diff.right())
+        // Each of these records the change itself, naming the comment attribute
+        // it concerns. That named change is kept, rather than the client's
+        // unnamed one, because every CornerstoneStatus built during the session
+        // carries it to the Comments panel.
+        return when (diff) {
+            is Addition -> {
+                val (comment, variables) = internalForm(diff.right())
+                startRuleSessionToAddComment(case, comment, variables)
+            }
+
+            is Removal -> startRuleSessionToRemoveComment(case, internalForm(diff.left()).first)
+
+            is Replacement -> {
+                val (replacement, variables) = internalForm(diff.right())
+                startRuleSessionToReplaceComment(case, internalForm(diff.left()).first, replacement, variables)
+            }
         }
-        currentChange = diff
-        return status
     }
 
     fun commitRuleSession(ruleRequest: RuleRequest): ViewableCase {
@@ -736,13 +1023,22 @@ class RuleSessionManager(
             startRuleSessionToAssignValue(viewableCase.case, assignAttribute, request.assignExpression ?: "")
         } else {
             when (val diff = request.diff) {
-                is Addition -> startRuleSessionToAddComment(viewableCase, diff.addedText)
-                is Removal -> startRuleSessionToRemoveComment(viewableCase, diff.removedText)
-                is Replacement -> startRuleSessionToReplaceComment(
-                    viewableCase,
-                    diff.originalText,
-                    diff.replacementText
-                )
+                is Addition -> {
+                    val (comment, variables) = internalForm(diff.addedText)
+                    startRuleSessionToAddComment(viewableCase, comment, variables)
+                }
+
+                is Removal -> startRuleSessionToRemoveComment(viewableCase, internalForm(diff.removedText).first)
+
+                is Replacement -> {
+                    val (replacement, variables) = internalForm(diff.replacementText)
+                    startRuleSessionToReplaceComment(
+                        viewableCase,
+                        internalForm(diff.originalText).first,
+                        replacement,
+                        variables
+                    )
+                }
             }
         }
         try {
@@ -760,6 +1056,12 @@ class RuleSessionManager(
         }
     }
 }
+
+/**
+ * A question the server puts to the user about a value expression, with the
+ * expression they are accepting by answering yes.
+ */
+internal data class FormulaQuestion(val message: String, val offeredExpression: String)
 
 /**
  * Classic Levenshtein edit distance, used to tolerate small misspellings when matching a

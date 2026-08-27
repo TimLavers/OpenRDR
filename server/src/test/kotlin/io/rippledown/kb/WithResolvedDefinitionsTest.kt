@@ -2,7 +2,10 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import io.rippledown.model.*
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
+import io.rippledown.model.CaseId
+import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.*
 import kotlin.test.Test
 
@@ -60,9 +63,9 @@ internal class WithResolvedDefinitionsTest {
     }
 
     @Test
-    fun `a conclusion-only summary is carried over unchanged`() {
-        // Given a summary with a conclusion and no assignment
-        val summary = RuleSummary(id = 3, conclusion = Conclusion(1, "Advice given."))
+    fun `a summary with no assignment is carried over unchanged`() {
+        // Given a summary with no assignment (a stopping rule)
+        val summary = RuleSummary(id = 3)
         val original = interpretation(summary)
 
         // When the definitions are resolved
@@ -115,11 +118,11 @@ internal class WithResolvedDefinitionsTest {
 
     @Test
     fun `a mixture of summaries is resolved summary by summary`() {
-        // Given by-definition, concrete, and conclusion-only summaries
+        // Given by-definition and concrete summaries, plus a no-assignment (stopping) summary
         val original = interpretation(
             RuleSummary(id = 1, assignment = AssignValue(bmi, ByDefinition)),
             RuleSummary(id = 2, assignment = AssignValue(riskScore, Literal("7"))),
-            RuleSummary(id = 3, conclusion = Conclusion(1, "Advice given."))
+            RuleSummary(id = 3)
         )
 
         // When the definitions are resolved
@@ -131,6 +134,5 @@ internal class WithResolvedDefinitionsTest {
             AssignValue(bmi, bmiDefinition),
             AssignValue(riskScore, Literal("7"))
         )
-        resolved.conclusions() shouldBe setOf(Conclusion(1, "Advice given."))
     }
 }

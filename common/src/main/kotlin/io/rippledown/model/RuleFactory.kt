@@ -5,7 +5,10 @@ import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Rule
 
 interface RuleFactory {
-    fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>): Rule
-
-    fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>): Rule
+    /**
+     * Creates a rule under [parent] that makes [assignment] when its
+     * conditions hold, or that makes no assignment — a stopping rule,
+     * retracting what its parent assigned — if [assignment] is null.
+     */
+    fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>): Rule
 }

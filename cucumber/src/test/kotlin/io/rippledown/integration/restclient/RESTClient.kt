@@ -11,7 +11,6 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.*
 import io.rippledown.main.Api
 import io.rippledown.model.Attribute
-import io.rippledown.model.Conclusion
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -78,13 +77,6 @@ class RESTClient {
     fun getOrCreateAttribute(name: String): Attribute = runBlocking {
         client.post(endpoint + GET_OR_CREATE_ATTRIBUTE) {
             setBody(name)
-            parameter(KB_ID, currentKB.get().id)
-        }.body()
-    }
-
-    fun getOrCreateConclusion(text: String): Conclusion = runBlocking {
-        client.post(endpoint + GET_OR_CREATE_CONCLUSION) {
-            setBody(text)
             parameter(KB_ID, currentKB.get().id)
         }.body()
     }

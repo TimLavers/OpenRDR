@@ -72,5 +72,37 @@ Feature: Derived attribute
     When I request that the derived attribute "height" be added with value "1.5"
     Then the chat should explain that the name "height" already exists
 
+  Scenario: The user should be asked about a misspelt attribute name in a formula
+    Given case Fermi is provided with the following values, reference ranges and units:
+      | Attribute | Value | Low | High | Units |
+      | Height    | 1.72  |     | 2.5  | m     |
+      | Weight    | 65    |     | 100  | kg    |
+    And I start the client application
+    And I select the case Fermi
+    When I request that the derived attribute "bmi" be added with formula "weight/hieght^2"
+    Then the chat should say there is no attribute named "hieght" and suggest the formula "weight/Height^2"
+
+  Scenario: The user should be asked about a formula naming an attribute the knowledge base does not have
+    Given case Fermi is provided with the following values, reference ranges and units:
+      | Attribute | Value | Low | High | Units |
+      | Height    | 1.72  |     | 2.5  | m     |
+      | Weight    | 65    |     | 100  | kg    |
+    And I start the client application
+    And I select the case Fermi
+    When I request that the derived attribute "risk" be added with formula "weight/age"
+    Then the chat should say there is no attribute named "age" and offer to assign the text "weight/age"
+
+  Scenario: The user should be able to accept the chatbot's correction of a misspelt attribute name
+    Given case Fermi is provided with the following values, reference ranges and units:
+      | Attribute | Value | Low | High | Units |
+      | Height    | 1.72  |     | 2.5  | m     |
+      | Weight    | 65    |     | 100  | kg    |
+    And I start the client application
+    And I select the case Fermi
+    When I request that the derived attribute "bmi" be added with formula "weight/hieght^2"
+    And the chat should say there is no attribute named "hieght" and suggest the formula "weight/Height^2"
+    And I accept the correction and give the reason "Weight is in case"
+    Then the UI should show the value for derived attribute "bmi" as "21.97"
+
 
 

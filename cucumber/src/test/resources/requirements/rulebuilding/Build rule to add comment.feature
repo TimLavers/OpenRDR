@@ -11,16 +11,22 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     And select the case Case2
     And the interpretation should be "Go to Bondi."
 
-  Scenario: The user should be able to build a rule to add an existing comment
-    Given the configured case Case1 is stored on the server
-    And the following comments have been defined in the project:
-      | Go to Bondi.   |
-      | Go to Malabar. |
-      | Go to Coogee.  |
+  Scenario: The user should be able to build a rule to add a comment that already exists in the project
+    # The first rule is conditioned so that the comment exists in the project but is not
+    # given to Manly, so that the second rule genuinely adds an already-existing comment.
+    Given case Bondi is provided having data:
+      | Sun | hot |
+    And case Manly is provided having data:
+      | Sun | cold |
     And I start the client application
-    And I should see the case Case1 as the current case
-    And I build a rule to add the existing comment "Go to Malabar."
+    And I select case Bondi
+    And I build a rule to add the comment "Go to Malabar." with condition
+      | Sun is hot |
     And the interpretation should be "Go to Malabar."
+    And I select case Manly
+    And the interpretation should be empty
+    When I build a rule to add the existing comment "Go to Malabar."
+    Then the interpretation should be "Go to Malabar."
 
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application

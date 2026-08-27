@@ -14,6 +14,14 @@ class InterpretationTest {
     private val caseId = CaseId(1234, "Case 1")
     private var attributeId = 0
     private var conditionId = 0
+    private val wave = Attribute(1, "Wave")
+    private val sun = Attribute(2, "Sun")
+    private val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
+    private val c2 = Attribute(11, "C2", AttributeKind.COMMENT)
+    private val c3 = Attribute(12, "C3", AttributeKind.COMMENT)
+
+    private fun comment(attribute: Attribute, text: String, vararg variables: Attribute) =
+        AssignValue(attribute, CommentTemplate(text, variables.toList()))
 
     @Test
     fun construction() {
@@ -23,190 +31,119 @@ class InterpretationTest {
 
     @Test
     fun testEmpty() {
-        Interpretation(caseId).conclusions().size shouldBe 0
+        Interpretation(caseId).assignments().size shouldBe 0
     }
 
     @Test
     fun singleRule() {
         val interpretation = Interpretation(caseId)
-        val conclusion = Conclusion(2, "First conclusion")
-        val rule = Rule(0, null, conclusion, emptySet())
+        val assignment = comment(c1, "First comment")
+        val rule = Rule(0, null, emptySet(), mutableSetOf(), assignment)
         interpretation.add(rule)
-        checkSingleConclusion(interpretation, conclusion)
+        checkSingleAssignment(interpretation, assignment)
     }
 
     @Test
-    fun twoRulesWithSameConclusion() {
+    fun twoRulesWithSameAssignment() {
         val interpretation = Interpretation(caseId)
-        val conclusion = Conclusion(1, "First conclusion")
-        val rule0 = Rule(0, null, conclusion, emptySet())
-        val rule1 = Rule(1, null, conclusion, emptySet())
+        val assignment = comment(c1, "First comment")
+        val rule0 = Rule(0, null, emptySet(), mutableSetOf(), assignment)
+        val rule1 = Rule(1, null, emptySet(), mutableSetOf(), assignment)
         interpretation.add(rule0)
         interpretation.add(rule1)
-        checkSingleConclusion(interpretation, conclusion)
+        checkSingleAssignment(interpretation, assignment)
     }
 
     @Test
     fun multipleRules() {
         val interpretation = Interpretation(caseId)
-        val c0 = Conclusion(1, "First conclusion")
-        val rule0 = Rule(0, null, c0, emptySet())
-        val c1 = Conclusion(2, "Second conclusion")
-        val rule1 = Rule(1, null, c1, emptySet())
-        val c2 = Conclusion(3, "Third conclusion")
-        val rule2 = Rule(2, null, c2, emptySet())
-        interpretation.add(rule0)
-        interpretation.add(rule1)
-        interpretation.add(rule2)
-        interpretation.conclusions().size shouldBe 3
-        interpretation.conclusions() shouldContain c0
-        interpretation.conclusions() shouldContain c1
-        interpretation.conclusions() shouldContain c2
+        val a0 = comment(c1, "First comment")
+        val a1 = comment(c2, "Second comment")
+        val a2 = comment(c3, "Third comment")
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), a0))
+        interpretation.add(Rule(1, null, emptySet(), mutableSetOf(), a1))
+        interpretation.add(Rule(2, null, emptySet(), mutableSetOf(), a2))
+        interpretation.assignments().size shouldBe 3
+        interpretation.assignments() shouldContain a0
+        interpretation.assignments() shouldContain a1
+        interpretation.assignments() shouldContain a2
     }
 
     @Test
-    fun idsOfRulesGivingConclusion() {
+    fun idsOfRulesMakingAssignment() {
         val interpretation = Interpretation(caseId)
-        val concA = Conclusion(1, "A")
-        val concB = Conclusion(2, "B")
-        val rule0 = Rule(0, null, concA, emptySet())
-        val rule1 = Rule(1, null, concA, emptySet())
-        val rule2 = Rule(2, null, concB, emptySet())
-        interpretation.idsOfRulesGivingConclusion(concA) shouldBe setOf()
+        val assignmentA = comment(c1, "A")
+        val assignmentB = comment(c2, "B")
+        val rule0 = Rule(0, null, emptySet(), mutableSetOf(), assignmentA)
+        val rule1 = Rule(1, null, emptySet(), mutableSetOf(), assignmentA)
+        val rule2 = Rule(2, null, emptySet(), mutableSetOf(), assignmentB)
+        interpretation.idsOfRulesMakingAssignment(assignmentA) shouldBe setOf()
 
         interpretation.add(rule0)
         interpretation.add(rule1)
         interpretation.add(rule2)
-        interpretation.idsOfRulesGivingConclusion(concA) shouldBe setOf(rule0.id, rule1.id)
-        interpretation.idsOfRulesGivingConclusion(concB) shouldBe setOf(rule2.id)
+        interpretation.idsOfRulesMakingAssignment(assignmentA) shouldBe setOf(rule0.id, rule1.id)
+        interpretation.idsOfRulesMakingAssignment(assignmentB) shouldBe setOf(rule2.id)
+    }
+
+    @Test
+    fun idsOfRulesAssigningAnAttribute() {
+        val interpretation = Interpretation(caseId)
+        val rule0 = Rule(0, null, emptySet(), mutableSetOf(), comment(c1, "A"))
+        val rule1 = Rule(1, null, emptySet(), mutableSetOf(), comment(c2, "B"))
+        interpretation.add(rule0)
+        interpretation.add(rule1)
+
+        interpretation.idsOfRulesAssigning(c1) shouldBe setOf(rule0.id)
+        interpretation.idsOfRulesAssigning(c2) shouldBe setOf(rule1.id)
     }
 
     @Test
     fun addRuleSummary() {
         val interpretation = Interpretation(caseId)
-        val c0 = Conclusion(1, "First conc")
-        val rule0 = Rule(0, null, c0, emptySet())
-        val c1 = Conclusion(2, "Second conc")
-        val rule1 = Rule(1, null, c1, emptySet())
-        val c2 = Conclusion( 3, "Third conc")
-        val rule2 = Rule(2, null, c2, emptySet())
-        interpretation.add(rule0.summary())
-        interpretation.add(rule1.summary())
-        interpretation.add(rule2.summary())
-        interpretation.conclusions().size shouldBe 3
-        interpretation.conclusions() shouldContain c0
-        interpretation.conclusions() shouldContain c1
-        interpretation.conclusions() shouldContain c2
+        val a0 = comment(c1, "First comment")
+        val a1 = comment(c2, "Second comment")
+        val a2 = comment(c3, "Third comment")
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), a0).summary())
+        interpretation.add(Rule(1, null, emptySet(), mutableSetOf(), a1).summary())
+        interpretation.add(Rule(2, null, emptySet(), mutableSetOf(), a2).summary())
+        interpretation.assignments().size shouldBe 3
+        interpretation.assignments() shouldContain a0
+        interpretation.assignments() shouldContain a1
+        interpretation.assignments() shouldContain a2
     }
 
     @Test
     fun serialisationWithRule() {
-        val conclusion = Conclusion(1, "First conc")
+        val assignment = comment(c1, "First comment")
         val conditions = setOf(
             isCondition(1, Attribute(1, "x"), "1"),
         )
-        val rule = Rule(0, null, conclusion, conditions)
+        val rule = Rule(0, null, conditions, mutableSetOf(), assignment)
         val interpretation = Interpretation(caseId).apply { add(rule) }
         val restored = serializeDeserialize(interpretation)
-        restored.conclusions() shouldBe setOf(conclusion)
+        restored.assignments() shouldBe setOf(assignment)
     }
 
     @Test
     fun serialisationWithRuleSummary() {
-        val conclusion = Conclusion(1,"First conc")
+        val assignment = comment(c1, "First comment")
         val conditions = setOf(
             isCondition(1, Attribute(1, "x"), "1"),
         )
-        val rule = Rule(0, null, conclusion, conditions)
-        val ruleSummary = rule.summary()
-        val interpretation = Interpretation(caseId).apply { add(ruleSummary) }
+        val rule = Rule(0, null, conditions, mutableSetOf(), assignment)
+        val interpretation = Interpretation(caseId).apply { add(rule.summary()) }
         val restored = serializeDeserialize(interpretation)
-        restored.conclusions() shouldBe setOf(conclusion)
-    }
-
-    @Test
-    fun shouldReturnConditionsForConclusion() {
-        val interpretation = Interpretation(caseId)
-        val c0 = Conclusion(1, "First conc")
-        val conditions0 = setOf(containsText(Attribute(attributeId++, "A"), "text A"), containsText(Attribute(
-            attributeId++,
-            "B"
-        ), "text B"))
-        val rule0 = Rule(0, null, c0, conditions0)
-        val c1 = Conclusion(2, "Second conc")
-        val conditions1 = setOf(containsText(Attribute(attributeId++, "C"), "text C"), containsText(Attribute(
-            attributeId++,
-            "D"
-        ), "text D"))
-        val rule1 = Rule(1, null, c1, conditions1)
-        interpretation.add(rule0)
-        interpretation.add(rule1)
-        interpretation.conditionsForConclusion(c0) shouldBe listOf("A contains \"text A\"", "B contains \"text B\"")
-        interpretation.conditionsForConclusion(c1) shouldBe listOf("C contains \"text C\"", "D contains \"text D\"")
-    }
-
-    @Test
-    fun conditionsForConclusionShouldBeInAlphaOrderForTheLeafRule() {
-        val interpretation = Interpretation(caseId)
-        val conclusion = Conclusion(1, "First conc")
-        val conditions = setOf(
-            containsText(Attribute(attributeId++, "z"), "text z"),
-            containsText(Attribute(attributeId++, "A"), "text A"),
-            containsText(Attribute(attributeId++, "Y"), "text Y"),
-            containsText(Attribute(attributeId++, "b"), "text b"),
-        )
-        val rule0 = Rule(0, null, conclusion, conditions)
-        interpretation.add(rule0)
-        interpretation.conditionsForConclusion(conclusion) shouldBe listOf(
-            "A contains \"text A\"",
-            "b contains \"text b\"",
-            "Y contains \"text Y\"",
-            "z contains \"text z\""
-        )
-    }
-
-    @Test
-    fun conditionsForConclusionShouldListConditionsOfParentRulesFirst() {
-        val interpretation = Interpretation(caseId)
-        val conclusion0 = Conclusion(1, "First conc")
-        val conclusion1 = Conclusion(2, "Second conc")
-        val conditions0 = setOf(
-            containsText(Attribute(26, "z"), "text z"),
-            containsText(Attribute(1, "A"), "text A"),
-            containsText(Attribute(25, "Y"), "text Y"),
-            containsText(Attribute(2, "b"), "text b"),
-        )
-        val conditions1 = setOf(
-            containsText(Attribute(18, "r"), "text r"),
-            containsText(Attribute(19, "s"), "text s"),
-            containsText(Attribute(16, "p"), "text p"),
-            containsText(Attribute(17, "q"), "text q"),
-        )
-        val rule0 = Rule(0, null, conclusion0, conditions0)
-        val rule1 = Rule(1, rule0, conclusion1, conditions1)
-        interpretation.add(rule1)
-        interpretation.conditionsForConclusion(conclusion1) shouldBe listOf(
-            "A contains \"text A\"",
-            "b contains \"text b\"",
-            "Y contains \"text Y\"",
-            "z contains \"text z\"",
-            "p contains \"text p\"",
-            "q contains \"text q\"",
-            "r contains \"text r\"",
-            "s contains \"text s\""
-        )
+        restored.assignments() shouldBe setOf(assignment)
     }
 
     @Test
     fun toCommentsShouldConvertInternalPlaceholdersToAttributeNameFormat() {
         val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val sun = Attribute(2, "Sun")
         val template = "The wave quality is " + VARIABLE_TOKEN + " and the air temperature is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
-        val conclusion = Conclusion(1, template, variables)
-        val rule = Rule(0, null, conclusion, emptySet())
-        interpretation.add(rule)
+        interpretation.add(
+            Rule(0, null, emptySet(), mutableSetOf(), comment(c1, template, wave, sun))
+        )
 
         val case = RDRCaseBuilder().apply {
             addValue(wave, 0, "excellent")
@@ -222,12 +159,12 @@ class InterpretationTest {
     @Test
     fun toCommentsShouldResolveAttributeNameViaResolverWhenAbsentFromCase() {
         val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val sun = Attribute(2, "Sun")
+        // The stored comment carries a name the attribute no longer has.
+        val staleSun = Attribute(sun.id, "Sunshine")
         val template = "The wave is " + VARIABLE_TOKEN + " and the sun is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
-        val conclusion = Conclusion(1, template, variables)
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        interpretation.add(
+            Rule(0, null, emptySet(), mutableSetOf(), comment(c1, template, wave, staleSun))
+        )
 
         // The current case has no value for Sun, so Sun is absent from case.attributes.
         val case = RDRCaseBuilder().apply {
@@ -238,30 +175,14 @@ class InterpretationTest {
         val attributeById = { id: Int -> listOf(wave, sun).find { it.id == id } }
 
         val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case, attributeById))
-        // Sun should resolve to its name rather than falling back to {unknown}.
+        // Sun should resolve to its current name.
         comments shouldBe setOf("The wave is {Wave} and the sun is {Sun}")
-    }
-
-    @Test
-    fun toCommentsShouldFallBackToUnknownWhenAttributeCannotBeResolved() {
-        val interpretation = Interpretation(caseId)
-        val template = "The sun is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(99))
-        val conclusion = Conclusion(1, template, variables)
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
-
-        val case = RDRCaseBuilder().build("Test", 1)
-
-        val comments = Json.decodeFromString<Set<String>>(interpretation.toComments(case))
-        comments shouldBe setOf("The sun is {unknown}")
     }
 
     @Test
     fun toCommentsShouldHandlePlainCommentsWithoutVariables() {
         val interpretation = Interpretation(caseId)
-        val conclusion = Conclusion(1, "Plain comment")
-        val rule = Rule(0, null, conclusion, emptySet())
-        interpretation.add(rule)
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), comment(c1, "Plain comment")))
 
         val case = RDRCaseBuilder().build("Test", 1)
 
@@ -281,43 +202,14 @@ class InterpretationTest {
     }
 
     @Test
-    fun toCommentsShouldConvertInternalPlaceholdersForMultipleComments() {
-        val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val conclusion1 = Conclusion(1, "First comment")
-        val template2 = "Wave is " + VARIABLE_TOKEN
-        val variables2 = listOf(CommentVariable(wave.id))
-        val conclusion2 = Conclusion(2, template2, variables2)
-        val rule1 = Rule(0, null, conclusion1, emptySet())
-        val rule2 = Rule(1, null, conclusion2, emptySet())
-        interpretation.add(rule1)
-        interpretation.add(rule2)
-
-        val case = RDRCaseBuilder().apply {
-            addValue(wave, 0, "excellent")
-        }.build("Test", 1)
-
-        val commentsJson = interpretation.toComments(case)
-        val comments = Json.decodeFromString<Set<String>>(commentsJson)
-        // Bot should see {attributeName} format
-        comments shouldBe setOf("First comment", "Wave is {Wave}")
-    }
-
-    @Test
     fun toCommentsShouldIncludeCommentAttributeAssignments() {
-        // Given an interpretation with a literal comment assignment and a template comment assignment
+        // Given an interpretation with a plain comment assignment and a template comment assignment
         val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
-        val c2 = Attribute(11, "C2", AttributeKind.COMMENT)
         interpretation.add(
-            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("Plain comment.")))
+            RuleSummary(id = 1, assignment = comment(c1, "Plain comment."))
         )
         interpretation.add(
-            RuleSummary(
-                id = 2,
-                assignment = AssignValue(c2, CommentTemplate("Wave is " + VARIABLE_TOKEN, listOf(wave)))
-            )
+            RuleSummary(id = 2, assignment = comment(c2, "Wave is " + VARIABLE_TOKEN, wave))
         )
         val case = RDRCaseBuilder().apply {
             addValue(wave, 0, "excellent")
@@ -334,7 +226,6 @@ class InterpretationTest {
     fun toCommentsShouldOmitUnresolvedAndNonCommentAssignments() {
         // Given an unresolved ByDefinition comment assignment and a derived-value assignment
         val interpretation = Interpretation(caseId)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
         val bmi = Attribute(11, "BMI", AttributeKind.DERIVED)
         interpretation.add(RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition)))
         interpretation.add(RuleSummary(id = 2, assignment = AssignValue(bmi, Literal("25"))))
@@ -358,7 +249,7 @@ class InterpretationTest {
             containsText(glucose, "12.0"),
             isCondition(attributeId++, weight, "80")
         )
-        val rule = Rule(0, null, null, conditions, assignment = assignment)
+        val rule = Rule(0, null, conditions, mutableSetOf(), assignment)
         val interpretation = Interpretation(caseId).apply { add(rule) }
 
         // When asking for the conditions of that assignment
@@ -393,11 +284,11 @@ class InterpretationTest {
         val beta = Attribute(attributeId++, "Beta", AttributeKind.DERIVED)
         val parentConditions = setOf(containsText(glucose, "12.0"))
         val parentAssignment = AssignValue(alpha, Literal("yes"))
-        val parentRule = Rule(0, null, null, parentConditions, assignment = parentAssignment)
+        val parentRule = Rule(0, null, parentConditions, mutableSetOf(), parentAssignment)
 
         val childConditions = setOf(isCondition(attributeId++, weight, "80"))
         val childAssignment = AssignValue(beta, Literal("no"))
-        val childRule = Rule(1, parentRule, null, childConditions, assignment = childAssignment)
+        val childRule = Rule(1, parentRule, childConditions, mutableSetOf(), childAssignment)
 
         val interpretation = Interpretation(caseId).apply { add(childRule) }
 
@@ -406,6 +297,26 @@ class InterpretationTest {
 
         // Then parent conditions come first, then child conditions
         result shouldBe listOf("Glucose contains \"12.0\"", "weight is \"80\"")
+    }
+
+    @Test
+    fun `conditionsForAssignment lists the conditions of the leaf rule in alphabetical order`() {
+        val interpretation = Interpretation(caseId)
+        val assignment = comment(c1, "First comment")
+        val conditions = setOf(
+            containsText(Attribute(26, "z"), "text z"),
+            containsText(Attribute(1, "A"), "text A"),
+            containsText(Attribute(25, "Y"), "text Y"),
+            containsText(Attribute(2, "b"), "text b"),
+        )
+        interpretation.add(Rule(0, null, conditions, mutableSetOf(), assignment))
+
+        interpretation.conditionsForAssignment(assignment) shouldBe listOf(
+            "A contains \"text A\"",
+            "b contains \"text b\"",
+            "Y contains \"text Y\"",
+            "z contains \"text z\""
+        )
     }
 
     private fun containsText(attribute: Attribute, match: String): EpisodicCondition {
@@ -421,9 +332,9 @@ class InterpretationTest {
         return format.decodeFromString(serialized)
     }
 
-    private fun checkSingleConclusion(interpretation: Interpretation, conclusion: Conclusion) {
-        interpretation.conclusions().size shouldBe 1
-        interpretation.conclusions() shouldContain conclusion
+    private fun checkSingleAssignment(interpretation: Interpretation, assignment: AssignValue) {
+        interpretation.assignments().size shouldBe 1
+        interpretation.assignments() shouldContain assignment
     }
 
     // -----------------------------------------------------------------
@@ -439,24 +350,19 @@ class InterpretationTest {
     }
 
     @Test
-    fun `commentTexts returns plain conclusion text`() {
+    fun `commentTexts returns plain comment text`() {
         val interpretation = Interpretation(caseId)
-        val conclusion = Conclusion(1, "Normal glucose results.")
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), comment(c1, "Normal glucose results.")))
         val case = RDRCaseBuilder().build("Test", 1)
 
         interpretation.commentTexts(case) shouldBe setOf("Normal glucose results.")
     }
 
     @Test
-    fun `commentTexts returns conclusion text with variables in attributeName format`() {
+    fun `commentTexts returns comment text with variables in attributeName format`() {
         val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val sun = Attribute(2, "Sun")
         val template = "The wave quality is " + VARIABLE_TOKEN + " and the air temperature is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
-        val conclusion = Conclusion(1, template, variables)
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), comment(c1, template, wave, sun)))
         val case = RDRCaseBuilder().apply {
             addValue(wave, 0, "excellent")
             addValue(sun, 0, "hot")
@@ -468,12 +374,9 @@ class InterpretationTest {
     @Test
     fun `commentTexts resolves variable names via attributeById when absent from case`() {
         val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val sun = Attribute(2, "Sun")
+        val staleSun = Attribute(sun.id, "Sunshine")
         val template = "The wave is " + VARIABLE_TOKEN + " and the sun is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(wave.id), CommentVariable(sun.id))
-        val conclusion = Conclusion(1, template, variables)
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), comment(c1, template, wave, staleSun)))
         val case = RDRCaseBuilder().apply {
             addValue(wave, 0, "excellent")
         }.build("Test", 1)
@@ -483,51 +386,8 @@ class InterpretationTest {
     }
 
     @Test
-    fun `commentTexts falls back to unknown when attribute cannot be resolved`() {
-        val interpretation = Interpretation(caseId)
-        val template = "The sun is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(99))
-        val conclusion = Conclusion(1, template, variables)
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
-        val case = RDRCaseBuilder().build("Test", 1)
-
-        interpretation.commentTexts(case) shouldBe setOf("The sun is {unknown}")
-    }
-
-    @Test
-    fun `commentTexts returns CommentTemplate assignment text`() {
-        val interpretation = Interpretation(caseId)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
-        interpretation.add(
-            RuleSummary(id = 1, assignment = AssignValue(c1, CommentTemplate("Plain comment.")))
-        )
-        val case = RDRCaseBuilder().build("Test", 1)
-
-        interpretation.commentTexts(case) shouldBe setOf("Plain comment.")
-    }
-
-    @Test
-    fun `commentTexts returns CommentTemplate assignment with variables in attributeName format`() {
-        val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
-        interpretation.add(
-            RuleSummary(
-                id = 1,
-                assignment = AssignValue(c1, CommentTemplate("Wave is " + VARIABLE_TOKEN, listOf(wave)))
-            )
-        )
-        val case = RDRCaseBuilder().apply {
-            addValue(wave, 0, "excellent")
-        }.build("Test", 1)
-
-        interpretation.commentTexts(case) shouldBe setOf("Wave is {Wave}")
-    }
-
-    @Test
     fun `commentTexts returns Literal assignment value`() {
         val interpretation = Interpretation(caseId)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
         interpretation.add(
             RuleSummary(id = 1, assignment = AssignValue(c1, Literal("A literal comment.")))
         )
@@ -539,7 +399,6 @@ class InterpretationTest {
     @Test
     fun `commentTexts omits unresolved ByDefinition comment assignments`() {
         val interpretation = Interpretation(caseId)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
         interpretation.add(
             RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition))
         )
@@ -561,28 +420,13 @@ class InterpretationTest {
     }
 
     @Test
-    fun `commentTexts returns both conclusion texts and comment assignment texts`() {
-        val interpretation = Interpretation(caseId)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
-        interpretation.add(Rule(0, null, Conclusion(1, "From conclusion"), emptySet()))
-        interpretation.add(
-            RuleSummary(id = 2, assignment = AssignValue(c1, CommentTemplate("From assignment")))
-        )
-        val case = RDRCaseBuilder().build("Test", 1)
-
-        interpretation.commentTexts(case) shouldBe setOf("From conclusion", "From assignment")
-    }
-
-    @Test
     fun `commentTexts returns multiple comment assignments sorted by attribute id`() {
         val interpretation = Interpretation(caseId)
-        val c2 = Attribute(20, "C2", AttributeKind.COMMENT)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
         interpretation.add(
-            RuleSummary(id = 1, assignment = AssignValue(c2, CommentTemplate("Second comment")))
+            RuleSummary(id = 1, assignment = comment(c2, "Second comment"))
         )
         interpretation.add(
-            RuleSummary(id = 2, assignment = AssignValue(c1, CommentTemplate("First comment")))
+            RuleSummary(id = 2, assignment = comment(c1, "First comment"))
         )
         val case = RDRCaseBuilder().build("Test", 1)
 
@@ -590,36 +434,42 @@ class InterpretationTest {
     }
 
     @Test
-    fun `commentTexts deduplicates identical texts from conclusion and assignment`() {
+    fun `commentTexts deduplicates identical texts given by different attributes`() {
         val interpretation = Interpretation(caseId)
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
-        interpretation.add(Rule(0, null, Conclusion(1, "Same text"), emptySet()))
-        interpretation.add(
-            RuleSummary(id = 2, assignment = AssignValue(c1, CommentTemplate("Same text")))
-        )
+        interpretation.add(RuleSummary(id = 1, assignment = comment(c1, "Same text")))
+        interpretation.add(RuleSummary(id = 2, assignment = comment(c2, "Same text")))
         val case = RDRCaseBuilder().build("Test", 1)
 
         interpretation.commentTexts(case) shouldBe setOf("Same text")
     }
 
     @Test
-    fun `commentTexts handles mixed conclusions with variables and comment assignments`() {
+    fun `commentTexts handles a mixture of plain and templated comments`() {
         val interpretation = Interpretation(caseId)
-        val wave = Attribute(1, "Wave")
-        val c1 = Attribute(10, "C1", AttributeKind.COMMENT)
-        val conclusion = Conclusion(1, "First comment")
-        val template = "Wave is " + VARIABLE_TOKEN
-        val variables = listOf(CommentVariable(wave.id))
-        val conclusion2 = Conclusion(2, template, variables)
-        interpretation.add(Rule(0, null, conclusion, emptySet()))
-        interpretation.add(Rule(1, null, conclusion2, emptySet()))
+        interpretation.add(Rule(0, null, emptySet(), mutableSetOf(), comment(c1, "First comment")))
         interpretation.add(
-            RuleSummary(id = 3, assignment = AssignValue(c1, CommentTemplate("Third comment")))
+            Rule(1, null, emptySet(), mutableSetOf(), comment(c2, "Wave is " + VARIABLE_TOKEN, wave))
         )
+        interpretation.add(RuleSummary(id = 3, assignment = comment(c3, "Third comment")))
         val case = RDRCaseBuilder().apply {
             addValue(wave, 0, "excellent")
         }.build("Test", 1)
 
         interpretation.commentTexts(case) shouldBe setOf("First comment", "Wave is {Wave}", "Third comment")
+    }
+
+    @Test
+    fun `resolveDefinitions replaces by-definition assignments with the stored definition`() {
+        // Given an interpretation holding a by-definition comment assignment
+        val interpretation = Interpretation(caseId)
+        interpretation.add(RuleSummary(id = 1, assignment = AssignValue(c1, ByDefinition)))
+        val definition = CommentTemplate("Given by the definition.")
+
+        // When the definitions are resolved
+        interpretation.resolveDefinitions { if (it == c1) definition else null }
+
+        // Then the assignment carries the definition
+        interpretation.assignments() shouldBe setOf(AssignValue(c1, definition))
+        interpretation.commentTexts(RDRCaseBuilder().build("Test", 1)) shouldBe setOf("Given by the definition.")
     }
 }

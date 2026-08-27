@@ -4,6 +4,9 @@ package io.rippledown.interpretation
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.text.AnnotatedString
@@ -18,17 +21,111 @@ import io.rippledown.utils.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 
 
-@OptIn(ExperimentalTestApi::class)
+/**
+ * The comments shown by the Comments table, in the order of its rows. A row
+ * previewing a replacement contributes the comment being replaced followed by
+ * the one replacing it, as both are shown in that row.
+ */
+fun ComposeTestRule.commentsShown(idPrefix: String = ""): List<String> =
+    onAllNodes(isCommentText(idPrefix), useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .map { node ->
+            node.config.getOrNull(SemanticsProperties.Text)?.joinToString("") { it.text } ?: ""
+        }
+
+/**
+ * The names shown in the name column, in row order. A row previewing a
+ * replacement contributes the name of the comment being replaced followed by
+ * that of the one replacing it.
+ */
+fun ComposeTestRule.commentNamesShown(idPrefix: String = ""): List<String> =
+    onAllNodes(isCommentName(idPrefix), useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .map { node ->
+            node.config.getOrNull(SemanticsProperties.Text)?.joinToString("") { it.text } ?: ""
+        }
+
+/**
+ * The comments of the table read as one string, as they were shown before the
+ * comments became a table, so that an expectation of the whole interpretation
+ * can still be written as one string.
+ */
 fun ComposeTestRule.requireInterpretation(text: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD, useUnmergedTree = true).assertTextEquals(text)
+    commentsShown().joinToString(" ") shouldBe text
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun ComposeTestRule.requireInterpretationForCornerstone(text: String) {
-    onNodeWithContentDescription(INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE, useUnmergedTree = true).assertTextEquals(
-        text
+    commentsShown(CORNERSTONE_COMMENT_ID_PREFIX).joinToString(" ") shouldBe text
+}
+
+fun ComposeTestRule.requireCommentNames(vararg names: String) {
+    commentNamesShown() shouldBe names.toList()
+}
+
+/**
+ * No row is previewing a pending change, which is how the table shows that the
+ * rule session has finished or been cancelled.
+ */
+fun ComposeTestRule.requireNoPendingCommentRows() {
+    onAllNodes(isPendingCommentText(), useUnmergedTree = true).assertCountEquals(0)
+}
+
+private fun isPendingCommentText() = SemanticsMatcher("is a comment being changed") { node ->
+    node.hasDescriptionStartingWithAnyOf(
+        COMMENT_PENDING_ADD_PREFIX,
+        COMMENT_PENDING_REMOVE_PREFIX,
+        COMMENT_PENDING_REPLACE_PREFIX,
+        COMMENT_REPLACEMENT_TEXT_PREFIX
     )
 }
+
+fun ComposeTestRule.requireCommentShownFor(name: String, text: String) {
+    onNode(hasContentDescriptionStartingWith("$COMMENT_TEXT_PREFIX$name"), useUnmergedTree = true)
+        .assertTextEquals(text)
+}
+
+/**
+ * The styles applied within the text of the comment given by the named comment
+ * attribute, which is how the highlighting of an unresolved variable marker
+ * within a comment can be told.
+ */
+fun ComposeTestRule.commentTextStyles(name: String, idPrefix: String = "") =
+    onNode(hasContentDescriptionStartingWith("$idPrefix$COMMENT_TEXT_PREFIX$name"), useUnmergedTree = true)
+        .fetchSemanticsNode()
+        .config[SemanticsProperties.Text]
+        .flatMap { it.spanStyles }
+
+private fun isCommentText(idPrefix: String) = SemanticsMatcher("is a comment text cell") { node ->
+    node.hasDescriptionStartingWithAnyOf(
+        "$idPrefix$COMMENT_TEXT_PREFIX",
+        "$idPrefix$COMMENT_PENDING_ADD_PREFIX",
+        "$idPrefix$COMMENT_PENDING_REMOVE_PREFIX",
+        "$idPrefix$COMMENT_PENDING_REPLACE_PREFIX",
+        "$idPrefix$COMMENT_REPLACEMENT_TEXT_PREFIX"
+    )
+}
+
+private fun isCommentName(idPrefix: String) = SemanticsMatcher("is a comment name chip") { node ->
+    node.hasDescriptionStartingWithAnyOf(
+        "$idPrefix$COMMENT_NAME_PREFIX",
+        "$idPrefix$COMMENT_REPLACEMENT_NAME_PREFIX"
+    )
+}
+
+private fun hasContentDescriptionStartingWith(prefix: String) =
+    SemanticsMatcher("content description starts with $prefix") { node ->
+        node.hasDescriptionStartingWithAnyOf(prefix)
+    }
+
+/**
+ * Matching on the whole prefix, rather than on a substring, keeps the
+ * cornerstone view's rows out of the case's, since its ids only differ by their
+ * leading prefix.
+ */
+private fun SemanticsNode.hasDescriptionStartingWithAnyOf(vararg prefixes: String) =
+    config.getOrNull(SemanticsProperties.ContentDescription)?.any { description ->
+        prefixes.any { description.startsWith(it) }
+    } == true
 
 fun ComposeTestRule.requireChangeInterpretationIconToBeShowing() {
     onNodeWithContentDescription(CHANGE_INTERPRETATION_ICON).assertIsDisplayed()
@@ -266,8 +363,24 @@ fun requireCommentToBeHighlighted(comment: String, layoutResult: TextLayoutResul
 }
 
 fun requireCommentToBeNotHighlighted(layoutResult: TextLayoutResult) {
-    val annotatedString = layoutResult.layoutInput.text
-    annotatedString.spanStyles.size shouldBe 0
+    layoutResult.layoutInput.text.spanStyles.size shouldBe 0
+}
+
+/**
+ * The row of the comment given by the named comment attribute is highlighted,
+ * which its tag reports, the highlight itself being a background that the
+ * semantics tree does not show.
+ */
+fun ComposeTestRule.requireCommentRowToBeHighlighted(name: String, idPrefix: String = "") {
+    onNodeWithTag("$idPrefix$COMMENT_ROW_HOVERED_TAG_PREFIX$name", useUnmergedTree = true).assertExists()
+}
+
+fun ComposeTestRule.requireCommentRowNotToBeHighlighted(name: String, idPrefix: String = "") {
+    onNodeWithTag("$idPrefix$COMMENT_ROW_TAG_PREFIX$name", useUnmergedTree = true).assertExists()
+}
+
+fun ComposeTestRule.requireNoCommentRowToBeHighlighted() {
+    onAllNodesWithTag(COMMENT_ROW_HOVERED_TAG_PREFIX, useUnmergedTree = true).assertCountEquals(0)
 }
 
 fun requireStyleForCommentToHaveBackground(layoutResult: TextLayoutResult, comment: String, color: Color) {
@@ -300,16 +413,14 @@ private fun ComposeTestRule.performMouseInput(action: MouseInjectionScope.() -> 
 }
 
 fun ComposeTestRule.movePointerOverCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
-    val charPositionAbsolute = absoluteCharacterPosition(layoutResult, charIndex)
     performMouseInput {
-        moveTo(charPositionAbsolute)
+        moveTo(absoluteCharacterPosition(layoutResult, charIndex))
     }
 }
 
 fun ComposeTestRule.movePointerToTheRightOfTheCharacter(charIndex: Int, layoutResult: TextLayoutResult) {
-    val charPositionAbsolute = absoluteCharacterPosition(layoutResult, charIndex)
     performMouseInput {
-        moveTo(charPositionAbsolute + Offset(10f, 0f))
+        moveTo(absoluteCharacterPosition(layoutResult, charIndex) + Offset(10f, 0f))
     }
 }
 
@@ -321,14 +432,12 @@ private fun ComposeTestRule.absoluteCharacterPosition(
     val node = onNodeWithText(allTextInLayout, useUnmergedTree = true)
     val bounds = node.fetchSemanticsNode().boundsInRoot
     val charPositionInLayout = layoutResult.getBoundingBox(charIndex)
-    val charPositionAbsolute = Offset(bounds.left + charPositionInLayout.left, bounds.top)
-    return charPositionAbsolute
+    return Offset(bounds.left + charPositionInLayout.left, bounds.top)
 }
 
 fun ComposeTestRule.movePointerOverComment(comment: String, layoutResult: TextLayoutResult) {
     val textInLayout = layoutResult.layoutInput.text.text
-    val charIndex = textInLayout.indexOf(comment)
-    movePointerOverCharacter(charIndex, layoutResult)
+    movePointerOverCharacter(textInLayout.indexOf(comment), layoutResult)
 }
 
 fun ComposeTestRule.movePointerToTheRightOfTheComment(comment: String, layoutResult: TextLayoutResult) {
@@ -342,6 +451,58 @@ fun ComposeTestRule.movePointerBelowTheText(layoutResult: TextLayoutResult) {
     performMouseInput {
         moveTo(Offset(0f, lineBottom + 10f))
     }
+}
+
+/**
+ * Move the pointer over the comment given by the named comment attribute, which
+ * is what shows that comment's tooltip and highlights its row.
+ */
+fun ComposeTestRule.movePointerOverCommentRow(name: String, idPrefix: String = "") {
+    onNode(hasContentDescriptionStartingWith("$idPrefix$COMMENT_TEXT_PREFIX$name"), useUnmergedTree = true)
+        .performMouseInput { moveTo(center) }
+    waitForIdle()
+}
+
+/**
+ * Move the pointer over the first characters of the comment given by the named
+ * comment attribute, rather than over the middle of it.
+ */
+fun ComposeTestRule.movePointerOverStartOfComment(name: String, idPrefix: String = "") {
+    onNode(hasContentDescriptionStartingWith("$idPrefix$COMMENT_TEXT_PREFIX$name"), useUnmergedTree = true)
+        .performMouseInput { moveTo(Offset(2f, center.y)) }
+    waitForIdle()
+}
+
+/**
+ * Move the pointer over the half of a pending replacement row that shows the
+ * comment coming in, as against the one going out.
+ */
+fun ComposeTestRule.movePointerOverReplacementHalf(name: String, idPrefix: String = "") {
+    onNode(
+        hasContentDescriptionStartingWith("$idPrefix$COMMENT_REPLACEMENT_TEXT_PREFIX$name"),
+        useUnmergedTree = true
+    ).performMouseInput { moveTo(center) }
+    waitForIdle()
+}
+
+/**
+ * Move the pointer over the text cell of the row previewing the given kind of
+ * pending change, whose id carries that kind rather than the plain prefix.
+ */
+fun ComposeTestRule.movePointerOverPendingCommentRow(pendingPrefix: String, name: String) {
+    onNode(hasContentDescriptionStartingWith("$pendingPrefix$name"), useUnmergedTree = true)
+        .performMouseInput { moveTo(center) }
+    waitForIdle()
+}
+
+/**
+ * Move the pointer away from every comment, to where no row can be under it.
+ */
+fun ComposeTestRule.movePointerAwayFromTheComments() {
+    performMouseInput {
+        moveTo(Offset(0f, 0f))
+    }
+    waitForIdle()
 }
 
 fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {

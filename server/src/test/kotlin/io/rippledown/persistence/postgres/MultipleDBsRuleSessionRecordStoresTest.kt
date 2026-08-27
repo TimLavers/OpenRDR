@@ -3,7 +3,6 @@ package io.rippledown.persistence.postgres
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.rule.RuleSessionRecord
 import io.rippledown.persistence.RuleSessionRecordStore
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -18,10 +17,6 @@ class MultipleDBsRuleSessionRecordStoresTest: MultipleDBsTest() {
         store2 = kb2.ruleSessionRecordStore()
     }
 
-    @AfterTest
-    override fun cleanup() {
-        super.cleanup()
-    }
 
     override fun reload() {
         super.reload()

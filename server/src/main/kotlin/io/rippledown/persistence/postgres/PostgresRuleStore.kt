@@ -31,7 +31,6 @@ class PostgresRuleStore(private val db: Database): RuleStore {
         return transaction(db) {
             val pgRule = PGRule.new {
                 parentId = prototype.parentId
-                conclusionId = prototype.conclusionId
                 conditionIds = prototype.conditionIdsString()
                 assignment = prototype.assignmentString()
             }
@@ -47,7 +46,6 @@ class PostgresRuleStore(private val db: Database): RuleStore {
             persistentRules.forEach {
                 PGRule.new(it.id) {
                     parentId = it.parentId
-                    conclusionId = it.conclusionId
                     conditionIds = it.conditionIdsString()
                     assignment = it.assignmentString()
                 }
@@ -72,7 +70,6 @@ class PostgresRuleStore(private val db: Database): RuleStore {
                 "Cannot update a rule that is not in the store."
             }
             pgRule.parentId = persistentRule.parentId
-            pgRule.conclusionId = persistentRule.conclusionId
             pgRule.conditionIds = persistentRule.conditionIdsString()
             pgRule.assignment = persistentRule.assignmentString()
         }
@@ -81,21 +78,18 @@ class PostgresRuleStore(private val db: Database): RuleStore {
     private fun persistentRule(pgRule: PGRule) = PersistentRule(
         pgRule.id.value,
         pgRule.parentId,
-        pgRule.conclusionId,
         pgRule.conditionIds,
         PersistentRule.assignmentFromString(pgRule.assignment)
     )
 }
 object PGRules: IntIdTable(name = RULES_TABLE) {
     val parentId = integer("parent").nullable()
-    val conclusionId = integer("conclusion").nullable()
     val conditionIds = varchar("conditions", 1024)
     val assignment = text("assignment").nullable()
 }
 class PGRule(id: EntityID<Int>): IntEntity(id){
     companion object: IntEntityClass<PGRule>(PGRules)
     var parentId by PGRules.parentId
-    var conclusionId by PGRules.conclusionId
     var conditionIds by PGRules.conditionIds
     var assignment by PGRules.assignment
 }

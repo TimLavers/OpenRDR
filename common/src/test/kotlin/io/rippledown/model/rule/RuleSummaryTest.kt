@@ -2,14 +2,17 @@ package io.rippledown.model.rule
 
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Conclusion
+import io.rippledown.model.Attribute
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.condition.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 internal class RuleSummaryTest: ConditionTestBase() {
-    private val conclusion = Conclusion( 1, "Capricious behaviour normal at that age.")
-    private val empty = RuleSummary(8,null, emptySet())
+    private val commentAttribute = Attribute(1, "C1", AttributeKind.COMMENT)
+    private val assignment =
+        AssignValue(commentAttribute, CommentTemplate("Capricious behaviour normal at that age."))
+    private val empty = RuleSummary(8, emptySet())
     private val rs2: RuleSummary
     private val rs3: RuleSummary
 
@@ -19,7 +22,7 @@ internal class RuleSummaryTest: ConditionTestBase() {
         conditions2.add(isNormal(2001, tsh))
         val conditionsFromRoot2 =
             mutableListOf<Condition>(isHigh(1, glucose, ""), isHigh(2, tsh, "")).apply { addAll(conditions2) }
-        rs2 = RuleSummary(12, null, conditions2, conditionsFromRoot2.map { it.asText() })
+        rs2 = RuleSummary(12, conditions2, conditionsFromRoot2.map { it.asText() })
 
         val conditions3 = mutableSetOf<Condition>()
         conditions3.add(isNormal(3000, glucose))
@@ -27,13 +30,13 @@ internal class RuleSummaryTest: ConditionTestBase() {
         conditions3.add(containsText(3002, clinicalNotes, "goats"))
         val conditionsFromRoot3 =
             mutableListOf<Condition>(isHigh(1, glucose, ""), isHigh(2, tsh, "")).apply { addAll(conditions3) }
-        rs3 = RuleSummary(13, conclusion, conditions3, conditionsFromRoot3.map { it.asText() })
+        rs3 = RuleSummary(13, conditions3, conditionsFromRoot3.map { it.asText() }, assignment)
     }
 
     @Test
-    fun noConclusion() {
-        empty.conclusion shouldBe null
-        rs2.conclusion shouldBe null
+    fun noAssignment() {
+        empty.assignment shouldBe null
+        rs2.assignment shouldBe null
     }
 
     @Test
@@ -65,8 +68,8 @@ internal class RuleSummaryTest: ConditionTestBase() {
     }
 
     @Test
-    fun conclusion() {
-        rs3.conclusion shouldBe conclusion
+    fun assignment() {
+        rs3.assignment shouldBe assignment
     }
 
     @Test
@@ -76,7 +79,7 @@ internal class RuleSummaryTest: ConditionTestBase() {
         val sd3 = serializeDeserialize(rs3)
         sd3 shouldBe rs3
         sd3.conditions shouldBe rs3.conditions
-        sd3.conclusion shouldBe conclusion
+        sd3.assignment shouldBe assignment
     }
 
     fun serializeDeserialize(ruleSummary: RuleSummary): RuleSummary {

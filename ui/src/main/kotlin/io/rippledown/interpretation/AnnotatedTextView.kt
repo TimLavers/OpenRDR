@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 
@@ -31,6 +32,8 @@ interface AnnotatedTextViewHandler {
 fun AnnotatedTextView(
     text: AnnotatedString,
     description: String = INTERPRETATION_TEXT_FIELD,
+    modifier: Modifier = Modifier.padding(10.dp),
+    style: TextStyle = TextStyle.Default,
     handler: AnnotatedTextViewHandler
 ) {
     var pointerEnter by remember { mutableStateOf(false) }
@@ -39,7 +42,8 @@ fun AnnotatedTextView(
 
     Text(
         text = text,
-        modifier = Modifier.padding(10.dp)
+        style = style,
+        modifier = modifier
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {

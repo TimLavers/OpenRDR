@@ -1,6 +1,5 @@
 package io.rippledown.model.rule
 
-import io.rippledown.model.Conclusion
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
@@ -26,11 +25,8 @@ class RuleBuildingSession(
     private val materialisedCornerstones = mutableMapOf<RDRCase, RDRCase>()
 
     class TemporaryRuleFactory : RuleFactory {
-        override fun createRuleAndAddToParent(parent: Rule, conclusion: Conclusion?, conditions: Set<Condition>) =
-            Rule(Random.nextInt(), parent, conclusion, conditions)
-
-        override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue, conditions: Set<Condition>) =
-            Rule(Random.nextInt(), parent, null, conditions, mutableSetOf(), assignment)
+        override fun createRuleAndAddToParent(parent: Rule, assignment: AssignValue?, conditions: Set<Condition>) =
+            Rule(Random.nextInt(), parent, conditions, mutableSetOf(), assignment)
     }
 
     init {
@@ -47,14 +43,10 @@ class RuleBuildingSession(
             .filter { case.name != it.name }
             .forEach {
                 copyOfTree.apply(it, resolver)
-                val conclusionsGivenByModifiedTree = it.interpretation.conclusions()
                 val assignmentsGivenByModifiedTree = it.interpretation.assignments()
                 val materialised = tree.materialise(it, resolver)
-                val conclusionsGivenByOriginalTree = it.interpretation.conclusions()
                 val assignmentsGivenByOriginalTree = it.interpretation.assignments()
-                if (conclusionsGivenByModifiedTree != conclusionsGivenByOriginalTree ||
-                    assignmentsGivenByModifiedTree != assignmentsGivenByOriginalTree
-                ) {
+                if (assignmentsGivenByModifiedTree != assignmentsGivenByOriginalTree) {
                     cornerstonesNotExempted.add(it)
                     materialisedCornerstones[it] = materialised
                 }

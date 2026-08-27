@@ -8,6 +8,11 @@ import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
+/**
+ * Starts a rule session to add a comment. The server auto-names the
+ * comment attribute (C1, C2, …); the user can rename it later. See step 14
+ * of documentation/design/repeat_inferencing.md.
+ */
 data class AddComment(
     val comment: String,
     val variables: List<ChatCommentVariable> = emptyList()
@@ -29,6 +34,7 @@ data class AddComment(
         val cornerstoneStatus =
             ruleService.startRuleSessionToAddComment(sessionCase, internalComment, resolvedVariables)
         ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.summary())
+        val response = modelResponder.response(cornerstoneStatus.summary())
+        return response.withCommentName(ruleService.nameOfCommentAttributeInSession())
     }
 }
