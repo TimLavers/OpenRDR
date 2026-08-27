@@ -248,6 +248,70 @@ class RuleSessionManagerAssignmentTest {
         }.message shouldBe didYouMeanFormulaMessage("weigt", "weight / height")
     }
 
+    // --- formulaQuestionFor ---
+
+    @Test
+    fun `a misspelling is offered as the corrected expression`() {
+        // Given a KB with "height", which "hieght" transposes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When the question about the misspelling is asked for
+        val question = rsm.formulaQuestionFor("weight/hieght^2")
+
+        // Then the corrected formula is what the user accepts by saying yes, so
+        // that their acceptance can be acted on without the model re-sending it
+        question shouldBe FormulaQuestion(
+            didYouMeanFormulaMessage("hieght", "weight/height^2"),
+            "weight/height^2"
+        )
+    }
+
+    @Test
+    fun `a name with nothing near it offers the text as a quoted literal`() {
+        // Given a KB with weight, and nothing resembling "age"
+        kb.attributeManager.getOrCreate("weight")
+
+        // When the question about the expression is asked for
+        val question = rsm.formulaQuestionFor("weight / age")
+
+        // Then what is offered is the text as a value, which is what quoting it
+        // makes it: the offer is accepted by assigning it, not by parsing it
+        question shouldBe FormulaQuestion(
+            unknownAttributeInFormulaMessage("age", "weight / age"),
+            "\"weight / age\""
+        )
+    }
+
+    @Test
+    fun `the question is the one raised when the expression is refused`() {
+        // Given a KB in which one name of the expression does not resolve
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // When the expression is refused
+        val refusal = shouldThrow<IllegalStateException> { rsm.valueExpressionFor("weigt / height") }
+
+        // Then the refusal says exactly what the question says. The two are one
+        // so that the offer can never name an expression other than the one the
+        // user was shown
+        refusal.message shouldBe rsm.formulaQuestionFor("weigt / height")?.message
+    }
+
+    @Test
+    fun `text that raises no question has none`() {
+        // Given a KB with two attributes
+        kb.attributeManager.getOrCreate("weight")
+        kb.attributeManager.getOrCreate("height")
+
+        // Then a quoted literal, text with no operator, a formula that parses,
+        // and text naming no attribute at all are all unquestioned
+        rsm.formulaQuestionFor("\"weight / age\"").shouldBeNull()
+        rsm.formulaQuestionFor("diabetic").shouldBeNull()
+        rsm.formulaQuestionFor("weight / height").shouldBeNull()
+        rsm.formulaQuestionFor("non-diabetic").shouldBeNull()
+    }
+
     // --- assign value sessions ---
 
     @Test

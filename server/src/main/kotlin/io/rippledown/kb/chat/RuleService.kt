@@ -45,6 +45,16 @@ interface RuleService {
         valueExpression: String
     ): CornerstoneStatus
 
+    /**
+     * The value expression the user is being offered in place of
+     * [valueExpression], or null if it raises no question. An expression naming
+     * something that is no attribute is put back to the user, either as a
+     * correction or as text to assign, and this is what they accept by saying
+     * yes, so that the acceptance can be acted on without asking the model to
+     * re-send it.
+     */
+    fun offeredValueExpressionFor(valueExpression: String): String?
+
     fun startRuleSessionToRemoveAssignment(viewableCase: ViewableCase, attributeName: String): CornerstoneStatus
     fun startRuleSessionToReplaceAssignment(
         viewableCase: ViewableCase,

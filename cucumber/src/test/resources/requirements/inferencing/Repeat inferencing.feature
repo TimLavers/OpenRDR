@@ -78,7 +78,7 @@ Feature: Repeat inferencing via derived attributes.
       | weight | 93.0 |
     And I start the client application
     And a backdoor rule is built for case Dirac to assign the formula "weight / (height * height)" to the derived attribute "BMI" with no conditions
-    When I see the case Dirac as the current case
+    And I select the case Dirac
     Then the derived value "BMI" should not be present
 
   ##############################################################################

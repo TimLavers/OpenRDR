@@ -563,16 +563,41 @@ class RuleSessionManager(
         if (unresolved != null && nameBeingDefined != null && unresolved.equals(nameBeingDefined, ignoreCase = true)) {
             error("This value cannot be assigned: ${cycleMessageForNames(listOf(nameBeingDefined, nameBeingDefined))}.")
         }
-        val resolvedAName = names.any { attributeNamedExactly(it) != null }
-        if (resolvedAName && unresolved != null) {
-            val nearest = nearestAttributeName(unresolved)
-            error(
-                if (nearest == null) unknownAttributeInFormulaMessage(unresolved, trimmed)
-                else didYouMeanFormulaMessage(unresolved, trimmed.replace(unresolved, nearest))
-            )
-        }
+        formulaQuestionFor(trimmed)?.let { error(it.message) }
         return Literal(trimmed)
     }
+
+    /**
+     * The question put to the user about [expressionText], paired with the
+     * expression they accept by answering yes, or null if the text raises no
+     * question.
+     *
+     * The two travel together so that the answer to a question the server asked
+     * can be acted on by the server: the model is told to re-send the offered
+     * expression when the user accepts, but it re-sends the original often
+     * enough, and the two of them then ask and refuse the same thing for ever.
+     */
+    internal fun formulaQuestionFor(expressionText: String): FormulaQuestion? {
+        val trimmed = expressionText.trim()
+        if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) return null
+        if (!trimmed.contains(FORMULA_OPERATORS)) return null
+        if (FormulaParser(::attributeNamedExactly).parse(trimmed) != null) return null
+        val names = namesInFormula(trimmed)
+        val unresolved = names.firstOrNull { attributeNamedExactly(it) == null } ?: return null
+        if (names.none { attributeNamedExactly(it) != null }) return null
+        val nearest = nearestAttributeName(unresolved)
+            ?: return FormulaQuestion(
+                unknownAttributeInFormulaMessage(unresolved, trimmed),
+                // The offer is of the text as a value, so it is accepted as a
+                // literal, which is what quoting it makes it.
+                "\"$trimmed\""
+            )
+        val corrected = trimmed.replace(unresolved, nearest)
+        return FormulaQuestion(didYouMeanFormulaMessage(unresolved, corrected), corrected)
+    }
+
+    override fun offeredValueExpressionFor(valueExpression: String): String? =
+        formulaQuestionFor(valueExpression)?.offeredExpression
 
     /**
      * The attribute of exactly this name, differing at most in case or in
@@ -1031,6 +1056,12 @@ class RuleSessionManager(
         }
     }
 }
+
+/**
+ * A question the server puts to the user about a value expression, with the
+ * expression they are accepting by answering yes.
+ */
+internal data class FormulaQuestion(val message: String, val offeredExpression: String)
 
 /**
  * Classic Levenshtein edit distance, used to tolerate small misspellings when matching a

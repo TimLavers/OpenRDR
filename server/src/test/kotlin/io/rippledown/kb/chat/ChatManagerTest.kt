@@ -14,6 +14,7 @@ import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_R
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.commentVariableTip
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
+import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -1017,6 +1018,78 @@ class ChatManagerTest {
         // Then - the model is called as normal
         coVerify { conversationService.response(any<String>()) }
         coVerify(exactly = 0) { ruleService.exemptCornerstoneCase() }
+    }
+
+    /**
+     * The server refuses a formula that misspells an attribute name and offers the
+     * correction. The model is told to re-send the offered expression when the user
+     * accepts, but it re-sends the original often enough, and the two of them then
+     * ask and refuse the same thing for ever.
+     */
+    @Test
+    fun `should itself act on the acceptance of an offered value expression`() = runTest {
+        // Given a refused assignment whose correction has been offered to the user
+        givenAnOfferHasBeenMade()
+
+        // When the user accepts it
+        chatManager.response("yes")
+
+        // Then the assignment is made with the offered expression, without asking the model
+        coVerify { ruleService.startRuleSessionToAssignValue(viewableCase, "bmi", "weight/Height^2") }
+        coVerify(exactly = 0) { conversationService.response(match<String> { it.contains("yes") }) }
+    }
+
+    @Test
+    fun `should ask the model when the answer to an offer is not an acceptance`() = runTest {
+        // Given a refused assignment whose correction has been offered to the user
+        givenAnOfferHasBeenMade()
+
+        // When the user answers with something else
+        chatManager.response("no, weight/Height^3")
+
+        // Then the offer is not acted on, and the model is asked as usual
+        coVerify(exactly = 0) {
+            ruleService.startRuleSessionToAssignValue(viewableCase, "bmi", "weight/Height^2")
+        }
+        coVerify { conversationService.response(match<String> { it.contains("weight/Height^3") }) }
+    }
+
+    @Test
+    fun `should act on an offer only once`() = runTest {
+        // Given an offer that has been accepted
+        givenAnOfferHasBeenMade()
+        chatManager.response("yes")
+
+        // When the user says yes again, to whatever the model asked next
+        chatManager.response("yes")
+
+        // Then the assignment is not made a second time
+        coVerify(exactly = 1) { ruleService.startRuleSessionToAssignValue(viewableCase, "bmi", "weight/Height^2") }
+    }
+
+    /**
+     * Puts the chat in the state it is in once the server has refused
+     * `weight/hieght^2` and offered `weight/Height^2` in its place.
+     */
+    private suspend fun givenAnOfferHasBeenMade() {
+        every { viewableCase.derivedValues() } returns emptyList()
+        every { ruleService.attributeForName("bmi") } returns null
+        every { ruleService.offeredValueExpressionFor("weight/hieght^2") } returns "weight/Height^2"
+        every { ruleService.offeredValueExpressionFor("weight/Height^2") } returns null
+        every {
+            ruleService.startRuleSessionToAssignValue(viewableCase, "bmi", "weight/hieght^2")
+        } throws IllegalStateException(didYouMeanFormulaMessage("hieght", "weight/Height^2"))
+        every {
+            ruleService.startRuleSessionToAssignValue(viewableCase, "bmi", "weight/Height^2")
+        } returns CornerstoneStatus()
+        coEvery { conversationService.startConversation() } returns ActionComment(
+            action = ASSIGN_DERIVED_VALUE,
+            attributeName = "bmi",
+            valueExpression = "weight/hieght^2"
+        ).toJsonString()
+        coEvery { conversationService.response(any<String>()) } returns
+                ActionComment(USER_ACTION, message = "Anything else?").toJsonString()
+        chatManager.startConversation(viewableCase)
     }
 
     @Test
