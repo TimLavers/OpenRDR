@@ -187,6 +187,30 @@ class CommentRowsTest {
     }
 
     @Test
+    fun `a replacement is matched by attribute name even when another row matches its text`() {
+        // Given the comment being replaced renders differently for this case, and
+        // another comment happens to have the text carried by the replacement
+        val commentBeingReplaced = RenderedComment(text = "Glucose is 12.0.", name = "C1")
+        val textMatchFromAnotherAttribute = RenderedComment(text = "Glucose is {Glucose}.", name = "C9")
+
+        // When the replacement names the attribute being replaced
+        val rows = commentRowsToDisplay(
+            listOf(commentBeingReplaced, textMatchFromAnotherAttribute),
+            Replacement(
+                originalText = "Glucose is {Glucose}.",
+                replacementText = "Glucose is fine.",
+                attributeName = "C2",
+                replacedAttributeName = "C1"
+            )
+        )
+
+        // Then identity wins over the coincidental text match
+        rows.map { it.highlight } shouldBe listOf(CommentHighlight.REPLACED, CommentHighlight.NONE)
+        rows.first().replacement?.text shouldBe "Glucose is fine."
+        rows.last().replacement shouldBe null
+    }
+
+    @Test
     fun `a removal without an attribute name falls back to matching the text`() {
         // Given a change made without a name, as an older client would send
         val rows = commentRowsToDisplay(listOf(bondi, flippers), Removal(flippers.text))
