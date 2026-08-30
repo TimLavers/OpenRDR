@@ -134,14 +134,15 @@ class RenameAttributeTest {
         // shown under the comment attribute's name
         val case = caseWith("weight" to "93.0")
         rsm.startRuleSessionToAddComment(case, "Overweight.")
-        rsm.currentDiff shouldBe Addition("Overweight.", "C1")
+        rsm.currentDiff shouldBe Addition("Overweight.", "C1", kb.attributeManager.byName("C1")?.id)
 
         // When the comment is renamed
         rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change carries the new name
-        rsm.currentDiff shouldBe Addition("Overweight.", "Beach")
-        rsm.cornerstoneStatus().commentDiff shouldBe Addition("Overweight.", "Beach")
+        rsm.currentDiff shouldBe Addition("Overweight.", "Beach", kb.attributeManager.byName("Beach")?.id)
+        rsm.cornerstoneStatus().commentDiff shouldBe
+                Addition("Overweight.", "Beach", kb.attributeManager.byName("Beach")?.id)
     }
 
     @Test

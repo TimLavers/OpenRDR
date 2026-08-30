@@ -59,7 +59,7 @@ class CornerstoneStatusTest {
             cornerstoneToReview = viewableCase,
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
-            pendingChange = Addition("Go to Bondi.")
+            pendingChange = Addition("Go to Bondi.", "C1", attributeId = 17)
         )
 
         //When
@@ -67,7 +67,7 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.commentDiff shouldBe Addition("Go to Bondi.")
+        deserialized.commentDiff shouldBe Addition("Go to Bondi.", "C1", attributeId = 17)
     }
 
     @Test
@@ -268,7 +268,8 @@ class CornerstoneStatusTest {
                 "pendingChange": {
                     "type": "io.rippledown.model.diff.Addition",
                     "addedText": "Go to Bondi.",
-                    "attributeName": "C1"
+                    "attributeName": "C1",
+                    "attributeId": null
                 },
                 "ruleConditions": [
                     "Sun is in case",

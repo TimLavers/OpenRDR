@@ -697,7 +697,8 @@ class RuleSessionManagerAssignmentTest {
 
         // Then only the comment preview is set, so the Derived attributes panel
         // shows nothing pending
-        rsm.currentDiff shouldBe Addition("Go to Bondi.", "C1")
+        rsm.currentDiff shouldBe
+                Addition("Go to Bondi.", "C1", kb.attributeManager.byName("C1")?.id)
         rsm.currentDerivedValueChange.shouldBeNull()
     }
 

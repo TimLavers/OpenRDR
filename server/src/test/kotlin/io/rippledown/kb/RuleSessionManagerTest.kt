@@ -261,7 +261,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
-        rsm.currentDiff shouldBe Addition(comment, "C1")
+        rsm.currentDiff shouldBe Addition(comment, "C1", kb.attributeManager.byName("C1")?.id)
     }
 
     @Test
@@ -275,7 +275,9 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToAddComment(viewableCase, template, variables)
 
         // Then - the pending comment shows the template, with the variable named
-        rsm.currentDiff shouldBe Addition("Glucose is {Glucose}", "C1")
+        rsm.currentDiff shouldBe Addition(
+            "Glucose is {Glucose}", "C1", kb.attributeManager.byName("C1")?.id
+        )
     }
 
     /**
@@ -304,7 +306,7 @@ class RuleSessionManagerTest {
         rsm.startRuleSessionToAddComment(viewableCase, template, listOf(CommentVariable(bmi.id)))
 
         // Then the variable is shown by name, not marked as missing
-        rsm.currentDiff shouldBe Addition("BMI is {BMI}", "C1")
+        rsm.currentDiff shouldBe Addition("BMI is {BMI}", "C1", kb.attributeManager.byName("C1")?.id)
     }
 
     // --- startRuleSessionToRemoveComment ---
@@ -955,7 +957,10 @@ class RuleSessionManagerTest {
 
         // Then the recorded change names the comment attribute the server minted
         rsm.isRuleSessionActive() shouldBe true
-        rsm.currentDiff shouldBe diff.copy(attributeName = "C1")
+        rsm.currentDiff shouldBe diff.copy(
+            attributeName = "C1",
+            attributeId = kb.attributeManager.byName("C1")?.id
+        )
     }
 
     @Test

@@ -54,7 +54,8 @@ class RuleSessionRefusalTest {
         rsm.startRuleSessionToAddComment(case, "Patient is diabetic")
 
         // Then the change is previewed, naming the comment attribute
-        rsm.pendingChange shouldBe Addition("Patient is diabetic", "C1")
+        rsm.pendingChange shouldBe
+                Addition("Patient is diabetic", "C1", kb.attributeManager.byName("C1")?.id)
         rsm.nameOfCommentAttributeInSession() shouldBe "C1"
     }
 

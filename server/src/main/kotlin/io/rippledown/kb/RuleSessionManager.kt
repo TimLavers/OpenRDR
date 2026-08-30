@@ -157,7 +157,7 @@ class RuleSessionManager(
         val attribute = commentAttributeFor(template)
         return startCommentSession(
             case,
-            Addition(template.textWithVariableNames(), attribute.name),
+            Addition(template.textWithVariableNames(), attribute.name, attribute.id),
             attribute,
             attribute,
             ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition))

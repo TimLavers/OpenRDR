@@ -520,7 +520,10 @@ internal class KBEndpointTest {
         endpoint.startRuleSession(sessionStartRequest)
 
         //Then the recorded change names the comment attribute the server minted
-        endpoint.session.ruleSessionManager.currentDiff shouldBe diff.copy(attributeName = "C1")
+        endpoint.session.ruleSessionManager.currentDiff shouldBe diff.copy(
+            attributeName = "C1",
+            attributeId = endpoint.kb.attributeManager.byName("C1")?.id
+        )
     }
 
     @Test
@@ -552,7 +555,10 @@ internal class KBEndpointTest {
         val status = endpoint.startRuleSession(sessionStartRequest)
 
         //Then
-        status.commentDiff shouldBe diff.copy(attributeName = "C1")
+        status.commentDiff shouldBe diff.copy(
+            attributeName = "C1",
+            attributeId = endpoint.kb.attributeManager.byName("C1")?.id
+        )
     }
 
     @Test

@@ -31,12 +31,13 @@ data class CommentRowState(
  * The rows the Comments panel should draw for [comments], given the [diff] the
  * rule session in progress is about to make.
  *
- * A pending addition is not on the case yet, so a row for it is appended: a new
- * comment attribute has the highest id, and comments are shown in attribute id
- * order, so this is where the comment will sit once the rule is committed. A
- * pending removal or replacement applies to a row that is already there, and
- * that row shows the comment as the change gives it: a comment with variables is
- * previewed as the template its rule defines, not as it renders for this case.
+ * A pending addition is not on the case yet, so a row is inserted in comment
+ * attribute id order, where it will sit once the rule is committed. The
+ * attribute can be an existing one that is not on this case, so it need not go
+ * last. A pending removal or replacement applies to a row that is already
+ * there, and that row shows the comment as the change gives it: a comment with
+ * variables is previewed as the template its rule defines, not as it renders
+ * for this case.
  *
  * @param ruleConditions the conditions of the rule being built, shown in the
  *   tooltip of a comment that is being added or is replacing another, since
@@ -86,23 +87,32 @@ fun commentRowsToDisplay(
         // The comment can already be on the case: the rule has been committed
         // but the client has not yet been told the session is over. Showing the
         // pending row as well would show the comment twice.
-        is Addition -> comments.map { CommentRowState(it) } +
-                if (comments.any { it.isThatOf(diff.addedText, diff.attributeName) }) {
-                    emptyList()
-                } else {
-                    listOf(
-                        CommentRowState(
-                            comment = RenderedComment(
-                                text = diff.addedText,
-                                conditions = ruleConditions,
-                                name = diff.attributeName
-                            ),
-                            highlight = CommentHighlight.ADDED
-                        )
-                    )
-                }
+        is Addition -> {
+            val existingRows = comments.map { CommentRowState(it) }
+            if (comments.any { it.isThatOf(diff.addedText, diff.attributeName) }) {
+                existingRows
+            } else {
+                val addedRow = CommentRowState(
+                    comment = RenderedComment(
+                        text = diff.addedText,
+                        conditions = ruleConditions,
+                        name = diff.attributeName,
+                        attributeId = diff.attributeId
+                    ),
+                    highlight = CommentHighlight.ADDED
+                )
+                (existingRows + addedRow).inAttributeOrderIfKnown()
+            }
+        }
     }
 }
+
+private fun List<CommentRowState>.inAttributeOrderIfKnown(): List<CommentRowState> =
+    if (all { it.comment.attributeId != null }) {
+        sortedBy { it.comment.attributeId }
+    } else {
+        this
+    }
 
 /**
  * Whether this is the comment the given change concerns. The attribute name
