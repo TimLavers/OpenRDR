@@ -145,8 +145,7 @@ class RuleSessionManager(
      * Comments are comment attributes: adding one gets or creates the
      * attribute whose definition is the comment's text, and builds a rule
      * assigning it by definition. A new attribute is auto-named (C1, C2, …)
-     * and can be renamed by the user later. See "Phase 2 — comments become
-     * derived attributes" in documentation/design/repeat_inferencing.md.
+     * and can be renamed by the user later.
      */
     internal fun startRuleSessionToAddComment(
         case: RDRCase,
@@ -195,8 +194,7 @@ class RuleSessionManager(
     /**
      * Each comment text has its own attribute, so the replacement is a new
      * (or existing) attribute for the replacement text: the replacing rule
-     * assigns it, and leaf-most suppression retracts the original. See
-     * "Phase 2" in documentation/design/repeat_inferencing.md.
+     * assigns it, and leaf-most suppression retracts the original.
      */
     internal fun startRuleSessionToReplaceComment(
         case: RDRCase,
@@ -473,9 +471,9 @@ class RuleSessionManager(
      * Renames a comment or derived attribute. Renaming is not part of rule
      * building — it is allowed whether or not a session is in progress — and
      * changes the attribute's name only, since everything refers to it by id.
-     * External attributes cannot be renamed until the alias map of step 20 of
-     * documentation/design/repeat_inferencing.md exists, because a case
-     * arriving with the old name would create a new attribute.
+     * External attributes cannot be renamed until persisted aliases map the
+     * names sent by the external system to renamed attributes; otherwise a
+     * case arriving with the old name would create a new attribute.
      */
     override fun renameAttribute(currentName: String, newName: String): String {
         val attribute = attributeForName(currentName)
@@ -675,17 +673,17 @@ class RuleSessionManager(
     }
 
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
-        check(ruleSession != null) { "No rule session in progress." }
+        val session = activeRuleSession("No rule session in progress.")
         val condition = kb.conditionManager.getById(conditionId)
-        ruleSession!!.removeCondition(condition)
+        session.removeCondition(condition)
         return cornerstoneStatus(null)
     }
 
     override fun removeConditionByText(conditionText: String): CornerstoneStatus {
-        check(ruleSession != null) { "No rule session in progress." }
-        val condition = ruleSession!!.conditions.firstOrNull { it.asText() == conditionText }
+        val session = activeRuleSession("No rule session in progress.")
+        val condition = session.conditions.firstOrNull { it.asText() == conditionText }
             ?: throw IllegalArgumentException("Condition not found in current rule session: $conditionText")
-        ruleSession!!.removeCondition(condition)
+        session.removeCondition(condition)
         return cornerstoneStatus(null)
     }
 
@@ -700,18 +698,16 @@ class RuleSessionManager(
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
 
-    fun conflictingCasesInCurrentRuleSession(): List<RDRCase> {
-        checkSession()
-        return ruleSession!!.cornerstoneCases()
-    }
+    fun conflictingCasesInCurrentRuleSession(): List<RDRCase> = activeRuleSession().cornerstoneCases()
 
     override fun addConditionToCurrentRuleSession(condition: Condition) {
-        checkSession()
+        val session = activeRuleSession()
         // Align the provided condition with that in the condition manager.
-        val conditionToUse = if (condition.id == null) {
+        val conditionId = condition.id
+        val conditionToUse = if (conditionId == null) {
             kb.conditionManager.getOrCreate(condition)
         } else {
-            val existing = kb.conditionManager.getById(condition.id!!)
+            val existing = kb.conditionManager.getById(conditionId)
             // Check that there's no confusion between the condition provided
             // and the one that already exists (here we're defending against test code
             // that might have mixed things up).
@@ -721,27 +717,26 @@ class RuleSessionManager(
             existing
         }
         cycleMessageFor(conditionToUse)?.let { throw IllegalArgumentException(it) }
-        ruleSession!!.addCondition(conditionToUse)
+        session.addCondition(conditionToUse)
     }
 
     override fun commitCurrentRuleSession() {
-        checkSession()
+        val session = activeRuleSession()
         // Internal invariant: the entry points refuse cycle-creating
         // conditions, so this should never fire.
-        ruleSession!!.conditions.forEach { condition ->
+        session.conditions.forEach { condition ->
             check(cycleMessageFor(condition) == null) {
                 "Cannot commit rule session: ${cycleMessageFor(condition)}"
             }
         }
-        val rulesAdded = ruleSession!!.commit()
+        val rulesAdded = session.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
-        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(ruleSession!!.case)
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
         ruleSession = null
         currentChange = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
-        checkRuleSessionHistoryConsistency()
         sendCasesInfo()
     }
 
@@ -760,7 +755,9 @@ class RuleSessionManager(
     fun ruleSessionHistories() = kb.ruleSessionRecorder.allRuleSessionHistories()
 
     override fun undoLastRuleSession() {
-        val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()!!
+        val record = checkNotNull(kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()) {
+            "There are no rules to undo."
+        }
         record.idsOfRulesAddedInSession.forEach {
             val toDelete = kb.ruleTree.ruleForId(it)
             kb.ruleManager.deleteLeafRule(toDelete)
@@ -768,15 +765,14 @@ class RuleSessionManager(
         kb.ruleSessionRecorder.delete(kb.ruleSessionRecorder.allRuleSessionHistories().last())
     }
 
-    private fun checkSession() {
+    private fun activeRuleSession(message: String = "Rule session not started."): RuleBuildingSession {
         logger.debug("checking session")
-        check(ruleSession != null) { "Rule session not started." }
+        return checkNotNull(ruleSession) { message }
     }
 
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
         // Materialise the case so that derived attributes assigned by existing
-        // rules are visible to the suggestion generators. See step 8a of
-        // documentation/design/repeat_inferencing.md.
+        // rules are visible to the suggestion generators.
         val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
         val ctx = SuggestionContext(
             sessionCase = materialisedCase,
@@ -808,10 +804,10 @@ class RuleSessionManager(
      * after the new set of conditions have been applied
      */
     fun updateCornerstone(request: UpdateCornerstoneRequest): CornerstoneStatus {
-        checkSession()
+        val session = activeRuleSession()
 
         //replace the conditions in the current session with the updated ones
-        ruleSession!!.conditions = request.conditionList.conditions.toMutableSet()
+        session.conditions = request.conditionList.conditions.toMutableSet()
 
         //update the cornerstone status
         val currentCC = request.cornerstoneStatus.cornerstoneToReview
@@ -824,17 +820,17 @@ class RuleSessionManager(
      * @return the CornerstoneStatus for the current session after the specified cornerstone has been exempted
      */
     fun exemptCornerstone(index: Int): CornerstoneStatus {
-        checkSession()
+        val session = activeRuleSession()
 
-        val currentCornerstones = ruleSession!!.cornerstoneCases()
+        val currentCornerstones = session.cornerstoneCases()
         if (index < 0 || currentCornerstones.isEmpty()) {
             selectedCornerstone = null
             return CornerstoneStatus()
         }
         val toExempt = currentCornerstones[index]
-        ruleSession!!.exemptCornerstone(toExempt)
+        session.exemptCornerstone(toExempt)
 
-        val cornerstones = ruleSession!!.cornerstoneCases()
+        val cornerstones = session.cornerstoneCases()
         return if (cornerstones.isEmpty()) {
             selectedCornerstone = null
             CornerstoneStatus()
@@ -851,8 +847,7 @@ class RuleSessionManager(
      * @return the CornerstoneStatus for the current session after the specified cornerstone has been selected
      */
     fun selectCornerstone(index: Int): CornerstoneStatus {
-        checkSession()
-        val cornerstones = ruleSession!!.cornerstoneCases()
+        val cornerstones = activeRuleSession().cornerstoneCases()
         val caseInstance = cornerstones[index]
         // Because Interpretation is not immutable, we need to copy
         // the case with a new interpretation (copy is not deep)
@@ -869,9 +864,9 @@ class RuleSessionManager(
      * @return the CornerstoneStatus for the current session where the specified cornerstone should remain selected if it is still in the list of cornerstones
      */
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
-        checkSession()
-        val cornerstones: List<RDRCase> = ruleSession!!.cornerstoneCases()
-        val conditionTexts = ruleSession!!.conditions.map { it.asText() }
+        val session = activeRuleSession()
+        val cornerstones: List<RDRCase> = session.cornerstoneCases()
+        val conditionTexts = session.conditions.map { it.asText() }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
             pendingChange = pendingChange,
             ruleConditions = conditionTexts
@@ -928,7 +923,8 @@ class RuleSessionManager(
     }
 
     override fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase {
-        val copied = kb.copyCaseAsFavourite(case.id!!, newName)
+        val caseId = requireNotNull(case.id) { "Cannot copy a case that has no persisted id." }
+        val copied = kb.copyCaseAsFavourite(caseId, newName)
         sendCasesInfo()
         return copied
     }
@@ -949,11 +945,7 @@ class RuleSessionManager(
         runBlocking { webSocketManager?.sendCasesInfo(casesInfo()) }
     }
 
-    private fun checkRuleSessionHistoryConsistency() {
-        val idsOfNonRootRulesInTree = kb.ruleTree.rules().filter { it.parent != null }.map { it.id }.toSet()
-    }
-
-    fun conditionForExpression(expression: String) = conditionForExpression(ruleSession!!.case, expression)
+    fun conditionForExpression(expression: String) = conditionForExpression(activeRuleSession().case, expression)
 
     private fun viewableCase(case: RDRCase): ViewableCase {
         return kb.viewableCase(case)

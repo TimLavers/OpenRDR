@@ -63,6 +63,25 @@ class RuleManagerTest {
     }
 
     @Test
+    fun `a stored assignment referring to an unknown attribute prevents the knowledge base from loading`() {
+        // Given a persisted child rule assigning an attribute the KB does not have
+        ruleStore.create(
+            PersistentRule(
+                id = null,
+                parentId = ruleManager.ruleTree().root.id,
+                conditionIds = emptySet(),
+                assignment = AssignValue(Attribute(99, "Whatever"), io.rippledown.model.rule.Literal("value"))
+            )
+        )
+
+        // When the rule manager rebuilds the persisted tree
+        // Then the inconsistent persisted state is reported
+        shouldThrow<NoSuchElementException> {
+            RuleManager(conditionManager, attributeManager, ruleStore)
+        }
+    }
+
+    @Test
     fun createRuleAndAddToParent() {
         val root = ruleManager.ruleTree().root
 

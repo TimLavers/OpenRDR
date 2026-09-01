@@ -157,8 +157,8 @@ attribute id, not the name.
 The report is based on the set of comment-attribute values present on the case, **not** on the derived attributes, and
 in fact, this is the key distinction between them as far as the user is concerned. The AI report generator receives
 these named comment attributes as its inputs; a meaningful name (if the user has assigned one) is a useful signal about
-the comment's role. Comment ordering is maintained, even though it is less important as
-the AI produces the report.
+the comment's role. Comments are currently shown in attribute-id order. Persisted, user-controlled comment ordering is
+planned in [comment_naming_and_attribute_ordering.md](comment_naming_and_attribute_ordering.md), but is not implemented.
 
 The existing comment actions map directly onto assignment:
 
@@ -213,7 +213,7 @@ import/export.
 
 ## Inference algorithm
 
-`RuleTree.apply` currently formerly made a single depth-first pass. This changes to
+`RuleTree.apply` formerly made a single depth-first pass. It now uses
 a fixpoint iteration, applied wherever a case is interpreted (`KB.interpret`,
 including cornerstone evaluation during rule building):
 
@@ -327,8 +327,9 @@ Therefore, there is no need for a cycle check when the rule is committed.
 
 1. **A comment is a type of derived attribute**. One rule action kind
    for the whole system: assign a value to a derived attribute.
-2. **Derived attribute ordering**: same process as for external attribute ordering. A new derived attribute will be last
-   on the list, but the user can change this.
+2. **Derived attribute ordering**: derived values are currently sorted by attribute name. Persisted, user-controlled
+   ordering is planned in [comment_naming_and_attribute_ordering.md](comment_naming_and_attribute_ordering.md), but is
+   not implemented.
 3. **Episodic derived attributes**: deferred. Scenarios where derived
    values in earlier episodes would be useful are imaginable (e.g.
    conditions like `previous Diabetes status is "diabetic"`, or trends in
@@ -381,5 +382,5 @@ comments only), while still unifying the machinery underneath.
 - Assigning the value of a derived attribute using an AI rather than with a rule ("please read the clinical notes and
   assign diabetic status to be "diabetes" if indicated")
 - Referring to derived attributes from *other* knowledge bases.
-- Historical derived values in earlier episodes (see resolved decision).
+- Historical derived values in earlier episodes.
 - Conditions on report structure (e.g. that would set the ordering or filtering of report sections).

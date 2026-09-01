@@ -19,10 +19,7 @@ import io.rippledown.utils.serializeDeserialize
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-/**
- * Renaming a comment or derived attribute. See step 14 of
- * documentation/design/repeat_inferencing.md.
- */
+/** Renaming a comment or derived attribute. */
 class RenameAttributeTest {
     private lateinit var kb: KB
     private lateinit var rsm: RuleSessionManager

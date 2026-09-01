@@ -32,11 +32,6 @@ data class IntRangeData(val start: Int, val endInclusive: Int) {
 }
 
 /**
- * The maximum length of a comment.
- */
-const val MAXIMUM_COMMENT_LENGTH = 2048
-
-/**
  * The given comment text truncated to at most 20 characters, appending
  * "..." if truncated, for use in confirmation messages. If the truncation
  * point falls inside a `{attributeName}` variable rendering, the whole

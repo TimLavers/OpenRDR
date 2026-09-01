@@ -146,8 +146,8 @@ class RelevanceRankerTest {
     }
 
     /**
-     * Comment-overlap from an assignment-based action (Phase 2 comment
-     * attributes) must rank a matching candidate above an alphabetically
+     * Comment-overlap from an assignment-based comment action must rank a
+     * matching candidate above an alphabetically
      * earlier unrelated one, just as the conclusion-based action does.
      */
     @Test

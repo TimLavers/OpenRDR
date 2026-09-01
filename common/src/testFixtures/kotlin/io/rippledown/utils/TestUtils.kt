@@ -83,8 +83,7 @@ fun createCase(
 
 /**
  * A comment attribute whose definition is the given text. Each comment text
- * has its own attribute, as in a knowledge base built through the chat. See
- * "Phase 2" in documentation/design/repeat_inferencing.md.
+ * has its own attribute, as in a knowledge base built through the chat.
  */
 fun commentAssignment(id: Int, text: String) =
     AssignValue(Attribute(id, commentAttributeName(id), AttributeKind.COMMENT), CommentTemplate(text))

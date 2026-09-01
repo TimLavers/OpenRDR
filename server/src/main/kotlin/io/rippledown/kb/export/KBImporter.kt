@@ -12,8 +12,7 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
 
         // Comments are comment attributes, so an export that still has
         // conclusions predates that and cannot be imported. Reject it before
-        // creating or populating any persistent state. See step 16 of
-        // documentation/design/repeat_inferencing.md.
+        // creating or populating any persistent state.
         check(conclusionsDirectory.listFiles().isNullOrEmpty()) {
             "This knowledge base was exported with conclusions, which are no longer supported."
         }

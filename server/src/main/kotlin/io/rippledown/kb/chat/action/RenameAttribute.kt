@@ -8,8 +8,7 @@ import io.rippledown.model.chat.ChatResponse
 /**
  * Renames a comment or derived attribute. Renaming changes the attribute's
  * name only, so it is not rule building: no rule session is started and it is
- * allowed whether or not a session is in progress. See step 14 of
- * documentation/design/repeat_inferencing.md.
+ * allowed whether or not a session is in progress.
  */
 data class RenameAttribute(
     val attributeName: String,

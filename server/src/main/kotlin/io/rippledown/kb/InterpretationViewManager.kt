@@ -5,9 +5,9 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.*
 
 /**
- * Comment ordering is not significant (resolved decision 4 of
- * documentation/design/repeat_inferencing.md), so comments are shown in
- * attribute id order, which merely makes a case's report deterministic.
+ * Comments are currently shown in attribute-id order. This makes their order
+ * deterministic, but it is not persisted user-controlled ordering; that work
+ * is not implemented.
  */
 class InterpretationViewManager {
 
@@ -35,8 +35,7 @@ class InterpretationViewManager {
      * The comment-attribute assignments in the interpretation, in
      * attribute id order. An unresolved ByDefinition assignment
      * contributes no comment, matching interpretation, where a missing
-     * definition makes no assignment. See "Phase 2 — comments become
-     * derived attributes" in documentation/design/repeat_inferencing.md.
+     * definition makes no assignment.
      */
     private fun commentAssignments(interpretation: Interpretation): List<AssignValue> =
         interpretation.assignments()

@@ -27,6 +27,7 @@ class DerivedValuesPanelTest {
             }
 
             // Then the heading and the empty-state text are shown
+            onNodeWithText(DERIVED_ATTRIBUTES_LABEL).assertIsDisplayed()
             onNodeWithContentDescription(DERIVED_VALUES_TOGGLE).assertIsDisplayed()
             onNodeWithContentDescription(DERIVED_ATTRIBUTES_NONE).assertIsDisplayed()
         }

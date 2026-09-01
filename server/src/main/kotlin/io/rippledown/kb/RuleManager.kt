@@ -91,12 +91,11 @@ class RuleManager(
     /**
      * The stored assignment with its attributes replaced by those held by the
      * attribute manager, so that a rule built before an attribute was renamed
-     * shows the attribute's current name. An assignment referring to an
-     * attribute the manager does not know is left as it was stored.
+     * shows the attribute's current name. A missing attribute is inconsistent
+     * persisted state and prevents the knowledge base loading.
      */
     private fun aligned(assignment: AssignValue?): AssignValue? {
         if (assignment == null) return null
-        return runCatching { assignment.alignAttributes { id -> attributeProvider.getById(id) } }
-            .getOrDefault(assignment)
+        return assignment.alignAttributes { id -> attributeProvider.getById(id) }
     }
 }
