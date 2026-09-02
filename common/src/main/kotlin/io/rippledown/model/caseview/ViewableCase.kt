@@ -25,11 +25,7 @@ data class ViewableCase(
         check(case.attributes == viewProperties.attributes.toSet()) {
             "Case attributes do not match view properties attributes:\n\nCase attributes: ${case.attributes}\n\nView properties attributes: ${viewProperties.attributes}"
         }
-        val interpretation = viewableInterpretation.interpretation
-        check(
-            case.interpretation.caseId == interpretation.caseId &&
-                    case.interpretation.ruleSummaries == interpretation.ruleSummaries
-        ) {
+        check(case.interpretation == viewableInterpretation.interpretation) {
             "Case interpretation does not match viewable interpretation:\n\nCase interpretation: ${case.interpretation}\n\nViewable interpretation: ${viewableInterpretation.interpretation}"
         }
     }

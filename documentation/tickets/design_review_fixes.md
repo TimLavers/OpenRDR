@@ -174,12 +174,30 @@ agreed order of work. Update the status as each is finished.
   directly; the `runCatching { … }.getOrDefault(…)` wrappers have now been removed from `RuleManager` and
   `DerivedDefinitionManager` as well. A stored rule or definition referring to an attribute id the KB does not hold now
   prevents the KB from loading, with regression coverage for both paths.
+
+  This left `:server:test` red in six places, all in `RuleManagerTest`, and all the fixture's fault rather than the
+  production change's. Its comments came from the `CommentFactory` test helper, which mints a comment attribute without
+  telling the attribute manager, so every rebuild of the tree then failed to find the attribute — exactly the
+  inconsistency the removal is meant to expose, manufactured by the test. The comments now come from
+  `attributeManager.createCommentAttribute()`. The new regression test failed for a second reason: its unknown attribute
+  was `EXTERNAL`, which `AssignValue` refuses before the manager is ever consulted, so it threw
+  `IllegalArgumentException` and never reached the behaviour it was written for. The attribute is now `COMMENT`.
 - **`ActionComment` has one value-expression field.** The unused `replacementValueExpression` field and the mapping that
   let it overwrite `valueExpression` have been removed. Derived-value assignment, replacement and definition editing all
   use the documented `valueExpression` field.
-- **`ViewableCase` validates the whole interpretation payload.** Its constructor now compares both the case id and the
-  rule summaries, instead of relying on `Interpretation` data-class equality, which only includes `caseId`. A regression
-  test supplies different rule results for the same case and proves that construction is refused.
+- **`ViewableCase` cannot validate more than the case id — reverted.** The constructor was changed to compare the rule
+  summaries as well, on the grounds that `Interpretation` equality is `caseId`-only. That invariant does not hold:
+  `KB.viewableCase` passes `withResolvedDefinitions(...)`, a display copy in which every `ByDefinition` assignment is
+  replaced by the attribute's stored definition, so the summaries differ by design. The check therefore fired on every
+  comment rule, `POST /api/buildRule` returned 500, and all 30 chat cukes failed in their setup step. `:common:test` was
+  red as well, with four `ViewableCaseTest` fixtures refused and the new regression test throwing
+  `IllegalArgumentException` from `AssignValue`, whose attribute must be KB-assigned — so it never exercised the check
+  at all.
+
+  Comparing only the rule *ids* would survive display resolution, but it buys no known defect and turns any future
+  display inconsistency into a dead client rather than a slightly wrong panel. The check is back to case identity, and
+  the review finding is withdrawn: the viewable interpretation is a rewritten copy of the case's own, so nothing
+  stronger than the case id is a property of both.
 - **`RuleSessionManager` contains no `!!`.** Session-dependent operations now obtain one checked `RuleBuildingSession`
   local, condition and case ids are explicitly required, and undo reports when there is no recorded session.
 - **Stale conclusion-era test names are gone.** The three script suites and files are now `AddingCommentsTest`,

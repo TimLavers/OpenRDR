@@ -1,6 +1,5 @@
 package io.rippledown.model.caseview
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
@@ -23,25 +22,6 @@ class ViewableCaseTest {
         val viewableCase = ViewableCase(rdrCase, caseViewProperties())
         viewableCase.case shouldBe rdrCase
         viewableCase.viewProperties shouldBe caseViewProperties()
-    }
-
-    @Test
-    fun `construction refuses a viewable interpretation with different rules`() {
-        // Given a case and a viewable interpretation for the same case id but different rule results
-        val rdrCase = createCase("Case1")
-        val differentInterpretation = Interpretation(rdrCase.caseId).apply {
-            add(RuleSummary(id = 99, assignment = AssignValue(tsh, Literal("different"))))
-        }
-
-        // When a viewable case is constructed from the mismatched interpretation
-        // Then the mismatch is refused even though the case ids agree
-        shouldThrow<IllegalStateException> {
-            ViewableCase(
-                rdrCase,
-                caseViewProperties(),
-                ViewableInterpretation(differentInterpretation)
-            )
-        }
     }
 
     @Test
