@@ -226,9 +226,20 @@ Unit tests after each step, from the repo root:
   --tests "io.rippledown.util.*" --tests "io.rippledown.persistence.inmemory.*" --console=plain
 ```
 
-Last run: common green, 1269 server tests, 0 failures.
+Last run, after the `ViewableCase` revert and the `RuleManagerTest` fixture fix: `:common:test`, `:server:test` (1290
+tests over the non-Postgres packages) and `:ui:test` all green.
 
 Focused verification after the dead-code removal: `ValueExpressionTest` passed and `:server:compileKotlin` succeeded.
+
+`.\gradlew.bat :cucumber:chat`: 38 scenarios, 721 steps, all passed, in 10m 8s. This is the run that had failed 30 of 30
+in its setup step on the `ViewableCase` check.
+
+`.\gradlew.bat :cucumber:conditions`: all passed, after a fix to `InterpretationPO.movePointerOverCentreOf`. `Some
+suggested conditions can be modified before being added` had failed twice over, waiting the full ten seconds for the
+condition tooltip. The rule itself had committed and the comment was on screen, so only the hover had failed: a
+`Robot.mouseMove` to where the pointer already is generates no event, and since the window occupies the same screen
+position in every scenario, the scenario before can leave the pointer on the very pixel being moved to — whereupon
+neither the first attempt nor any retry of it moves anything. The pointer now always arrives from somewhere else.
 
 The cuke `The user should be able to accept the chatbot's correction of a misspelt attribute name` now covers the new
 "Did you mean …?" confirmation and the accepted corrected formula. It still needs a real LLM-and-GUI cuke run by the

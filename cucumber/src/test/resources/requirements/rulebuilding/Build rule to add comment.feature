@@ -28,7 +28,6 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     When I build a rule to add the existing comment "Go to Malabar."
     Then the interpretation should be "Go to Malabar."
 
-  @single
   Scenario: A pending existing comment should be previewed in comment attribute order
     # C1 and C3 are given to Manly, while C2 is initially given only to Bondi.
     # Adding C2 to Manly therefore reuses an older comment attribute between the
