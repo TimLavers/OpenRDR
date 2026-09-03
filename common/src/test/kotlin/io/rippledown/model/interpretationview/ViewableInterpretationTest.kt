@@ -2,10 +2,7 @@ package io.rippledown.model.interpretationview
 
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.model.Attribute
-import io.rippledown.model.AttributeKind
-import io.rippledown.model.CaseId
-import io.rippledown.model.Interpretation
+import io.rippledown.model.*
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.AssignValue
@@ -64,6 +61,21 @@ class ViewableInterpretationTest {
         restored.latestText() shouldBe "First comment"
 
         checkSerializationIsThreadSafe(interp)
+    }
+
+    @Test
+    fun `serialisation keeps a rendered comment's attribute id`() {
+        // Given a view containing a rendered comment with its ordering identity
+        val view = ViewableInterpretation(
+            interp,
+            renderedComments = listOf(RenderedComment("First comment", name = "C1", attributeId = 100))
+        )
+
+        // When the view is serialized and deserialized
+        val restored = serializeDeserialize(view)
+
+        // Then the comment keeps the id used to order pending additions
+        restored.renderedComments.single().attributeId shouldBe 100
     }
 
     @Test

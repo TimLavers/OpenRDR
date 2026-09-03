@@ -4,9 +4,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
-class AddingConclusionsTest {
+class AddingCommentsTest {
     @Test
-    fun `add conclusion`() {
+    fun `add comment`() {
         build {
             case("Case1", "a")
             requireInterpretation("Case1")
@@ -22,7 +22,7 @@ class AddingConclusionsTest {
     }
 
     @Test
-    fun `add two conclusions`() {
+    fun `add two comments`() {
         build {
             case("Case1", "a")
             session {
@@ -44,13 +44,13 @@ class AddingConclusionsTest {
     }
 
     @Test
-    fun `all cornerstones should be presented when adding a conclusion`() {
+    fun `all cornerstones should be presented when adding a comment`() {
         build {
             cornerstoneCase("1", "a")
             cornerstoneCase("2", "b")
             cornerstoneCase("3", "c")
             cornerstoneCase("4", "abc")
-            case("1","a")
+            case("1", "a")
             case("2", "b")
             case("3", "c")
             case("4", "abc")

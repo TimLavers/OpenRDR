@@ -94,6 +94,7 @@ const val REPORT_DISCLAIMER =
             "It may be incorrect. Please review it before releasing to any 3rd party."
 
 // Derived attributes panel constants
+const val DERIVED_ATTRIBUTES_LABEL = "Derived attributes"
 const val DERIVED_VALUES_TOGGLE = "DERIVED_VALUES_TOGGLE"
 const val DERIVED_VALUES_PANEL = "DERIVED_VALUES_PANEL"
 const val DERIVED_VALUE_ROW_PREFIX = "DERIVED_VALUE_ROW_"

@@ -3,12 +3,14 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.Attribute
-import io.rippledown.model.CommentFactory
+import io.rippledown.model.AttributeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.isHigh
 import io.rippledown.model.condition.isLow
 import io.rippledown.model.condition.isNormal
 import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.CommentTemplate
+import io.rippledown.model.rule.Literal
 import io.rippledown.model.rule.Rule
 import io.rippledown.persistence.PersistentRule
 import io.rippledown.persistence.RuleStore
@@ -20,7 +22,6 @@ import kotlin.test.Test
 
 class RuleManagerTest {
     private lateinit var attributeManager: AttributeManager
-    private lateinit var commentFactory: CommentFactory
     private lateinit var conditionManager: ConditionManager
     private lateinit var ruleStore: RuleStore
     private lateinit var ruleManager: RuleManager
@@ -39,20 +40,22 @@ class RuleManagerTest {
     @BeforeTest
     fun setup() {
         attributeManager = AttributeManager(InMemoryAttributeStore())
-        commentFactory = CommentFactory()
         conditionManager = ConditionManager(attributeManager, InMemoryConditionStore())
         ruleStore = InMemoryRuleStore()
         ruleManager = RuleManager(conditionManager, attributeManager, ruleStore)
 
         glucose = attributeManager.getOrCreate("Glucose")
         tsh = attributeManager.getOrCreate("TSH")
-        coffeeAssignment = commentFactory.comment(text1)
-        teaAssignment = commentFactory.comment(text2)
-        champagneAssignment = commentFactory.comment(text3)
+        coffeeAssignment = commentAssignment(text1)
+        teaAssignment = commentAssignment(text2)
+        champagneAssignment = commentAssignment(text3)
         normalGlucose = conditionManager.getOrCreate(isNormal(null, glucose))
         highTSH = conditionManager.getOrCreate(isHigh(null, tsh))
         lowTSH = conditionManager.getOrCreate(isLow(null, tsh))
     }
+
+    private fun commentAssignment(text: String) =
+        AssignValue(attributeManager.createCommentAttribute(), CommentTemplate(text))
 
     @Test
     fun `root rule is created automatically`() {
@@ -60,6 +63,25 @@ class RuleManagerTest {
         ruleManager.ruleTree().root.childRules() shouldBe emptySet()
         ruleManager.ruleTree().root.parent shouldBe null
         ruleManager.ruleTree().root.assignment shouldBe null
+    }
+
+    @Test
+    fun `a stored assignment referring to an unknown attribute prevents the knowledge base from loading`() {
+        // Given a persisted child rule assigning an attribute the KB does not have
+        ruleStore.create(
+            PersistentRule(
+                id = null,
+                parentId = ruleManager.ruleTree().root.id,
+                conditionIds = emptySet(),
+                assignment = AssignValue(Attribute(99, "Whatever", AttributeKind.COMMENT), Literal("value"))
+            )
+        )
+
+        // When the rule manager rebuilds the persisted tree
+        // Then the inconsistent persisted state is reported
+        shouldThrow<NoSuchElementException> {
+            RuleManager(conditionManager, attributeManager, ruleStore)
+        }
     }
 
     @Test

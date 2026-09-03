@@ -61,8 +61,6 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
      * using the smallest index whose name is not already in use by an
      * attribute of any kind (ignoring case, consistent with the naming rules
      * for KB-assigned attributes). The user can rename the attribute later.
-     * See "Phase 2 — comments become derived attributes" in
-     * documentation/design/repeat_inferencing.md.
      */
     fun createCommentAttribute(): Attribute {
         val namesInUse = nameToAttribute.keys.map { it.lowercase() }.toSet()
@@ -71,17 +69,11 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
     }
 
     /**
-     * Whether any attribute, of any kind, has the given name, ignoring case.
-     */
-    fun isNameInUse(name: String) = nameToAttribute.keys.any { it.equals(name, ignoreCase = true) }
-
-    /**
      * Rename the given attribute, which changes its name and nothing else:
      * everything that refers to an attribute does so by id. The new name is
      * refused if it is blank or in use by another attribute (ignoring case,
      * consistent with the naming rules for KB-assigned attributes); changing
-     * only the case of the attribute's own name is allowed. See step 14 of
-     * documentation/design/repeat_inferencing.md.
+     * only the case of the attribute's own name is allowed.
      */
     fun rename(attribute: Attribute, newName: String): Attribute {
         val name = newName.trim()

@@ -492,7 +492,7 @@ class CommentTokenOverlapScorerTest {
     }
 
     // -----------------------------------------------------------------
-    // Assignment-based actions (Phase 2: comments are comment attributes)
+    // Assignment-based actions: comments are comment attributes
     // -----------------------------------------------------------------
 
     private val commentAttr = Attribute(100, "C1", AttributeKind.COMMENT)

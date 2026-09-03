@@ -11,9 +11,8 @@ import kotlinx.serialization.json.Json
  * ConclusionStore.store. See
  * documentation/design/editing_derived_attribute_definitions.md.
  *
- * The interface is deliberately kind-agnostic (any attribute id maps to a
- * definition) so that Phase 2 of repeat inferencing can fold comment
- * definitions into the same store.
+ * The interface is deliberately kind-agnostic: any attribute id maps to a
+ * definition, so derived and comment definitions share the same store.
  */
 interface DerivedDefinitionStore {
     fun all(): Map<Int, ValueExpression>

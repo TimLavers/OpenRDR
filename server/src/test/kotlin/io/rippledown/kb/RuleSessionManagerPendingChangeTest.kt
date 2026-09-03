@@ -60,7 +60,7 @@ class RuleSessionManagerPendingChangeTest {
         rsm.startRuleSessionToAddComment(case, "Surf's up.")
 
         // Then the pending change is the addition, named
-        rsm.pendingChange shouldBe Addition("Surf's up.", "C1")
+        rsm.pendingChange shouldBe Addition("Surf's up.", "C1", kb.attributeManager.byName("C1")?.id)
     }
 
     @Test
@@ -72,7 +72,8 @@ class RuleSessionManagerPendingChangeTest {
         rsm.renameAttribute("C1", "Beach")
 
         // Then the pending change shows the new name
-        rsm.pendingChange shouldBe Addition("Surf's up.", "Beach")
+        rsm.pendingChange shouldBe
+                Addition("Surf's up.", "Beach", kb.attributeManager.byName("Beach")?.id)
     }
 
     @Test
@@ -154,7 +155,8 @@ class RuleSessionManagerPendingChangeTest {
         rsm.renameAttribute("C1", "Beach")
 
         // Then the status the client is sent shows the new name
-        rsm.cornerstoneStatus().commentDiff shouldBe Addition("Surf's up.", "Beach")
+        rsm.cornerstoneStatus().commentDiff shouldBe
+                Addition("Surf's up.", "Beach", kb.attributeManager.byName("Beach")?.id)
     }
 
     @Test

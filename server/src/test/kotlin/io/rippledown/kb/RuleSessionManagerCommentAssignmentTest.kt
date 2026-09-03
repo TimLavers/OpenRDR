@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.greaterThanOrEqualTo
+import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.ByDefinition
 import io.rippledown.model.rule.CommentTemplate
@@ -69,13 +70,19 @@ class RuleSessionManagerCommentAssignmentTest {
     fun `adding the same comment text reuses the comment attribute`() {
         // Given a committed comment rule
         buildAddCommentRule("Diabetic diet advice given.")
+        val existingAttribute = kb.attributeManager.byName("C1")
 
         // When another session is started with the same text on a case not yet given it
         rsm.startRuleSessionToAddComment(viewableCase("C", "5.0"), "Diabetic diet advice given.")
-        rsm.cancelRuleSession()
 
         // Then no second comment attribute was created
         kb.attributeManager.commentAttributes().size shouldBe 1
+        rsm.pendingChange shouldBe Addition(
+            "Diabetic diet advice given.",
+            "C1",
+            existingAttribute?.id
+        )
+        rsm.cancelRuleSession()
     }
 
     @Test

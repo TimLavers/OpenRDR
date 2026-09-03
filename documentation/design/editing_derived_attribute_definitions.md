@@ -8,15 +8,14 @@
 questions" at the end).
 See also [repeat_inferencing.md](repeat_inferencing.md), on which this builds.
 
-**Sequencing (as done):** this work landed **before** repeat inferencing Phase 2 (comments become derived
-attributes). The
-`DerivedDefinitionStore` / `ByDefinition` architecture introduced here is the architecture Phase 2 landed on: a
+**Sequencing (as done):** this work landed **before** comments became derived attributes. The
+`DerivedDefinitionStore` / `ByDefinition` architecture introduced here is the architecture that work landed on: a
 comment's text template (`CommentTemplate`) is just another definition, and the conclusion store has since been deleted
 rather than maintained alongside it. Doing this first avoided migrating configured KBs twice. See the Sequencing notes
 in [repeat_inferencing.md](repeat_inferencing.md).
 
 References below to `Conclusion`, `ConclusionStore` and `ConclusionManager` describe the state of the code when this
-design was written; those types were deleted by Phase 2 step 16.
+design was written; those types were deleted when comments became attributes.
 
 ## The requirement
 
@@ -67,8 +66,8 @@ mirroring `ConclusionManager`. Crucially it exposes an in-place
 `ConclusionStore.store`.
 
 Rationale for a dedicated store (rather than a column on the attributes
-table): keep `Attribute` a pure identity (`id, name, kind`), and converge with
-Phase 2 of repeat inferencing (comments-as-attributes), which needs the same
+table): keep `Attribute` a pure identity (`id, name, kind`), and converge with comments-as-attributes, which needs the
+same
 "attribute id → value expression (+ variables)" mapping. The two should become
 one store.
 
@@ -170,11 +169,11 @@ Instruction routing (new `18_editing_derived_definition.md`, sibling to
   attribute has a single consistent expression; genuinely differing
   expressions remain as overrides.
 
-## Relationship to Phase 2 (comments become derived attributes)
+## Relationship to comments as derived attributes
 
-This is the same generalisation Phase 2 makes for comments. The
-`DerivedDefinitionStore` should be shaped so a `COMMENT` attribute's text
-template (+ `${}` variables) is just another definition, so Phase 2 can fold
+This is the same generalisation later used for comments. The
+`DerivedDefinitionStore` should be shaped so a `COMMENT` attribute's text template (+ `${}` variables) is just another
+definition, so the comments-as-attributes work can fold
 `ConclusionStore` into it rather than maintaining two parallel stores. This
 directly realises "persist derived attributes like we do comments".
 
@@ -198,15 +197,16 @@ directly realises "persist derived attributes like we do comments".
 ## Resolved questions
 
 1. **Store shape: data attributes only now.** `DerivedDefinitionStore` is built for data attributes only; the unified
-   store (covering comment text + variables) is designed in Phase 2, when the survey of `Conclusion` usages provides the
-   information to design it well. Two cheap future-proofing constraints keep the Phase 2 fold-in schema-free:
+   store (covering comment text + variables) is designed with the comments-as-attributes work, when the survey of
+   `Conclusion` usages provides the information to design it well. Two cheap future-proofing constraints keep that
+   fold-in schema-free:
   - the definition is persisted as serialized `ValueExpression` JSON in the
     `expression TEXT` column (the `PersistentRule.assignment` trick), so a future template subtype needs no schema
     change;
   - the store interface is kind-agnostic — `store(attributeId, expression)` /
     `definitionFor(attributeId): ValueExpression?` — with the "must be DERIVED" check enforced in the chat action, not
     the store. A rename to
-    `AttributeDefinitionStore` in Phase 2 is acceptable churn.
+    `AttributeDefinitionStore` during that work is acceptable churn.
 2. **`ByDefinition` sentinel, with resolve-then-evaluate.** `ByDefinition` is a `ValueExpression` subtype (explicit in
    the persisted JSON; keeps
    `AssignValue.expression` non-null; a third sealed-class branch rather than nullability rippling through consumers).
@@ -227,8 +227,8 @@ directly realises "persist derived attributes like we do comments".
 - **Impact summary on a global edit.** Editing a definition changes values KB-wide with deliberately no cornerstone
   session; a lightweight impact summary (e.g. how many cornerstones' derived values change) shown before or after the
   edit would give the user confidence in the change.
-- **Renaming a derived attribute.** Id-referenced, so mechanically safe; needs the name-in-use refusal (as in repeat
-  inferencing step 8c) and a chat action + instruction routing of its own.
+- **Renaming a derived attribute.** Id-referenced, so mechanically safe; needs the existing name-in-use refusal and a
+  chat action plus instruction routing of its own.
 
 ## Where we got to (session note)
 

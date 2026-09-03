@@ -55,6 +55,30 @@ class CommentRowsTest {
     }
 
     @Test
+    fun `an addition using an existing comment attribute is shown in attribute order`() {
+        // Given comments on either side of an existing comment attribute that is not on this case
+        val laterComment = RenderedComment(
+            text = "Go home.",
+            name = "C3",
+            attributeId = 3
+        )
+
+        // When a rule session is adding the existing comment attribute to the case
+        val rows = commentRowsToDisplay(
+            comments = listOf(bondi.copy(attributeId = 1), laterComment),
+            diff = Addition("Bring your flippers.", "C2", attributeId = 2)
+        )
+
+        // Then its pending row is shown where it will remain after the rule is committed
+        rows.map { it.comment.name } shouldBe listOf("C1", "C2", "C3")
+        rows.map { it.highlight } shouldBe listOf(
+            CommentHighlight.NONE,
+            CommentHighlight.ADDED,
+            CommentHighlight.NONE
+        )
+    }
+
+    @Test
     fun `an added row shows the comment being added, named, with the rule conditions`() {
         // Given a rule session with a condition so far
         // When an addition is applied
@@ -184,6 +208,30 @@ class CommentRowsTest {
         rows.single().comment.text shouldBe "Glucose is {Glucose}."
         rows.single().highlight shouldBe CommentHighlight.REPLACED
         rows.single().replacement?.text shouldBe "Glucose is fine."
+    }
+
+    @Test
+    fun `a replacement is matched by attribute name even when another row matches its text`() {
+        // Given the comment being replaced renders differently for this case, and
+        // another comment happens to have the text carried by the replacement
+        val commentBeingReplaced = RenderedComment(text = "Glucose is 12.0.", name = "C1")
+        val textMatchFromAnotherAttribute = RenderedComment(text = "Glucose is {Glucose}.", name = "C9")
+
+        // When the replacement names the attribute being replaced
+        val rows = commentRowsToDisplay(
+            listOf(commentBeingReplaced, textMatchFromAnotherAttribute),
+            Replacement(
+                originalText = "Glucose is {Glucose}.",
+                replacementText = "Glucose is fine.",
+                attributeName = "C2",
+                replacedAttributeName = "C1"
+            )
+        )
+
+        // Then identity wins over the coincidental text match
+        rows.map { it.highlight } shouldBe listOf(CommentHighlight.REPLACED, CommentHighlight.NONE)
+        rows.first().replacement?.text shouldBe "Glucose is fine."
+        rows.last().replacement shouldBe null
     }
 
     @Test

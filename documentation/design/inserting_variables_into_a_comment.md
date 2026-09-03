@@ -47,7 +47,7 @@ comment reads without the comment having to be edited. `alignAttributes` re-poin
 is loaded, since a deserialized variable may carry a stale name.
 
 *(The template took over from `Conclusion`, which held the same two fields as a text and a list of
-`CommentVariable(attributeId)`. See "Phase 2" in [repeat_inferencing.md](repeat_inferencing.md).)*
+`CommentVariable(attributeId)`.)*
 
 ## Rendering
 

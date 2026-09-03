@@ -5,8 +5,7 @@ import io.rippledown.model.rule.CommentTemplate
 
 /**
  * Mints a comment attribute per comment text, as a knowledge base does, so
- * that tests can build rules that give comments. See "Phase 2 — comments
- * become derived attributes" in documentation/design/repeat_inferencing.md.
+ * that tests can build rules that give comments.
  */
 class CommentFactory(private val firstId: Int = 5000) {
     private val textToAttribute = mutableMapOf<String, Attribute>()

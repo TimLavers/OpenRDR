@@ -109,7 +109,18 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         val component = context.accessibleComponent ?: return
         val location = execute<Point> { component.locationOnScreen } ?: return
         val size = execute<Dimension> { component.size } ?: return
-        Robot().mouseMove(location.x + size.width / 2, location.y + size.height / 2)
+        val centreX = location.x + size.width / 2
+        val centreY = location.y + size.height / 2
+        with(Robot()) {
+            // Moving the pointer to where it already is generates no event, so
+            // the hover that shows the tooltip is never entered. The window
+            // occupies the same place in every scenario, so the scenario before
+            // can leave the pointer on this very spot, and then neither the
+            // first attempt nor any retry of it moves anything. Always arrive
+            // from somewhere else.
+            mouseMove(centreX, location.y - size.height)
+            mouseMove(centreX, centreY)
+        }
     }
 
     fun waitForInterpretationText(expected: String): InterpretationPO {

@@ -19,18 +19,17 @@ data class RenderedComment(
     // The name of the comment attribute that gave the comment, shown in the
     // name column of the Comments panel. Empty when the comment did not come
     // from a comment attribute, as for a rendering done without one.
-    val name: String = ""
+    val name: String = "",
+    // The id of the comment attribute, used to keep a pending addition in the
+    // same order it will have after commit. Null for older payloads and for a
+    // rendering done without a comment attribute.
+    val attributeId: Int? = null
 )
 
 @Serializable
 data class IntRangeData(val start: Int, val endInclusive: Int) {
     fun toIntRange() = start..endInclusive
 }
-
-/**
- * The maximum length of a comment.
- */
-const val MAXIMUM_COMMENT_LENGTH = 2048
 
 /**
  * The given comment text truncated to at most 20 characters, appending

@@ -28,8 +28,7 @@ interface RuleService {
      * The name of the comment attribute that the session in progress will
      * assign, or null if no session is in progress or it is not about adding
      * or replacing a comment. Comments are named so that they can be referred
-     * to, so the name is told to the user when the comment is accepted. See
-     * step 14 of documentation/design/repeat_inferencing.md.
+     * to, so the name is told to the user when the comment is accepted.
      */
     fun nameOfCommentAttributeInSession(): String?
 

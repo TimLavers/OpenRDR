@@ -9,8 +9,6 @@ import kotlinx.serialization.json.Json
  * The definition of one attribute, as exported. Once comments are comment
  * attributes their text is a definition rather than a conclusion, so an
  * export that omitted the definitions would lose every comment in the KB.
- * See "Phase 2 — comments become derived attributes" in
- * documentation/design/repeat_inferencing.md.
  */
 @Serializable
 data class ExportedDefinition(val attributeId: Int, val expression: ValueExpression)

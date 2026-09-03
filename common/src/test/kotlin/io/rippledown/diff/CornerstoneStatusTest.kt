@@ -1,6 +1,7 @@
 package io.rippledown.diff
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.fromJsonString
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
@@ -58,7 +59,7 @@ class CornerstoneStatusTest {
             cornerstoneToReview = viewableCase,
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
-            pendingChange = Addition("Go to Bondi.")
+            pendingChange = Addition("Go to Bondi.", "C1", attributeId = 17)
         )
 
         //When
@@ -66,7 +67,7 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.commentDiff shouldBe Addition("Go to Bondi.")
+        deserialized.commentDiff shouldBe Addition("Go to Bondi.", "C1", attributeId = 17)
     }
 
     @Test
@@ -87,8 +88,14 @@ class CornerstoneStatusTest {
     @Test
     fun `should serialize and deserialize with a Replacement diff`() {
         //Given
+        val replacement = Replacement(
+            originalText = "Go to Bondi.",
+            replacementText = "Go to Maroubra.",
+            attributeName = "C2",
+            replacedAttributeName = "C1"
+        )
         val cornerstoneStatus = CornerstoneStatus(
-            pendingChange = Replacement("Go to Bondi.", "Go to Maroubra.")
+            pendingChange = replacement
         )
 
         //When
@@ -96,7 +103,32 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.commentDiff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
+        deserialized.commentDiff shouldBe replacement
+    }
+
+    @Test
+    fun `a Replacement from an older client defaults the replaced attribute name`() {
+        // Given JSON written before Replacement carried the name of the attribute going out
+        val legacyJson = """
+            {
+                "cornerstoneToReview": null,
+                "indexOfCornerstoneToReview": -1,
+                "numberOfCornerstones": 0,
+                "pendingChange": {
+                    "type": "io.rippledown.model.diff.Replacement",
+                    "originalText": "Go to Bondi.",
+                    "replacementText": "Go to Maroubra.",
+                    "attributeName": "C2"
+                },
+                "ruleConditions": []
+            }
+        """.trimIndent()
+
+        // When it is read by the current model
+        val status = legacyJson.fromJsonString<CornerstoneStatus>()
+
+        // Then the missing name takes its backward-compatible default
+        status.commentDiff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.", "C2")
     }
 
     @Test
@@ -236,7 +268,8 @@ class CornerstoneStatusTest {
                 "pendingChange": {
                     "type": "io.rippledown.model.diff.Addition",
                     "addedText": "Go to Bondi.",
-                    "attributeName": "C1"
+                    "attributeName": "C1",
+                    "attributeId": null
                 },
                 "ruleConditions": [
                     "Sun is in case",

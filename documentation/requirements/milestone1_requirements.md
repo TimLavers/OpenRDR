@@ -53,17 +53,11 @@ last column.
 **Ticket:** [ORD2](../tickets/work_tickets.md)
 
 **InterpretationView:**
-The `Interpretation` is presented as plain text. The text consists of all of the
-conclusions given for the case joined together with spaces between them.
-The order of the conclusions in this text is defined by the conclusion ordering.
+The original plain-text interpretation view has been retired. Comments are now shown in the **Comments** panel as a
+two-column table, with one row giving each comment attribute's name and text. Rows currently have a deterministic
+attribute-id order; persisted user-controlled ordering is not implemented. See [case_view.md](case_view.md).
 
-The text is shown in a text area with a monospaced font. This is because comments
-sometimes contain tables formed by white-spaces.
 **Ticket:** [ORD7](../tickets/work_tickets.md)
-
-*Since superseded:* the comments are now shown in the **Comments** panel as a two column table, a row for each comment
-giving the name of the comment attribute and the comment itself, and comment ordering no longer signifies. See
-[case_view.md](case_view.md).
 
 ## Data processing
 The Clinical Decision Support System is backed by a Knowledge Base (KB).
@@ -201,5 +195,4 @@ No new concepts.
 
 **1.4.35**
 No new concepts.
-
 

@@ -6,8 +6,6 @@ from the comments its rules gave it.
 Each comment is an `Attribute` of kind `COMMENT`, whose value for a case is the comment's text. A rule gives a comment
 by assigning that attribute; the text itself is held as the attribute's definition, a `CommentTemplate`. So a comment
 has a name, is referred to by identity rather than by its wording, and is shown in the Comments panel beside that name.
-See
-[repeat_inferencing.md](../design/repeat_inferencing.md), "Phase 2 — comments become derived attributes".
 
 *(Before that change a comment was a `Conclusion`, a separate kind of thing with an id of its own, held in a conclusion
 store and referenced by rules. This file was `conclusions.md`.)*
@@ -22,8 +20,7 @@ store and referenced by rules. This file was `conclusions.md`.)*
 | Maximum length       | There can be at most 2,048 characters in the text of a comment. **Not currently enforced** (see below).        | Conc-3     |
 
 **The two validations above are not enforced by the current implementation.**
-They were `require` checks on `Conclusion`, and went when that class did.
-`MAXIMUM_COMMENT_LENGTH` survives in `common/.../model/Comment.kt` but nothing reads it, and no path refuses a blank
+They were `require` checks on `Conclusion`, and went when that class did. No path currently refuses an overlong or blank
 comment. They are recorded here as requirements still wanted, not as behaviour to rely on.
 
 ## Giving, removing and replacing comments

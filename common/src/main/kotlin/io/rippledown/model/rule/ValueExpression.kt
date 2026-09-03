@@ -79,8 +79,7 @@ object ByDefinition : ValueExpression() {
  * corresponding [variables]. This carries over the rendering semantics of
  * `Conclusion`: a variable that is missing from the case or blank renders
  * as a `{name: no value}` marker, whose position is reported by [render]
- * so that the UI can highlight it. See "Phase 2 — comments become derived
- * attributes" in documentation/design/repeat_inferencing.md.
+ * so that the UI can highlight it.
  */
 @Serializable
 @SerialName("CommentTemplate")
@@ -261,22 +260,6 @@ internal const val DERIVED_VALUE_SIGNIFICANT_FIGURES = 4
 internal fun Double.toValueString(): String {
     val rounded = toBigDecimal(MathContext(DERIVED_VALUE_SIGNIFICANT_FIGURES)).stripTrailingZeros()
     return rounded.toPlainString()
-}
-
-/**
- * The value expression for the given user-entered text. The text is a
- * formula if it parses as arithmetic whose identifiers all resolve to
- * attributes; otherwise it is a literal. Values are typed by example:
- * a plain number is a numeric literal.
- */
-fun parseValueExpression(text: String, attributeFor: (String) -> Attribute?): ValueExpression {
-    val trimmed = text.trim()
-    if (trimmed.startsWith("\"") && trimmed.endsWith("\"") && trimmed.length >= 2) {
-        return Literal(trimmed.substring(1, trimmed.length - 1))
-    }
-    if (trimmed.toDoubleOrNull() != null) return Literal(trimmed)
-    val expr = FormulaParser(attributeFor).parse(trimmed)
-    return if (expr != null && expr.referencedAttributes().isNotEmpty()) Formula(expr) else Literal(trimmed)
 }
 
 /**

@@ -53,8 +53,7 @@ class ChangeTreeToReplaceAssignment(val toBeReplaced: AssignValue, val replaceme
         // A derived value is replaced on its own attribute. Comments are the
         // exception: each comment text has its own attribute, so replacing a
         // comment assigns a different attribute, with leaf-most suppression
-        // retracting the original. See "Phase 2" in
-        // documentation/design/repeat_inferencing.md.
+        // retracting the original.
         require(
             toBeReplaced.attribute == replacement.attribute ||
                     (toBeReplaced.attribute.kind == AttributeKind.COMMENT &&

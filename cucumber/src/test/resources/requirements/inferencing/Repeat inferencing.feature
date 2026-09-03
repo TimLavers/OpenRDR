@@ -1,6 +1,5 @@
-# This file specifies the *intended* behaviour after Phase 1 of the
-# repeat-inferencing design (see documentation/design/repeat_inferencing.md).
-# Phase 1 step 9: step definitions and backdoor plumbing are now in place.
+# This file specifies the repeat-inferencing behaviour described in
+# documentation/design/repeat_inferencing.md.
 Feature: Repeat inferencing via derived attributes.
   A rule can assign a value to a derived attribute, and other rules can use
   that value in their conditions. Inference repeats until the interpretation

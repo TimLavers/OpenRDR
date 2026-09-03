@@ -218,7 +218,6 @@ with no comments (`generated = false`) shows "No comments to report on."
   a future version will let the user choose which attributes to include.
 - **Sending the comments' names to the model.** The report is built from the comment *texts* only
   (`Interpretation.toComments`). Now that every comment is a named attribute, the name is signal about the comment's
-  role and is meant to be an input too; see step 19 of
-  [repeat_inferencing.md](repeat_inferencing.md), which also updates the system prompt. Keeping
-  `ReportView` independent of `InterpretationView` meant the comments redesign (step 17, done) did not disturb the
+  role and is meant to be an input too. Keeping
+  `ReportView` independent of `InterpretationView` meant the comments redesign did not disturb the
   report.
