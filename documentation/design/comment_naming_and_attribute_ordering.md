@@ -1,14 +1,16 @@
 # Comment naming and attribute ordering
 
-Two changes that reverse decisions taken during Phase 2 and 3 of
-[repeat_inferencing.md](repeat_inferencing.md):
+This document records two related changes:
 
 1. A comment's name is assigned by the server (`C1`, `C2`, …), not proposed by the model. The user can rename it
    afterwards.
-2. The ordering of comment and derived attributes is persisted, and the user can change it by drag and drop, as they can
-   for external attributes.
+2. Comment and derived-attribute ordering should be persisted and user-changeable by drag and drop, as external
+   attribute ordering is in the current session.
 
-Neither change is implemented yet. This document is the plan.
+**Status:** change 1, predictable server-assigned comment names, is implemented. Change 2, persisted user-controlled
+ordering, is **not implemented**. Comments are currently sorted by attribute id, derived values by attribute name, and
+neither panel offers reordering. The implementation sections below remain the plan for change 2 and a historical record
+for change 1.
 
 ## A finding that change 2 depends on
 
@@ -24,7 +26,7 @@ persistence, not merely extend it.
 
 # Change 1 — the server names comments
 
-## Current flow
+## Former flow
 
 `19_naming_and_renaming.md` tells the model to emit an `attributeName` field with `{{ADD_COMMENT}}` and
 `{{REPLACE_COMMENT}}`. `ActionComment.attributeName`
@@ -44,7 +46,7 @@ Bottom-up, keeping the build green after each.
 - `createCommentAttribute()` loses its parameter; the body reduces to the smallest-unused-`Cn` search plus
   `getOrCreate(name, COMMENT)`.
 - Delete `isUsableProposedName` and the `MAX_PROPOSED_ATTRIBUTE_NAME_LENGTH`
-  constant. Keep `isNameInUse` (used by `rename`) and `rename` unchanged.
+  constant. Keep `rename` unchanged; it checks for a conflicting name directly.
 
 ### 1.2 `RuleSessionManager`
 
@@ -92,8 +94,8 @@ All of these shrink.
 
 ### 1.7 Design doc
 
-`repeat_inferencing.md` step 14 records the LLM-proposal decision. Rewrite it as resolved against, with the rationale:
-names must be predictable, and must not consume model attention or latency; renaming covers the semantic case.
+`repeat_inferencing.md` records the implemented decision: names are predictable and do not consume model attention or
+latency; renaming covers the semantic case.
 
 **Risk**: low. It is a pure deletion. The only behaviour lost is semantic auto-naming, which the rename action already
 provides.
@@ -199,10 +201,8 @@ To issue `api.moveAttribute(movedId, targetId)` the rows need ids.
 - `CaseViewExporter` already writes `caseViewManager.allInOrder()`, which will now include comment and derived
   attributes, and `KBImporter` resolves ids against the full attributes file, so it should work as it stands. Add a
   round-trip test asserting that a comment attribute's position survives export and import.
-- `repeat_inferencing.md`: reverse resolved decision 4 ("comment ordering: not significant"), recording that comment
-  ordering is user-controlled and persisted, which aligns it with decision 5 for derived attributes; amend the step 15
-  note saying the ordering machinery was removed; and extend step 17's description of the Comments panel to mention drag
-  and drop.
+- Update `repeat_inferencing.md` to record that comment and derived-attribute ordering is user-controlled and persisted,
+  and extend the Comments panel description to mention drag and drop.
 - No SQL to run, given that `attribute_indexes` is reused.
 
 ---

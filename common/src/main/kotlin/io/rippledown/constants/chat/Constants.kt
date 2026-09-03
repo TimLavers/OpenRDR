@@ -36,8 +36,7 @@ const val COMMENT_VARIABLE_TIP_KEYWORD = "braces"
 /**
  * The messages about the names of comment and derived attributes. Comments are
  * named so that they can be referred to, and the names of KB-assigned
- * attributes can be changed; see step 14 of
- * documentation/design/repeat_inferencing.md. The fragments are separate
+ * attributes can be changed. The fragments are separate
  * constants so that the cucumber suite can recognise the messages without
  * knowing the name, which the model chooses.
  */
@@ -82,5 +81,4 @@ const val CANCEL_RULE = "CancelRule"
 const val COPY_CASE_TO_FAVOURITES = "CopyCaseToFavourites"
 const val DELETE_CASE_FROM_FAVOURITES = "DeleteCaseFromFavourites"
 const val COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME = "CopyCaseToFavouritesWithNewName"
-
 

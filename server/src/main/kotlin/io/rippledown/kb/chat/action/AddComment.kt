@@ -10,8 +10,7 @@ import io.rippledown.model.chat.ChatResponse
 
 /**
  * Starts a rule session to add a comment. The server auto-names the
- * comment attribute (C1, C2, …); the user can rename it later. See step 14
- * of documentation/design/repeat_inferencing.md.
+ * comment attribute (C1, C2, …); the user can rename it later.
  */
 data class AddComment(
     val comment: String,

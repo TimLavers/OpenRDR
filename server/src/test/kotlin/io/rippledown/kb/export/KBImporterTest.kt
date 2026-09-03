@@ -1,5 +1,6 @@
 package io.rippledown.kb.export
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.maps.shouldHaveSize
@@ -15,6 +16,7 @@ import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.model.rule.Literal
 import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import java.io.File
 import java.time.Instant
@@ -55,6 +57,24 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.caseViewManager.allInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
         rebuilt.ruleSessionRecorder.allRuleSessionHistories().size shouldBe 0
+    }
+
+    @Test
+    fun `an export containing conclusions is rejected before a persistent KB is created`() {
+        // Given an otherwise valid export containing a legacy conclusion
+        KBExporter(tempDir, KB(InMemoryKB(KBInfo("Rejected")))).export()
+        val conclusionsDirectory = KBExportImport(tempDir).conclusionsDirectory
+        conclusionsDirectory.mkdirs()
+        writeFileInDirectory(conclusionsDirectory)
+
+        // When the export is imported
+        val error = shouldThrow<IllegalStateException> {
+            KBImporter(tempDir, persistenceProvider).import()
+        }
+
+        // Then it is rejected without leaving a half-built persistent KB
+        error.message shouldBe "This knowledge base was exported with conclusions, which are no longer supported."
+        persistenceProvider.idStore().data() shouldBe emptyMap()
     }
 
     @Test

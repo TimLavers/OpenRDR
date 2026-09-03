@@ -1,5 +1,3 @@
-# This file specifies the behaviour described in step 14 of
-# documentation/design/repeat_inferencing.md.
 @delay_after_cuke
 Feature: Naming comments, and renaming comments and derived attributes
   Every comment has a name, so that the user can refer to it later. The name is

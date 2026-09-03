@@ -20,8 +20,7 @@ open class RuleTestBase : ConditionTestBase() {
     /**
      * The comment attribute for the given text, created if this is the first
      * time the text has been used. Each comment text has its own attribute,
-     * as in a knowledge base built through the chat. See "Phase 2" in
-     * documentation/design/repeat_inferencing.md.
+     * as in a knowledge base built through the chat.
      */
     fun commentAttribute(text: String): Attribute =
         textToAttribute.getOrPut(text) {

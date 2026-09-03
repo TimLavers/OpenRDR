@@ -45,7 +45,11 @@ data class Replacement(
 }
 
 @Serializable
-data class Addition(val addedText: String = "", override val attributeName: String = "") : Diff {
+data class Addition(
+    val addedText: String = "",
+    override val attributeName: String = "",
+    val attributeId: Int? = null
+) : Diff {
     override fun left() = ""
     override fun right() = addedText
 }
@@ -55,7 +59,6 @@ data class Removal(val removedText: String = "", override val attributeName: Str
     override fun left() = removedText
     override fun right() = ""
 }
-
 
 
 

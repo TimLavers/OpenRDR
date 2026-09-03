@@ -351,7 +351,7 @@ class HistoricalRuleScorerTest {
     }
 
     // -----------------------------------------------------------------
-    // Assignment-based actions (Phase 2: comments are comment attributes)
+    // Assignment-based actions: comments are comment attributes
     // -----------------------------------------------------------------
 
     /**

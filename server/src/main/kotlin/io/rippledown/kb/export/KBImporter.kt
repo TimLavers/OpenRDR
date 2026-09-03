@@ -10,6 +10,13 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         // Extract the name and id.
         val kbInfo = KBInfoImporter(kbDetailsFile).import()
 
+        // Comments are comment attributes, so an export that still has
+        // conclusions predates that and cannot be imported. Reject it before
+        // creating or populating any persistent state.
+        check(conclusionsDirectory.listFiles().isNullOrEmpty()) {
+            "This knowledge base was exported with conclusions, which are no longer supported."
+        }
+
         // Using the name and id, create a persistent KB.
         val persistentKB = persistenceProvider.createKBPersistence(kbInfo)
 
@@ -27,14 +34,6 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
         val attributeIdToIndex = mutableMapOf<Int,Int>()
         attributesInOrder.forEachIndexed { index, attribute -> attributeIdToIndex[attribute.id] = index}
         persistentKB.attributeOrderStore().load(attributeIdToIndex)
-
-        // Comments are comment attributes, so an export that still has
-        // conclusions predates that and cannot be imported. See step 16 of
-        // documentation/design/repeat_inferencing.md.
-        val conclusionsDirectory = File(destination, "Conclusions")
-        check(conclusionsDirectory.listFiles().isNullOrEmpty()) {
-            "This knowledge base was exported with conclusions, which are no longer supported."
-        }
 
         // Extract the definitions of the derived and comment attributes and
         // store them. An export made before definitions were exported has no

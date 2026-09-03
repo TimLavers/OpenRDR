@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -94,17 +95,16 @@ class DerivedDefinitionManagerTest {
     }
 
     @Test
-    fun `a stored definition referring to an unknown attribute is left as it was stored`() {
+    fun `a stored definition referring to an unknown attribute prevents the knowledge base from loading`() {
         // Given a store holding a definition referring to an attribute the KB does not have
         val store = InMemoryDerivedDefinitionStore()
-        val definition = Formula(AttributeValue(Attribute(99, "Whatever")))
-        store.store(10, definition)
+        store.store(10, Formula(AttributeValue(Attribute(99, "Whatever"))))
 
         // When a manager is created on the store
-        val manager = DerivedDefinitionManager(store, attributeManager)
-
-        // Then the definition is unchanged
-        manager.definitionFor(10) shouldBe definition
+        // Then the inconsistent persisted state is reported
+        shouldThrow<NoSuchElementException> {
+            DerivedDefinitionManager(store, attributeManager)
+        }
     }
 
     @Test

@@ -5,8 +5,7 @@ import io.rippledown.kb.commentsFor
 /**
  * Comment rule sessions driven by case id, as the endpoint's callers do.
  * Comments are comment attributes, so these delegate to the comment entry
- * points of the rule session manager. See "Phase 2 — comments become
- * derived attributes" in documentation/design/repeat_inferencing.md.
+ * points of the rule session manager.
  */
 fun KBEndpoint.startRuleSessionToAddComment(caseId: Long, comment: String) =
     session.ruleSessionManager.startRuleSessionToAddComment(case(caseId), comment)

@@ -1771,7 +1771,7 @@ class KBTest {
         rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        rsm.currentDiff shouldBe Addition(comment, "C1")
+        rsm.currentDiff shouldBe Addition(comment, "C1", kb.attributeManager.byName("C1")?.id)
     }
 
     @Test
@@ -1851,7 +1851,7 @@ class KBTest {
         val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        status.commentDiff shouldBe Addition(comment, "C1")
+        status.commentDiff shouldBe Addition(comment, "C1", kb.attributeManager.byName("C1")?.id)
     }
 
     @Test
@@ -1865,7 +1865,7 @@ class KBTest {
         val status = rsm.startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         //Then
-        status.commentDiff shouldBe Addition(comment, "C1")
+        status.commentDiff shouldBe Addition(comment, "C1", kb.attributeManager.byName("C1")?.id)
     }
 
     @Test

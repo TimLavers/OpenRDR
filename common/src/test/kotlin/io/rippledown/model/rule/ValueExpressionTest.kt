@@ -24,6 +24,9 @@ internal class ValueExpressionTest {
         setOf(weight, height, riskScore).firstOrNull { it.name == name }
     }
 
+    private fun parseFormula(text: String): Expr =
+        FormulaParser(attributeFor).parse(text) ?: error("Expected a formula: $text")
+
     @Test
     fun `a literal evaluates to its value`() {
         // Given a literal
@@ -238,18 +241,9 @@ internal class ValueExpressionTest {
     }
 
     @Test
-    fun `parsing a plain value gives a literal`() {
-        // When plain values are parsed
-        // Then literals result
-        parseValueExpression("diabetic", attributeFor) shouldBe Literal("diabetic")
-        parseValueExpression("7", attributeFor) shouldBe Literal("7")
-        parseValueExpression("\"quoted value\"", attributeFor) shouldBe Literal("quoted value")
-    }
-
-    @Test
     fun `parsing arithmetic over attributes gives a formula`() {
         // When a formula text is parsed
-        val parsed = parseValueExpression("weight / (height * height)", attributeFor)
+        val parsed = Formula(parseFormula("weight / (height * height)"))
 
         // Then a formula results and it evaluates correctly
         parsed shouldBe Formula(
@@ -264,7 +258,7 @@ internal class ValueExpressionTest {
     @Test
     fun `parsing respects operator precedence`() {
         // When a mixed-precedence formula is parsed
-        val parsed = parseValueExpression("weight + height * 2", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight + height * 2"))
 
         // Then multiplication binds tighter than addition
         parsed.evaluate(case(weight to "10", height to "3")) shouldBe "16"
@@ -273,7 +267,7 @@ internal class ValueExpressionTest {
     @Test
     fun `should parse double asterisk 2 as exponentiation to the power of 2`() {
         // When a formula uses ** for exponentiation
-        val parsed = parseValueExpression("weight / height ** 2", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight / height ** 2"))
 
         // Then ** is interpreted as squared
         parsed.evaluate(case(weight to "93.0", height to "2.0")) shouldBe "23.25"
@@ -284,7 +278,7 @@ internal class ValueExpressionTest {
     @Test
     fun `should parse double asterisk 3 as exponentiation to the power of 3`() {
         // When a formula uses ** for exponentiation
-        val parsed = parseValueExpression("weight ** 3", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight ** 3"))
 
         // Then ** is interpreted as squared
         parsed.evaluate(case(weight to "2")) shouldBe "8"
@@ -295,7 +289,7 @@ internal class ValueExpressionTest {
     @Test
     fun `should parse caret as exponentiation to the power of 2`() {
         // When a formula uses ^ for exponentiation
-        val parsed = parseValueExpression("weight / height ^ 2", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight / height ^ 2"))
 
         // Then ^ is interpreted as squared
         parsed.evaluate(case(weight to "93.0", height to "2.0")) shouldBe "23.25"
@@ -306,7 +300,7 @@ internal class ValueExpressionTest {
     @Test
     fun `should parse caret as exponentiation to the power of 3`() {
         // When a formula uses ^ for exponentiation
-        val parsed = parseValueExpression("weight ^ 3", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight ^ 3"))
 
         // Then ^ is interpreted as cubed
         parsed.evaluate(case(weight to "2")) shouldBe "8"
@@ -317,7 +311,7 @@ internal class ValueExpressionTest {
     @Test
     fun `should ignore spaces around the caret`() {
         // When a formula uses ^ for exponentiation
-        val parsed = parseValueExpression("weight^3", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight^3"))
 
         // Then ^ is interpreted as cubed
         parsed.evaluate(case(weight to "2")) shouldBe "8"
@@ -328,7 +322,7 @@ internal class ValueExpressionTest {
     @Test
     fun `should parse float with exponentiation`() {
         // When a formula uses ^ for exponentiation
-        val parsed = parseValueExpression("weight^3.14159", attributeFor) as Formula
+        val parsed = Formula(parseFormula("weight^3.14159"))
 
         // Then ^ is interpreted as cubed
         parsed.evaluate(case(weight to "2")) shouldBe "8.825"
@@ -339,17 +333,17 @@ internal class ValueExpressionTest {
     @Test
     fun `attribute names containing spaces parse in formulas`() {
         // When a formula referencing "Risk score" is parsed
-        val parsed = parseValueExpression("Risk score + 1", attributeFor) as Formula
+        val parsed = Formula(parseFormula("Risk score + 1"))
 
         // Then the attribute resolves
         parsed.referencedAttributes() shouldBe setOf(riskScore)
     }
 
     @Test
-    fun `text with an unresolvable identifier is a literal`() {
+    fun `text with an unresolvable identifier is not a formula`() {
         // When text that looks arithmetical but does not resolve is parsed
-        // Then it is treated as a literal
-        parseValueExpression("gluten-free", attributeFor) shouldBe Literal("gluten-free")
-        parseValueExpression("B+", attributeFor) shouldBe Literal("B+")
+        // Then the formula parser refuses it
+        FormulaParser(attributeFor).parse("gluten-free").shouldBeNull()
+        FormulaParser(attributeFor).parse("B+").shouldBeNull()
     }
 }

@@ -22,8 +22,7 @@ removed.
 
 The two panels preview a change the same way because they show the same kind of thing: a named value the rules gave the
 case. A comment being added is a new row rather than text appended to a paragraph, since each comment has its own
-attribute and so its own row (see
-[repeat_inferencing.md](repeat_inferencing.md), Phase 2).
+attribute and so its own row.
 
 The preview disappears when the session is committed or cancelled.
 

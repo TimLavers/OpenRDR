@@ -36,7 +36,12 @@ internal class RuleBuildingTest {
         val diff = Addition("Go to Bondi")
         val cornerstoneStatus = kbEndpoint.startRuleSession(SessionStartRequest(id, diff))
         // The pending change carries the name of the comment attribute the server minted.
-        cornerstoneStatus shouldBe CornerstoneStatus(pendingChange = diff.copy(attributeName = "C1"))
+        cornerstoneStatus shouldBe CornerstoneStatus(
+            pendingChange = diff.copy(
+                attributeName = "C1",
+                attributeId = kbEndpoint.kb.attributeManager.byName("C1")?.id
+            )
+        )
     }
 
     @Test
@@ -50,7 +55,15 @@ internal class RuleBuildingTest {
         val viewableCase = kbEndpoint.viewableCase(cc1.id!!)
         val diff = Addition("Go to Bondi")
         val cornerstoneStatus = kbEndpoint.startRuleSession(SessionStartRequest(id2, diff))
-        cornerstoneStatus shouldBe CornerstoneStatus(viewableCase, 0, 1, diff.copy(attributeName = "C1"))
+        cornerstoneStatus shouldBe CornerstoneStatus(
+            viewableCase,
+            0,
+            1,
+            diff.copy(
+                attributeName = "C1",
+                attributeId = kbEndpoint.kb.attributeManager.byName("C1")?.id
+            )
+        )
     }
 
     @Test

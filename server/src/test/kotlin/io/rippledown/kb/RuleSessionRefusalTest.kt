@@ -10,6 +10,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.diff.Replacement
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
@@ -53,7 +54,8 @@ class RuleSessionRefusalTest {
         rsm.startRuleSessionToAddComment(case, "Patient is diabetic")
 
         // Then the change is previewed, naming the comment attribute
-        rsm.pendingChange shouldBe Addition("Patient is diabetic", "C1")
+        rsm.pendingChange shouldBe
+                Addition("Patient is diabetic", "C1", kb.attributeManager.byName("C1")?.id)
         rsm.nameOfCommentAttributeInSession() shouldBe "C1"
     }
 
@@ -74,6 +76,25 @@ class RuleSessionRefusalTest {
         // request that was turned away, not the session that turned it away
         rsm.pendingChange shouldBe previewOfRunningSession
         rsm.nameOfCommentAttributeInSession() shouldBe commentOfRunningSession
+    }
+
+    @Test
+    fun `a refused request leaves both attribute names of a running replacement preview alone`() {
+        // Given a session replacing a comment, whose preview identifies both
+        // the attribute coming in and the one going out
+        val case = createCase("Case")
+        rsm.startRuleSessionToAddComment(case, "Patient is diabetic")
+        commitWithHighGlucose()
+        rsm.startRuleSessionToReplaceComment(case, "Patient is diabetic", "Patient is well")
+        rsm.pendingChange shouldBe Replacement("Patient is diabetic", "Patient is well", "C2", "C1")
+
+        // When another comment session is refused because the replacement is in progress
+        shouldThrow<IllegalStateException> {
+            rsm.startRuleSessionToAddComment(case, "A second request")
+        }
+
+        // Then the running replacement can still identify the row it previews
+        rsm.pendingChange shouldBe Replacement("Patient is diabetic", "Patient is well", "C2", "C1")
     }
 
     @Test

@@ -28,6 +28,29 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     When I build a rule to add the existing comment "Go to Malabar."
     Then the interpretation should be "Go to Malabar."
 
+  Scenario: A pending existing comment should be previewed in comment attribute order
+    # C1 and C3 are given to Manly, while C2 is initially given only to Bondi.
+    # Adding C2 to Manly therefore reuses an older comment attribute between the
+    # two attributes already shown on the case.
+    Given case Bondi is provided having data:
+      | Sun | hot |
+    And case Manly is provided having data:
+      | Sun | cold |
+    And a backdoor rule is built for case Bondi to add the comment "First comment." with conditions:
+      | Sun is in case |
+    And a backdoor rule is built for case Bondi to add the comment "Middle comment." with conditions:
+      | Sun is hot |
+    And a backdoor rule is built for case Bondi to add the comment "Last comment." with conditions:
+      | Sun is in case |
+    And I start the client application
+    And I select case Manly
+    When I request that the comment "Middle comment." be added
+    Then the comments panel should show exactly:
+      | First comment.  |
+      | Middle comment. |
+      | Last comment.   |
+    And I cancel the rule
+
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
     Given I start the client application
     And case Bondi is provided having data:

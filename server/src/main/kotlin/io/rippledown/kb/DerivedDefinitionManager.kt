@@ -28,10 +28,9 @@ class DerivedDefinitionManager(
     /**
      * The stored expression with its attributes replaced by those held by the
      * attribute manager, so that a definition stored before an attribute was
-     * renamed reads with the attribute's current name. An expression
-     * referring to an attribute the manager does not know is left as stored.
+     * renamed reads with the attribute's current name. A missing attribute is
+     * inconsistent persisted state and prevents the knowledge base loading.
      */
     private fun aligned(expression: ValueExpression) =
-        runCatching { expression.alignAttributes { id -> attributeProvider.getById(id) } }
-            .getOrDefault(expression)
+        expression.alignAttributes { id -> attributeProvider.getById(id) }
 }
