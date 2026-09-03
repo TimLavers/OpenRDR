@@ -909,6 +909,40 @@ class KBTest {
     }
 
     @Test
+    fun `delete case from favourites`() {
+        val originalCase = kb.addCornerstoneCase(createCase("Original"))
+        val copy1 = kb.copyCaseAsFavourite(originalCase.id!!, "Copy1")
+        val copy2 = kb.copyCaseAsFavourite(originalCase.id!!, "Copy2")
+        kb.favouriteCaseIds() shouldBe listOf(copy1.caseId, copy2.caseId) // sanity
+
+        kb.deleteCaseFromFavourites(copy1)
+        kb.favouriteCaseIds() shouldBe listOf(copy2.caseId)
+        kb.deleteCaseFromFavourites(copy2)
+        kb.favouriteCaseIds() shouldBe listOf()
+    }
+
+    @Test
+    fun `deleting case not in favourites doesa nothing`() {
+        val caseName = "Original"
+        val originalCase = kb.addCornerstoneCase(createCase(caseName))
+        val copy1 = kb.copyCaseAsFavourite(originalCase.id!!, "Copy1")
+        kb.deleteCaseFromFavourites(copy1)
+        kb.favouriteCaseIds() shouldBe listOf()
+        kb.deleteCaseFromFavourites(copy1)
+        kb.favouriteCaseIds() shouldBe listOf()
+    }
+
+    @Test
+    fun `cornerstone cases cannot be deleted`() {
+        val originalCase = kb.addCornerstoneCase(createCase("Original"))
+        val copy1 = kb.copyCaseAsFavourite(originalCase.id!!, "Copy1")
+        shouldThrow<IllegalArgumentException> {
+            kb.deleteCaseFromFavourites(originalCase)
+        }
+        kb.favouriteCaseIds() shouldBe listOf(copy1.caseId)
+    }
+
+    @Test
     fun `rule session must be started for rule session operations`() {
         val noSessionMessage = "Rule session not started."
         shouldThrow<IllegalStateException> {

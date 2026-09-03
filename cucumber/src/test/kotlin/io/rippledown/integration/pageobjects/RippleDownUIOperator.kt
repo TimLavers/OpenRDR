@@ -42,6 +42,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
+    fun caseSearchCaseCountPO() = CaseSearchCaseCountPO {
+        context()
+    }
+
     fun kbControlsPO() = KbControlsPO {
         context()
     }

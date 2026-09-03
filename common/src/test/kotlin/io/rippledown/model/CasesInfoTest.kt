@@ -20,13 +20,17 @@ internal class CasesInfoTest {
     }
 
     @Test
-    fun `count should include both processed and cornerstone cases`() {
+    fun `count should include cases of all types`() {
         val processed = listOf(CaseId(1, "P1"), CaseId(2, "P2"))
         val cornerstones = listOf(CaseId(3, "C1", CaseType.Cornerstone))
-        val info = CasesInfo(caseIds = processed, cornerstoneCaseIds = cornerstones, kbName = "kb")
-        assertEquals(info.count, 3)
+        val favourites = listOf(CaseId(5, "C1", CaseType.Favourite))
+        val search = listOf(CaseId(7, "C1", CaseType.Search))
+        val info = CasesInfo(caseIds = processed, cornerstoneCaseIds = cornerstones, favourites, search, kbName = "kb")
+        assertEquals(info.count, 5)
         assertEquals(info.caseIds.size, 2)
         assertEquals(info.cornerstoneCaseIds.size, 1)
+        assertEquals(info.favouriteCaseIds.size, 1)
+        assertEquals(info.searchCaseIds.size, 1)
     }
 
     @Test

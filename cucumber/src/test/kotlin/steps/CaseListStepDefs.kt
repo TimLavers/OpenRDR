@@ -38,7 +38,12 @@ class CaseListStepDefs {
 
     @Then("I should see no cases in the favourites case list")
     fun IShouldSeeNoCasesInTheFavouritesCaseList() {
-        caseCountPO().requireCaseCountToBeHidden()
+        favouriteCaseCountPO().requireCaseCountToBeHidden()
+    }
+
+    @Then("I should see no cases in the search case list")
+    fun IShouldSeeNoCasesInTheCaseSearchCaseList() {
+        caseSearchCaseCountPO().requireCaseCountToBeHidden()
     }
 
     @Then("the cornerstone case list should contain:")

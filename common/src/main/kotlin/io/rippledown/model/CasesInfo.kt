@@ -7,7 +7,8 @@ data class CasesInfo(
     val caseIds: List<CaseId> = listOf(),
     val cornerstoneCaseIds: List<CaseId> = listOf(),
     val favouriteCaseIds: List<CaseId> = listOf(),
+    val searchCaseIds: List<CaseId> = listOf(),
     val kbName: String = ""
 ) {
-    val count get() = caseIds.size + cornerstoneCaseIds.size
+    val count get() = caseIds.size + cornerstoneCaseIds.size + favouriteCaseIds.size + searchCaseIds.size
 }
