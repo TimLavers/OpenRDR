@@ -96,11 +96,13 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
     private fun getAttributeCellsInOrderShown(): List<AttributeCellPO> {
         val caseName = awaitNameShown()
         val contentDescriptionPrefix = attributeCellContentDescriptionPrefix(caseName)
-        return contextProvider()
-            .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
-            .findAllByDescriptionPrefix(contentDescriptionPrefix)
-            .map { AttributeCellPO(it, caseName) }
-            .sorted()
+        return execute<List<AttributeCellPO>> {
+            contextProvider()
+                .find(CASE_VIEW_TABLE)!!//narrow down the context to the table
+                .findAllByDescriptionPrefix(contentDescriptionPrefix)
+                .map { AttributeCellPO(it, caseName) }
+                .sorted()
+        }
     }
 
     private fun extractMatchingValuesInOrderShown(
@@ -125,8 +127,9 @@ class CaseViewPO(private val contextProvider: () -> AccessibleContext) {
         val allAttributeCells = getAttributeCellsInOrderShown()
         fun cellPosition(attribute: String): Point {
             val draggedCell = allAttributeCells.find { it.text() == attribute }!!
-            val accessibleComponent = draggedCell.context.accessibleComponent
-            val topLeft = accessibleComponent.locationOnScreen
+            // Compose 1.11's accessibility bridge walks the Swing hierarchy to
+            // resolve a screen position, so this must run on the EDT.
+            val topLeft = execute<Point> { draggedCell.context.accessibleComponent.locationOnScreen }
             return Point(topLeft.x + 5, topLeft.y + 5)
         }
         val targetPos = cellPosition(targetAttribute)
