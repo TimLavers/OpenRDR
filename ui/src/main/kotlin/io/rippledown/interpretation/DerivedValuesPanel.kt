@@ -171,33 +171,42 @@ internal fun DerivedValueRow(
             .background(rowBackground)
             .semantics { contentDescription = "$DERIVED_VALUE_ROW_PREFIX${info.name}" }
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = info.name,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                color = Color.DarkGray,
-                modifier = Modifier
-                    .weight(columnWidths.attributeColumnWeight)
-                    .padding(end = 12.dp)
-                    .semantics { contentDescription = "$DERIVED_VALUE_NAME_PREFIX${info.name}" }
-            )
-            Text(
-                text = valueAnnotatedString(row),
-                fontSize = 13.sp,
-                color = Color.Black,
-                modifier = Modifier
-                    .weight(columnWidths.scrollableAreaWeight())
-                    .semantics { contentDescription = valueDescription }
-            )
-            Spacer(
-                modifier = Modifier.weight(
-                    1f - columnWidths.attributeColumnWeight - columnWidths.scrollableAreaWeight()
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // TooltipArea exposes its content only while a native hover is
+            // active. Publish the same details in a zero-size node so assistive
+            // technology and integration tests can read them deterministically.
+            // This follows the accessibility pattern used by ReportView.
+            Box(modifier = Modifier.size(0.dp)) {
+                DerivedValueTooltip(info, showFormula = row.highlight == DerivedValueHighlight.NONE)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = info.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = Color.DarkGray,
+                    modifier = Modifier
+                        .weight(columnWidths.attributeColumnWeight)
+                        .padding(end = 12.dp)
+                        .semantics { contentDescription = "$DERIVED_VALUE_NAME_PREFIX${info.name}" }
                 )
-            )
+                Text(
+                    text = valueAnnotatedString(row),
+                    fontSize = 13.sp,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .weight(columnWidths.scrollableAreaWeight())
+                        .semantics { contentDescription = valueDescription }
+                )
+                Spacer(
+                    modifier = Modifier.weight(
+                        1f - columnWidths.attributeColumnWeight - columnWidths.scrollableAreaWeight()
+                    )
+                )
+            }
         }
     }
 }
