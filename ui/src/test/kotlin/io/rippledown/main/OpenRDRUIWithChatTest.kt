@@ -4,12 +4,15 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.rippledown.appbar.assertKbNameIs
+import io.rippledown.casecontrol.requireCaseSelectorNotToBeDisplayed
 import io.rippledown.casecontrol.requireNamesToBeShowingOnCaseList
 import io.rippledown.casecontrol.selectCaseByName
 import io.rippledown.casecontrol.waitForCaseToBeShowing
 import io.rippledown.chat.*
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCaseWithInterpretation
@@ -26,17 +29,197 @@ class OpenRDRUIWithChatTest {
 
     lateinit var handler: Handler
     lateinit var api: Api
+    val defaultKb = KBInfo("kb_id", "KB")
+    val glucose = KBInfo("glucose_id", "Glucose")
 
     @Before
     fun setUp() {
         api = mockk<Api>()
         handler = mockk<Handler>()
         coEvery { api.cornerstoneStatus() } returns null
-        coEvery { api.kbList() } returns emptyList()
+        coEvery { api.kbList() } returns listOf(defaultKb)
+        coEvery { api.selectKB(defaultKb.id) } returns defaultKb
         coEvery { api.waitingCasesInfo() } returns CasesInfo()
-        coEvery { api.startWebSocketSession(any(), any(), any()) } returns Unit
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } returns Unit
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
+    }
+
+    private fun captureKbCallbacks(): Pair<() -> ((KBInfo) -> Unit), () -> (() -> Unit)> {
+        lateinit var kbInfoUpdated: (KBInfo) -> Unit
+        lateinit var kbClosed: () -> Unit
+        coEvery {
+            api.startWebSocketSession(
+                updateCornerstoneStatus = any(),
+                ruleSessionCompleted = any(),
+                updateCasesInfo = any(),
+                kbInfoUpdated = any(),
+                kbClosed = any()
+            )
+        } coAnswers {
+            kbInfoUpdated = arg(3)
+            kbClosed = arg(4)
+        }
+        return Pair({ kbInfoUpdated }, { kbClosed })
+    }
+
+    @Test
+    fun `with no knowledge base the conversation is started with no ids and a message can be sent`() = runTest {
+        // Given
+        coEvery { api.kbList() } returns emptyList()
+        val greeting = "There are no knowledge bases yet."
+        coEvery { api.startConversation(null, null) } returns ChatResponse(greeting)
+        coEvery { api.sendUserMessage("create Lipids") } returns ChatResponse("Created Lipids")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForIdle()
+            requireChatMessagesShowing(listOf(BotMessage(greeting)))
+
+            // When
+            typeChatMessageAndClickSend("create Lipids")
+
+            // Then
+            requireChatMessagesShowing(
+                listOf(
+                    BotMessage(greeting),
+                    UserMessage("create Lipids"),
+                    BotMessage("Created Lipids")
+                )
+            )
+            coVerify(exactly = 1) { api.startConversation(any(), any()) }
+            coVerify(exactly = 0) { api.waitingCasesInfo() }
+        }
+    }
+
+    @Test
+    fun `with a knowledge base that has no cases the conversation is about the knowledge base alone`() = runTest {
+        // Given
+        val greeting = "The knowledge base has no cases."
+        coEvery { api.startConversation(defaultKb.id, null) } returns ChatResponse(greeting)
+
+        with(composeTestRule) {
+            // When
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForIdle()
+
+            // Then
+            requireChatMessagesShowing(listOf(BotMessage(greeting)))
+            coVerify(exactly = 1) { api.startConversation(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `a knowledge base with cases starts one conversation, about the first case`() = runTest {
+        // Given
+        val caseId = CaseId(id = 7, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(7) } returns createViewableCaseWithInterpretation("case A", 7, listOf("Go to Bondi"))
+        coEvery { api.startConversation(defaultKb.id, 7) } returns ChatResponse("Hello")
+
+        with(composeTestRule) {
+            // When
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+
+            // Then
+            coVerify(exactly = 1) { api.startConversation(any(), any()) }
+            coVerify(exactly = 1) { api.startConversation(defaultKb.id, 7) }
+        }
+    }
+
+    @Test
+    fun `a KbInfo push opens that knowledge base and starts a new conversation`() = runTest {
+        // Given
+        val (kbInfoUpdated, _) = captureKbCallbacks()
+        coEvery { api.startConversation(defaultKb.id, null) } returns ChatResponse("KB has no cases.")
+        coEvery { api.startConversation(glucose.id, null) } returns ChatResponse("Glucose has no cases.")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForIdle()
+            assertKbNameIs("KB")
+
+            // When
+            kbInfoUpdated()(glucose)
+            waitForIdle()
+
+            // Then
+            assertKbNameIs("Glucose")
+            requireChatMessagesShowing(listOf(BotMessage("KB has no cases."), BotMessage("Glucose has no cases.")))
+            coVerify(exactly = 1) { api.startConversation(glucose.id, null) }
+        }
+    }
+
+    @Test
+    fun `a KbClosed push hides the cases and starts a conversation with no knowledge base`() = runTest {
+        // Given
+        val (_, kbClosed) = captureKbCallbacks()
+        val caseId = CaseId(id = 7, name = "case A")
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(7) } returns createViewableCaseWithInterpretation("case A", 7, listOf("Go to Bondi"))
+        coEvery { api.startConversation(defaultKb.id, 7) } returns ChatResponse("Hello")
+        // No greeting here: in the test harness a chat message arriving in the same frame as the
+        // case view disappearing makes the chat's scroll-to-end run inside the Scaffold's measure.
+        // The greeting of a restarted conversation is shown by the KbInfo test above.
+        coEvery { api.startConversation(null, null) } returns ChatResponse("")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+
+            // When
+            kbClosed()()
+            waitForIdle()
+
+            // Then
+            requireCaseSelectorNotToBeDisplayed()
+            coVerify(exactly = 1) { api.startConversation(null, null) }
+        }
+    }
+
+    @Test
+    fun `the reply to an open request is shown before the greeting of the opened knowledge base`() = runTest {
+        // Given
+        val (kbInfoUpdated, _) = captureKbCallbacks()
+        coEvery { api.startConversation(defaultKb.id, null) } returns ChatResponse("KB has no cases.")
+        coEvery { api.startConversation(glucose.id, null) } returns ChatResponse("Glucose has no cases.")
+        // The server pushes KbInfo before it replies, as the real one does.
+        coEvery { api.sendUserMessage("open Glucose") } coAnswers {
+            kbInfoUpdated()(glucose)
+            ChatResponse("Opened Glucose")
+        }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForIdle()
+
+            // When
+            typeChatMessageAndClickSend("open Glucose")
+            waitForIdle()
+
+            // Then
+            requireChatMessagesShowing(
+                listOf(
+                    BotMessage("KB has no cases."),
+                    UserMessage("open Glucose"),
+                    BotMessage("Opened Glucose"),
+                    BotMessage("Glucose has no cases.")
+                )
+            )
+        }
     }
 
     @Test
@@ -147,7 +330,7 @@ class OpenRDRUIWithChatTest {
             typeChatMessageAndClickSend(userMessage)
 
             //Then
-            coVerify { api.sendUserMessage(userMessage, id) }
+            coVerify { api.sendUserMessage(userMessage) }
         }
     }
 
@@ -172,7 +355,7 @@ class OpenRDRUIWithChatTest {
             waitForCaseToBeShowing(caseName)
 
             //Then
-            coVerify { api.startConversation(id) }
+            coVerify { api.startConversation(any(), id) }
         }
     }
 
@@ -205,8 +388,8 @@ class OpenRDRUIWithChatTest {
             waitForCaseToBeShowing(caseNameB)
 
             //Then
-            coVerify(exactly = 1) { api.startConversation(idA) }
-            coVerify(exactly = 1) { api.startConversation(idB) }
+            coVerify(exactly = 1) { api.startConversation(any(), idA) }
+            coVerify(exactly = 1) { api.startConversation(any(), idB) }
         }
     }
 
@@ -224,8 +407,8 @@ class OpenRDRUIWithChatTest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns caseA
         coEvery { api.getCase(2) } returns caseB
-        coEvery { api.startConversation(1) } returns ChatResponse(sameResponse)
-        coEvery { api.startConversation(2) } returns ChatResponse(sameResponse)
+        coEvery { api.startConversation(any(), 1) } returns ChatResponse(sameResponse)
+        coEvery { api.startConversation(any(), 2) } returns ChatResponse(sameResponse)
 
         with(composeTestRule) {
             setContent {
@@ -254,7 +437,7 @@ class OpenRDRUIWithChatTest {
         val initialResponse = "the answer is 42"
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
-        coEvery { api.startConversation(id) } returns ChatResponse(initialResponse)
+        coEvery { api.startConversation(any(), id) } returns ChatResponse(initialResponse)
 
         with(composeTestRule) {
             //Given
@@ -279,8 +462,8 @@ class OpenRDRUIWithChatTest {
         val case = createViewableCaseWithInterpretation(caseName, id, listOf("Go to Bondi"))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(id) } returns case
-        coEvery { api.startConversation(id) } returns ChatResponse("Hello")
-        coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse("OK")
+        coEvery { api.startConversation(any(), id) } returns ChatResponse("Hello")
+        coEvery { api.sendUserMessage(any()) } returns ChatResponse("OK")
 
         with(composeTestRule) {
             setContent {
@@ -291,7 +474,7 @@ class OpenRDRUIWithChatTest {
             val userMessage = "add a comment"
             typeChatMessageAndClickSend(userMessage)
 
-            coVerify(exactly = 1) { api.startConversation(id) }
+            coVerify(exactly = 1) { api.startConversation(any(), id) }
         }
     }
 
@@ -305,7 +488,7 @@ class OpenRDRUIWithChatTest {
         val case = createViewableCaseWithInterpretation(caseA, 1, listOf(bondiComment))
         coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
         coEvery { api.getCase(1) } returns case
-        coEvery { api.sendUserMessage(any(), any<Long>()) } returns ChatResponse(answer)
+        coEvery { api.sendUserMessage(any()) } returns ChatResponse(answer)
 
         with(composeTestRule) {
             //Given
@@ -341,7 +524,7 @@ fun main() {
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
 //    coEvery { api.cornerstoneStatus() } returns CornerstoneStatus(caseB, 0, 42)
     coEvery { api.getCase(any()) } returns caseA
-    coEvery { api.sendUserMessage(any(), any()) } returns ChatResponse("The answer is 42")
+    coEvery { api.sendUserMessage(any()) } returns ChatResponse("The answer is 42")
 
     applicationFor {
         OpenRDRUI(handler, dispatcher = Unconfined)

@@ -75,9 +75,25 @@ class Api(
     suspend fun startWebSocketSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
         ruleSessionCompleted: () -> Unit,
-        updateCasesInfo: (CasesInfo) -> Unit = {}
+        updateCasesInfo: (CasesInfo) -> Unit = {},
+        kbInfoUpdated: (KBInfo) -> Unit = {},
+        kbClosed: () -> Unit = {}
     ) {
-        webSocketManager.startSession(updateCornerstoneStatus, ruleSessionCompleted, updateCasesInfo)
+        // currentKB is set before the UI hears of the change, so that anything the
+        // UI then asks for goes to the right KB.
+        webSocketManager.startSession(
+            updateCornerstoneStatus,
+            ruleSessionCompleted,
+            updateCasesInfo,
+            kbInfoUpdated = {
+                currentKB = it
+                kbInfoUpdated(it)
+            },
+            kbClosed = {
+                currentKB = null
+                kbClosed()
+            }
+        )
     }
     fun shutdown() {
         // client.close() // Uncomment if needed, but not required for CIO engine
@@ -332,11 +348,15 @@ class Api(
         }.body()
     }
 
-    suspend fun startConversation(caseId: Long): ChatResponse = try {
+    /**
+     * The chat exists without a knowledge base, so this does not go through
+     * [kbInfo], whose lazy default-KB fetch would create a KB behind the user's back.
+     */
+    suspend fun startConversation(kbId: String?, caseId: Long?): ChatResponse = try {
         val response = client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
-            setKBParameter()
-            setCaseIdParameter(caseId)
+            kbId?.let { parameter(KB_ID, it) }
+            caseId?.let { setCaseIdParameter(it) }
         }
         decodeChatResponseOrEmpty(response)
     } catch (_: Throwable) {
@@ -344,11 +364,9 @@ class Api(
         ChatResponse("")
     }
 
-    suspend fun sendUserMessage(message: String, caseId: Long): ChatResponse = try {
+    suspend fun sendUserMessage(message: String): ChatResponse = try {
         val response = client.post("$API_URL$SEND_USER_MESSAGE") {
             contentType(Plain)
-            setKBParameter()
-            setCaseIdParameter(caseId)
             setBody(message)
             timeout {
                 requestTimeoutMillis = 90_000

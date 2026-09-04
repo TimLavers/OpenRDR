@@ -571,10 +571,10 @@ exactly as `CASES_INFO_PREFIX` and `RULE_SESSION_COMPLETED` are today. `Api.star
 
 `Api`:
 
-- `startConversation(kbId: String?, caseId: Long?)` and `sendUserMessage(message)` read `currentKB` directly instead of
+- `startConversation(kbId: String?, caseId: Long?)` sends exactly the ids it is given and does not go through
   `kbInfo()`, so that a closed KB does not trigger the lazy default-KB fetch (which would silently *create* the default
   KB).
-- `sendUserMessage` no longer takes `caseId`; the server does not need it.
+- `sendUserMessage(message)` takes no ids at all; the server routes it to the one conversation.
 
 `OpenRDRUI`:
 
@@ -582,19 +582,29 @@ exactly as `CASES_INFO_PREFIX` and `RULE_SESSION_COMPLETED` are today. `Api.star
   case only if there is one.
 - `LaunchedEffect(kbInfo)`: if `kbInfo == null`, clear `casesInfo`, `currentCaseId`, `currentCase`,
   `cornerstoneStatus`; otherwise fetch `waitingCasesInfo()` as now.
-- Conversation start becomes a single effect keyed on the *context*, not the case:
+- Conversation start becomes a single effect keyed on the *context*, not the case. The context is derived, and is
+  `null` while the state is still settling, so that no conversation is started for a state that is merely passed through
+  (which would show the user, say, the "has no cases" greeting for a KB whose cases have not yet arrived):
 
   ```kotlin
-  val conversationKey = Triple(kbInfo?.id, currentCaseId, casesInfo.count == 0)
-  LaunchedEffect(conversationKey) {
-      if (kbInfo != null && casesInfo.count > 0 && currentCaseId == null) return@LaunchedEffect // a case is about to be chosen
-      val response = api.startConversation(kbInfo?.id, currentCaseId)
+  val chatContext: Pair<String?, Long?>? = when {
+      !kbListRead -> null                       // startup: KB list not yet fetched
+      kbInfo == null -> Pair(null, null)
+      casesInfoKbId != kbInfo.id -> null        // cases not yet fetched for this KB
+      casesInfo.count == 0 -> Pair(kbInfo.id, null)
+      currentCaseId == null -> null             // a case is about to be chosen
+      currentCaseId not in casesInfo -> null    // stale case id during a KB switch
+      else -> Pair(kbInfo.id, currentCaseId)
+  }
+  LaunchedEffect(chatContext) {
+      val (kbId, caseId) = chatContext ?: return@LaunchedEffect
+      val response = api.startConversation(kbId, caseId)
       ++chatId; pendingConversationResponse = response.takeIf { it.text.isNotBlank() }
   }
   ```
 
-  The guard avoids the transient "KB with cases but no case selected yet" state producing a throw-away
-  `KnowledgeBaseOnly` conversation before the first case is picked.
+  `kbListRead` is set by the startup effect after `kbList()`/`selectKB`; `casesInfoKbId` by `LaunchedEffect(kbInfo)`
+  after `waitingCasesInfo()` (or after clearing, when `kbInfo == null`).
 - `startWebSocketSession(... kbInfoUpdated = { kbInfo = it }, kbClosed = { kbInfo = null })`.
 - `CaseSelector`/`CaseControl` already hide themselves when `casesInfo.count == 0`; the anchor menu already shows
   `NO_KB_SELECTED` when `kbInfo == null`. The `availableKBs` filter `it != kbInfo` is null-safe.
@@ -674,7 +684,7 @@ sequenceDiagram
     CM -->> UI: 200 "Opened \"Thyroids\"."
     UI ->> User: Opened "Thyroids".
     Note over UI: LaunchedEffect(kbInfo): casesInfo = waitingCasesInfo()
-    Note over UI: first case selected -> conversationKey changes
+  Note over UI: first case selected -> chatContext changes
     UI ->> Api: startConversation(kbId, caseId)
     Api ->> Route: POST START_CONVERSATION
     Note over Route: ChatCoordinator.startConversation(CaseInKnowledgeBase)
@@ -1016,9 +1026,13 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 - `WebSocketApi` and `Api` (`KbInfo:`/`KbClosed`, `currentKB` maintenance, chat calls with nullable ids,
   `sendUserMessage` without `caseId`); `OpenRDRUI` (nullable `kbInfo` cascade, context-keyed conversation start,
   `sendUserMessage` without a case).
-- Tests: `WebSocketForKbInfoTest` (branch has a starting point), `ApiTest`, `OpenRDRUIWithChatTest` for: no case ->
-  message still sent; `KbInfo` push -> new conversation; `KbClosed` -> case view hidden, `NO_KB_SELECTED`, conversation
-  restarted with no ids; ordering of "Opened X" then the greeting.
+- Tests: `WebSocketForKbInfoTest`, `ApiTest` (three starts; the no-KB one asserts no default-KB fetch),
+  `OpenRDRUIWithChatTest` for: no KB -> started with no ids, message still sent, `waitingCasesInfo` never called; KB
+  with no cases -> one start with the KB id alone; KB with cases -> one start, about the first case; `KbInfo` push ->
+  new conversation; `KbClosed` -> case view hidden, conversation restarted with no ids; ordering of "Opened X" then the
+  greeting.
+- The UI test fixtures now open a KB by default (`kbList()` returning one KB, `selectKB` stubbed): with no KB the client
+  no longer fetches cases, which is the point.
 - *Commit:* `Client follows KbInfo and KbClosed web-socket events; chat usable without a case`.
 
 ### Stage 5 - Cucumber

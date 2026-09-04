@@ -289,25 +289,44 @@ class ApiTest {
     @Test
     fun `should return a response from the conversation with the model`() = runTest {
         val userMessage = "What is the meaning of life?"
-        val caseId = 1234L
         val config = config {
             expectedUserMessage = userMessage
-            expectedCaseId = caseId
             returnResponse = ChatResponse("42")
         }
-        val response = Api(mock(config)).sendUserMessage(userMessage, caseId)
+        val response = Api(mock(config)).sendUserMessage(userMessage)
         response shouldBe config.returnResponse
     }
 
     @Test
-    fun `should start a conversation with the model`() = runTest {
+    fun `should start a conversation about a case`() = runTest {
         val caseId = 1234L
         val config = config {
+            expectedKbId = "thyroids_1"
             expectedCaseId = caseId
             returnResponse = ChatResponse("42")
         }
-        val response = Api(mock(config)).startConversation(caseId)
+        val response = Api(mock(config)).startConversation("thyroids_1", caseId)
         response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `should start a conversation about a knowledge base with no case`() = runTest {
+        val config = config {
+            expectedKbId = "thyroids_1"
+            returnResponse = ChatResponse("No cases yet.")
+        }
+        val response = Api(mock(config)).startConversation("thyroids_1", null)
+        response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `should start a conversation with no knowledge base and not fetch the default one`() = runTest {
+        val config = config {
+            returnResponse = ChatResponse("No knowledge base is open.")
+        }
+        val response = Api(mock(config)).startConversation(null, null)
+        response shouldBe config.returnResponse
+        config.defaultKbFetches shouldBe 0
     }
 
     @Test
