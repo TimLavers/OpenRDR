@@ -131,6 +131,8 @@ tasks.register("cucumberTest") {
 
 tasks.register<JavaExec>("cucumberSingleTest") {
     setupExec()
+    // The scenario total is counted before the tag filter is applied, so it would be wrong here.
+    systemProperty("scenarioProgress.hideTotal", "true")
     args = argsForCuke() + listOf(
         pathToRequirements,
         "--tags",

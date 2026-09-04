@@ -73,6 +73,7 @@ fun OpenRDRUI(
     // started, or the user would see a greeting for a state that is passing.
     var kbListRead by remember { mutableStateOf(false) }
     var casesInfoKbId by remember { mutableStateOf<String?>(null) }
+    var conversationStarted by remember { mutableStateOf(false) }
     val density = LocalDensity.current
 
     // Report panel state
@@ -137,14 +138,14 @@ fun OpenRDRUI(
     LaunchedEffect(kbInfo) {
         withContext(dispatcher) {
             val open = kbInfo
-            if (open == null) {
-                casesInfo = CasesInfo()
+            if (open?.id != casesInfoKbId) {
+                // Case ids are per KB, so a case of the new KB can share the id of the
+                // one showing; drop it so the new KB's case is fetched.
                 currentCaseId = null
                 currentCase = null
                 cornerstoneStatus = null
-            } else {
-                casesInfo = api.waitingCasesInfo()
             }
+            casesInfo = if (open == null) CasesInfo() else api.waitingCasesInfo()
             casesInfoKbId = open?.id
         }
     }
@@ -205,6 +206,7 @@ fun OpenRDRUI(
 
     LaunchedEffect(chatContext) {
         val (kbId, caseId) = chatContext ?: return@LaunchedEffect
+        conversationStarted = false
         withContext(dispatcher) {
             try {
                 val response = api.startConversation(kbId, caseId)
@@ -216,6 +218,8 @@ fun OpenRDRUI(
                 // Swallow transient failures (e.g. stale kb id during a kb switch,
                 // or a case that is not (yet) in the current kb). The effect will
                 // re-fire when the context changes again.
+            } finally {
+                conversationStarted = true
             }
         }
     }
@@ -374,6 +378,7 @@ fun OpenRDRUI(
                 ChatController(
                     id = chatId,
                     chatControllerHandler,
+                    conversationStarted = conversationStarted,
                     voiceRecognitionService = voiceRecognitionService,
                     modifier = Modifier.width(chatPanelWidth)
                 )

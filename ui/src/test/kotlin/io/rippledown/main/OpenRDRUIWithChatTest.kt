@@ -1,6 +1,9 @@
 package io.rippledown.main
 
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -16,6 +19,7 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCaseWithInterpretation
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
@@ -91,6 +95,33 @@ class OpenRDRUIWithChatTest {
             )
             coVerify(exactly = 1) { api.startConversation(any(), any()) }
             coVerify(exactly = 0) { api.waitingCasesInfo() }
+        }
+    }
+
+    @Test
+    fun `the chat cannot be used until the conversation has started`() = runTest {
+        // Given a conversation start that has not yet returned
+        val greeting = CompletableDeferred<ChatResponse>()
+        coEvery { api.startConversation(defaultKb.id, null) } coAnswers { greeting.await() }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForIdle()
+
+            // Then the input is disabled and the bot is shown as typing
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsNotEnabled()
+            requireTypingIndicatorShowing()
+
+            // When the conversation start returns. A blank greeting, for the harness reason
+            // given in the KbClosed test below.
+            runOnIdle { greeting.complete(ChatResponse("")) }
+            waitForIdle()
+
+            // Then the input is enabled
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsEnabled()
+            requireTypingIndicatorNotShowing()
         }
     }
 

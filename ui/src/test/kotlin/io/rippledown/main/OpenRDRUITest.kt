@@ -929,6 +929,36 @@ class OpenRDRUITest {
     }
 
     @Test
+    fun `should show the new KB's case after switching KBs even when it has the same id as the old case`() = runTest {
+        //Given two KBs whose first cases share the id 1, as in-memory KBs do
+        val kbA = KBInfo("id_a", "KB_A")
+        val kbB = KBInfo("id_b", "KB_B")
+        coEvery { api.kbList() } returns listOf(kbA, kbB)
+        coEvery { api.selectKB("id_a") } returns kbA
+        coEvery { api.selectKB("id_b") } returns kbB
+        var casesForCurrentKb = CasesInfo(listOf(CaseId(id = 1, name = "case A")))
+        var caseForCurrentKb = createViewableCaseWithInterpretation("case A", 1)
+        coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
+        coEvery { api.getCase(1) } coAnswers { caseForCurrentKb }
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+
+            //When - the user switches to KB-B, whose only case also has id 1
+            casesForCurrentKb = CasesInfo(listOf(CaseId(id = 1, name = "case B")))
+            caseForCurrentKb = createViewableCaseWithInterpretation("case B", 1)
+            clickDropdown()
+            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+
+            //Then - the case view shows KB-B's case, not the stale KB-A one
+            waitForCaseToBeShowing("case B")
+        }
+    }
+
+    @Test
     fun `should update case list after switching KBs to reflect new KB's cases`() = runTest {
         //Given
         val kbA = KBInfo("id_a", "KB_A")

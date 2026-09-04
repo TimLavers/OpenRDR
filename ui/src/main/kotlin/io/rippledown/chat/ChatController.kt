@@ -18,6 +18,7 @@ interface ChatControllerHandler {
 fun ChatController(
     id: Long = -1L,
     handler: ChatControllerHandler,
+    conversationStarted: Boolean = true,
     voiceRecognitionService: VoiceRecognition? = null,
     modifier: Modifier = Modifier
 ) {
@@ -44,7 +45,7 @@ fun ChatController(
         sendIsEnabled = true
     }
 
-    ChatPanel(id, sendIsEnabled, chatHistory, onMessageSent = { userMessage ->
+    ChatPanel(id, conversationStarted && sendIsEnabled, chatHistory, onMessageSent = { userMessage ->
         if (userMessage.text.isNotEmpty()) {
             chatHistory = chatHistory + userMessage
         }
