@@ -72,6 +72,12 @@ class Defs {
         restClient().createKB(name)
     }
 
+    // The KB is created by the Before hook; this step states that fact in the feature.
+    @Given("there is a knowledge base called {word}")
+    fun requireOnlyKnowledgeBase(name: String) {
+        restClient().kbNames() shouldBe listOf(name)
+    }
+
     @When("I start the client application")
     fun startClientApplication() = startClient()
 

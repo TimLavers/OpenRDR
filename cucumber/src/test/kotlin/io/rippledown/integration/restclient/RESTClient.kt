@@ -169,6 +169,8 @@ class RESTClient {
 
     fun createKBWithDefaultName() = createKB(DEFAULT_PROJECT_NAME)
 
+    fun kbNames(): List<String> = runBlocking { api.kbList().map { it.name } }
+
     fun shutdown(): Unit = runBlocking {
         try {
             client.post("$endpoint$SHUTDOWN")

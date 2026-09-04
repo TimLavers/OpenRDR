@@ -1,5 +1,8 @@
 Feature: Managing knowledge bases through the chat
 
+  Background:
+    Given there is a knowledge base called Thyroids
+
   Scenario: The available knowledge bases can be listed
     Given A Knowledge Base called B has been created
     And A Knowledge Base called C has been created
@@ -64,8 +67,7 @@ Feature: Managing knowledge bases through the chat
     And the displayed KB name is now Glucose
 
   Scenario: Creating a knowledge base whose name is taken is refused
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     When I enter the following text into the chat panel:
       | Create a knowledge base called thyroids |
     Then the chatbot response contains the following terms:
