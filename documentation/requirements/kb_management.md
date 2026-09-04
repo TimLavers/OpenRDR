@@ -17,5 +17,5 @@ cause problems down the track in systems that have large numbers of rarely used 
 | Retrieve `KB`s.       | A `KB` can be retrieved based on its `KBInfo`.                                                                            | KBM-4      |
 | Delete a `KB`.        | A `KB` can deleted, based on its `KBInfo.id`.                                                                             | KBM-5      |
 | Load `KB`s at init.   | All `KB`s are loaded at server startup.                                                                                   | KBM-6      |
+| Rename a `KB`.        | A `KB` can be renamed without changing its persistent identifier.                                                         | KBM-7      |
  
-

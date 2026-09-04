@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.model.Attribute
+import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.Result
 import io.rippledown.persistence.PersistenceProvider
@@ -300,6 +301,23 @@ internal class ServerApplicationTest {
             app.deleteKB("Unknown")
         }.message shouldBe "Unknown kb id: Unknown"
         app.kbList().map { it.name } shouldBe listOf("Glucose")
+    }
+
+    @Test // KBM-7
+    fun `rename KB updates the manager and existing endpoint`() {
+        // given
+        val original = app.createKB("Thyroids", false)
+        val endpoint = app.kbForId(original.id)
+
+        // when
+        val renamed = app.renameKB(original.id, "Thyroid Function")
+
+        // then
+        renamed shouldBe KBInfo(original.id, "Thyroid Function")
+        renamed.name shouldBe "Thyroid Function"
+        app.kbList() shouldBe listOf(renamed)
+        endpoint.kbInfo() shouldBe renamed
+        app.kbForId(original.id) shouldBe endpoint
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

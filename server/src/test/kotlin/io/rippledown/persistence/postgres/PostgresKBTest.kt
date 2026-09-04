@@ -43,6 +43,21 @@ class PostgresKBTest {
     }
 
     @Test
+    fun `rename updates the stored KB name without changing its id`() {
+        // given
+        val newName = "Blood Glucose"
+
+        // when
+        glucoseKB.rename(newName)
+
+        // then
+        glucoseKB.kbInfo().id shouldBe glucoseInfo.id
+        glucoseKB.kbInfo().name shouldBe newName
+        PostgresKB(glucoseInfo.id).kbInfo().id shouldBe glucoseInfo.id
+        PostgresKB(glucoseInfo.id).kbInfo().name shouldBe newName
+    }
+
+    @Test
     fun attributeStore() {
         val age = glucoseKB.attributeStore().create("Age")
         val sex = glucoseKB.attributeStore().create("Sex")

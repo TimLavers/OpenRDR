@@ -69,6 +69,20 @@ class ApplicationKbService(
         return case
     }
 
+    override suspend fun rename(newName: String): KBInfo {
+        val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
+        val renamed = application.renameKB(endpoint.kbInfo().id, newName)
+        webSocketManager.sendKbInfo(renamed)
+        return renamed
+    }
+
+    override fun description(): String =
+        checkNotNull(openEndpoint()) { "No knowledge base is open." }.description()
+
+    override fun setDescription(text: String) {
+        checkNotNull(openEndpoint()) { "No knowledge base is open." }.setDescription(text)
+    }
+
     override fun isRuleSessionActive() = openEndpoint()?.session?.ruleSessionManager?.isRuleSessionActive() == true
 
     private fun pathologyDemonstrationCase(): ExternalCase {

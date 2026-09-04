@@ -28,5 +28,5 @@
 - Do not ask for permission to read or write any file or image - you have permission to do so
 - Do not ask for permission to run individual test files - you have permission to do so
 - Do not ask for permission to execute shell scripts like grep - you have permission to do so
-- <important>Ask for permission before running more than 1 test - in general you will not have permission as long
-  running tests are better run in Team City where they don't take over my desktop</important>
+- <important>Ask for permission before running more than 1 UI unit test or 1 cucumber test - in general you will not
+  have permission as long UI tests take over my desktop and need to be appropriately scheduled</important>

@@ -81,6 +81,26 @@ class KBManagementTest: OpenRDRServerTestBase() {
     }
 
     @Test
+    fun renameKB() = testApplication {
+        // given
+        setupServer()
+        val renamed = KBInfo(kbId, "New wisdom")
+        every { serverApplication.renameKB(kbId, renamed.name) } returns renamed
+
+        // when
+        val result = httpClient.post(RENAME_KB) {
+            parameter(KB_ID, kbId)
+            contentType(ContentType.Application.Json)
+            setBody(renamed.name)
+        }
+
+        // then
+        result.status shouldBe HttpStatusCode.OK
+        result.body<KBInfo>() shouldBe renamed
+        verify { serverApplication.renameKB(kbId, renamed.name) }
+    }
+
+    @Test
     fun exportKB() = testApplication {
         setupServer()
         val zipFile = File("src/test/resources/export/Empty.zip")

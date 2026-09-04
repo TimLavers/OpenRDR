@@ -331,6 +331,16 @@ class ActionCommentTest {
             ADD_DEMONSTRATION_CASE,
             kind = "pathology"
         ).createActionInstance() shouldBe AddDemonstrationCase("pathology")
+        ActionComment(
+            RENAME_KNOWLEDGE_BASE,
+            newName = "Thyroid Function"
+        ).createActionInstance() shouldBe RenameKnowledgeBase("Thyroid Function")
+        ActionComment(SHOW_KNOWLEDGE_BASE_DESCRIPTION)
+            .createActionInstance().shouldBeInstanceOf<ShowKnowledgeBaseDescription>()
+        ActionComment(
+            SET_KNOWLEDGE_BASE_DESCRIPTION,
+            description = "A thyroid KB."
+        ).createActionInstance() shouldBe SetKnowledgeBaseDescription("A thyroid KB.")
     }
 
     @Test

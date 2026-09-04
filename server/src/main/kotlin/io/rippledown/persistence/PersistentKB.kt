@@ -4,6 +4,7 @@ import io.rippledown.model.KBInfo
 
 interface PersistentKB {
     fun kbInfo(): KBInfo
+    fun rename(newName: String)
     fun attributeStore(): AttributeStore
     fun attributeOrderStore(): OrderStore
     fun derivedDefinitionStore(): DerivedDefinitionStore

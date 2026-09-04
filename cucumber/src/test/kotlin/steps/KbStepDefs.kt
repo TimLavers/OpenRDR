@@ -15,6 +15,12 @@ class KbStepDefs {
         }
     }
 
+    @Then("the displayed KB name is (now ){string}")
+    fun theDisplayedKBNameIsNowQuoted(kbName: String) {
+        // given / when / then
+        theDisplayedKBNameIsNow(kbName)
+    }
+
     @Then("no knowledge base is shown as selected")
     fun noKnowledgeBaseIsShownAsSelected() {
         waitUntilAsserted {

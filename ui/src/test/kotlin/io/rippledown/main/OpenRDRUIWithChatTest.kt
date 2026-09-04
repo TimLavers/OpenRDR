@@ -160,6 +160,29 @@ class OpenRDRUIWithChatTest {
     }
 
     @Test
+    fun `a renamed KbInfo push updates the displayed name without restarting the conversation`() = runTest {
+        // given
+        val (kbInfoUpdated, _) = captureKbCallbacks()
+        coEvery { api.startConversation(defaultKb.id, null) } returns ChatResponse("KB has no cases.")
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Dispatchers.Unconfined)
+            }
+            waitForIdle()
+            assertKbNameIs("KB")
+
+            // when
+            kbInfoUpdated()(KBInfo(defaultKb.id, "Renamed KB"))
+            waitForIdle()
+
+            // then
+            assertKbNameIs("Renamed KB")
+            coVerify(exactly = 1) { api.startConversation(defaultKb.id, null) }
+        }
+    }
+
+    @Test
     fun `a KbClosed push hides the cases and starts a conversation with no knowledge base`() = runTest {
         // Given
         val (_, kbClosed) = captureKbCallbacks()

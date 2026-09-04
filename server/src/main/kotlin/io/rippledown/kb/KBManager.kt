@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 
 class KBManager(private val persistenceProvider: PersistenceProvider) {
     private val kbInfos = mutableSetOf<KBInfo>()
+    private val openKbs = mutableMapOf<String, KB>()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
 
     init {
@@ -45,6 +46,22 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
         val idOfKBToBeDeleted = kbInfos.firstOrNull{ it.id == kbInfo.id} ?: throw IllegalArgumentException("No KB with id $kbInfo was found.")
         persistenceProvider.destroyKBPersistence(idOfKBToBeDeleted)
         kbInfos.remove(idOfKBToBeDeleted)
+        openKbs.remove(idOfKBToBeDeleted.id)
+    }
+
+    fun renameKB(id: String, newName: String): KBInfo {
+        val existing = kbInfos.firstOrNull { it.id == id }
+            ?: throw IllegalArgumentException("No KB with id $id was found.")
+        val clash = kbInfos.firstOrNull { it.id != id && it.name.equals(newName, ignoreCase = true) }
+        if (clash != null) {
+            throw IllegalArgumentException("A KB with name ${clash.name} already exists.")
+        }
+
+        val kb = (openKB(id) as EntityRetrieval.Success).entity
+        val renamed = kb.rename(newName)
+        kbInfos.remove(existing)
+        kbInfos.add(renamed)
+        return renamed
     }
 
     fun openKB(id: String): EntityRetrieval<KB> {
@@ -54,8 +71,10 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
         return if (kbInfo == null) {
             EntityRetrieval.Failure("Unknown id: $id.")
         } else {
-            val persistentKB = persistenceProvider.kbPersistence(kbInfo.id)
-            EntityRetrieval.Success(KB(persistentKB))
+            val kb = openKbs.getOrPut(id) {
+                KB(persistenceProvider.kbPersistence(kbInfo.id))
+            }
+            EntityRetrieval.Success(kb)
         }
     }
 }

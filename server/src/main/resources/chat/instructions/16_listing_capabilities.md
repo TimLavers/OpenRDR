@@ -23,7 +23,7 @@ not actually output the ** characters. Do not use any markdown formatting
 - **reorder** the attributes
 - **rename** a comment or a derived attribute
 - **cancel** the rule you are currently building
-- **list**, **open**, **create**, **close** or **delete** a knowledge base
+- **list**, **open**, **create**, **close**, **delete**, **rename** or **describe** a knowledge base
 
 When no knowledge base is open, mention only the last of these, and that a demonstration case can be added once one is.
 

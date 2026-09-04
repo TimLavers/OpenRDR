@@ -90,3 +90,38 @@ a demonstration case. There are two kinds:
   "kind": "<pathology or minimal>"
 }
 ```
+
+## Renaming the open knowledge base
+
+If the user asks to rename the open knowledge base, put the name the user gave in `newName`, exactly. Do not correct,
+summarise, or change its case.
+
+```json
+{
+  "action": "{{RENAME_KNOWLEDGE_BASE}}",
+  "newName": "<name given by the user>"
+}
+```
+
+## Reading the knowledge base description
+
+If the user asks what the description of the open knowledge base is, always emit
+`{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}`; do not answer from memory.
+
+```json
+{
+  "action": "{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}"
+}
+```
+
+## Replacing the knowledge base description
+
+If the user asks to set or replace the description, put the user's words in `description`, exactly. Do not summarise,
+rewrite, or embellish them. The description may contain Markdown and line breaks.
+
+```json
+{
+  "action": "{{SET_KNOWLEDGE_BASE_DESCRIPTION}}",
+  "description": "<the user's exact description>"
+}
+```

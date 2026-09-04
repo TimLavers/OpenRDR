@@ -92,6 +92,9 @@ const val CREATE_KNOWLEDGE_BASE = "CreateKnowledgeBase"
 const val CLOSE_KNOWLEDGE_BASE = "CloseKnowledgeBase"
 const val DELETE_KNOWLEDGE_BASE = "DeleteKnowledgeBase"
 const val ADD_DEMONSTRATION_CASE = "AddDemonstrationCase"
+const val RENAME_KNOWLEDGE_BASE = "RenameKnowledgeBase"
+const val SHOW_KNOWLEDGE_BASE_DESCRIPTION = "ShowKnowledgeBaseDescription"
+const val SET_KNOWLEDGE_BASE_DESCRIPTION = "SetKnowledgeBaseDescription"
 
 const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Ask me to list, open or create one."
 const val KB_ACTION_DURING_RULE_MESSAGE =
@@ -118,12 +121,16 @@ const val DEMO_CASE_NAME_MINIMAL = "Demo"
 const val DEMO_CASE_NAME_PATHOLOGY = "Einstein"
 const val NO_KB_OPEN = "No knowledge base is open."
 const val NO_KBS_YET = "There are no knowledge bases yet."
+const val KB_NAME_CANNOT_BE_BLANK = "A knowledge base name cannot be blank."
 
 fun kbOpenedMessage(name: String) = "$KB_OPENED \"$name\"."
 fun kbCreatedMessage(name: String) = "$KB_CREATED \"$name\"."
 fun kbClosedMessage(name: String) = "$KB_CLOSED_MESSAGE \"$name\"."
 fun kbDeletedMessage(name: String) = "$KB_DELETED \"$name\"."
+fun kbRenamedMessage(oldName: String, newName: String) = "Renamed \"$oldName\" to \"$newName\"."
 fun kbAlreadyExistsMessage(name: String) = "A knowledge base named \"$name\" $KB_ALREADY_EXISTS."
+fun kbHasNoDescriptionMessage(name: String) = "\"$name\" has no description."
+fun kbDescriptionUpdatedMessage(name: String) = "Description of \"$name\" updated."
 fun confirmKbDeletionMessage(name: String) =
     "Delete the knowledge base \"$name\"? $CANNOT_BE_UNDONE $SAY_YES_TO_CONFIRM"
 
@@ -148,4 +155,3 @@ fun emptyKbGreeting(kbName: String) =
     "The knowledge base \"$kbName\" $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +
             "To try it out, I can add a demonstration case: say \"$PATHOLOGY_CASE\" for a pathology report, " +
             "or \"$MINIMAL_CASE\" for a case with a single attribute."
-

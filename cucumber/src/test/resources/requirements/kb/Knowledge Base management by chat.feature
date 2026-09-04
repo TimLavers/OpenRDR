@@ -172,3 +172,37 @@ Feature: Managing knowledge bases through the chat
     Then the chatbot response contains the following terms:
       | finish or cancel the current rule |
     And the displayed KB name is Glucose
+
+  Scenario: The open knowledge base can be renamed
+    Given I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Rename this knowledge base to Thyroid Function |
+    Then the chatbot response contains the following terms:
+      | Renamed | Thyroids | Thyroid Function |
+    And the displayed KB name is now "Thyroid Function"
+
+  Scenario: Renaming to a name that is taken is refused
+    Given A Knowledge Base called Zinc has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Rename this knowledge base to zinc |
+    Then the chatbot response contains the following terms:
+      | already exists |
+    And the displayed KB name is Thyroids
+
+  Scenario: The description of the open knowledge base can be set and read back
+    Given I start the client application
+    When I enter the following text into the chat panel:
+      | Set the description to: A basic thyroid management KB. |
+    Then the chatbot response contains the following terms:
+      | Description | updated |
+    And the KB description is:
+    """
+    A basic thyroid management KB.
+    """
+    When I enter the following text into the chat panel:
+      | What is the description of this knowledge base? |
+    Then the chatbot response contains the following terms:
+      | A basic thyroid management KB. |

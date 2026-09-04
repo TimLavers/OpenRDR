@@ -142,6 +142,68 @@ class KBManagerTest {
         failure.errorMessage shouldBe "Unknown id: $id."
     }
 
+    @Test //KBM-7
+    fun `rename a KB preserves its id and persists the new name`() {
+        // given
+        val original = kbManager.createKB("Thyroids")
+
+        // when
+        val renamed = kbManager.renameKB(original.id, "Thyroid Function")
+
+        // then
+        renamed shouldBe KBInfo(original.id, "Thyroid Function")
+        kbManager.all() shouldBe setOf(renamed)
+        kbManager = KBManager(persistenceProvider)
+        kbManager.all() shouldBe setOf(renamed)
+        val reopened = (kbManager.openKB(original.id) as EntityRetrieval.Success).entity
+        reopened.kbInfo.name shouldBe "Thyroid Function"
+    }
+
+    @Test //KBM-7
+    fun `rename refuses a name already used by another KB ignoring case`() {
+        // given
+        val thyroids = kbManager.createKB("Thyroids")
+        val glucose = kbManager.createKB("Glucose")
+
+        // when
+        val error = shouldThrow<IllegalArgumentException> {
+            kbManager.renameKB(thyroids.id, "glucose")
+        }
+
+        // then
+        error.message shouldBe "A KB with name Glucose already exists."
+        kbManager.all() shouldBe setOf(thyroids, glucose)
+    }
+
+    @Test //KBM-7
+    fun `rename refuses an unknown KB id`() {
+        // given
+        val unknownId = "unknown_1"
+
+        // when
+        val error = shouldThrow<IllegalArgumentException> {
+            kbManager.renameKB(unknownId, "New name")
+        }
+
+        // then
+        error.message shouldBe "No KB with id $unknownId was found."
+    }
+
+    @Test //KBM-7
+    fun `rename validates the new name before changing persistence`() {
+        // given
+        val original = kbManager.createKB("Thyroids")
+
+        // when
+        shouldThrow<IllegalArgumentException> {
+            kbManager.renameKB(original.id, "")
+        }
+
+        // then
+        kbManager.all() shouldBe setOf(original)
+        persistenceProvider.kbPersistence(original.id).kbInfo() shouldBe original
+    }
+
     private fun add10KBs() {
         repeat(10) {
             kbManager.createKB("kb$it")

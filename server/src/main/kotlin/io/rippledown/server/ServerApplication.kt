@@ -85,6 +85,11 @@ class ServerApplication(
         idToKBEndpoint.remove(id)
     }
 
+    fun renameKB(id: String, newName: String): KBInfo {
+        kbForId(id)
+        return kbManager.renameKB(id, newName)
+    }
+
     fun openChatEndpoint(): KBEndpoint? = chatCoordinator.context().endpointOrNull
 
     fun kbForId(id: String): KBEndpoint {

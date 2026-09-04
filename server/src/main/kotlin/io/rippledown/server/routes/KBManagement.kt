@@ -75,6 +75,11 @@ fun Application.kbManagement(application: ServerApplication) {
             call.respond(OK)
         }
 
+        post(RENAME_KB) {
+            val renamed = application.renameKB(kbId(), call.receive<String>())
+            call.respond(renamed)
+        }
+
         get(DEFAULT_KB) {
             call.respond(application.getDefaultProject())
         }

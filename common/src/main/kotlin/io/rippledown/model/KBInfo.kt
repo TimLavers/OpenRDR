@@ -23,7 +23,7 @@ class KBInfo(val id: String, val name: String) : Comparable<KBInfo> {
         require("[a-z0-9_]+".toRegex().matches(id)) {
             "KBInfo id should consist of lower case letters, numbers, and _ only, but got $id."
         }
-        require(name.isNotEmpty()) {
+        require(name.isNotBlank()) {
             "KBInfo name cannot be blank."
         }
         require(name.length < 128) {

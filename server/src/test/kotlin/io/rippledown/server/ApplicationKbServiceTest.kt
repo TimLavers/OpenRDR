@@ -165,6 +165,39 @@ class ApplicationKbServiceTest {
     }
 
     @Test
+    fun `rename updates the open KB and pushes the renamed KBInfo`() = runBlocking<Unit> {
+        // given
+        val thyroids = app.createKB("Thyroids", false)
+        openEndpoint = app.kbForId(thyroids.id)
+        val pushed = slot<KBInfo>()
+        coEvery { webSocketManager.sendKbInfo(capture(pushed)) } just Runs
+
+        // when
+        val renamed = service.rename("Thyroid Function")
+
+        // then
+        renamed shouldBe KBInfo(thyroids.id, "Thyroid Function")
+        renamed.name shouldBe "Thyroid Function"
+        openEndpoint?.kbInfo() shouldBe renamed
+        app.kbList() shouldBe listOf(renamed)
+        pushed.captured shouldBe renamed
+        pushed.captured.name shouldBe "Thyroid Function"
+    }
+
+    @Test
+    fun `description operations use the open KB`() {
+        // given
+        val thyroids = app.createKB("Thyroids", false)
+        openEndpoint = app.kbForId(thyroids.id)
+
+        // when
+        service.setDescription("A thyroid knowledge base.")
+
+        // then
+        service.description() shouldBe "A thyroid knowledge base."
+    }
+
+    @Test
     fun `adding the pathology demonstration case stores Einstein and pushes the cases info`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)

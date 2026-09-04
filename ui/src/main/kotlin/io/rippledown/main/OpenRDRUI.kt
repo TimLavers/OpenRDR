@@ -62,7 +62,9 @@ fun OpenRDRUI(
     var chatId by remember { mutableStateOf<Long>(-1) }
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
-    var kbInfo: KBInfo? by remember { mutableStateOf(null) }
+    // KBInfo equality is id-only, so a rename produces an equal value. Always
+    // accept pushed KBInfo values so the application bar observes name changes.
+    var kbInfo: KBInfo? by remember { mutableStateOf(null, neverEqualPolicy()) }
     val voiceRecognitionService = voiceRecognition ?: remember { VoiceRecognitionService() }
     var chatPanelWidth by remember { mutableStateOf(350.dp) }
     var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
