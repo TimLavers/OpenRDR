@@ -1,4 +1,3 @@
-@ignore
 Feature: Managing knowledge bases through the chat
 
   Scenario: The available knowledge bases can be listed
@@ -22,16 +21,17 @@ Feature: Managing knowledge bases through the chat
     And case CaseB1 for KB B is provided having data:
       | Sun | cold |
     And I start the client application
+    And the displayed KB name is A
     When I enter the following text into the chat panel:
-      | Please open A |
+      | Please open B |
     Then the chatbot response contains the following terms:
-      | Opened | A |
-    And the displayed KB name is now A
-    And I should see the case CaseA1 as the current case
-    When I enter the following text into the chat panel:
-      | Please open b |
-    Then the displayed KB name is now B
+      | Opened | B |
+    And the displayed KB name is now B
     And I should see the case CaseB1 as the current case
+    When I enter the following text into the chat panel:
+      | Please open a |
+    Then the displayed KB name is now A
+    And I should see the case CaseA1 as the current case
 
   Scenario: Opening an unknown knowledge base lists the ones that exist
     Given A Knowledge Base called Glucose has been created
@@ -43,8 +43,7 @@ Feature: Managing knowledge bases through the chat
     And the displayed KB name is Glucose
 
   Scenario: Opening a knowledge base by part of its name asks first
-    Given A Knowledge Base called Thyroids has been created
-    And A Knowledge Base called Glucose has been created
+    Given A Knowledge Base called Glucose has been created
     And I start the client application
     And the displayed KB name is Glucose
     When I enter the following text into the chat panel:
@@ -57,8 +56,7 @@ Feature: Managing knowledge bases through the chat
     Then the displayed KB name is now Thyroids
 
   Scenario: A knowledge base can be created and is opened
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     When I enter the following text into the chat panel:
       | Create a knowledge base called Glucose |
     Then the chatbot response contains the following terms:
@@ -75,8 +73,7 @@ Feature: Managing knowledge bases through the chat
     And the displayed KB name is Thyroids
 
   Scenario: Creating a knowledge base whose name resembles an existing one asks first
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     When I enter the following text into the chat panel:
       | Create a knowledge base called Thyroid |
     Then the chatbot response contains the following terms:
@@ -99,8 +96,7 @@ Feature: Managing knowledge bases through the chat
     And I should see the case Einstein as the current case
 
   Scenario: The open knowledge base can be closed and another opened afterwards
-    Given A Knowledge Base called Thyroids has been created
-    And case Case1 for KB Thyroids is provided having data:
+    Given case Case1 for KB Thyroids is provided having data:
       | Sun | hot |
     And I start the client application
     When I enter the following text into the chat panel:
@@ -108,32 +104,31 @@ Feature: Managing knowledge bases through the chat
     Then the chatbot response contains the following terms:
       | Closed | Thyroids |
     And no knowledge base is shown as selected
-    And the case list is not showing
+    And the case list is hidden
     When I enter the following text into the chat panel:
       | Open Thyroids |
     Then the displayed KB name is now Thyroids
     And I should see the case Case1 as the current case
 
   Scenario: No knowledge base open invites the user to open or create one
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     When I enter the following text into the chat panel:
       | Close this knowledge base |
     Then the chatbot response contains the following terms:
       | No knowledge base is open | Thyroids | open | create |
 
   Scenario: Deleting a knowledge base requires confirmation
-    Given A Knowledge Base called Scratch has been created
-    And A Knowledge Base called Thyroids has been created
+    Given A Knowledge Base called Unwanted has been created
     And I start the client application
+    And the displayed KB name is Thyroids
     When I enter the following text into the chat panel:
-      | Delete the knowledge base Scratch |
+      | Delete the knowledge base Unwanted |
     Then the chatbot response contains the following terms:
-      | Delete | Scratch | cannot be undone |
+      | Delete | Unwanted | cannot be undone |
     When I enter the following text into the chat panel:
       | yes |
     Then the chatbot response contains the following terms:
-      | Deleted | Scratch |
+      | Deleted | Unwanted |
     When I enter the following text into the chat panel:
       | List the knowledge bases |
     Then the chatbot response consists of the following lines:
@@ -165,13 +160,13 @@ Feature: Managing knowledge bases through the chat
 
   Scenario: A knowledge base cannot be opened while a rule is being built
     Given A Knowledge Base called Glucose has been created
-    And A Knowledge Base called Thyroids has been created
-    And case Bondi is provided having data:
+    And case Bondi for KB Glucose is provided having data:
       | Sun | hot |
     And I start the client application
+    And the displayed KB name is Glucose
     And I start to build a rule to add the comment "Go to the beach." for case Bondi
     When I enter the following text into the chat panel:
-      | Open Glucose |
+      | Open Thyroids |
     Then the chatbot response contains the following terms:
       | finish or cancel the current rule |
-    And the displayed KB name is Thyroids
+    And the displayed KB name is Glucose

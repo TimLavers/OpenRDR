@@ -965,12 +965,17 @@ Feature: Managing knowledge bases through the chat
     And the displayed KB name is Thyroids
 ```
 
-New or ported steps: `the chatbot response consists of the following lines:` (branch), `a new case with the name {word}
-is stored in the Knowledge Base {word}` (branch, uses `labProxy().provideCaseForKb`), `the case list is not showing`
-(`CaseListPO.requireCaseListToBeHidden` exists), and the "but do not finish it" rule-building step, which is the
-existing add-comment-with-reason step defs minus the commit. `NO_KB_SELECTED` is the constant the bar already shows; the
-`{word}` capture in `the displayed KB name is (now ){word}` needs widening to `{string}`-or-`{}` for the three-word
-value, or a dedicated step `no KB is shown as selected`.
+Two fixture facts the draft above got wrong, corrected in the feature file itself: every scenario already starts with a
+`Thyroids` KB (the `Before` hook creates the default project), so `A Knowledge Base called Thyroids has been created`
+makes a *second* Thyroids and `kbForName` then refuses ("More than one KB"); and the client opens the *first KB by name*
+at startup, so a scenario that wants Thyroids open must give the other KBs names that sort after it (hence `Unwanted`,
+not `Scratch`, in the delete-with-confirmation scenario) or assert which KB is showing.
+
+New steps (stage 5): `the chatbot response consists of the following lines:` (`ChatPO.mostRecentBotRowConsistsOfLines`,
+an exact comparison of the non-blank trimmed lines) and `no knowledge base is shown as selected` (`NO_KB_SELECTED`,
+since `{word}` cannot capture the three-word value). Everything else was already bound: `a new case with the name
+{word} is stored in the Knowledge Base {word}`, the "but do not finish it" rule-building step, and the existing `the
+case list is hidden`, which the feature uses in place of the "not showing" wording drafted above.
 
 The rule-session scenario exercises the context switch guard and relies on the `LaunchedEffect(kbInfo)` cascade *not*
 firing (the server refused, so no push happens). In the close scenario above, the greeting is the *second* bot message

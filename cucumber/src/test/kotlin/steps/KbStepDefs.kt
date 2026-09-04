@@ -3,6 +3,7 @@ package steps
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.kb.NO_KB_SELECTED
 import io.rippledown.integration.waitUntilAsserted
 
 class KbStepDefs {
@@ -11,6 +12,13 @@ class KbStepDefs {
     fun theDisplayedKBNameIsNow(kbName: String) {
         waitUntilAsserted {
             kbControlsPO().currentKB() shouldBe kbName
+        }
+    }
+
+    @Then("no knowledge base is shown as selected")
+    fun noKnowledgeBaseIsShownAsSelected() {
+        waitUntilAsserted {
+            kbControlsPO().currentKB() shouldBe NO_KB_SELECTED
         }
     }
 

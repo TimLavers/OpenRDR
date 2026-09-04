@@ -11,6 +11,8 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.server.KBEndpoint
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -112,6 +114,35 @@ class ChatCoordinatorTest {
 
         // Then
         response shouldBe ChatResponse(ChatCoordinator.NO_CONVERSATION_MESSAGE)
+    }
+
+    @Test
+    fun `a user message arriving while a conversation is starting waits for the start to finish`() = runTest {
+        // Given
+        val startFinished = CompletableDeferred<ChatResponse>()
+        val order = mutableListOf<String>()
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
+        coEvery { chatManager.startConversation(null, any()) } coAnswers {
+            order += "start"
+            startFinished.await()
+        }
+        coEvery { chatManager.response("Hi") } coAnswers {
+            order += "message"
+            ChatResponse("Hello")
+        }
+
+        // When
+        val starting = async { coordinator.startConversation(ChatContext.NoKnowledgeBase) }
+        val replying = async { coordinator.responseToUserMessage("Hi") }
+        testScheduler.runCurrent()
+        order shouldBe listOf("start")
+        startFinished.complete(ChatResponse(""))
+
+        // Then
+        starting.await() shouldBe ChatResponse("")
+        replying.await() shouldBe ChatResponse("Hello")
+        order shouldBe listOf("start", "message")
     }
 
     @Test

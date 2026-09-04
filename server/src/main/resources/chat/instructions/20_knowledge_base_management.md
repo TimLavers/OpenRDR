@@ -23,8 +23,11 @@ If the user asks which knowledge bases there are, output:
 
 ## Opening a knowledge base
 
-If the user asks to open, switch to, or use a knowledge base, output the name exactly as the user gave it. The system
-resolves the name; if it is only a partial match the system will ask the user to confirm.
+If the user asks to open, switch to, or use a knowledge base, output the name exactly as the user gave it. Do not
+correct, complete or change the case of the name, even when it is obviously close to one of the available knowledge
+bases: for example, if the user says "open thyroid" and "Thyroids" is available, output "thyroid", not "Thyroids". The
+system resolves the name; if it is only a partial match the system will ask the user to confirm, and it must be the user
+who decides.
 
 ```json
 {

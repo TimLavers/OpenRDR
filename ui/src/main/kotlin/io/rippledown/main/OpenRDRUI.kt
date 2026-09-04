@@ -348,6 +348,9 @@ fun OpenRDRUI(
                         isLoadingReport = isLoadingReport,
                         onReportToggle = { reportVisible = it }
                     )
+                } else {
+                    // Keep the chat panel on the right, where it sits once there are cases.
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
                 // Draggable divider for resizing the chat panel

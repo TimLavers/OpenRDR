@@ -129,8 +129,17 @@ class ChatDefs {
 
     @Then("the chatbot response contains the following terms:")
     fun requireChatbotResponseToContain(terms: DataTable) {
-        awaitBotResponse("a bot message containing all of ${terms.asList()}") {
-            chatPO().mostRecentBotRowContainsTerms(terms.asList())
+        // Terms may be laid out in one row or one column; asList() accepts only a column.
+        val allTerms = terms.asLists().flatten()
+        awaitBotResponse("a bot message containing all of $allTerms") {
+            chatPO().mostRecentBotRowContainsTerms(allTerms)
+        }
+    }
+
+    @Then("the chatbot response consists of the following lines:")
+    fun requireChatbotResponseToConsistOfLines(lines: DataTable) {
+        awaitBotResponse("a bot message consisting of the lines ${lines.asList()}") {
+            chatPO().mostRecentBotRowConsistsOfLines(lines.asList())
         }
     }
 
