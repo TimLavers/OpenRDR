@@ -311,6 +311,34 @@ class ActionCommentTest {
     }
 
     @Test
+    fun `knowledge base actions are created from kbName and kind`() {
+        ActionComment(LIST_KNOWLEDGE_BASES).createActionInstance().shouldBeInstanceOf<ListKnowledgeBases>()
+        ActionComment(
+            OPEN_KNOWLEDGE_BASE,
+            kbName = "Thyroids"
+        ).createActionInstance() shouldBe OpenKnowledgeBase("Thyroids")
+        ActionComment(
+            CREATE_KNOWLEDGE_BASE,
+            kbName = "Lipids"
+        ).createActionInstance() shouldBe CreateKnowledgeBase("Lipids")
+        ActionComment(CLOSE_KNOWLEDGE_BASE).createActionInstance().shouldBeInstanceOf<CloseKnowledgeBase>()
+        ActionComment(
+            DELETE_KNOWLEDGE_BASE,
+            kbName = "Scratch"
+        ).createActionInstance() shouldBe DeleteKnowledgeBase("Scratch")
+        ActionComment(DELETE_KNOWLEDGE_BASE).createActionInstance() shouldBe DeleteKnowledgeBase(null)
+        ActionComment(
+            ADD_DEMONSTRATION_CASE,
+            kind = "pathology"
+        ).createActionInstance() shouldBe AddDemonstrationCase("pathology")
+    }
+
+    @Test
+    fun `an open without a name cannot be created`() {
+        ActionComment(OPEN_KNOWLEDGE_BASE).createActionInstance() shouldBe null
+    }
+
+    @Test
     fun handleUnknownAction() {
         val actionComment = ActionComment("SwapAttributes", attributeMoved = "Glucose", destination = "Age")
         actionComment.createActionInstance() shouldBe null

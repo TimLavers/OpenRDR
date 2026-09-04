@@ -82,6 +82,52 @@ class ConversationTest {
         }
 
     @Test
+    fun `the opening message is sent to the model when the conversation starts`() =
+        runTest {
+            // Given
+            val mockChatService = MockChatService(listOf(mockResponse(text = "Hi")))
+            val conversation = Conversation(mockChatService, functionCallHandlers, openingMessage = "Tell me a joke.")
+
+            // When
+            conversation.startConversation()
+
+            // Then
+            mockChatService.sentMessages shouldBe listOf("Tell me a joke.")
+        }
+
+    @Test
+    fun `with no opening message the chat is started but nothing is sent`() =
+        runTest {
+            // Given
+            val mockChatService = MockChatService(listOf(mockResponse(text = "should not be requested")))
+            val conversation = Conversation(mockChatService, functionCallHandlers, openingMessage = null)
+
+            // When
+            val response = conversation.startConversation()
+
+            // Then
+            response shouldBe ""
+            mockChatService.sentMessages shouldBe emptyList()
+            mockChatService.chatStarted shouldBe true
+        }
+
+    @Test
+    fun `a conversation with no opening message still answers subsequent messages`() =
+        runTest {
+            // Given
+            val mockChatService = MockChatService(listOf(mockResponse(text = "Answer")))
+            val conversation = Conversation(mockChatService, functionCallHandlers, openingMessage = null)
+            conversation.startConversation()
+
+            // When
+            val response = conversation.response("Question")
+
+            // Then
+            response shouldBe "Answer"
+            mockChatService.sentMessages shouldBe listOf("Question")
+        }
+
+    @Test
     fun `requesting a response should delegate to the chat service`() =
         runTest {
             // Given
@@ -242,8 +288,11 @@ class ConversationTest {
 
 private class MockChatService(private val responses: List<GenerateContentResponse>) : ChatService {
     private var index = 0
+    val sentMessages = mutableListOf<String>()
+    var chatStarted = false
     val chat = mockk<Chat>().apply {
         every { sendMessage(any<String>()) } answers {
+            sentMessages.add(firstArg())
             responses[index++]
         }
         every { sendMessage(any<Content>()) } answers {
@@ -251,5 +300,8 @@ private class MockChatService(private val responses: List<GenerateContentRespons
         }
     }
 
-    override fun startChat() = chat
+    override fun startChat(): Chat {
+        chatStarted = true
+        return chat
+    }
 }

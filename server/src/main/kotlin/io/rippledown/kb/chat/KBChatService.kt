@@ -27,13 +27,9 @@ object KBChatService {
             ?: throw IllegalArgumentException("Prompt file not found: $promptResource")).readText()
     }
 
-    private fun String.replacePlaceholders(
-        viewableCase: ViewableCase,
-        attributeById: (Int) -> Attribute?,
-        allAttributes: Set<Attribute>
-    ): String {
+    private fun String.replacePlaceholders(variables: Map<String, String>): String {
         var result = this
-        systemPromptVariables(viewableCase, attributeById, allAttributes).forEach { key, value ->
+        variables.forEach { (key, value) ->
             result = result.replace("{{$key}}", value)
         }
         return result
@@ -90,16 +86,34 @@ object KBChatService {
         .build()
 
     fun createKBChatService(
-        viewableCase: ViewableCase,
+        viewableCase: ViewableCase?,
+        kbName: String?,
+        kbNames: List<String>,
         attributeById: (Int) -> Attribute? = { null },
         allAttributes: Set<Attribute> = emptySet()
     ): ChatService {
-        val systemInstruction = systemPrompt(viewableCase, attributeById, allAttributes)
+        val systemInstruction = systemPrompt(viewableCase, kbName, kbNames, attributeById, allAttributes)
+        val functionDeclarations =
+            if (viewableCase == null) emptyList()
+            else listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
         return GeminiChatService(
             systemInstruction = systemInstruction,
-            functionDeclarations = listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
+            functionDeclarations = functionDeclarations
         )
     }
+
+    const val NO_KB_NAME = "none"
+    const val NO_KB_NAMES = "there are none"
+
+    // The sections that do not refer to the current case, so are meaningful when there is no case.
+    val caseLessSections = listOf(
+        "1_task.md",
+        "2_interactions.md",
+        "13_json_format_guidelines.md",
+        "14_general-guidelines.md",
+        "16_listing_capabilities.md",
+        "20_knowledge_base_management.md",
+    )
 
     val systemPromptMainSections = listOf(
         "1_task.md",
@@ -121,8 +135,12 @@ object KBChatService {
         "17_assigning_derived_values.md",
         "18_editing_derived_definition.md",
         "19_naming_and_renaming.md",
+        "20_knowledge_base_management.md",
         "25_favourite_cases.md",
     )
+
+    fun mainSectionsFor(hasCase: Boolean) = if (hasCase) systemPromptMainSections else caseLessSections
+
     val systemPromptExampleSections = listOf(
         "examples.md",
         "initial_blank_report.md",
@@ -132,19 +150,25 @@ object KBChatService {
     )
 
     fun systemPromptVariables(
-        viewableCase: ViewableCase,
+        viewableCase: ViewableCase?,
+        kbName: String? = null,
+        kbNames: List<String> = emptyList(),
         attributeById: (Int) -> Attribute? = { null },
         allAttributes: Set<Attribute> = emptySet()
     ) = mapOf(
         "ADD" to ADD,
         "ADD_A_COMMENT" to ADD_A_COMMENT,
         "ADD_COMMENT" to ADD_COMMENT,
-        "ATTRIBUTES" to viewableCase.attributes().joinToString("\n") { it.name },
+        "ATTRIBUTES" to (viewableCase?.attributes()?.joinToString("\n") { it.name } ?: ""),
         "ALL_ATTRIBUTES" to allAttributes.joinToString("\n") { it.name },
         // The viewable interpretation holds the resolved copy of the case's
         // interpretation, in which ByDefinition comment assignments have been
         // substituted with their stored definitions.
-        "COMMENTS" to viewableCase.viewableInterpretation.interpretation.toComments(viewableCase.case, attributeById),
+        "COMMENTS" to (viewableCase?.let {
+            it.viewableInterpretation.interpretation.toComments(it.case, attributeById)
+        } ?: "[]"),
+        "KB_NAME" to (kbName ?: NO_KB_NAME),
+        "KB_NAMES" to (kbNames.takeIf { it.isNotEmpty() }?.joinToString(", ") ?: NO_KB_NAMES),
         "TRANSFORM_REASON" to TRANSFORM_REASON,
         "GET_SUGGESTED_CONDITIONS" to GET_SUGGESTED_CONDITIONS,
         "REASON" to REASON,
@@ -184,22 +208,28 @@ object KBChatService {
         "COPY_CASE_TO_FAVOURITES" to COPY_CASE_TO_FAVOURITES,
         "DELETE_CASE_FROM_FAVOURITES" to DELETE_CASE_FROM_FAVOURITES,
         "COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME" to COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME,
+        "LIST_KNOWLEDGE_BASES" to LIST_KNOWLEDGE_BASES,
+        "OPEN_KNOWLEDGE_BASE" to OPEN_KNOWLEDGE_BASE,
+        "CREATE_KNOWLEDGE_BASE" to CREATE_KNOWLEDGE_BASE,
+        "CLOSE_KNOWLEDGE_BASE" to CLOSE_KNOWLEDGE_BASE,
+        "DELETE_KNOWLEDGE_BASE" to DELETE_KNOWLEDGE_BASE,
+        "ADD_DEMONSTRATION_CASE" to ADD_DEMONSTRATION_CASE,
     )
 
     fun systemPrompt(
-        viewableCase: ViewableCase,
+        viewableCase: ViewableCase?,
+        kbName: String? = null,
+        kbNames: List<String> = emptyList(),
         attributeById: (Int) -> Attribute? = { null },
         allAttributes: Set<Attribute> = emptySet()
     ): String {
-        val mainSection = systemPromptMainSections.map { it ->
-            readPromptResource("/chat/instructions", it).replacePlaceholders(viewableCase, attributeById, allAttributes)
+        val variables = systemPromptVariables(viewableCase, kbName, kbNames, attributeById, allAttributes)
+        val mainSection = mainSectionsFor(hasCase = viewableCase != null).map {
+            readPromptResource("/chat/instructions", it).replacePlaceholders(variables)
         }
-        val exampleSection = systemPromptExampleSections.map { it ->
-            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(
-                viewableCase,
-                attributeById,
-                allAttributes
-            )
+        val exampleSections = if (viewableCase == null) emptyList() else systemPromptExampleSections
+        val exampleSection = exampleSections.map {
+            readPromptResource("/chat/instructions/examples", it).replacePlaceholders(variables)
         }
         return (mainSection + exampleSection).joinToString(separator = "\n")
     }

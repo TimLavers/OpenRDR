@@ -264,19 +264,31 @@ sealed class ChatContext {
 
 Derived from it:
 
-| Context               | Prompt sections                          | Function declarations | Opening message                                                  |
-|-----------------------|------------------------------------------|-----------------------|------------------------------------------------------------------|
-| `NoKnowledgeBase`     | 1, 2, 13, 14, 16, **20** (KB management) | none                  | "No knowledge base is open. Please assist me."                   |
-| `KnowledgeBaseOnly`   | as above; `{{KB_NAME}}` set              | none                  | "Knowledge base "X" is open and has no cases. Please assist me." |
-| `CaseInKnowledgeBase` | all current sections + 20; examples      | the current three     | current: "Please assist me with the report for this case."       |
+| Context               | Prompt sections                          | Function declarations | Opening message                                            |
+|-----------------------|------------------------------------------|-----------------------|------------------------------------------------------------|
+| `NoKnowledgeBase`     | 1, 2, 13, 14, 16, **20** (KB management) | none                  | none - fixed greeting `NO_KB_GREETING` (below)             |
+| `KnowledgeBaseOnly`   | as above; `{{KB_NAME}}` set              | none                  | none - fixed greeting `EMPTY_KB_GREETING` (below)          |
+| `CaseInKnowledgeBase` | all current sections + 20; examples      | the current three     | current: "Please assist me with the report for this case." |
+
+In the two case-less contexts the greeting is informational and must say exactly what the user can do next, so it is
+server text, not a model turn: `Conversation.startConversation()` only opens the chat (`chatService.startChat()`) and
+the coordinator returns the constant. The model's history then begins with the user's first message, with everything it
+needs in the system prompt.
+
+- `NO_KB_GREETING`: *"No knowledge base is open. The knowledge bases are: A, B, C. Say "open A" to open one, or
+  "create D" to create a new one."* With no KBs at all: *"There are no knowledge bases yet. Say "create D" to create
+  one."*
+- `EMPTY_KB_GREETING`: *"The knowledge base "X" has no cases. Cases are normally provided by an external information
+  system. To try it out, I can add a demonstration case: say "pathology case" for a pathology report, or "minimal case"
+  for a case with a single attribute."* (Importing cases from a CSV file is a planned addition - stage 7.)
 
 `KBChatService.systemPrompt(context, ...)` replaces `systemPrompt(viewableCase, ...)`. The placeholder map gains
 `KB_NAME`, `KB_NAMES` (the current list, for the model to disambiguate *before* it emits an action, e.g. when the user
 says "open the thyroid one") and the five new action constants. Sections that mention the case must only be included
 when there is one; the assembled list is a function of the context, tested in `KBChatServiceTest`.
 
-`Conversation.startConversation()` takes the opening message as a constructor parameter (`openingMessage: String`),
-defaulting to the current text so nothing else changes.
+`Conversation.startConversation()` takes the opening message as a constructor parameter (`openingMessage: String?`),
+defaulting to the current text so nothing else changes; `null` means "open the chat, send nothing".
 
 ### 4.2 `ChatCoordinator`
 
@@ -348,16 +360,29 @@ val chatResponse = when (val action = actionComment.createActionInstance()) {
 `doKbManagement` applies the two server-side guards before calling the action:
 
 1. **Rule session active** and the action changes context (`Open`, `Create`, `Close`, `Delete`) ->
-   `ChatAction.RULE_SESSION_ALREADY_ACTIVE_ERROR`. `List` is always allowed.
-2. **Delete needs confirmation.** `DeleteKnowledgeBase` does not delete; it resolves the name and returns the question
-   *"Delete the knowledge base "X"? This cannot be undone. Say yes to confirm."* and `ChatManager` stores it in
-   `pendingDeletion` for exactly one turn, mirroring `offeredAssignment`. On the next message, if `isAcceptance` and
-   `pendingDeletion != null`, the manager runs `ConfirmDeleteKnowledgeBase(kbName)` directly, without consulting the
-   model. Any other message clears the pending deletion and goes to the model as usual.
+   `KB_ACTION_DURING_RULE_MESSAGE`. `List` and `AddDemonstrationCase` are always allowed
+   (`KbManagementAction.changesContext`).
+2. **Some actions ask before acting.** An action's `doIt` may return a `KbManagementOutcome.Ask(question, thenDo)`
+   instead of a `ChatResponse`: `question` goes to the user and `thenDo` - a suspending lambda over the
+   `KnowledgeBaseService` - is held in `ChatManager.pendingConfirmation` for exactly one turn, mirroring
+   `offeredAssignment`. On the next message, if `isAcceptance(message)` and `pendingConfirmation != null`, the manager
+   runs `thenDo` directly, without consulting the model. Any other message clears it and goes to the model as usual.
+   Which actions ask, and when, is in section 4.5.
 
-The two one-turn holders (`offeredAssignment`, `pendingDeletion`) have the same shape. Unifying them into a single
-`pendingConfirmation: Action?` is a reasonable refactor *after* this lands; it is not done here so that the
-derived-value flow is not disturbed.
+```kotlin
+sealed class KbManagementOutcome {
+  data class Done(val response: ChatResponse) : KbManagementOutcome()
+  class Ask(val question: String, val thenDo: suspend (KnowledgeBaseService) -> ChatResponse) : KbManagementOutcome()
+}
+```
+
+*Decision (stage 3):* `thenDo` is a lambda, not a second action class. The lambda captures the resolved `KBInfo`, so
+what runs on "yes" is exactly what was asked about, and there is no class the model could name to skip the question -
+which makes the `@ModelAction` marker unnecessary. `Action` is a `sealed interface` with `ChatAction` and
+`KbManagementAction` as its two kinds, so `ChatManager.processActionComment` dispatches exhaustively.
+
+`offeredAssignment` has the same one-turn shape and stays as it is; folding it into `pendingConfirmation` is a
+reasonable refactor *after* this lands (stage 7), so the derived-value flow is not disturbed now.
 
 `NO_KB_OPEN_MESSAGE` = *"No knowledge base is open. Ask me to list, open or create one."* This is what the user gets if
 the model emits, say, `AddComment` while nothing is open; the model is also told not to, but the server is the guard.
@@ -366,19 +391,24 @@ the model emits, say, `AddComment` while nothing is open; the model is also told
 
 ```kotlin
 sealed class KbResolution {
-    data class Found(val kbInfo: KBInfo) : KbResolution()
-    data class NotFound(val name: String, val available: List<String>) : KbResolution()
+  data class Exact(val kbInfo: KBInfo) : KbResolution()
+  data class Partial(val kbInfo: KBInfo) : KbResolution()          // unique substring match
     data class Ambiguous(val name: String, val candidates: List<String>) : KbResolution()
+  data class NotFound(val name: String, val available: List<String>) : KbResolution()
 }
+
+enum class DemonstrationCase { Pathology, Minimal }
 
 interface KnowledgeBaseService {
     fun knowledgeBases(): List<KBInfo>          // sorted by name
     fun openKnowledgeBase(): KBInfo?            // the KB of the current ChatContext
-    suspend fun open(name: String): KbResolution
-    suspend fun create(name: String): KBInfo    // throws IllegalArgumentException on a name clash
+  fun resolve(name: String): KbResolution     // section 4.5
+  fun nearDuplicateOf(newName: String): KBInfo?  // for create; section 4.5
+  suspend fun open(kbInfo: KBInfo)
+  suspend fun create(name: String): KBInfo    // throws IllegalArgumentException on an exact clash
     suspend fun close()
-    fun resolve(name: String): KbResolution     // used by Delete to ask before acting
     suspend fun delete(kbInfo: KBInfo)
+  suspend fun addDemonstrationCase(kind: DemonstrationCase): RDRCase   // the open KB
     suspend fun rename(newName: String): KBInfo  // the open KB; throws IllegalArgumentException on a clash
     fun description(): String                   // the open KB
     fun setDescription(text: String)            // the open KB
@@ -388,7 +418,7 @@ interface KnowledgeBaseService {
 
 `ApplicationKbService` (server, `io.rippledown.server`):
 
-- `open(name)`: `resolve(name)`; on `Found`, `application.selectKB(id)` then `webSocketManager.sendKbInfo(kbInfo)`. It
+- `open(kbInfo)`: `application.selectKB(id)` then `webSocketManager.sendKbInfo(kbInfo)`. It
   does **not** restart the conversation itself; the client does that when the `KbInfo` arrives (section 4.7). This keeps
   one owner for "when does a conversation start" - the client - and reuses the cascade that already exists.
 - `create(name)`: `application.createKB(name, force = false)` then the same push as `open`.
@@ -397,6 +427,12 @@ interface KnowledgeBaseService {
 - `delete(kbInfo)`: if it is the open KB, `close()` first; then `application.deleteKB(kbInfo.id)`, which is implemented
   as `kbManager.deleteKB(kbInfo); idToKBEndpoint.remove(id)`. Deleting the last KB is allowed; the client shows
   `NO_KB_SELECTED`.
+- `addDemonstrationCase(kind)`: builds an `ExternalCase` and calls `endpoint.processCase`, then
+  `webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())`, exactly as the `PROCESS_CASE` route does. The client's
+  cascade then selects the new case and restarts the conversation in `CaseInKnowledgeBase`, so the user's next message
+  is about the report. `Pathology` loads `server/src/main/resources/demo/Einstein.json` - a copy of the cucumber
+  fixture, the same patient the acceptance tests and `packaging/README-demo.txt` already use. `Minimal` is built in
+  code: one attribute, `x = 1`, dated today, case name "Demo".
 - `isRuleSessionActive()`:
   `coordinator.context().endpointOrNull?.session?.ruleSessionManager?.isRuleSessionActive() == true`.
 - `rename(newName)` (stage 6): `application.renameKB(id, newName)` then `sendKbInfo(renamed)`. The push is what updates
@@ -421,19 +457,33 @@ interface KnowledgeBaseService {
 - Requirement row `KBM-7 Rename a KB` in `documentation/requirements/kb_management.md`, whose prose already lists
   renaming as a `KBManager` responsibility.
 
-### 4.5 Name resolution
+### 4.5 Name resolution and confirmation
 
 `resolve(name)` on the KB list:
 
-1. Trim. Exact match, case-insensitive -> `Found`. If several match case-insensitively (possible because the GUI creates
+1. Trim. Exact match, case-insensitive -> `Exact`. If several match case-insensitively (possible because the GUI creates
    with `force = true`), prefer the one that matches exactly; otherwise `Ambiguous`.
-2. Otherwise, a unique KB whose name *contains* the given text case-insensitively -> `Found` ("open thyroid" for
+2. Otherwise, a unique KB whose name *contains* the given text case-insensitively -> `Partial` ("open thyroid" for
    "Thyroids"). More than one -> `Ambiguous` with the candidates.
 3. Otherwise `NotFound` with the full list.
 
 No edit distance. KB names are few and the list is cheap to show, so the right response to a miss is the list, not a
-guess. The response texts are fixed strings (constants in `common` `constants/chat/Constants.kt`) so the cucumber steps
-can match them:
+guess.
+
+In the spirit of a conversation the chat is generous in *matching* and careful in *acting*: a `Partial` match is
+accepted, but the user is asked before anything happens to it. Who asks, when:
+
+| Action   | `Exact`                            | `Partial`                                             | Near-duplicate of a new name                                                                           |
+|----------|------------------------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| `Open`   | opens                              | asks *"Did you mean "Thyroids"? Say yes to open it."* | -                                                                                                      |
+| `Delete` | asks (always - it is irreversible) | asks, naming the resolved KB                          | -                                                                                                      |
+| `Create` | refuses: *"...already exists."*    | -                                                     | asks *"There is already a knowledge base "Thyroids". Create "Thyroid" as well? Say yes to create it."* |
+
+`nearDuplicateOf(newName)` for create: an existing name that contains, or is contained in, the new name,
+case-insensitively. A legitimate "Thyroids 2" costs one extra turn; a typo does not silently create a second KB.
+
+The response texts are fixed strings (constants in `common` `constants/chat/Constants.kt`) so the cucumber steps can
+match them:
 
 - `NotFound`: *"There is no knowledge base named "X". The knowledge bases are: A, B, C."*
 - `Ambiguous`: *"More than one knowledge base matches "X": Thyroids, Thyroids (old). Which one?"*
@@ -441,19 +491,23 @@ can match them:
 ### 4.6 The actions
 
 All in `io.rippledown.kb.chat.action`, found by reflection as now. `ActionComment` gains `val kbName: String? = null`
-and `invokeConstructor` maps it. `createActionInstance()` returns `Action?` and `asSubclass(Action::class.java)`.
+and `val kind: String? = null`, and `invokeConstructor` maps them. `createActionInstance()` returns `Action?` and
+`asSubclass(Action::class.java)`.
 
-| Class                          | Constructor     | Behaviour                                                                               | Response                                                                                                           |
-|--------------------------------|-----------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `ListKnowledgeBases`           | `()`            | `kbService.knowledgeBases()`                                                            | One name per line, the open one suffixed ` (open)`. Empty list: *"There are no knowledge bases."*                  |
-| `OpenKnowledgeBase`            | `(kbName)`      | `kbService.open(kbName)`                                                                | `Found`: *"Opened "X"."*; else the resolution message                                                              |
-| `CreateKnowledgeBase`          | `(kbName)`      | `kbService.create(kbName)`; blank name refused                                          | *"Created and opened "X"."*; clash: *"A knowledge base named "X" already exists."*                                 |
-| `CloseKnowledgeBase`           | `()`            | `kbService.close()` if one is open                                                      | *"Closed "X"."*; nothing open: *"No knowledge base is open."*                                                      |
-| `DeleteKnowledgeBase`          | `(kbName?)`     | `kbService.resolve(kbName ?: open KB's name)`; **does not delete**                      | `Found`: the confirmation question; else the resolution message                                                    |
-| `ConfirmDeleteKnowledgeBase`   | `(kbName)`      | `kbService.delete(...)`. Created only by `ChatManager` on acceptance; not in the prompt | *"Deleted "X"."*                                                                                                   |
-| `RenameKnowledgeBase`          | `(newName)`     | Stage 6. `kbService.rename(newName)` on the open KB; blank name refused                 | *"Renamed "X" to "Y"."*; clash: *"A knowledge base named "Y" already exists."*; nothing open: `NO_KB_OPEN_MESSAGE` |
-| `ShowKnowledgeBaseDescription` | `()`            | Stage 6. `kbService.description()`                                                      | The description verbatim; empty: *""X" has no description."*                                                       |
-| `SetKnowledgeBaseDescription`  | `(description)` | Stage 6. `kbService.setDescription(description)`; replaces the whole text               | *"Description of "X" updated."*                                                                                    |
+| Class                          | Constructor     | Behaviour                                                                                                                       | Response                                                                                                           |
+|--------------------------------|-----------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `ListKnowledgeBases`           | `()`            | `kbService.knowledgeBases()`                                                                                                    | One name per line, the open one suffixed ` (open)`. Empty list: *"There are no knowledge bases."*                  |
+| `OpenKnowledgeBase`            | `(kbName)`      | `resolve`; `Exact` -> `open(kbInfo)`; `Partial` -> `Ask(question) { open(kbInfo) }`                                             | *"Opened "X"."*; the question; or the resolution message                                                           |
+| `CreateKnowledgeBase`          | `(kbName)`      | blank refused; exact clash refused; near-duplicate -> `Ask(question) { create(name) }`; else create                             | *"Created and opened "X"."*; the question; or the clash message                                                    |
+| `CloseKnowledgeBase`           | `()`            | `kbService.close()` if one is open                                                                                              | *"Closed "X"."*; nothing open: *"No knowledge base is open."*                                                      |
+| `DeleteKnowledgeBase`          | `(kbName?)`     | `resolve(kbName ?: open KB's name)`; `Exact`/`Partial` -> `Ask(question) { delete(kbInfo) }`; **never deletes on its own turn** | *"Delete the knowledge base "X"? This cannot be undone. Say yes to confirm."*; or the resolution message           |
+| `AddDemonstrationCase`         | `(kind)`        | `kind` is `pathology` or `minimal`; `kbService.addDemonstrationCase(kind)`; needs an open KB                                    | *"Added the case "Einstein"."* / *"Added the case "Demo"."*; nothing open: `NO_KB_OPEN_MESSAGE`                    |
+| `RenameKnowledgeBase`          | `(newName)`     | Stage 6. `kbService.rename(newName)` on the open KB; blank name refused                                                         | *"Renamed "X" to "Y"."*; clash: *"A knowledge base named "Y" already exists."*; nothing open: `NO_KB_OPEN_MESSAGE` |
+| `ShowKnowledgeBaseDescription` | `()`            | Stage 6. `kbService.description()`                                                                                              | The description verbatim; empty: *""X" has no description."*                                                       |
+| `SetKnowledgeBaseDescription`  | `(description)` | Stage 6. `kbService.setDescription(description)`; replaces the whole text                                                       | *"Description of "X" updated."*                                                                                    |
+
+The `thenDo` lambdas capture the resolved `KBInfo` (or, for create, the exact name the user gave), so what runs on
+"yes" is precisely what was asked about, whatever the KB list does in between.
 
 Rename and describe do not change the chat context, so the rule-session guard does not apply to them; a user may well
 want to note something in the description while a rule is half built. Rename reuses `ActionComment.newName`, which
@@ -461,16 +515,15 @@ want to note something in the description while a rule is half built. Rename reu
 composed by it: instruction 20 says *"put the user's words in `description`, exactly; do not summarise or embellish"*.
 Markdown in the user's text is passed through untouched (the GUI dialog accepts Markdown today).
 
-`ConfirmDeleteKnowledgeBase` is not an action the model can emit: it is not in the instructions, and `ChatManager`
-constructs it directly. Reflection would still find it if the model guessed the name, so it re-checks that
-`pendingDeletion` names the same KB, and otherwise answers with the confirmation question again. This is the same
-"server holds the decision" stance as the cornerstone exemption.
+The `thenDo` halves are not actions the model can emit: they are lambdas built by the asking action, so there is no
+class name for reflection to find. This is the same "server holds the decision" stance as the cornerstone exemption.
 
 Constants (`common` `constants/chat/Constants.kt`): `LIST_KNOWLEDGE_BASES`, `OPEN_KNOWLEDGE_BASE`,
-`CREATE_KNOWLEDGE_BASE`, `CLOSE_KNOWLEDGE_BASE`, `DELETE_KNOWLEDGE_BASE`, `RENAME_KNOWLEDGE_BASE`,
-`SHOW_KNOWLEDGE_BASE_DESCRIPTION`, `SET_KNOWLEDGE_BASE_DESCRIPTION`, plus the fixed response fragments (`KB_OPENED`,
-`KB_CREATED`, `KB_CLOSED_MESSAGE`, `KB_DELETED`, `CONFIRM_KB_DELETION`, `NO_KB_OPEN_MESSAGE`,
-`NO_KNOWLEDGE_BASES`). Web-socket constants: `KB_INFO_PREFIX = "KbInfo:"`, `KB_CLOSED = "KbClosed"`.
+`CREATE_KNOWLEDGE_BASE`, `CLOSE_KNOWLEDGE_BASE`, `DELETE_KNOWLEDGE_BASE`, `ADD_DEMONSTRATION_CASE`,
+`RENAME_KNOWLEDGE_BASE`, `SHOW_KNOWLEDGE_BASE_DESCRIPTION`, `SET_KNOWLEDGE_BASE_DESCRIPTION`, plus the fixed texts
+(`NO_KB_GREETING`, `EMPTY_KB_GREETING`, `KB_OPENED`, `KB_CREATED`, `KB_CLOSED_MESSAGE`, `KB_DELETED`,
+`CONFIRM_KB_DELETION`, `CONFIRM_KB_OPEN`, `CONFIRM_KB_CREATE`, `NO_KB_OPEN_MESSAGE`, `NO_KNOWLEDGE_BASES`,
+`DEMO_CASE_ADDED`). Web-socket constants: `KB_INFO_PREFIX = "KbInfo:"`, `KB_CLOSED = "KbClosed"`.
 
 ### 4.7 Instructions
 
@@ -481,8 +534,11 @@ New file `server/src/main/resources/chat/instructions/20_knowledge_base_manageme
 - One JSON example per action, in the house style of `25_favourite_cases.md`. For open and delete: *"transcribe the name
   the user gave; do not correct it - the system resolves names"* (the same policy as formula names, see
   `repeat_inferencing.md`, "the model is a transcriber").
-- Delete: *"Do not ask the user to confirm. Emit the action; the system asks."* Otherwise the model asks, the user says
-  yes, the model emits the action, and the server asks *again*.
+- Open, create, delete: *"Do not ask the user to confirm. Emit the action; the system asks when it needs to."*
+  Otherwise the model asks, the user says yes, the model emits the action, and the server asks *again*.
+- Demonstration case: when the user accepts the offer in `EMPTY_KB_GREETING` ("pathology case", "the minimal one",
+  "yes, pathology"), emit `AddDemonstrationCase` with `kind` `pathology` or `minimal`. If they say only "yes", ask
+  which.
 - When no knowledge base is open: *"Only the knowledge base actions and `{{USER_ACTION}}` are available. If the user
   asks for anything else, tell them to open or create a knowledge base first."*
 - Stage 6 adds the rename and description examples. Rename: *"`newName` is the name the user gave, exactly."*
@@ -664,13 +720,16 @@ sequenceDiagram
 
 ### 5.4 Delete, with confirmation held by the server
 
+Open-by-partial-name and create-near-duplicate follow the same shape: the action returns `Ask`, the manager holds the
+`thenDo` action for one turn, and "yes" runs it without a model call.
+
 ```mermaid
 sequenceDiagram
     actor User
     participant CM as ChatManager
     participant Model as Gemini
     participant Del as DeleteKnowledgeBase
-    participant Confirm as ConfirmDeleteKnowledgeBase
+  participant Confirm as DeleteResolvedKnowledgeBase
     participant Svc as ApplicationKbService
     participant App as ServerApplication
     participant WS as WebSocketManager
@@ -679,12 +738,12 @@ sequenceDiagram
     Model -->> CM: {"action":"DeleteKnowledgeBase","kbName":"Scratch"}
     CM ->> CM: guard: rule session active? no
     CM ->> Del: doIt(kbService)
-    Del ->> Svc: resolve("Scratch") -> Found
-    Del -->> CM: "Delete the knowledge base \"Scratch\"? This cannot be undone. Say yes to confirm."
-    CM ->> CM: pendingDeletion = Scratch (one turn)
+  Del ->> Svc: resolve("Scratch") -> Exact
+  Del -->> CM: Ask("Delete the knowledge base \"Scratch\"? This cannot be undone. Say yes to confirm.", DeleteResolvedKnowledgeBase(id))
+  CM ->> CM: pendingConfirmation = thenDo (one turn)
     CM -->> User: (question)
     User ->> CM: "yes"
-    CM ->> CM: isAcceptance && pendingDeletion != null -> bypass the model
+  CM ->> CM: isAcceptance && pendingConfirmation != null -> bypass the model
     CM ->> Confirm: doIt(kbService)
     Confirm ->> Svc: delete(Scratch)
     alt Scratch is the open KB
@@ -695,8 +754,8 @@ sequenceDiagram
     CM -->> User: Deleted "Scratch".
 ```
 
-If the user answers anything other than an acceptance, `pendingDeletion` is cleared and the message goes to the model as
-normal; nothing is deleted.
+If the user answers anything other than an acceptance, `pendingConfirmation` is cleared and the message goes to the
+model as normal; nothing is deleted.
 
 ### 5.5 A KB action refused during a rule session
 
@@ -761,6 +820,52 @@ Feature: Managing knowledge bases through the chat
     Then the chatbot response contains the following terms:
       | no knowledge base named | Lipids | Glucose | Thyroids |
     And the displayed KB name is Glucose
+
+  Scenario: Opening a knowledge base by part of its name asks first
+    Given A Knowledge Base called Thyroids has been created
+    And A Knowledge Base called Glucose has been created
+    And I start the client application
+    And the displayed KB name is Glucose
+    When I enter the following text into the chat panel:
+      | Open thyroid |
+    Then the chatbot response contains the following terms:
+      | Did you mean | Thyroids |
+    And the displayed KB name is Glucose
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the displayed KB name is now Thyroids
+
+  Scenario: Creating a knowledge base whose name resembles an existing one asks first
+    Given A Knowledge Base called Thyroids has been created
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Create a knowledge base called Thyroid |
+    Then the chatbot response contains the following terms:
+      | already | Thyroids | Create | Thyroid |
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the displayed KB name is now Thyroid
+
+  Scenario: An empty knowledge base offers a demonstration case
+    Given A Knowledge Base called Glucose has been created
+    And I start the client application
+    And the displayed KB name is Glucose
+    Then the chatbot response contains the following terms:
+      | has no cases | external information system | pathology case | minimal case |
+    When I enter the following text into the chat panel:
+      | The pathology case please |
+    Then the chatbot response contains the following terms:
+      | Added | Einstein |
+    And I should see the case Einstein as the current case
+
+  Scenario: No knowledge base open invites the user to open or create one
+    Given A Knowledge Base called Thyroids has been created
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Close this knowledge base |
+    Then the chatbot response contains the following terms:
+      | No knowledge base is open | Thyroids | open | create |
 
   Scenario: A knowledge base can be created and is opened
     Given A Knowledge Base called Thyroids has been created
@@ -857,8 +962,9 @@ existing add-comment-with-reason step defs minus the commit. `NO_KB_SELECTED` is
 `{word}` capture in `the displayed KB name is (now ){word}` needs widening to `{string}`-or-`{}` for the three-word
 value, or a dedicated step `no KB is shown as selected`.
 
-The last scenario exercises the context switch guard and relies on the `LaunchedEffect(kbInfo)` cascade *not* firing
-(the server refused, so no push happens).
+The rule-session scenario exercises the context switch guard and relies on the `LaunchedEffect(kbInfo)` cascade *not*
+firing (the server refused, so no push happens). In the close scenario above, the greeting is the *second* bot message
+(the "Closed" reply comes first), so `the chatbot response contains` reads the most recent row, as it does today.
 
 ## 7. Staged implementation plan
 
@@ -875,15 +981,18 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 - Implement `ServerApplication.deleteKB(id)`; test through `ServerApplicationTest` with `InMemoryPersistenceProvider`
   (deleted KB gone from `kbList()`, `kbForId` throws, `DELETE_KB` route returns 200).
 - `KbResolution` and `resolve(name)` as a pure function `resolveKbName(name, kbInfos)` in `io.rippledown.kb`, with
-  `KbNameResolutionTest` covering exact, case-insensitive, contains, ambiguous, not-found, blank.
-- `KnowledgeBaseService` interface and `ApplicationKbService`; `WebSocketManager.sendKbInfo/sendKbClosed`; constants.
+  `KbNameResolutionTest` covering exact, case-insensitive, partial, ambiguous, not-found, blank; `nearDuplicateOf` for
+  create.
+- `KnowledgeBaseService` interface and `ApplicationKbService`, including `addDemonstrationCase` (`Einstein.json` copied
+  to server resources; the minimal case built in code); `WebSocketManager.sendKbInfo/sendKbClosed`; constants.
   `ApplicationKbServiceTest` with a mocked `WebSocketManager` (stub each call; no `relaxed`).
 - *Commit:* `Server-side KB management service with web-socket KbInfo and KbClosed events`.
 
 ### Stage 2 - Server: chat context and coordinator
 
-- `ChatContext`; `Conversation(openingMessage)`; `KBChatService.systemPrompt(context, ...)` with the per-context section
-  table (`KBChatServiceTest`: the no-KB prompt contains section 20 and not section 3; the case prompt contains both;
+- `ChatContext`; `Conversation(openingMessage: String?)`; the two fixed greetings; `KBChatService.systemPrompt(context,
+  ...)` with the per-context section table (`KBChatServiceTest`: the no-KB prompt contains section 20 and not section 3;
+  the case prompt contains both;
   `{{KB_NAMES}}` substituted).
 - `ChatManagerFactory` (the body of `ChatSessionManager.startConversation`, generalised); `ChatCoordinator`;
   `ChatManager.ruleService` nullable with the short-circuits; `KBSession` loses `chatSessionManager`; `KBEndpoint`
@@ -894,11 +1003,11 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 
 ### Stage 3 - Server: the actions and the instructions
 
-- `Action` marker, `KbManagementAction`, `ActionComment.kbName`, the six action classes, dispatch and the two guards in
-  `ChatManager`, `pendingDeletion`.
-- Tests: one `*Test` per action (`ActionTestBase` pattern, mocked `KnowledgeBaseService`), plus in `ChatManagerTest`:
-  refusal during a rule session; `AddComment` when no KB is open; deletion confirmed by "yes"; deletion abandoned by any
-  other reply; `ConfirmDeleteKnowledgeBase` emitted by the model without a pending deletion is not acted on.
+- `Action` (sealed), `KbManagementAction`, `KbManagementOutcome`, `ActionComment.kbName` and `kind`, the six action
+  classes, dispatch and the two guards in `ChatManager`, `pendingConfirmation`.
+- Tests: one `*Test` per action (`KbActionTestBase`, mocked `KnowledgeBaseService`), plus in `ChatManagerTest`:
+  refusal during a rule session; `AddComment` when no KB is open; an `Ask` confirmed by "yes" and abandoned by any other
+  reply; `ActionCommentTest` pins the reflective creation from `kbName` / `kind`.
 - Instruction file 20 and the edits to 1, 2, 13, 16.
 - *Commit:* `Chat actions to list, open, create, close and delete knowledge bases`.
 
@@ -980,7 +1089,8 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 
 ### Stage 7 (optional follow-ups, not part of this feature)
 
-- Unify `offeredAssignment` and `pendingDeletion` into one `pendingConfirmation`.
+- Fold `offeredAssignment` into `pendingConfirmation`.
+- Import cases from a CSV file by chat (the empty-KB greeting would then offer it alongside the demonstration case).
 - Create from a sample by chat.
 - A `Rename` item in `KbAnchorMenu`, now that the route exists.
 
@@ -991,10 +1101,17 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 - **Client starts conversations; server never does.** After `open`/`create`/`close` the server only pushes state. If the
   server also restarted the conversation, the client's own cascade would start a second one and the two greetings would
   race. One owner.
-- **Delete confirmation is held by the server for one turn**, as `offeredAssignment` is. A model-side confirmation is
-  not reliable and, when it does happen, produces a double ask.
-- **Name resolution has no edit distance.** The candidate list is tiny and always shown on a miss; a wrong guess on a
-  *delete* is far worse than an extra turn.
+- **Confirmations are held by the server for one turn**, as `offeredAssignment` is. A model-side confirmation is not
+  reliable and, when it does happen, produces a double ask.
+- **Generous matching, careful acting.** A partial name is accepted for open and delete, but a partial match always asks
+  before acting; delete asks even on an exact match. Create warns on a near-duplicate name. This is the conversational
+  trade: one extra turn in the doubtful cases, no silent surprises.
+- **Name resolution has no edit distance.** The candidate list is tiny and always shown on a miss.
+- **Case-less greetings are fixed text.** They exist to tell the user exactly what they can do next (open/create; add a
+  demonstration case); that wording should not vary run to run.
+- **A demonstration case, not a demonstration KB.** The user already has a KB open; the shortest path to "see it work"
+  is one case in it. Einstein is the patient the demo README and the acceptance tests already use, so the story is the
+  same everywhere.
 - **`ruleService` nullable in `ChatManager` rather than a null-object `RuleService`.** A null object would make
   `AddComment` "succeed" with nothing happening; a null makes the refusal explicit and testable.
 - **`KbManagementAction` as a sibling of `ChatAction`, not a change to `ChatAction.doIt`.** The alternative - a single
@@ -1011,11 +1128,11 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
   server action, not a model recollection, because the description is not in the prompt.
 - **Rename and describe are not blocked by a rule session.** They do not change the context the rule is being built in.
 
-## 9. Open questions for review
+## 9. Questions resolved in review
 
-1. Should the case-less `KnowledgeBaseOnly` greeting invite the user to provide a case (there is no chat path to do so;
-   cases arrive over the REST interface), or simply say the KB is empty?
-2. `resolve` step 2 (unique substring match) - keep, or insist on an exact name for **delete** and allow substring only
-   for **open**? The cheaper-mistake argument says: exact for delete.
-3. Deleting the last KB leaves the client on `NO_KB_SELECTED` with no KB to reopen. Acceptable, or should the server
-   refuse to delete the last one?
+1. *Empty KB greeting* - say the KB is empty, explain that cases come from an external information system, and offer a
+   demonstration case (pathology: Einstein; or minimal: `x = 1` today). CSV import is a later addition (stage 7).
+2. *Partial names* - allowed for open and delete, with the user asked before acting; create asks when the new name is a
+   near-duplicate of an existing one. Section 4.5.
+3. *No KB open* - an acceptable state. The greeting lists the KBs and says how to open or create one. Deleting the last
+   KB is allowed.

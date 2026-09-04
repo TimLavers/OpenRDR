@@ -13,6 +13,7 @@ import io.rippledown.chat.ReasonTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
+import io.rippledown.kb.chat.ChatManagerFactory
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.*
@@ -1712,11 +1713,10 @@ class KBTest {
         every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
 
         //When
-        session.startConversation(viewableCase)
         rsm.startRuleSessionToAddComment(viewableCase.case, "Go to Bondi.")
         val modelResponder = mockk<ModelResponder>(relaxed = true)
         val reasonTransformer =
-            session.chatSessionManager.createReasonTransformer(viewableCase, ruleService, modelResponder)
+            ChatManagerFactory.createReasonTransformer(viewableCase, ruleService, modelResponder)
         val reasonTransformation = reasonTransformer.transform(reason)
 
         //Then

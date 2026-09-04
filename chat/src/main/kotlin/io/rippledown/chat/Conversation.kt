@@ -25,7 +25,8 @@ interface FunctionCallHandler {
 
 class Conversation(
     private val chatService: ChatService,
-    private val functionCallHandlers: Map<String, FunctionCallHandler>
+    private val functionCallHandlers: Map<String, FunctionCallHandler>,
+    private val openingMessage: String? = DEFAULT_OPENING_MESSAGE
 ) :
     ConversationService {
     private val logger = lazyLogger
@@ -35,7 +36,7 @@ class Conversation(
         chat = retry {
             chatService.startChat()
         }
-        return response("Please assist me with the report for this case.")
+        return openingMessage?.let { response(it) } ?: ""
     }
 
     private suspend fun executeFunction(functionCall: FunctionCall): String {
@@ -194,6 +195,7 @@ class Conversation(
         const val MAX_TIMEOUT_RETRIES = 1
         const val TIMEOUT_RETRY_DELAY_MS = 5_000L
         const val CONTINUE_NUDGE = "Please continue with the appropriate response."
+        const val DEFAULT_OPENING_MESSAGE = "Please assist me with the report for this case."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"

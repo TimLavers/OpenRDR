@@ -4,6 +4,9 @@ import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.KBSession
+import io.rippledown.kb.chat.ChatCoordinator
+import io.rippledown.kb.chat.ChatManagerFactory
+import io.rippledown.kb.chat.KnowledgeBaseService
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
@@ -23,9 +26,11 @@ class ServerApplication(
 ) {
     private val logger = lazyLogger
 
-    //    val kbDataDir = File("data").apply { mkdirs() }
     private val kbManager = KBManager(persistenceProvider)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
+    val kbService: KnowledgeBaseService =
+        ApplicationKbService(this, webSocketManager, openEndpoint = { openChatEndpoint() })
+    val chatCoordinator = ChatCoordinator(ChatManagerFactory(kbService), kbService)
 
     init {
         persistenceProvider.idStore().data().keys.forEach {
@@ -74,11 +79,16 @@ class ServerApplication(
     }
 
     fun deleteKB(id: String) {
-        TODO()
+        val endpoint = kbForId(id)
+        logger.info("Deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
+        kbManager.deleteKB(endpoint.kbInfo())
+        idToKBEndpoint.remove(id)
     }
 
+    fun openChatEndpoint(): KBEndpoint? = chatCoordinator.context().endpointOrNull
+
     fun kbForId(id: String): KBEndpoint {
-        return if (idToKBEndpoint.containsKey(id)) idToKBEndpoint[id]!! else throw IllegalArgumentException("Unknown kb id: $id")
+        return idToKBEndpoint[id] ?: throw IllegalArgumentException("Unknown kb id: $id")
     }
 
     fun kbForName(name: String): KBEndpoint {

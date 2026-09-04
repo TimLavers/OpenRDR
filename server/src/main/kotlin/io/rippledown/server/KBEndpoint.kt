@@ -10,7 +10,6 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
-import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
@@ -81,10 +80,6 @@ class KBEndpoint(
     fun viewableCase(id: Long) = kb.viewableCase(uninterpretedCase(id))
 
     fun conditionHintsForCase(id: Long): ConditionList = ruleSessionManager().conditionHintsForCase(case(id))
-
-    suspend fun startConversation(caseId: Long): ChatResponse = session.startConversation(viewableCase(caseId))
-
-    suspend fun responseToUserMessage(message: String): ChatResponse = session.responseToUserMessage(message)
 
     suspend fun caseReport(caseId: Long): CaseReport {
         val viewable = viewableCase(caseId)

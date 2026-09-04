@@ -259,5 +259,48 @@ internal class ServerApplicationTest {
         persistenceProvider.idStore().data().keys shouldBe setOf(id0)
     }
 
+    @Test // KBM-5
+    fun `delete KB removes it from the list, the endpoints and persistence`() {
+        // Given
+        val glucose = app.createKB("Glucose", false)
+        val thyroids = app.createKB("Thyroids", false)
+        app.kbList() shouldBe listOf(glucose, thyroids)
+
+        // When
+        app.deleteKB(glucose.id)
+
+        // Then
+        app.kbList() shouldBe listOf(thyroids)
+        persistenceProvider.idStore().data().keys shouldBe setOf(thyroids.id)
+        shouldThrow<IllegalArgumentException> {
+            app.kbForId(glucose.id)
+        }.message shouldBe "Unknown kb id: ${glucose.id}"
+        app.kbForId(thyroids.id).kbInfo() shouldBe thyroids
+    }
+
+    @Test
+    fun `deleting the last KB leaves no KBs`() {
+        // Given
+        val only = app.createKB("Only", false)
+
+        // When
+        app.deleteKB(only.id)
+
+        // Then
+        app.kbList() shouldBe emptyList()
+    }
+
+    @Test
+    fun `delete KB with unknown id`() {
+        // Given
+        app.createKB("Glucose", false)
+
+        // When / Then
+        shouldThrow<IllegalArgumentException> {
+            app.deleteKB("Unknown")
+        }.message shouldBe "Unknown kb id: Unknown"
+        app.kbList().map { it.name } shouldBe listOf("Glucose")
+    }
+
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)
 }

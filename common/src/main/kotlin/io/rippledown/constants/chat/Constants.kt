@@ -82,3 +82,70 @@ const val COPY_CASE_TO_FAVOURITES = "CopyCaseToFavourites"
 const val DELETE_CASE_FROM_FAVOURITES = "DeleteCaseFromFavourites"
 const val COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME = "CopyCaseToFavouritesWithNewName"
 
+// Knowledge base management by chat. See documentation/design/kb_management_by_chat.md.
+const val KB_INFO_PREFIX = "KbInfo:"
+const val KB_CLOSED = "KbClosed"
+
+const val LIST_KNOWLEDGE_BASES = "ListKnowledgeBases"
+const val OPEN_KNOWLEDGE_BASE = "OpenKnowledgeBase"
+const val CREATE_KNOWLEDGE_BASE = "CreateKnowledgeBase"
+const val CLOSE_KNOWLEDGE_BASE = "CloseKnowledgeBase"
+const val DELETE_KNOWLEDGE_BASE = "DeleteKnowledgeBase"
+const val ADD_DEMONSTRATION_CASE = "AddDemonstrationCase"
+
+const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Ask me to list, open or create one."
+const val KB_ACTION_DURING_RULE_MESSAGE =
+    "Please finish or cancel the current rule before opening, creating, closing or deleting a knowledge base."
+const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."
+const val OPEN_SUFFIX = " (open)"
+const val KB_OPENED = "Opened"
+const val KB_CREATED = "Created and opened"
+const val KB_CLOSED_MESSAGE = "Closed"
+const val KB_DELETED = "Deleted"
+const val CANNOT_BE_UNDONE = "This cannot be undone."
+const val SAY_YES_TO_CONFIRM = "Say yes to confirm."
+const val DID_YOU_MEAN = "Did you mean"
+const val NO_KB_NAMED = "There is no knowledge base named"
+const val THE_KNOWLEDGE_BASES_ARE = "The knowledge bases are:"
+const val MORE_THAN_ONE_KB_MATCHES = "More than one knowledge base matches"
+const val KB_ALREADY_EXISTS = "already exists"
+const val HAS_NO_CASES = "has no cases"
+const val EXTERNAL_INFORMATION_SYSTEM = "external information system"
+const val PATHOLOGY_CASE = "pathology case"
+const val MINIMAL_CASE = "minimal case"
+const val DEMO_CASE_ADDED = "Added the case"
+const val DEMO_CASE_NAME_MINIMAL = "Demo"
+const val DEMO_CASE_NAME_PATHOLOGY = "Einstein"
+const val NO_KB_OPEN = "No knowledge base is open."
+const val NO_KBS_YET = "There are no knowledge bases yet."
+
+fun kbOpenedMessage(name: String) = "$KB_OPENED \"$name\"."
+fun kbCreatedMessage(name: String) = "$KB_CREATED \"$name\"."
+fun kbClosedMessage(name: String) = "$KB_CLOSED_MESSAGE \"$name\"."
+fun kbDeletedMessage(name: String) = "$KB_DELETED \"$name\"."
+fun kbAlreadyExistsMessage(name: String) = "A knowledge base named \"$name\" $KB_ALREADY_EXISTS."
+fun confirmKbDeletionMessage(name: String) =
+    "Delete the knowledge base \"$name\"? $CANNOT_BE_UNDONE $SAY_YES_TO_CONFIRM"
+
+fun confirmKbOpenMessage(name: String) = "$DID_YOU_MEAN \"$name\"? Say yes to open it."
+fun confirmKbCreateMessage(newName: String, existingName: String) =
+    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well? Say yes to create it."
+
+fun kbNotFoundMessage(name: String, available: List<String>) =
+    if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
+    else "$NO_KB_NAMED \"$name\". $THE_KNOWLEDGE_BASES_ARE ${available.joinToString(", ")}."
+
+fun kbAmbiguousMessage(name: String, candidates: List<String>) =
+    "$MORE_THAN_ONE_KB_MATCHES \"$name\": ${candidates.joinToString(", ")}. Which one?"
+
+fun demoCaseAddedMessage(caseName: String) = "$DEMO_CASE_ADDED \"$caseName\"."
+fun noKbGreeting(available: List<String>) =
+    if (available.isEmpty()) "$NO_KBS_YET Say \"create D\" to create one."
+    else "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE ${available.joinToString(", ")}. " +
+            "Say \"open ${available.first()}\" to open one, or \"create D\" to create a new one."
+
+fun emptyKbGreeting(kbName: String) =
+    "The knowledge base \"$kbName\" $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +
+            "To try it out, I can add a demonstration case: say \"$PATHOLOGY_CASE\" for a pathology report, " +
+            "or \"$MINIMAL_CASE\" for a case with a single attribute."
+

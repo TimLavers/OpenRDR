@@ -2,13 +2,11 @@ package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.beBlank
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.*
+import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
@@ -16,6 +14,7 @@ import io.rippledown.kb.chat.ChatManager.Companion.commentVariableTip
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.model.Attribute
+import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
@@ -36,12 +35,14 @@ class ChatManagerTest {
     lateinit var case: RDRCase
     lateinit var viewableCase: ViewableCase
     lateinit var suggestionsBuffer: SuggestionsBuffer
+    lateinit var kbService: KnowledgeBaseService
     lateinit var chatManager: ChatManager
 
     @BeforeTest
     fun setUp() {
         conversationService = mockk()
         ruleService = mockk()
+        kbService = mockk()
         viewableCase = mockk()
         case = mockk()
         suggestionsBuffer = SuggestionsBuffer()
@@ -49,7 +50,7 @@ class ChatManagerTest {
         every { viewableCase.attributes() } returns listOf(Attribute(1, "Glucose"), Attribute(2, "TSH"))
         every { ruleService.isRuleSessionActive() } returns false
         every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
-        chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer)
+        chatManager = ChatManager(conversationService, ruleService, kbService, suggestionsBuffer)
         setupLogger()
     }
 
@@ -60,6 +61,185 @@ class ChatManagerTest {
         loggerField.set(chatManager, logger)
         every { logger.isInfoEnabled } returns true
         every { logger.isErrorEnabled } returns true
+    }
+
+    @Test
+    fun `a fixed greeting is returned after the chat is started, without consulting the model`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns ""
+
+        // When
+        val response = chatManager.startConversation(null, greeting = "Hello there.")
+
+        // Then
+        response shouldBe ChatResponse("Hello there.")
+        coVerify(exactly = 1) { conversationService.startConversation() }
+    }
+
+    @Test
+    fun `the AI unavailable message replaces the greeting when the chat cannot start`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } throws RuntimeException("no network")
+
+        // When
+        val response = chatManager.startConversation(null, greeting = "Hello there.")
+
+        // Then
+        response shouldBe ChatResponse(AI_UNAVAILABLE_MESSAGE)
+    }
+
+    @Test
+    fun `without a rule service a rule building action is refused`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        val fromModel = ActionComment(action = ADD_COMMENT, comment = "Go to Bondi.").toJsonString()
+        coEvery { conversationService.response("Add a comment") } returns fromModel
+
+        // When
+        val response = chatManager.response("Add a comment")
+
+        // Then
+        response shouldBe ChatResponse(NO_KB_OPEN_MESSAGE)
+    }
+
+    @Test
+    fun `without a rule service a message for the user is passed through`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        val fromModel = ActionComment(action = USER_ACTION, message = "Open or create a knowledge base.").toJsonString()
+        coEvery { conversationService.response("Help") } returns fromModel
+
+        // When
+        val response = chatManager.response("Help")
+
+        // Then
+        response shouldBe ChatResponse("Open or create a knowledge base.")
+    }
+
+    @Test
+    fun `without a rule service the message is not augmented with a cornerstone status`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        coEvery { conversationService.response("Hi") } returns ActionComment(
+            action = USER_ACTION,
+            message = "Hi"
+        ).toJsonString()
+
+        // When
+        chatManager.response("Hi")
+
+        // Then
+        coVerify(exactly = 1) { conversationService.response("Hi") }
+    }
+
+    @Test
+    fun `a knowledge base action runs without a rule service`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+        coEvery { conversationService.response("List") } returns ActionComment(action = LIST_KNOWLEDGE_BASES).toJsonString()
+
+        // When
+        val response = chatManager.response("List")
+
+        // Then
+        response shouldBe ChatResponse("Glucose")
+    }
+
+    @Test
+    fun `a knowledge base action that changes the context is refused while a rule is being built`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        val toModel = "${CURRENT_CORNERSTONE_STATUS_PREFIX}${CornerstoneStatus().summary()}]\nOpen Glucose"
+        coEvery { conversationService.response(toModel) } returns
+                ActionComment(action = OPEN_KNOWLEDGE_BASE, kbName = "Glucose").toJsonString()
+
+        // When
+        val response = chatManager.response("Open Glucose")
+
+        // Then
+        response shouldBe ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
+        coVerify(exactly = 0) { kbService.open(any()) }
+    }
+
+    @Test
+    fun `listing knowledge bases is allowed while a rule is being built`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+        val toModel = "${CURRENT_CORNERSTONE_STATUS_PREFIX}${CornerstoneStatus().summary()}]\nList"
+        coEvery { conversationService.response(toModel) } returns ActionComment(action = LIST_KNOWLEDGE_BASES).toJsonString()
+
+        // When
+        val response = chatManager.response("List")
+
+        // Then
+        response shouldBe ChatResponse("Glucose")
+    }
+
+    @Test
+    fun `a question from an action is put to the user and a yes runs it without the model`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        val scratch = KBInfo("s1", "Scratch")
+        every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
+        coEvery { kbService.delete(scratch) } just Runs
+        coEvery { conversationService.response("Delete Scratch") } returns
+                ActionComment(action = DELETE_KNOWLEDGE_BASE, kbName = "Scratch").toJsonString()
+
+        // When
+        val question = chatManager.response("Delete Scratch")
+        val answer = chatManager.response("yes")
+
+        // Then
+        question shouldBe ChatResponse(confirmKbDeletionMessage("Scratch"))
+        answer shouldBe ChatResponse(kbDeletedMessage("Scratch"))
+        coVerify(exactly = 1) { kbService.delete(scratch) }
+        coVerify(exactly = 0) { conversationService.response("yes") }
+    }
+
+    @Test
+    fun `anything but a yes drops the pending question and goes to the model`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        val scratch = KBInfo("s1", "Scratch")
+        every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
+        coEvery { conversationService.response("Delete Scratch") } returns
+                ActionComment(action = DELETE_KNOWLEDGE_BASE, kbName = "Scratch").toJsonString()
+        coEvery { conversationService.response("no") } returns
+                ActionComment(action = USER_ACTION, message = "OK, nothing deleted.").toJsonString()
+        coEvery { conversationService.response("yes") } returns
+                ActionComment(action = USER_ACTION, message = "Yes to what?").toJsonString()
+
+        // When
+        chatManager.response("Delete Scratch")
+        val declined = chatManager.response("no")
+        val lateYes = chatManager.response("yes")
+
+        // Then
+        declined shouldBe ChatResponse("OK, nothing deleted.")
+        lateYes shouldBe ChatResponse("Yes to what?")
+        coVerify(exactly = 0) { kbService.delete(any()) }
+    }
+
+    @Test
+    fun `an outcome that changes the context tells the model no more than the user sees`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        every { kbService.openKnowledgeBase() } returns KBInfo("g1", "Glucose")
+        coEvery { kbService.close() } just Runs
+        coEvery { conversationService.response("Close") } returns ActionComment(action = CLOSE_KNOWLEDGE_BASE).toJsonString()
+
+        // When
+        val response = chatManager.response("Close")
+
+        // Then
+        response shouldBe ChatResponse(kbClosedMessage("Glucose"))
+        coVerify(exactly = 1) { conversationService.response(any()) }
     }
 
     @Test
@@ -495,7 +675,8 @@ class ChatManagerTest {
                     return "delivered"
                 }
             }
-            chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer, suggestedConditionsHandler)
+            chatManager =
+                ChatManager(conversationService, ruleService, kbService, suggestionsBuffer, suggestedConditionsHandler)
             setupLogger()
 
             // The rule session is inactive until the comment is added, then active thereafter
@@ -539,7 +720,8 @@ class ChatManagerTest {
                     return "delivered"
                 }
             }
-            chatManager = ChatManager(conversationService, ruleService, suggestionsBuffer, suggestedConditionsHandler)
+            chatManager =
+                ChatManager(conversationService, ruleService, kbService, suggestionsBuffer, suggestedConditionsHandler)
             setupLogger()
 
             var sessionActive = false

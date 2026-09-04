@@ -1,6 +1,6 @@
 package io.rippledown.kb.chat
 
-import io.rippledown.kb.chat.action.ChatAction
+import io.rippledown.kb.chat.action.Action
 import io.rippledown.log.lazyLogger
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KFunction
@@ -26,16 +26,18 @@ data class ActionComment(
     val valueExpression: String? = null,
     val suggestions: List<String>? = null,
     val variables: List<ChatCommentVariable>? = null,
+    val kbName: String? = null,
+    val kind: String? = null,
 ) {
     companion object {
         val logger = lazyLogger
     }
 
-    fun createActionInstance(): ChatAction? {
+    fun createActionInstance(): Action? {
         val className = "io.rippledown.kb.chat.action.$action"
         val kclass = try {
             Class.forName(className)
-                .asSubclass(ChatAction::class.java)
+                .asSubclass(Action::class.java)
                 .kotlin
         } catch (e: Exception) {
             logger.error("Failed to create action instance from '$action': ${e.message}", e)
@@ -45,7 +47,7 @@ data class ActionComment(
         return kclass.constructors.firstNotNullOfOrNull { invokeConstructor(it) }
     }
 
-    private fun invokeConstructor(fn: KFunction<ChatAction>): ChatAction? {
+    private fun invokeConstructor(fn: KFunction<Action>): Action? {
         val asMap = mutableMapOf<String, Any?>()
         if (message != null) asMap["message"] = message
         if (comment != null) asMap["comment"] = comment
@@ -58,10 +60,12 @@ data class ActionComment(
         if (newName != null) asMap["newName"] = newName
         if (valueExpression != null) asMap["valueExpression"] = valueExpression
         if (variables != null) asMap["variables"] = variables
+        if (kbName != null) asMap["kbName"] = kbName
+        if (kind != null) asMap["kind"] = kind
 
         val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {
-            val parameterName = it.name
+            val parameterName = it.name ?: return null
             if (!asMap.containsKey(parameterName)) {
                 if (it.isOptional) {
                     // Skip optional parameters with no value
@@ -70,8 +74,7 @@ data class ActionComment(
                 return null
             }
 
-            val parameterValue = asMap[parameterName]!!
-            paramMap[it] = parameterValue
+            paramMap[it] = asMap.getValue(parameterName) ?: return null
         }
        return fn.callBy(paramMap)
     }
