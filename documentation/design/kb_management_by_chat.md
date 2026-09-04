@@ -1112,6 +1112,14 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 - Import cases from a CSV file by chat (the empty-KB greeting would then offer it alongside the demonstration case).
 - Create from a sample by chat.
 - A `Rename` item in `KbAnchorMenu`, now that the route exists.
+- **Shrink `KbAnchorMenu`.** Now that list/open/create/close/delete are in the chat, the menu's KB switcher and Create
+  item are duplicate surface and the chat versions are better (fuzzy names, confirmation, explanation). Keep the KB name
+  as the anchor (it is the only place the open KB is shown) and keep the items the chat cannot do well: Import and
+  Export (need a file path), Edit description (arbitrary free text; chat replacement is stage 6), Create from sample (no
+  chat design yet). The menu is also the only route that works without the LLM (no API key, quota exhausted), so do not
+  remove it entirely until there is a no-LLM fallback story. Cost: the other `kb` folder features drive the menu via
+  `KbControlsPO` (create, select, import/export, description) and would be rewritten to use the chat steps - a small
+  stage of its own.
 
 ## 8. Decisions and their reasons
 

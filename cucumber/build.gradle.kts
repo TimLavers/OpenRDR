@@ -33,6 +33,7 @@ val pathToRequirements = "${projectDir.path}/src/test/resources/requirements"
 fun argsForCuke() = mutableListOf(
     "--plugin", "junit:build/test-results/junit.xml",
     "--plugin", "html:build/test-results-html",
+    "--plugin", "steps.ScenarioProgress",
     "--glue", "steps"
 )
 
@@ -145,7 +146,7 @@ tasks.register<JavaExec>("cucumberSingleTest") {
  */
 tasks.register<JavaExec>("cucumberDryRun") {
     setupExec()
-    args = listOf("--glue", "steps", "--dry-run", pathToRequirements)
+    args = listOf("--glue", "steps", "--dry-run", "--plugin", "steps.ScenarioProgress", pathToRequirements)
     dependsOn("testClasses")
 }
 
