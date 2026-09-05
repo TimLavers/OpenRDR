@@ -198,6 +198,8 @@ class Conversation(
         const val DEFAULT_OPENING_MESSAGE = "Please assist me with the report for this case."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"
+        const val SUGGESTION_NUMBER_PARAMETER = "suggestionNumber"
+        const val NEW_VALUE_PARAMETER = "newValue"
         const val TRANSFORM_REASON = "transformReasonToFormalCondition"
         const val GET_SUGGESTED_CONDITIONS = "getSuggestedConditions"
         const val SELECT_SUGGESTED_CONDITION = "selectSuggestedCondition"

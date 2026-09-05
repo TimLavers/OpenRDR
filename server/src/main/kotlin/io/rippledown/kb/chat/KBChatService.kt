@@ -6,8 +6,10 @@ import com.google.genai.types.Type
 import io.rippledown.chat.ChatService
 import io.rippledown.chat.Conversation.Companion.CONDITION_TEXT_PARAMETER
 import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
+import io.rippledown.chat.Conversation.Companion.NEW_VALUE_PARAMETER
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
+import io.rippledown.chat.Conversation.Companion.SUGGESTION_NUMBER_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.GeminiChatService
 import io.rippledown.constants.chat.*
@@ -68,19 +70,40 @@ object KBChatService {
 
     private val selectSuggestionDeclaration = FunctionDeclaration.builder()
         .name(SELECT_SUGGESTED_CONDITION)
-        .description("Selects a non-editable suggested condition and adds it directly to the rule session. Use this instead of transformReasonToFormalCondition when the user selects a non-editable suggestion.")
+        .description(
+            "Adds the suggested condition the user chose to the rule session. Use this, not " +
+                    "$TRANSFORM_REASON, whenever the user chooses one of the suggestions they were shown, " +
+                    "whether it is editable or not. Identify the suggestion by its number in that list: the " +
+                    "system resolves the number, so you never have to reproduce the condition's text."
+        )
         .parameters(
             Schema.builder()
                 .type(Type.Known.OBJECT)
                 .properties(
                     mapOf(
+                        SUGGESTION_NUMBER_PARAMETER to Schema.builder()
+                            .type(Type.Known.INTEGER)
+                            .description("The number of the chosen suggestion in the list shown to the user, counting from 1.")
+                            .build(),
+                        NEW_VALUE_PARAMETER to Schema.builder()
+                            .type(Type.Known.STRING)
+                            .description(
+                                "For an [editable] suggestion only: the value the user gave when asked what " +
+                                        "value they wanted. Omit it when first told that an editable " +
+                                        "suggestion was chosen, and omit it entirely for a suggestion that " +
+                                        "is not editable."
+                            )
+                            .build(),
                         CONDITION_TEXT_PARAMETER to Schema.builder()
                             .type(Type.Known.STRING)
-                            .description("The exact text of the non-editable suggested condition to add.")
+                            .description(
+                                "The exact text of the chosen suggestion. Give this only when you do not " +
+                                        "know its number; the number is preferred."
+                            )
                             .build()
                     )
                 )
-                .required(listOf(CONDITION_TEXT_PARAMETER))
+                .required(listOf(SUGGESTION_NUMBER_PARAMETER))
                 .build()
         )
         .build()

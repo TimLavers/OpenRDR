@@ -8,7 +8,9 @@ import java.io.File
 
 object StepsInfrastructure {
     lateinit var uiTestBase: UITestBase
-    private lateinit var launchedClient: LaunchedClient
+
+    /** The running client, or null when none has been started or the last one has been stopped. */
+    private var launchedClient: LaunchedClient? = null
 
     /**
      * Per-scenario flag set by the `@voice-is-fake` cucumber tag. When
@@ -44,16 +46,23 @@ object StepsInfrastructure {
     }
 
     fun startClient() {
+        // A scenario that starts the client twice would otherwise leave the first
+        // window running and overlapping the second: the page objects address the
+        // new window's accessibility tree while native focus, and so every Robot
+        // keystroke, can go to the old one.
+        launchedClient?.stopClient()
         launchedClient = LaunchedClient()
     }
-    fun client() = launchedClient
+
+    fun client() = launchedClient ?: error("The client application has not been started.")
 
     fun screenshotOnFailure(scenario: Scenario) {
-        if (scenario.isFailed && ::launchedClient.isInitialized) {
+        val running = launchedClient
+        if (scenario.isFailed && running != null) {
             val file = File(failureDir(scenario), "screenshot.png")
             println("Scenario failed - saving screenshot to ${file.absolutePath}")
             try {
-                launchedClient.screenshot(file)
+                running.screenshot(file)
             } catch (e: Exception) {
                 println("Failed to capture screenshot: ${e.message}")
             }
@@ -86,7 +95,8 @@ object StepsInfrastructure {
     }
 
     fun cleanup() {
-        if (::launchedClient.isInitialized) launchedClient.stopClient()
+        launchedClient?.stopClient()
+        launchedClient = null
         uiTestBase.serverProxy.shutdown()
         useFakeVoice = false
     }

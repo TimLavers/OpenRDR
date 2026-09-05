@@ -54,7 +54,8 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
         val suggestionsBuffer = SuggestionsBuffer()
         val suggestedConditionsHandler =
             SuggestedConditionsHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
-        val selectSuggestionHandler = SelectSuggestionHandler(viewableCase.case, ruleSessionManager)
+        val selectSuggestionHandler =
+            SelectSuggestionHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
             TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer, ruleSessionManager),
             GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler,

@@ -7,6 +7,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
 
@@ -73,6 +74,19 @@ interface RuleService {
     fun selectCornerstoneCase(index: Int): CornerstoneStatus
     fun addConditionToCurrentRuleSession(condition: Condition)
     fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult
+
+    /**
+     * The condition an editable suggestion gives when the value the user is
+     * editing is replaced by [value], or the reason it cannot be used. Built
+     * here rather than parsed from text so that nothing has to transcribe the
+     * condition: the model gives the suggestion and the new value, and the
+     * server substitutes.
+     */
+    fun conditionForEditedSuggestion(
+        case: RDRCase,
+        editableCondition: EditableCondition,
+        value: String
+    ): ConditionParsingResult
     fun commitCurrentRuleSession()
     fun cancelCurrentRuleSession()
     fun undoLastRuleSession()
