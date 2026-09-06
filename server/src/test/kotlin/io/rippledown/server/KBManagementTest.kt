@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
@@ -72,11 +73,33 @@ class KBManagementTest: OpenRDRServerTestBase() {
     }
 
     @Test
-    fun deleteKB() = testApplication {
+    fun `deleting a KB should return the remaining KB first in alpha order`() = testApplication {
+        // Given
         setupServer()
-        every { serverApplication.deleteKB(kbId) } returns Unit
-        val result = httpClient.delete(DELETE_KB) {parameter(KB_ID, kbId)}
+        val remaining = KBInfo("10", "Glucose")
+        every { serverApplication.deleteKB(kbId) } returns remaining
+
+        // When
+        val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
+
+        // Then
         result.status shouldBe HttpStatusCode.OK
+        result.body<KBInfo>() shouldBe remaining
+        verify { serverApplication.deleteKB(kbId) }
+    }
+
+    @Test
+    fun `deleting the only KB should respond with no content`() = testApplication {
+        // Given
+        setupServer()
+        every { serverApplication.deleteKB(kbId) } returns null
+
+        // When
+        val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
+
+        // Then
+        result.status shouldBe HttpStatusCode.NoContent
+        result.bodyAsText() shouldBe ""
         verify { serverApplication.deleteKB(kbId) }
     }
 

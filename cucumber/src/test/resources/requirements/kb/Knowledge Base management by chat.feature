@@ -3,18 +3,43 @@ Feature: Managing knowledge bases through the chat
   Background:
     Given there is a knowledge base called Thyroids
 
-  Scenario: The available knowledge bases can be listed
-    Given A Knowledge Base called B has been created
-    And A Knowledge Base called C has been created
-    And A Knowledge Base called A has been created
+  Scenario: The available knowledge bases can be listed if there are any
+    Given A Knowledge Base called Lipids has been created
+    And A Knowledge Base called Haematology has been created
+    And A Knowledge Base called Biochemistry has been created
     And I start the client application
     When I enter the following text into the chat panel:
       | What knowledge bases are available? |
     Then the chatbot response consists of the following lines:
-      | A (open) |
-      | B        |
-      | C        |
-      | Thyroids |
+      | Biochemistry (open) |
+      | Haematology         |
+      | Lipids              |
+      | Thyroids            |
+
+  @single
+  Scenario: The option to create a KB is given if there are none
+    Given The Knowledge Base called Thyroids has been deleted
+    And I start the client application
+    And pause
+    Then the chatbot response contains the following terms:
+      | no knowledge bases yet | create |
+    And no knowledge base is shown as selected
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the chatbot response contains the following terms:
+      | name |
+    When I enter the following text into the chat panel:
+      | Glucose |
+    Then the chatbot response contains the following terms:
+      | Created | Glucose |
+    And the displayed KB name is now Glucose
+    Then the chatbot response contains the following terms:
+      | has no cases | demonstration case |
+    When I enter the following text into the chat panel:
+      | ok |
+    Then the chatbot response contains the following terms:
+      | pathology | minimal |
+    And the displayed KB name is Glucose
 
   Scenario: A knowledge base can be opened by name
     Given A Knowledge Base called A has been created

@@ -166,6 +166,12 @@ class RESTClient {
             currentKB.set(kbi)
         }
     }
+    fun deleteKB(name: String) {
+        runBlocking {
+            val toDelete = api.kbList().first { it.name == name }
+            currentKB.set(api.deleteKB(toDelete.id))
+        }
+    }
 
     fun createKBWithDefaultName() = createKB(DEFAULT_PROJECT_NAME)
 

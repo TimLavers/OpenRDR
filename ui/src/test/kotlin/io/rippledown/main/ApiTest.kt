@@ -3,10 +3,7 @@ package io.rippledown.main
 import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -140,6 +137,33 @@ class ApiTest {
         val config = config { }
         Api(mock(config)).createKB(expectedName)
         config.newKbName shouldBe expectedName
+    }
+
+    @Test
+    fun `deleteKB should return the remaining KB`() = runTest {
+        // Given
+        val remaining = KBInfo("glucose_1", "Glucose")
+        val config = config { kbRemainingAfterDeletion = remaining }
+
+        // When
+        val result = Api(mock(config)).deleteKB("thyroids_1")
+
+        // Then
+        config.deletedKbId shouldBe "thyroids_1"
+        result shouldBe remaining
+    }
+
+    @Test
+    fun `deleteKB should return null when no KB remains`() = runTest {
+        // Given
+        val config = config { kbRemainingAfterDeletion = null }
+
+        // When
+        val result = Api(mock(config)).deleteKB("thyroids_1")
+
+        // Then
+        config.deletedKbId shouldBe "thyroids_1"
+        result shouldBe null
     }
 
     @Test

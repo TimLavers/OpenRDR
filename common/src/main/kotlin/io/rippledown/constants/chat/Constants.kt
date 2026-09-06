@@ -96,7 +96,7 @@ const val RENAME_KNOWLEDGE_BASE = "RenameKnowledgeBase"
 const val SHOW_KNOWLEDGE_BASE_DESCRIPTION = "ShowKnowledgeBaseDescription"
 const val SET_KNOWLEDGE_BASE_DESCRIPTION = "SetKnowledgeBaseDescription"
 
-const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Ask me to list, open or create one."
+const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Do you want to see the list, or open or create one."
 const val KB_ACTION_DURING_RULE_MESSAGE =
     "Please finish or cancel the current rule before opening, creating, closing or deleting a knowledge base."
 const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."
@@ -106,7 +106,6 @@ const val KB_CREATED = "Created and opened"
 const val KB_CLOSED_MESSAGE = "Closed"
 const val KB_DELETED = "Deleted"
 const val CANNOT_BE_UNDONE = "This cannot be undone."
-const val SAY_YES_TO_CONFIRM = "Say yes to confirm."
 const val DID_YOU_MEAN = "Did you mean"
 const val NO_KB_NAMED = "There is no knowledge base named"
 const val THE_KNOWLEDGE_BASES_ARE = "The knowledge bases are:"
@@ -114,14 +113,12 @@ const val MORE_THAN_ONE_KB_MATCHES = "More than one knowledge base matches"
 const val KB_ALREADY_EXISTS = "already exists"
 const val HAS_NO_CASES = "has no cases"
 const val EXTERNAL_INFORMATION_SYSTEM = "external information system"
-const val PATHOLOGY_CASE = "pathology case"
-const val MINIMAL_CASE = "minimal case"
 const val DEMO_CASE_ADDED = "Added the case"
-const val DEMO_CASE_NAME_MINIMAL = "Demo"
-const val DEMO_CASE_NAME_PATHOLOGY = "Einstein"
+const val DEMO_CASE_NAME = "Einstein"
 const val NO_KB_OPEN = "No knowledge base is open."
 const val NO_KBS_YET = "There are no knowledge bases yet."
 const val KB_NAME_CANNOT_BE_BLANK = "A knowledge base name cannot be blank."
+const val NAME_THE_NEW_KB = "What would you like to call it?"
 
 fun kbOpenedMessage(name: String) = "$KB_OPENED \"$name\"."
 fun kbCreatedMessage(name: String) = "$KB_CREATED \"$name\"."
@@ -132,11 +129,11 @@ fun kbAlreadyExistsMessage(name: String) = "A knowledge base named \"$name\" $KB
 fun kbHasNoDescriptionMessage(name: String) = "\"$name\" has no description."
 fun kbDescriptionUpdatedMessage(name: String) = "Description of \"$name\" updated."
 fun confirmKbDeletionMessage(name: String) =
-    "Delete the knowledge base \"$name\"? $CANNOT_BE_UNDONE $SAY_YES_TO_CONFIRM"
+    "Delete the knowledge base \"$name\"? $CANNOT_BE_UNDONE"
 
-fun confirmKbOpenMessage(name: String) = "$DID_YOU_MEAN \"$name\"? Say yes to open it."
+fun confirmKbOpenMessage(name: String) = "$DID_YOU_MEAN \"$name\"?"
 fun confirmKbCreateMessage(newName: String, existingName: String) =
-    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well? Say yes to create it."
+    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well?."
 
 fun kbNotFoundMessage(name: String, available: List<String>) =
     if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
@@ -146,12 +143,18 @@ fun kbAmbiguousMessage(name: String, candidates: List<String>) =
     "$MORE_THAN_ONE_KB_MATCHES \"$name\": ${candidates.joinToString(", ")}. Which one?"
 
 fun demoCaseAddedMessage(caseName: String) = "$DEMO_CASE_ADDED \"$caseName\"."
+
 fun noKbGreeting(available: List<String>) =
-    if (available.isEmpty()) "$NO_KBS_YET Say \"create D\" to create one."
-    else "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE ${available.joinToString(", ")}. " +
-            "Say \"open ${available.first()}\" to open one, or \"create D\" to create a new one."
+    if (available.isEmpty()) "$NO_KBS_YET Do you want to create one?"
+    else "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE${
+        available.joinToString(
+            prefix = "\n",
+            separator = "\n",
+            postfix = "\n"
+        )
+    }. " +
+            "Do you want to open one or create a new one?"
 
 fun emptyKbGreeting(kbName: String) =
-    "The knowledge base \"$kbName\" $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +
-            "To try it out, I can add a demonstration case: say \"$PATHOLOGY_CASE\" for a pathology report, " +
-            "or \"$MINIMAL_CASE\" for a case with a single attribute."
+    "The $kbName knowledge base $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +
+            "Would you like to see a demonstration case?"

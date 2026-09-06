@@ -10,6 +10,7 @@ import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_AC
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import kotlinx.coroutines.CancellationException
 
 interface ModelResponder {
     suspend fun response(message: String): ChatResponse
@@ -54,18 +55,40 @@ class ChatManager(
     private var pendingConfirmation: KbManagementOutcome.Ask? = null
 
     /**
+     * Whether the greeting the user has just been shown is still awaiting its
+     * answer. The greeting is the server's own question, so the server answers a
+     * plain acceptance of it; the model never saw the question, and has been known
+     * to deny having asked it. Open for the first message only.
+     */
+    private var greetingAwaitingAnswer = false
+
+    private data class PendingKbCreation(val stage: KbCreationStage, val question: String)
+
+    private var pendingKbCreation: PendingKbCreation? = null
+    private val kbCreationInterpreter = KbCreationReplyInterpreter(conversationService)
+
+    /**
      * When [greeting] is given the conversation has no opening message: the chat is
      * started so that the model is ready, and the greeting is what the user sees.
      */
     suspend fun startConversation(viewableCase: ViewableCase?, greeting: String? = null): ChatResponse {
         currentCase = viewableCase
+        pendingKbCreation = null
+        greetingAwaitingAnswer = false
         val response = try {
             conversationService.startConversation()
         } catch (e: Exception) {
             logger.error("Failed to start conversation", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
-        if (greeting != null) return ChatResponse(greeting)
+        if (greeting != null) {
+            if (viewableCase == null && kbService.knowledgeBases().isEmpty() && kbService.openKnowledgeBase() == null) {
+                pendingKbCreation = PendingKbCreation(KbCreationStage.OFFER_CREATION, greeting)
+            } else {
+                greetingAwaitingAnswer = true
+            }
+            return ChatResponse(greeting)
+        }
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
         // When the case already has comments the model replies in prose
         // (e.g. "This case has the following comments: ... Would you
@@ -105,6 +128,8 @@ class ChatManager(
         ) {
             return ExemptCornerstone().doIt(ruleService, currentCase, this)
         }
+        answerToKbCreation(message)?.let { return it }
+        answerToGreeting(message)?.let { return it }
         val pending = pendingConfirmation
         pendingConfirmation = null
         if (pending != null && isAcceptance(message)) {
@@ -266,6 +291,62 @@ class ChatManager(
         return commentVariableTip(exampleAttribute)
     }
 
+    private suspend fun answerToKbCreation(message: String): ChatResponse? {
+        val pending = pendingKbCreation ?: return null
+        val reply = try {
+            kbCreationInterpreter.interpret(pending.stage, pending.question, message)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid KB creation interpretation", e)
+            return ChatResponse(clarifyKbCreation(pending))
+        } catch (e: Exception) {
+            logger.error("Failed to interpret KB creation reply", e)
+            return ChatResponse(AI_UNAVAILABLE_MESSAGE)
+        }
+        return when (reply.intent) {
+            KbCreationIntent.CONFIRM -> {
+                pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
+                ChatResponse(NAME_THE_NEW_KB)
+            }
+
+            KbCreationIntent.DENY -> {
+                pendingKbCreation = null
+                ChatResponse(KB_CREATION_DECLINED)
+            }
+
+            KbCreationIntent.CONFIRM_WITH_NAME -> {
+                val response = manageKnowledgeBases(CreateKnowledgeBase(checkNotNull(reply.kbName)))
+                pendingKbCreation = null
+                response
+            }
+
+            KbCreationIntent.UNCLEAR -> ChatResponse(clarifyKbCreation(pending))
+            KbCreationIntent.OTHER_REQUEST -> {
+                pendingKbCreation = null
+                null // The ordinary conversation handles the explicit change of subject.
+            }
+        }
+    }
+
+    private fun clarifyKbCreation(pending: PendingKbCreation): String {
+        val question = when (pending.stage) {
+            KbCreationStage.OFFER_CREATION -> KB_CREATION_CLARIFICATION
+            KbCreationStage.AWAITING_NAME -> KB_NAME_CLARIFICATION
+        }
+        pendingKbCreation = pending.copy(question = question)
+        return question
+    }
+
+    /** Other greetings still use the existing demonstration-case acceptance path. */
+    private suspend fun answerToGreeting(message: String): ChatResponse? {
+        if (!greetingAwaitingAnswer) return null
+        greetingAwaitingAnswer = false
+        if (!isAcceptance(message)) return null
+        if (kbService.openKnowledgeBase() == null) return null
+        return manageKnowledgeBases(AddDemonstrationCase())
+    }
+
     private suspend fun manageKnowledgeBases(action: KbManagementAction): ChatResponse {
         if (action.changesContext && isRuleSessionActive()) return ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
         return when (val outcome = action.doIt(kbService)) {
@@ -285,6 +366,11 @@ class ChatManager(
     private fun isRuleSessionActive() = ruleService?.isRuleSessionActive() == true
 
     companion object {
+        const val KB_CREATION_DECLINED = "OK, I won't create a knowledge base. You can ask to create one later."
+        const val KB_CREATION_CLARIFICATION =
+            "A knowledge base holds cases and rules used to generate reports. Would you like to create one? " +
+                    "You can also give its name, or say no."
+        const val KB_NAME_CLARIFICATION = "What would you like to call the new knowledge base? You can also cancel."
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"

@@ -6,11 +6,8 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.*
-import io.rippledown.constants.chat.DEMO_CASE_NAME_MINIMAL
-import io.rippledown.constants.chat.DEMO_CASE_NAME_PATHOLOGY
+import io.rippledown.constants.chat.DEMO_CASE_NAME
 import io.rippledown.kb.KbResolution
-import io.rippledown.kb.chat.DemonstrationCase
-import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.diff.Addition
@@ -198,7 +195,7 @@ class ApplicationKbServiceTest {
     }
 
     @Test
-    fun `adding the pathology demonstration case stores Einstein and pushes the cases info`() = runBlocking<Unit> {
+    fun `adding the demonstration case stores Einstein and pushes the cases info`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
@@ -206,36 +203,16 @@ class ApplicationKbServiceTest {
         coEvery { webSocketManager.sendCasesInfo(capture(pushed)) } just Runs
 
         // When
-        val case = service.addDemonstrationCase(DemonstrationCase.Pathology)
+        val case = service.addDemonstrationCase()
 
         // Then
-        case.name shouldBe DEMO_CASE_NAME_PATHOLOGY
+        case.name shouldBe DEMO_CASE_NAME
         case.attributes shouldHaveSize 65
         case.attributes.map { it.name } shouldContainAll listOf("Patient Name", "HAEMOGLOBIN", "MCV", "TSH")
         case.dates shouldHaveSize 2
-        app.kbForId(thyroids.id).kb.processedCaseIds().map { it.name } shouldBe listOf(DEMO_CASE_NAME_PATHOLOGY)
-        pushed.captured.caseIds.map { it.name } shouldBe listOf(DEMO_CASE_NAME_PATHOLOGY)
+        app.kbForId(thyroids.id).kb.processedCaseIds().map { it.name } shouldBe listOf(DEMO_CASE_NAME)
+        pushed.captured.caseIds.map { it.name } shouldBe listOf(DEMO_CASE_NAME)
         pushed.captured.kbName shouldBe "Thyroids"
-    }
-
-    @Test
-    fun `adding the minimal demonstration case stores a case with x = 1 dated today`() = runBlocking<Unit> {
-        // Given
-        val thyroids = app.createKB("Thyroids", false)
-        openEndpoint = app.kbForId(thyroids.id)
-        coEvery { webSocketManager.sendCasesInfo(any()) } just Runs
-
-        // When
-        val case = service.addDemonstrationCase(DemonstrationCase.Minimal)
-
-        // Then
-        case.name shouldBe DEMO_CASE_NAME_MINIMAL
-        case.attributes.map { it.name } shouldBe listOf("x")
-        val x: Attribute = case.attributes.single()
-        case.getLatest(x)?.value?.text shouldBe "1"
-        case.dates shouldHaveSize 1
-        case.dates.single() shouldBe now
-        coVerify(exactly = 1) { webSocketManager.sendCasesInfo(any()) }
     }
 
     @Test
@@ -245,7 +222,7 @@ class ApplicationKbServiceTest {
 
         // When / Then
         shouldThrow<IllegalStateException> {
-            service.addDemonstrationCase(DemonstrationCase.Minimal)
+            service.addDemonstrationCase()
         }
     }
 
@@ -262,7 +239,7 @@ class ApplicationKbServiceTest {
         val endpoint = app.kbForId(thyroids.id)
         openEndpoint = endpoint
         coEvery { webSocketManager.sendCasesInfo(any()) } just Runs
-        val case = service.addDemonstrationCase(DemonstrationCase.Minimal)
+        val case = service.addDemonstrationCase()
         service.isRuleSessionActive() shouldBe false
 
         // When

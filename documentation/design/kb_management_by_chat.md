@@ -20,9 +20,11 @@ The chosen shape, in one paragraph:
   "router" LLM in front of the KB chat. The abandoned branch `kb_management_by_chat` built the two-tier router and it
   costs two model calls per turn, loses conversational context at the hand-off, and duplicates the action-dispatch
   machinery. We do not take that part of the branch.
-- **The server decides, the model transcribes.** The model emits `{"action": "OpenKnowledgeBase", "kbName": "..."}`; the
-  server resolves the name, refuses ambiguity, asks for confirmation before a delete, and refuses a context switch while
-  a rule is being built. No policy lives in the prompt.
+- **The server controls workflows; the model interprets language.** For an ordinary request the model emits an action
+  such as `{"action": "OpenKnowledgeBase", "kbName": "..."}`. When the server is awaiting an answer in a workflow, it
+  supplies the pending question and state and asks the model for a structured interpretation instead. The server chooses
+  the transition, validates names and executes the permitted action. The first application is the no-KB startup offer
+  and subsequent naming step (section 4.3.1); extending this to other workflows is described in section 4.3.2.
 - **The GUI follows the server over the web socket**, exactly as it already does for cases and cornerstones (see
   `updating_the_gui_from_the_server_state.md`). Opening a KB from the chat pushes the new `KBInfo` to the client; the
   client's existing cascade (`kbInfo` -> cases -> first case -> `startConversation`) does the rest. Closing pushes a
@@ -89,8 +91,9 @@ Facts that shape the design:
 - Actions are found by reflection: `ActionComment.createActionInstance()` looks up
   `io.rippledown.kb.chat.action.<action>` and binds constructor parameters by name from `ActionComment`'s fields. New
   actions therefore need only a class and (for the name) one new field, `kbName`.
-- `ChatManager` already has the exact pattern we need for a confirmation held for one turn:
-  `offeredAssignment` + `isAcceptance(message)`.
+- `ChatManager` already holds confirmations through `offeredAssignment` + `isAcceptance(message)`. Retaining the pending
+  action on the server is useful, but the fixed English acceptance list is not the pattern for new workflows. The no-KB
+  startup flow now delegates language interpretation to the model and retains its state through unclear replies.
 - The server has *no* notion of "the current KB": every request carries `kbId`. The client's `Api.currentKB` is the only
   "current KB" and `Api.kbInfo()` lazily fetches (and, via `getDefaultProject`, *creates*) the default KB when it is
   null. "Close" therefore needs the chat calls to stop going through `Api.kbInfo()`.
@@ -180,7 +183,8 @@ classDiagram
         -ruleService RuleService?
         -currentCase ViewableCase?
         -kbService KnowledgeBaseService
-        -pendingDeletion DeleteKnowledgeBase?
+      -pendingConfirmation KbManagementOutcome.Ask?
+      -pendingKbCreation PendingKbCreation?
         +startConversation() ChatResponse
         +response(message) ChatResponse
         +processActionComment(actionComment) ChatResponse
@@ -270,17 +274,16 @@ Derived from it:
 | `KnowledgeBaseOnly`   | as above; `{{KB_NAME}}` set              | none                  | none - fixed greeting `EMPTY_KB_GREETING` (below)          |
 | `CaseInKnowledgeBase` | all current sections + 20; examples      | the current three     | current: "Please assist me with the report for this case." |
 
-In the two case-less contexts the greeting is informational and must say exactly what the user can do next, so it is
-server text, not a model turn: `Conversation.startConversation()` only opens the chat (`chatService.startChat()`) and
-the coordinator returns the constant. The model's history then begins with the user's first message, with everything it
-needs in the system prompt.
+In the two case-less contexts the greeting is server text: `Conversation.startConversation()` only opens the chat
+(`chatService.startChat()`) and the coordinator supplies the greeting. For the no-KB creation workflow, each user reply
+is sent to the model together with the server's pending question and state. The model therefore sees the question the
+user is answering, even though it did not generate that question itself.
 
-- `NO_KB_GREETING`: *"No knowledge base is open. The knowledge bases are: A, B, C. Say "open A" to open one, or
-  "create D" to create a new one."* With no KBs at all: *"There are no knowledge bases yet. Say "create D" to create
-  one."*
-- `EMPTY_KB_GREETING`: *"The knowledge base "X" has no cases. Cases are normally provided by an external information
-  system. To try it out, I can add a demonstration case: say "pathology case" for a pathology report, or "minimal case"
-  for a case with a single attribute."* (Importing cases from a CSV file is a planned addition - stage 7.)
+- `noKbGreeting(available)`: with no KBs, *"There are no knowledge bases yet. Do you want to create one?"* Otherwise,
+  it lists the KBs and asks whether the user wants to open one or create a new one.
+- `emptyKbGreeting(name)`: explains that the KB has no cases and cases normally come from an external information
+  system, then asks *"Would you like to see a demonstration case?"* (Importing cases from a CSV file is a planned
+  addition - stage 7.)
 
 `KBChatService.systemPrompt(context, ...)` replaces `systemPrompt(viewableCase, ...)`. The placeholder map gains
 `KB_NAME`, `KB_NAMES` (the current list, for the model to disambiguate *before* it emits an action, e.g. when the user
@@ -362,7 +365,8 @@ val chatResponse = when (val action = actionComment.createActionInstance()) {
 1. **Rule session active** and the action changes context (`Open`, `Create`, `Close`, `Delete`) ->
    `KB_ACTION_DURING_RULE_MESSAGE`. `List` and `AddDemonstrationCase` are always allowed
    (`KbManagementAction.changesContext`).
-2. **Some actions ask before acting.** An action's `doIt` may return a `KbManagementOutcome.Ask(question, thenDo)`
+2. **Some actions ask before acting (existing confirmation path).** An action's `doIt` may return a
+   `KbManagementOutcome.Ask(question, thenDo)`
    instead of a `ChatResponse`: `question` goes to the user and `thenDo` - a suspending lambda over the
    `KnowledgeBaseService` - is held in `ChatManager.pendingConfirmation` for exactly one turn, mirroring
    `offeredAssignment`. On the next message, if `isAcceptance(message)` and `pendingConfirmation != null`, the manager
@@ -386,6 +390,73 @@ reasonable refactor *after* this lands (stage 7), so the derived-value flow is n
 
 `NO_KB_OPEN_MESSAGE` = *"No knowledge base is open. Ask me to list, open or create one."* This is what the user gets if
 the model emits, say, `AddComment` while nothing is open; the model is also told not to, but the server is the guard.
+
+### 4.3.1 First-KB creation: server workflow, model interpretation
+
+This is the implemented pattern for startup when no KBs exist. `ChatManager` holds a `PendingKbCreation` containing
+the stage (`OFFER_CREATION` or `AWAITING_NAME`) and the question shown to the user. It does not recognise confirmations
+through an English word list, and it does not assume that the next message after a name request is literally the name.
+
+`KbCreationReplyInterpreter` uses the existing `ConversationService` and model conversation. For each pending reply it
+sends the interpretation contract from `chat/kb_creation_reply.md` plus JSON containing `stage`, `question` and
+`userReply`. The model returns an intent and, where appropriate, an exact name:
+
+```json
+{
+  "intent": "CONFIRM_WITH_NAME",
+  "kbName": "Thyroid"
+}
+```
+
+| Interpretation      | Example                                             | Server transition or action                                                                                                   |
+|---------------------|-----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `CONFIRM`           | "oui", "yes", "go ahead"                            | Enter `AWAITING_NAME`; ask "What would you like to call it?" A repeated agreement asks again.                                 |
+| `DENY`              | "not now", "actually, no"                           | End the offer or naming step; acknowledge cancellation without creating anything.                                             |
+| `CONFIRM_WITH_NAME` | "yes, call it Thyroid", "create one called Thyroid" | Run the existing `CreateKnowledgeBase` action with the extracted name. At `AWAITING_NAME`, a bare name also has this meaning. |
+| `UNCLEAR`           | "maybe", "what is a KB?"                            | Keep the stage and return a server clarification.                                                                             |
+| `OTHER_REQUEST`     | "list the knowledge bases"                          | End the creation workflow and pass the original request to the ordinary conversation.                                         |
+
+The first three are the expected answers. `UNCLEAR` avoids forced guesses; `OTHER_REQUEST` distinguishes an explicit
+change of subject from an uncertain answer. The name must preserve the user's spelling, case and language. Agreement
+does not need to contain a literal "yes", and the model must not invent a name or translate one.
+
+The response is decoded as a strict typed object, separate from `ActionComment`. Unknown intents, malformed output,
+multiple objects, extra action fields, a missing or blank name, or a name attached to a non-naming intent do not execute
+anything. The server clarifies and retains the pending state. A model availability failure returns the existing AI
+unavailable message and also retains state; coroutine cancellation propagates. A new conversation resets the workflow.
+
+The server still applies `CreateKnowledgeBase`'s blank-name, duplicate-name and near-duplicate checks. A valid naming
+interpretation hands control to that action; any near-duplicate question uses the existing `pendingConfirmation` path.
+The model cannot bypass validation by emitting an action during an interpretation turn. Creation and GUI updates follow
+the existing service and web socket path.
+
+Ordinary offer and naming replies cost one model call each, using the same conversation. An explicit different request
+costs a second call to handle the original request after interpretation. There is no separate routing model. Once the
+workflow ends, ordinary turns use the usual action format again.
+
+`FirstKbCreationTest` exercises both stages with mocked interpretations, including French replies, direct naming,
+cancellation, uncertainty, invalid model output, retry, change of subject and server name validation. Those tests verify
+the deterministic workflow and protocol. `KbCreationReplyModelTest` separately exercises the configured model with
+French, Spanish and English replies, name extraction, cancellation, uncertainty and return to ordinary action output.
+It runs when `API_KEY` is available and uses no UI or persistent KBs.
+
+### 4.3.2 Applying the pattern elsewhere
+
+The direction for further work is to move workflow decisions into explicit server states, while using the model to
+interpret the user's response in the context of the pending question. Suitable next candidates are demonstration-case
+selection, open/create choices, KB action confirmations, offered expressions, and the stages of rule building and
+cornerstone review.
+
+For each migration, define the state and allowed interpretations, keep the pending action and its parameters on the
+server, validate the model's output, and test the transitions independently of the model. Give the model the actual
+pending question on every interpretation turn. A model should identify consent or a chosen option; it should not choose
+the workflow stage, invent the next question, or execute a pending action itself. If such an interpreter later shares
+a conversation with callable tools, execution must also be gated by the active server state; an intent-only prompt is
+not an execution guard. The current no-KB conversation has no callable tools.
+
+The other workflows have not been migrated in this change. In particular, `pendingConfirmation`, `offeredAssignment`,
+demonstration-case greeting acceptance and cornerstone exemption retain their existing handling. A shared abstraction
+should be extracted when a second workflow establishes which parts are actually common.
 
 ### 4.4 `KnowledgeBaseService` and `ApplicationKbService`
 
@@ -536,6 +607,8 @@ New file `server/src/main/resources/chat/instructions/20_knowledge_base_manageme
   `repeat_inferencing.md`, "the model is a transcriber").
 - Open, create, delete: *"Do not ask the user to confirm. Emit the action; the system asks when it needs to."*
   Otherwise the model asks, the user says yes, the model emits the action, and the server asks *again*.
+- First-KB startup and naming: explicit interpretation turns use the intent contract in section 4.3.1 instead of
+  `ActionComment`. This exception applies only to the current interpretation request, not subsequent ordinary turns.
 - Demonstration case: when the user accepts the offer in `EMPTY_KB_GREETING` ("pathology case", "the minimal one",
   "yes, pathology"), emit `AddDemonstrationCase` with `kind` `pathology` or `minimal`. If they say only "yes", ask
   which.
@@ -1108,6 +1181,7 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 
 ### Stage 7 (optional follow-ups, not part of this feature)
 
+- Extend the server workflow and model interpretation pattern from first-KB creation to the candidates in section 4.3.2.
 - Fold `offeredAssignment` into `pendingConfirmation`.
 - Import cases from a CSV file by chat (the empty-KB greeting would then offer it alongside the demonstration case).
 - Create from a sample by chat.
@@ -1123,13 +1197,17 @@ packages) and `:cucumber:cucumberDryRun` bound. The user commits after each stag
 
 ## 8. Decisions and their reasons
 
-- **Single conversation, not a router.** One model call per turn; the KB-management turn keeps the conversation's
-  history; one dispatch mechanism. The cost is a slightly longer prompt in every context.
+- **Single conversation.** First-KB workflow replies use one model call for interpretation; an explicit change of
+  subject
+  additionally uses the ordinary conversation to handle that request. The same model and history serve both purposes.
+- **Server-owned workflow, model-interpreted language.** The server holds the question and state, interprets the typed
+  result and chooses the next step. This replaces the English acceptance list and verbatim-name shortcut for no-KB
+  startup. Uncertainty and interpretation failure retain state rather than silently consuming the offer.
 - **Client starts conversations; server never does.** After `open`/`create`/`close` the server only pushes state. If the
   server also restarted the conversation, the client's own cascade would start a second one and the two greetings would
   race. One owner.
-- **Confirmations are held by the server for one turn**, as `offeredAssignment` is. A model-side confirmation is not
-  reliable and, when it does happen, produces a double ask.
+- **Existing action confirmations are held by the server for one turn**, as `offeredAssignment` is. First-KB creation
+  now has explicit pending stages instead; migrating the other confirmations is follow-up work (section 4.3.2).
 - **Generous matching, careful acting.** A partial name is accepted for open and delete, but a partial match always asks
   before acting; delete asks even on an exact match. Create warns on a near-duplicate name. This is the conversational
   trade: one extra turn in the doubtful cases, no silent surprises.

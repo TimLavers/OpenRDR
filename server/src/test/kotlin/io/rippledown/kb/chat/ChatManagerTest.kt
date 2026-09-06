@@ -227,6 +227,116 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `accepting the greeting's offer to create the first knowledge base asks for a name after interpretation`() =
+        runTest {
+            // Given
+            chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+            coEvery { conversationService.startConversation() } returns ""
+            every { kbService.knowledgeBases() } returns emptyList()
+            every { kbService.openKnowledgeBase() } returns null
+            coEvery { conversationService.response(any()) } returns """{"intent":"CONFIRM"}"""
+            chatManager.startConversation(null, greeting = noKbGreeting(emptyList()))
+
+            // When
+            val response = chatManager.response("ok")
+
+            // Then
+            response shouldBe ChatResponse(NAME_THE_NEW_KB)
+            coVerify(exactly = 1) { conversationService.response(any<String>()) }
+        }
+
+    @Test
+    fun `the model extracts the name and the server creates the knowledge base`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        coEvery { conversationService.startConversation() } returns ""
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.openKnowledgeBase() } returns null
+        coEvery { conversationService.response(any()) } returnsMany listOf(
+            """{"intent":"CONFIRM"}""",
+            """{"intent":"CONFIRM_WITH_NAME","kbName":"Coogee Beach"}"""
+        )
+        every { kbService.resolve("Coogee Beach") } returns KbResolution.NotFound("Coogee Beach", emptyList())
+        every { kbService.nearDuplicateOf("Coogee Beach") } returns null
+        coEvery { kbService.create("Coogee Beach") } returns KBInfo("c1", "Coogee Beach")
+        chatManager.startConversation(null, greeting = noKbGreeting(emptyList()))
+        chatManager.response("yes")
+
+        // When
+        val response = chatManager.response("Coogee Beach")
+
+        // Then
+        response shouldBe ChatResponse(kbCreatedMessage("Coogee Beach"))
+        coVerify(exactly = 1) { kbService.create("Coogee Beach") }
+        coVerify(exactly = 2) { conversationService.response(any<String>()) }
+    }
+
+    @Test
+    fun `an explicit different request ends the creation offer`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        coEvery { conversationService.startConversation() } returns ""
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.openKnowledgeBase() } returns null
+        coEvery { conversationService.response(match { it.contains("[Interpret a reply") }) } returns
+                """{"intent":"OTHER_REQUEST"}"""
+        coEvery { conversationService.response("What can you do?") } returns
+                ActionComment(action = USER_ACTION, message = "I can manage knowledge bases.").toJsonString()
+        coEvery { conversationService.response("yes") } returns
+                ActionComment(action = USER_ACTION, message = "Yes to what?").toJsonString()
+        chatManager.startConversation(null, greeting = noKbGreeting(emptyList()))
+
+        // When
+        chatManager.response("What can you do?")
+        val lateYes = chatManager.response("yes")
+
+        // Then
+        lateYes shouldBe ChatResponse("Yes to what?")
+        coVerify(exactly = 0) { kbService.create(any()) }
+    }
+
+    @Test
+    fun `accepting the greeting's offer of a demonstration case adds one, without the model`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        val glucose = KBInfo("g1", "Glucose")
+        coEvery { conversationService.startConversation() } returns ""
+        every { kbService.knowledgeBases() } returns listOf(glucose)
+        every { kbService.openKnowledgeBase() } returns glucose
+        every { case.name } returns "Einstein"
+        coEvery { kbService.addDemonstrationCase() } returns case
+        chatManager.startConversation(null, greeting = emptyKbGreeting("Glucose"))
+
+        // When
+        val response = chatManager.response("ok")
+
+        // Then
+        response shouldBe ChatResponse(demoCaseAddedMessage("Einstein"))
+        coVerify(exactly = 1) { kbService.addDemonstrationCase() }
+        coVerify(exactly = 0) { conversationService.response(any<String>()) }
+    }
+
+    @Test
+    fun `accepting the greeting goes to the model when there are knowledge bases but none is open`() = runTest {
+        // Given
+        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        coEvery { conversationService.startConversation() } returns ""
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+        coEvery { conversationService.response("yes") } returns
+                ActionComment(action = USER_ACTION, message = "Open Glucose, or create a new one?").toJsonString()
+        chatManager.startConversation(null, greeting = noKbGreeting(listOf("Glucose")))
+
+        // When
+        val response = chatManager.response("yes")
+
+        // Then
+        response shouldBe ChatResponse("Open Glucose, or create a new one?")
+        coVerify(exactly = 0) { kbService.create(any()) }
+        coVerify(exactly = 0) { kbService.addDemonstrationCase() }
+    }
+
+    @Test
     fun `an outcome that changes the context tells the model no more than the user sees`() = runTest {
         // Given
         chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)

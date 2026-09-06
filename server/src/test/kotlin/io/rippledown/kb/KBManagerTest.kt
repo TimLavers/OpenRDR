@@ -87,6 +87,38 @@ class KBManagerTest {
     }
 
     @Test //KBM-5
+    fun `deleting a KB should return the KBInfo of the remaining KB first in alpha order`() {
+        //Given
+        val info1 = kbManager.createKB("Thyroids")
+        val info2 = kbManager.createKB("Glucose")
+        val info3 = kbManager.createKB("Lipids")
+
+        //When
+        val kbInfo = kbManager.deleteKB(info2)
+
+        //Then
+        kbInfo shouldBe info3
+
+        //And when the last KB in alpha order is deleted
+        val remaining = kbManager.deleteKB(info1)
+
+        //Then the first remaining KB in alpha order is returned
+        remaining shouldBe info3
+    }
+
+    @Test //KBM-5
+    fun `deleting the only KB should return null`() {
+        //Given
+        val info = kbManager.createKB("Thyroids")
+
+        //When
+        val kbInfo = kbManager.deleteKB(info)
+
+        //Then
+        kbInfo shouldBe null
+    }
+
+    @Test //KBM-5
     fun `delete non-existent KB`() {
         val info = KBInfo("Unknown")
         shouldThrow<IllegalArgumentException> {

@@ -57,6 +57,8 @@ class EngineConfig {
     var expectedUserMessage: String = ""
     var expectedKbId: String? = null
     var newKbName: String? = null
+    var deletedKbId: String? = null
+    var kbRemainingAfterDeletion: KBInfo? = null
     var sampleKB: SampleKB? = null
 
     var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
@@ -154,6 +156,20 @@ private class EngineBuilder(private val config: EngineConfig) {
                 val name = body.text
                 config.newKbName = name
                 httpResponseData(json.encodeToString(KBInfo(name)))
+            }
+
+            DELETE_KB -> {
+                config.deletedKbId = request.url.parameters[KB_ID]
+                val remaining = config.kbRemainingAfterDeletion
+                if (remaining == null) {
+                    respond(
+                        content = ByteReadChannel(""),
+                        status = HttpStatusCode.NoContent,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    httpResponseData(json.encodeToString(remaining))
+                }
             }
 
             CREATE_KB_FROM_SAMPLE -> {

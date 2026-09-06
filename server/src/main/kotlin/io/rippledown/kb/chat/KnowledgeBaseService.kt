@@ -4,8 +4,6 @@ import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 
-enum class DemonstrationCase { Pathology, Minimal }
-
 /**
  * What a knowledge base management chat action is allowed to do. These
  * operations are about the set of knowledge bases, not the contents of one, so
@@ -20,7 +18,7 @@ interface KnowledgeBaseService {
     suspend fun create(name: String): KBInfo
     suspend fun close()
     suspend fun delete(kbInfo: KBInfo)
-    suspend fun addDemonstrationCase(kind: DemonstrationCase): RDRCase
+    suspend fun addDemonstrationCase(): RDRCase
     suspend fun rename(newName: String): KBInfo
     fun description(): String
     fun setDescription(text: String)

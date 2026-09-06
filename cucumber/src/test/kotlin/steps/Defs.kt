@@ -72,6 +72,11 @@ class Defs {
         restClient().createKB(name)
     }
 
+    @When("The Knowledge Base called {word} has been deleted")
+    fun deleteKnowledgeBase(name: String) {
+        restClient().deleteKB(name)
+    }
+
     // The KB is created by the Before hook; this step states that fact in the feature.
     @Given("there is a knowledge base called {word}")
     fun requireOnlyKnowledgeBase(name: String) {
@@ -210,7 +215,12 @@ class Defs {
     }
 
     @Given("case {word} for KB {word} gets the interpretation {string} when it is provided having data:")
-    fun provideCaseWithDataForKbAndCheckInterpretation(caseName: String, kbName: String, comment: String,  dataTable: DataTable) {
+    fun provideCaseWithDataForKbAndCheckInterpretation(
+        caseName: String,
+        kbName: String,
+        comment: String,
+        dataTable: DataTable
+    ) {
         val attributeNameToValue = mutableMapOf<String, String>()
         dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
         val received = labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
@@ -276,7 +286,7 @@ class Defs {
                         errors.add(caseName to actualInterpretation)
                     }
                 }
-        }
+            }
         if (!errors.isEmpty()) {
             println("Got wrong interps, as follows:")
             errors.forEach {

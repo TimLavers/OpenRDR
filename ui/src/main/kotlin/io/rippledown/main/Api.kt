@@ -107,6 +107,13 @@ class Api(
         }.body()
         return currentKB ?: throw IllegalStateException("Failed to create KB")
     }
+    suspend fun deleteKB(id: String): KBInfo? {
+        val response = client.delete("$API_URL$DELETE_KB") {
+            parameter(KB_ID, id)
+        }
+        currentKB = if (response.status == HttpStatusCode.NoContent) null else response.body()
+        return currentKB
+    }
 
     suspend fun createKBFromSample(name: String, sample: SampleKB): KBInfo {
         currentKB = client.post("$API_URL$CREATE_KB_FROM_SAMPLE") {

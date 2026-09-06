@@ -328,9 +328,8 @@ class ActionCommentTest {
         ).createActionInstance() shouldBe DeleteKnowledgeBase("Scratch")
         ActionComment(DELETE_KNOWLEDGE_BASE).createActionInstance() shouldBe DeleteKnowledgeBase(null)
         ActionComment(
-            ADD_DEMONSTRATION_CASE,
-            kind = "pathology"
-        ).createActionInstance() shouldBe AddDemonstrationCase("pathology")
+            ADD_DEMONSTRATION_CASE
+        ).createActionInstance() is AddDemonstrationCase
         ActionComment(
             RENAME_KNOWLEDGE_BASE,
             newName = "Thyroid Function"

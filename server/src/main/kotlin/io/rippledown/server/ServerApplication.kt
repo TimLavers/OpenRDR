@@ -78,11 +78,12 @@ class ServerApplication(
         return kbForId(id).kbInfo()
     }
 
-    fun deleteKB(id: String) {
+    fun deleteKB(id: String): KBInfo? {
         val endpoint = kbForId(id)
         logger.info("Deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
-        kbManager.deleteKB(endpoint.kbInfo())
+        val remaining = kbManager.deleteKB(endpoint.kbInfo())
         idToKBEndpoint.remove(id)
+        return remaining
     }
 
     fun renameKB(id: String, newName: String): KBInfo {

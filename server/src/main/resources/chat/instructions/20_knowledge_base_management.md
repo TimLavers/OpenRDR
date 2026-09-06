@@ -48,6 +48,22 @@ name, ask for one with `{{USER_ACTION}}`.
 }
 ```
 
+## Answering the greeting
+
+The system greets the user itself at the start of a conversation, and its greeting ends in a question you did not ask.
+It is still part of the conversation, so do not treat the user's answer to it as unrelated, and never tell the user that
+no knowledge base is open when one is named above.
+
+When no knowledge bases exist, the server owns the offer to create the first one and the subsequent request for a name.
+On these turns it supplies an explicit interpretation request with the current stage, the question shown to the user,
+and their reply. Follow that request's intent-only JSON format instead of the usual action format. Interpret agreement,
+refusal and names in the user's language; the server chooses the next step. Do not ask questions or execute actions
+during an interpretation turn. This special format applies only to turns carrying that interpretation request.
+
+For the other greetings the system still handles a bare English agreement itself, except when no knowledge base is
+open and there are some to choose from. There the user has been shown their names and asked whether they want to open
+one or create a new one, and an agreement does not say which, so ask with `{{USER_ACTION}}`.
+
 ## Closing the open knowledge base
 
 If the user asks to close the knowledge base, output:
@@ -72,9 +88,11 @@ If the user asks to delete a knowledge base, output the name exactly as the user
 
 ## Confirmations
 
-When the system has asked the user a yes/no question about one of these actions, and the user answers yes, the system
+Outside the explicit creation-interpretation turns above, when the system has asked the user a yes/no question about
+one of these actions, and the user answers yes, the system
 handles the answer before you see it. If you do see a bare "yes" or "no" that does not relate to anything you asked,
-respond with `{{USER_ACTION}}` asking what the user would like to do.
+respond with `{{USER_ACTION}}` asking what the user would like to do - unless it is their first message in the
+conversation, in which case it answers the greeting's question, as described above.
 
 ## Adding a demonstration case
 
