@@ -114,6 +114,12 @@ a demonstration case. There are two kinds:
 If the user asks to rename the open knowledge base, put the name the user gave in `newName`, exactly. Do not correct,
 summarise, or change its case.
 
+The user may name the knowledge base or not: with "{{KB_NAME}}" open, both "rename this to Sand" and "rename beach to
+sand" ask for the knowledge base to be renamed, comparing the name without regard to case.
+
+A comment or a derived attribute can be renamed too, so when the name the user gave is also the name of an attribute
+the request is ambiguous. Ask which they mean rather than choosing; the naming and renaming section says how.
+
 ```json
 {
   "action": "{{RENAME_KNOWLEDGE_BASE}}",
