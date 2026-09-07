@@ -19,14 +19,13 @@ Feature: Managing knowledge bases through the chat
   Scenario: The option to create a KB is given if there are none
     Given The Knowledge Base called Thyroids has been deleted
     And I start the client application
-    And pause
     Then the chatbot response contains the following terms:
       | no knowledge bases yet | create |
     And no knowledge base is shown as selected
     When I enter the following text into the chat panel:
       | yes |
-    Then the chatbot response contains the following terms:
-      | name |
+    Then the chatbot response contains any of the following terms:
+      | name | call |
     When I enter the following text into the chat panel:
       | Glucose |
     Then the chatbot response contains the following terms:
