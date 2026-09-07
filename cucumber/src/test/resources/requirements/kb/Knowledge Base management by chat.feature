@@ -16,7 +16,6 @@ Feature: Managing knowledge bases through the chat
       | Lipids              |
       | Thyroids            |
 
-  @single
   Scenario: The option to create a KB is given if there are none
     Given The Knowledge Base called Thyroids has been deleted
     And I start the client application
@@ -38,7 +37,7 @@ Feature: Managing knowledge bases through the chat
     When I enter the following text into the chat panel:
       | ok |
     Then the chatbot response contains the following terms:
-      | pathology | minimal |
+      | Added | Einstein |
     And the displayed KB name is Glucose
 
   Scenario: A knowledge base can be opened by name
@@ -115,9 +114,9 @@ Feature: Managing knowledge bases through the chat
     And I start the client application
     And the displayed KB name is Glucose
     Then the chatbot response contains the following terms:
-      | has no cases | external information system | pathology case | minimal case |
+      | has no cases | external information system | demonstration case |
     When I enter the following text into the chat panel:
-      | The pathology case please |
+      | Yes please |
     Then the chatbot response contains the following terms:
       | Added | Einstein |
     And I should see the case Einstein as the current case

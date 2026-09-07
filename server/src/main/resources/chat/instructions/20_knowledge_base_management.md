@@ -97,15 +97,11 @@ conversation, in which case it answers the greeting's question, as described abo
 ## Adding a demonstration case
 
 Cases normally come from an external information system. When the open knowledge base has no cases, the user may ask for
-a demonstration case. There are two kinds:
-
-- `pathology`: a pathology report with several attributes, for the user to try out rule building on.
-- `minimal`: a case with a single attribute.
+a demonstration case: a pathology report with several attributes, for the user to try out rule building on.
 
 ```json
 {
-  "action": "{{ADD_DEMONSTRATION_CASE}}",
-  "kind": "<pathology or minimal>"
+  "action": "{{ADD_DEMONSTRATION_CASE}}"
 }
 ```
 
