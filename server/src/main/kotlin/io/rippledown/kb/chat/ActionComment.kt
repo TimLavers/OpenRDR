@@ -27,7 +27,6 @@ data class ActionComment(
     val suggestions: List<String>? = null,
     val variables: List<ChatCommentVariable>? = null,
     val kbName: String? = null,
-    val kind: String? = null,
     val description: String? = null,
 ) {
     companion object {
@@ -62,7 +61,6 @@ data class ActionComment(
         if (valueExpression != null) asMap["valueExpression"] = valueExpression
         if (variables != null) asMap["variables"] = variables
         if (kbName != null) asMap["kbName"] = kbName
-        if (kind != null) asMap["kind"] = kind
         if (description != null) asMap["description"] = description
 
         val paramMap = mutableMapOf<KParameter, Any>()
