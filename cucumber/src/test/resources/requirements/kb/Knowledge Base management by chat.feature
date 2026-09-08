@@ -24,8 +24,8 @@ Feature: Managing knowledge bases through the chat
     And no knowledge base is shown as selected
     When I enter the following text into the chat panel:
       | yes |
-    Then the chatbot response contains any of the following terms:
-      | name | call |
+    Then the chatbot response contains the following terms:
+      | What would you like to call it? |
     When I enter the following text into the chat panel:
       | Glucose |
     Then the chatbot response contains the following terms:

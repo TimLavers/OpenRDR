@@ -22,6 +22,7 @@ class ApplicationKbServiceTest {
     private lateinit var webSocketManager: WebSocketManager
     private lateinit var app: ServerApplication
     private var openEndpoint: KBEndpoint? = null
+    private var closedCount = 0
     private lateinit var service: ApplicationKbService
     private val now = 1_700_000_000_000L
 
@@ -30,7 +31,8 @@ class ApplicationKbServiceTest {
         webSocketManager = mockk()
         app = ServerApplication(InMemoryPersistenceProvider(), webSocketManager)
         openEndpoint = null
-        service = ApplicationKbService(app, webSocketManager, { openEndpoint }, { now })
+        closedCount = 0
+        service = ApplicationKbService(app, webSocketManager, { openEndpoint }, { closedCount++ }, { now })
     }
 
     @Test
@@ -128,6 +130,7 @@ class ApplicationKbServiceTest {
 
         // Then
         coVerify(exactly = 1) { webSocketManager.sendKbClosed() }
+        closedCount shouldBe 1
         app.kbList() shouldBe listOf(thyroids)
     }
 
@@ -144,6 +147,7 @@ class ApplicationKbServiceTest {
         // Then
         app.kbList() shouldBe listOf(thyroids)
         coVerify(exactly = 0) { webSocketManager.sendKbClosed() }
+        closedCount shouldBe 0
     }
 
     @Test
@@ -159,6 +163,7 @@ class ApplicationKbServiceTest {
         // Then
         app.kbList() shouldBe emptyList()
         coVerify(exactly = 1) { webSocketManager.sendKbClosed() }
+        closedCount shouldBe 1
     }
 
     @Test

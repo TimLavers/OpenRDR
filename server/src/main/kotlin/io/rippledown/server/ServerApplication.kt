@@ -29,7 +29,12 @@ class ServerApplication(
     private val kbManager = KBManager(persistenceProvider)
     private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
     val kbService: KnowledgeBaseService =
-        ApplicationKbService(this, webSocketManager, openEndpoint = { openChatEndpoint() })
+        ApplicationKbService(
+            this,
+            webSocketManager,
+            openEndpoint = { openChatEndpoint() },
+            onClosed = { chatCoordinator.knowledgeBaseClosed() }
+        )
     val chatCoordinator = ChatCoordinator(ChatManagerFactory(kbService), kbService)
 
     init {

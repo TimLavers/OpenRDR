@@ -149,11 +149,6 @@ class ChatDefs {
         }
     }
 
-    @Then("the chatbot response contains any of the following terms:")
-    fun requireChatbotResponseToContainAnyOf(terms: DataTable) {
-        waitForBotTextToContainAnyOf(*terms.asLists().flatten().toTypedArray())
-    }
-
     fun waitForBotTextToContainAnyOf(vararg terms: String) {
         awaitBotResponse("a bot message containing any of ${terms.toList()}") {
             chatPO().mostRecentBotRowContainsAnyOfTheTerms(terms.toList())

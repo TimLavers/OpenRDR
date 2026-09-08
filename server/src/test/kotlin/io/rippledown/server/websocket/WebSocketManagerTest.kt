@@ -89,16 +89,49 @@ class WebSocketManagerTest {
         manager.sendKbClosed()
     }
 
-    private fun withConnectedManager(block: suspend (WebSocketManager, List<String>) -> Unit) = runBlocking {
-        val sent = mutableListOf<String>()
-        val incoming = Channel<Frame>()
+    @Test
+    fun `a client disconnecting after another has connected does not close the new connection`() = runBlocking {
+        //Given
+        val manager = WebSocketManager()
+        val oldIncoming = Channel<Frame>()
+        val oldFrames = mutableListOf<Frame>()
+        val oldSession = sessionMock(oldIncoming, oldFrames)
+        val oldJob = launch { manager.setSession(oldSession) }
+        yield()
+        val newIncoming = Channel<Frame>()
+        val newFrames = mutableListOf<Frame>()
+        val newSession = sessionMock(newIncoming, newFrames)
+        val newJob = launch { manager.setSession(newSession) }
+        yield()
+
+        //When
+        oldIncoming.close()
+        oldJob.join()
+        manager.sendKbClosed()
+
+        //Then
+        oldFrames.filterIsInstance<Frame.Close>().size shouldBe 1
+        newFrames.filterIsInstance<Frame.Close>().size shouldBe 0
+        newFrames.filterIsInstance<Frame.Text>().map { it.readText() } shouldBe listOf(KB_CLOSED)
+        newIncoming.close()
+        newJob.join()
+    }
+
+    private fun sessionMock(incoming: Channel<Frame>, frames: MutableList<Frame>) =
+        sessionMock(incoming) { frames.add(it) }
+
+    private fun sessionMock(incoming: Channel<Frame>, onFrame: (Frame) -> Unit): WebSocketSession {
         val session = mockk<WebSocketSession>()
         every { session.incoming } returns incoming
         coEvery { session.flush() } just Runs
-        coEvery { session.send(any<Frame>()) } answers {
-            val frame = firstArg<Frame>()
-            if (frame is Frame.Text) sent.add(frame.readText())
-        }
+        coEvery { session.send(any<Frame>()) } answers { onFrame(firstArg()) }
+        return session
+    }
+
+    private fun withConnectedManager(block: suspend (WebSocketManager, List<String>) -> Unit) = runBlocking {
+        val sent = mutableListOf<String>()
+        val incoming = Channel<Frame>()
+        val session = sessionMock(incoming) { if (it is Frame.Text) sent.add(it.readText()) }
         val manager = WebSocketManager()
         val sessionJob = launch { manager.setSession(session) }
         yield()

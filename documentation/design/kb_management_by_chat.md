@@ -73,11 +73,13 @@ to, and a lambda rather than an action class means there is nothing the model co
 ### First knowledge base: server workflow, model interpretation
 
 When no knowledge base exists the server owns the offer to create one and the request for its name, as explicit stages
-(`OFFER_CREATION`, `AWAITING_NAME`). Each reply is sent to the model with the pending question and stage, and the model
-returns an intent (`CONFIRM`, `DENY`, `CONFIRM_WITH_NAME`, `UNCLEAR`, `OTHER_REQUEST`) plus, where given, the name
-exactly as the user wrote it, in their language. The server chooses the transition, validates the name through the
-ordinary `CreateKnowledgeBase` checks, and executes. Malformed or off-contract model output executes nothing and keeps
-the stage. This is the pattern to extend to other workflows: the server decides, the model reads.
+(`OFFER_CREATION`, `AWAITING_NAME`). A plain acceptance ("yes", "ok") is answered by the server at either stage, as
+for every other server question, and moves to or stays at naming. Any other reply is sent to the model with the pending
+question and stage, and the model returns an intent (`CONFIRM`, `DENY`, `CONFIRM_WITH_NAME`, `UNCLEAR`,
+`OTHER_REQUEST`) plus, where given, the name exactly as the user wrote it, in their language. The server chooses the
+transition, validates the name through the ordinary `CreateKnowledgeBase` checks, and executes. Malformed or
+off-contract model output executes nothing and keeps the stage. This is the pattern to extend to other workflows: the
+server decides, the model reads.
 
 ### Name resolution
 
@@ -100,9 +102,10 @@ knowledge base fetch, which would silently create one.
 - **One model, one prompt — not a router.** An earlier branch put a second "router" model in front of the knowledge base
   chat. It cost two model calls per turn, lost context at the hand-off and duplicated the dispatch machinery.
 - **Server-owned workflow, model-interpreted language.** The server holds the question and the state and chooses the
-  next step; the model only says what the user meant. Chosen over an English acceptance word list, which cannot handle
-  "oui" or "yes, call it Thyroid". The first-knowledge-base workflow uses it; the older one-turn confirmations still use
-  the word list until a second workflow shows what a shared abstraction should look like.
+  next step; the model only says what the user meant. Chosen over an English acceptance word list alone, which cannot
+  handle "oui" or "yes, call it Thyroid". The word list still runs first: a plain yes to a server question is never
+  put to a model that did not ask it, which had it answering "yes" with a clarification. The older one-turn
+  confirmations use the word list only, until a second workflow shows what a shared abstraction should look like.
 - **The client starts conversations; the server never does.** After open, create or close the server only pushes state.
   If it also restarted the conversation, the client's own cascade would start a second one and the two greetings would
   race.

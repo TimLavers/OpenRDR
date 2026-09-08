@@ -146,6 +146,26 @@ class ChatCoordinatorTest {
     }
 
     @Test
+    fun `closing the knowledge base resets the context and drops the chat manager`() = runTest {
+        // Given
+        val endpoint = mockk<KBEndpoint>()
+        every { endpoint.kbInfo() } returns thyroids
+        val context = ChatContext.KnowledgeBaseOnly(endpoint)
+        every { factory.create(context) } returns chatManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coordinator.startConversation(context)
+
+        // When
+        coordinator.knowledgeBaseClosed()
+        val response = coordinator.responseToUserMessage("Add a comment")
+
+        // Then
+        coordinator.context() shouldBe ChatContext.NoKnowledgeBase
+        response shouldBe ChatResponse(ChatCoordinator.NO_CONVERSATION_MESSAGE)
+        coVerify(exactly = 0) { chatManager.response(any()) }
+    }
+
+    @Test
     fun `each start replaces the chat manager`() = runTest {
         // Given
         val first = mockk<ChatManager>()

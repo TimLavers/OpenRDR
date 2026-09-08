@@ -51,8 +51,8 @@ class FirstKbCreationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["oui", "sí", "go ahead", "yes"])
-    fun `every agreement is sent to the model`(message: String) = runTest {
+    @ValueSource(strings = ["oui", "sí", "go ahead", "Yes, let's"])
+    fun `an agreement the server does not recognise is sent to the model`(message: String) = runTest {
         // Given
         coEvery { conversation.response(any()) } returns """{"intent":"CONFIRM"}"""
         manager.startConversation(null, noKbGreeting(emptyList()))
@@ -64,6 +64,39 @@ class FirstKbCreationTest {
         response shouldBe ChatResponse(NAME_THE_NEW_KB)
         coVerify(exactly = 1) { conversation.response(match { it.contains(message) }) }
         coVerify(exactly = 0) { kbService.create(any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["yes", "Yes please", "ok", "Sure!"])
+    fun `a plain acceptance of the offer asks for a name without consulting the model`(message: String) = runTest {
+        // Given
+        manager.startConversation(null, noKbGreeting(emptyList()))
+
+        // When
+        val response = manager.response(message)
+
+        // Then
+        response shouldBe ChatResponse(NAME_THE_NEW_KB)
+        coVerify(exactly = 0) { conversation.response(any()) }
+        coVerify(exactly = 0) { kbService.create(any()) }
+    }
+
+    @Test
+    fun `a plain acceptance moves the workflow on to naming`() = runTest {
+        // Given
+        val prompt = slot<String>()
+        coEvery { conversation.response(capture(prompt)) } returns namedReply("Thyroids")
+        manager.startConversation(null, noKbGreeting(emptyList()))
+        manager.response("yes")
+
+        // When
+        val response = manager.response("Thyroids")
+
+        // Then
+        response shouldBe ChatResponse(kbCreatedMessage("Thyroids"))
+        prompt.captured shouldContain "AWAITING_NAME"
+        prompt.captured shouldContain NAME_THE_NEW_KB
+        coVerify(exactly = 1) { kbService.create("Thyroids") }
     }
 
     @Test
@@ -140,6 +173,7 @@ class FirstKbCreationTest {
 
         // Then
         response shouldBe ChatResponse(NAME_THE_NEW_KB)
+        coVerify(exactly = 1) { conversation.response(any()) }
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

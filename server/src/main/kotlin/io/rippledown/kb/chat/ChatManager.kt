@@ -293,6 +293,12 @@ class ChatManager(
 
     private suspend fun answerToKbCreation(message: String): ChatResponse? {
         val pending = pendingKbCreation ?: return null
+        // The offer is the server's question, so a plain yes is answered here as for
+        // every other server question. While a name is awaited a yes is not a name.
+        if (isAcceptance(message)) {
+            pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
+            return ChatResponse(NAME_THE_NEW_KB)
+        }
         val reply = try {
             kbCreationInterpreter.interpret(pending.stage, pending.question, message)
         } catch (e: CancellationException) {

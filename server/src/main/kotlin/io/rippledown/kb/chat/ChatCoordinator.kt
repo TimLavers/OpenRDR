@@ -44,6 +44,16 @@ class ChatCoordinator(
         manager.response(message)
     }
 
+    /**
+     * Called from within a turn, when the action being run has closed or deleted
+     * the open knowledge base. Until the client starts the next conversation, a
+     * message must not be answered against a knowledge base that is gone.
+     */
+    fun knowledgeBaseClosed() {
+        context = ChatContext.NoKnowledgeBase
+        chatManager = null
+    }
+
     private fun greetingFor(context: ChatContext): String? = when (context) {
         is ChatContext.NoKnowledgeBase -> noKbGreeting(kbService.knowledgeBases().map { it.name })
         is ChatContext.KnowledgeBaseOnly -> emptyKbGreeting(context.endpoint.kbInfo().name)

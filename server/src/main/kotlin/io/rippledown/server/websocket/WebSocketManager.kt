@@ -26,7 +26,7 @@ class WebSocketManager {
                 frame.readBytes()
             }
         } finally {
-            connection.close()
+            session.close()
         }
     }
 

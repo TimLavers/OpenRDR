@@ -227,14 +227,13 @@ class ChatManagerTest {
     }
 
     @Test
-    fun `accepting the greeting's offer to create the first knowledge base asks for a name after interpretation`() =
+    fun `accepting the greeting's offer to create the first knowledge base asks for a name without the model`() =
         runTest {
             // Given
             chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
             coEvery { conversationService.startConversation() } returns ""
             every { kbService.knowledgeBases() } returns emptyList()
             every { kbService.openKnowledgeBase() } returns null
-            coEvery { conversationService.response(any()) } returns """{"intent":"CONFIRM"}"""
             chatManager.startConversation(null, greeting = noKbGreeting(emptyList()))
 
             // When
@@ -242,7 +241,7 @@ class ChatManagerTest {
 
             // Then
             response shouldBe ChatResponse(NAME_THE_NEW_KB)
-            coVerify(exactly = 1) { conversationService.response(any<String>()) }
+            coVerify(exactly = 0) { conversationService.response(any<String>()) }
         }
 
     @Test
@@ -252,10 +251,8 @@ class ChatManagerTest {
         coEvery { conversationService.startConversation() } returns ""
         every { kbService.knowledgeBases() } returns emptyList()
         every { kbService.openKnowledgeBase() } returns null
-        coEvery { conversationService.response(any()) } returnsMany listOf(
-            """{"intent":"CONFIRM"}""",
-            """{"intent":"CONFIRM_WITH_NAME","kbName":"Coogee Beach"}"""
-        )
+        coEvery { conversationService.response(any()) } returns
+                """{"intent":"CONFIRM_WITH_NAME","kbName":"Coogee Beach"}"""
         every { kbService.resolve("Coogee Beach") } returns KbResolution.NotFound("Coogee Beach", emptyList())
         every { kbService.nearDuplicateOf("Coogee Beach") } returns null
         coEvery { kbService.create("Coogee Beach") } returns KBInfo("c1", "Coogee Beach")
@@ -268,7 +265,7 @@ class ChatManagerTest {
         // Then
         response shouldBe ChatResponse(kbCreatedMessage("Coogee Beach"))
         coVerify(exactly = 1) { kbService.create("Coogee Beach") }
-        coVerify(exactly = 2) { conversationService.response(any<String>()) }
+        coVerify(exactly = 1) { conversationService.response(any<String>()) }
     }
 
     @Test

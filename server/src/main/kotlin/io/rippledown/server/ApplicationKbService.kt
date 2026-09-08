@@ -21,6 +21,7 @@ class ApplicationKbService(
     private val application: ServerApplication,
     private val webSocketManager: WebSocketManager,
     private val openEndpoint: () -> KBEndpoint?,
+    private val onClosed: () -> Unit,
     private val clock: () -> Long = System::currentTimeMillis
 ) : KnowledgeBaseService {
     private val logger = lazyLogger
@@ -46,6 +47,7 @@ class ApplicationKbService(
 
     override suspend fun close() {
         logger.info("Closing KB '${openKnowledgeBase()?.name}' on the client.")
+        onClosed()
         webSocketManager.sendKbClosed()
     }
 
