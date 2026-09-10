@@ -62,6 +62,9 @@ internal class KBInfoTest {
         shouldThrow<IllegalArgumentException> {
             KBInfo("id123","")
         }.message shouldBe "KBInfo name cannot be blank."
+        shouldThrow<IllegalArgumentException> {
+            KBInfo("id123", "   ")
+        }.message shouldBe "KBInfo name cannot be blank."
     }
 
     @Test //KBId-3

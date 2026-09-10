@@ -3,7 +3,9 @@ package io.rippledown.persistence.inmemory
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.PersistentKB
 
-class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
+class InMemoryKB(kbInfo: KBInfo) : PersistentKB {
+
+    private var kbInfo = kbInfo
 
     private val attributeStore = InMemoryAttributeStore()
     private val attributeOrderStore = InMemoryOrderStore()
@@ -15,6 +17,10 @@ class InMemoryKB(val kbInfo: KBInfo): PersistentKB {
     private val metaDataStore = InMemoryKeyValueStore()
 
     override fun kbInfo() = kbInfo
+
+    override fun rename(newName: String) {
+        kbInfo = KBInfo(kbInfo.id, newName)
+    }
 
     override fun attributeStore() = attributeStore
 

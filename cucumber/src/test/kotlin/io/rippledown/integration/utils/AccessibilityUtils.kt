@@ -308,6 +308,19 @@ fun AccessibleContext.printActions() {
     }
 }
 
+/**
+ * Invokes the primary action exposed by an accessibility node.
+ *
+ * This is preferable to an OS-level mouse click when native focus is not
+ * required: it cannot be lost while Compose is processing queued pointer
+ * events or recomposing the target.
+ */
+fun AccessibleContext.performAccessibleClick(): Boolean {
+    val action = accessibleAction ?: return false
+    if (action.accessibleActionCount == 0) return false
+    return action.doAccessibleAction(0)
+}
+
 fun ComposeWindow.isReadyForTesting(): Boolean {
     return this.isActive && this.isEnabled && this.isFocusable
 }

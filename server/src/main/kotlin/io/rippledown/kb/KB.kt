@@ -11,10 +11,11 @@ import io.rippledown.model.rule.resolvedFor
 import io.rippledown.persistence.PersistentKB
 
 
-class KB(persistentKB: PersistentKB) {
+class KB(private val persistentKB: PersistentKB) {
     val logger = lazyLogger
 
-    val kbInfo = persistentKB.kbInfo()
+    var kbInfo = persistentKB.kbInfo()
+        private set
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
@@ -40,6 +41,13 @@ class KB(persistentKB: PersistentKB) {
 
     fun setDescription(description: String) {
         metaInfo.setDescription(description)
+    }
+
+    fun rename(newName: String): KBInfo {
+        val renamed = KBInfo(kbInfo.id, newName)
+        persistentKB.rename(newName)
+        kbInfo = renamed
+        return renamed
     }
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {

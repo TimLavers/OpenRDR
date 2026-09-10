@@ -1,0 +1,89 @@
+package io.rippledown.server
+
+import io.rippledown.kb.KbResolution
+import io.rippledown.kb.chat.KnowledgeBaseService
+import io.rippledown.kb.nearDuplicateOf
+import io.rippledown.kb.resolveKbName
+import io.rippledown.log.lazyLogger
+import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCase
+import io.rippledown.model.external.ExternalCase
+import io.rippledown.server.websocket.WebSocketManager
+import kotlinx.serialization.json.Json
+
+private const val DEMO_CASE_RESOURCE = "/demo/Einstein.json"
+
+private val jsonAllowSMK = Json {
+    allowStructuredMapKeys = true
+}
+
+class ApplicationKbService(
+    private val application: ServerApplication,
+    private val webSocketManager: WebSocketManager,
+    private val openEndpoint: () -> KBEndpoint?,
+    private val onClosed: () -> Unit,
+    private val clock: () -> Long = System::currentTimeMillis
+) : KnowledgeBaseService {
+    private val logger = lazyLogger
+
+    override fun knowledgeBases(): List<KBInfo> = application.kbList()
+
+    override fun openKnowledgeBase(): KBInfo? = openEndpoint()?.kbInfo()
+
+    override fun resolve(name: String): KbResolution = resolveKbName(name, knowledgeBases())
+
+    override fun nearDuplicateOf(newName: String): KBInfo? = nearDuplicateOf(newName, knowledgeBases())
+
+    override suspend fun open(kbInfo: KBInfo) {
+        application.selectKB(kbInfo.id)
+        webSocketManager.sendKbInfo(kbInfo)
+    }
+
+    override suspend fun create(name: String): KBInfo {
+        val created = application.createKB(name, force = false)
+        webSocketManager.sendKbInfo(created)
+        return created
+    }
+
+    override suspend fun close() {
+        logger.info("Closing KB '${openKnowledgeBase()?.name}' on the client.")
+        onClosed()
+        webSocketManager.sendKbClosed()
+    }
+
+    override suspend fun delete(kbInfo: KBInfo) {
+        if (kbInfo == openKnowledgeBase()) close()
+        application.deleteKB(kbInfo.id)
+    }
+
+    override suspend fun addDemonstrationCase(): RDRCase {
+        val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
+        val case = endpoint.processCase(demonstrationCase())
+        webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
+        return case
+    }
+
+    override suspend fun rename(newName: String): KBInfo {
+        val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
+        val renamed = application.renameKB(endpoint.kbInfo().id, newName)
+        webSocketManager.sendKbInfo(renamed)
+        return renamed
+    }
+
+    override fun description(): String =
+        checkNotNull(openEndpoint()) { "No knowledge base is open." }.description()
+
+    override fun setDescription(text: String) {
+        checkNotNull(openEndpoint()) { "No knowledge base is open." }.setDescription(text)
+    }
+
+    override fun isRuleSessionActive() = openEndpoint()?.session?.ruleSessionManager?.isRuleSessionActive() == true
+
+    private fun demonstrationCase(): ExternalCase {
+        val stream = checkNotNull(ApplicationKbService::class.java.getResourceAsStream(DEMO_CASE_RESOURCE)) {
+            "Demonstration case resource $DEMO_CASE_RESOURCE is missing."
+        }
+        val text = stream.bufferedReader().use { it.readText() }
+        return jsonAllowSMK.decodeFromString(ExternalCase.serializer(), text)
+    }
+}

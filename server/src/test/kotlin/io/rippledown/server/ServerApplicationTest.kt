@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.model.Attribute
+import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.Result
 import io.rippledown.persistence.PersistenceProvider
@@ -257,6 +258,66 @@ internal class ServerApplicationTest {
         //Then
         app.kbFor(kbInfo).kb.kbInfo.name shouldBe kbName
         persistenceProvider.idStore().data().keys shouldBe setOf(id0)
+    }
+
+    @Test // KBM-5
+    fun `delete KB removes it from the list, the endpoints and persistence`() {
+        // Given
+        val glucose = app.createKB("Glucose", false)
+        val thyroids = app.createKB("Thyroids", false)
+        app.kbList() shouldBe listOf(glucose, thyroids)
+
+        // When
+        app.deleteKB(glucose.id)
+
+        // Then
+        app.kbList() shouldBe listOf(thyroids)
+        persistenceProvider.idStore().data().keys shouldBe setOf(thyroids.id)
+        shouldThrow<IllegalArgumentException> {
+            app.kbForId(glucose.id)
+        }.message shouldBe "Unknown kb id: ${glucose.id}"
+        app.kbForId(thyroids.id).kbInfo() shouldBe thyroids
+    }
+
+    @Test
+    fun `deleting the last KB leaves no KBs`() {
+        // Given
+        val only = app.createKB("Only", false)
+
+        // When
+        app.deleteKB(only.id)
+
+        // Then
+        app.kbList() shouldBe emptyList()
+    }
+
+    @Test
+    fun `delete KB with unknown id`() {
+        // Given
+        app.createKB("Glucose", false)
+
+        // When / Then
+        shouldThrow<IllegalArgumentException> {
+            app.deleteKB("Unknown")
+        }.message shouldBe "Unknown kb id: Unknown"
+        app.kbList().map { it.name } shouldBe listOf("Glucose")
+    }
+
+    @Test // KBM-7
+    fun `rename KB updates the manager and existing endpoint`() {
+        // given
+        val original = app.createKB("Thyroids", false)
+        val endpoint = app.kbForId(original.id)
+
+        // when
+        val renamed = app.renameKB(original.id, "Thyroid Function")
+
+        // then
+        renamed shouldBe KBInfo(original.id, "Thyroid Function")
+        renamed.name shouldBe "Thyroid Function"
+        app.kbList() shouldBe listOf(renamed)
+        endpoint.kbInfo() shouldBe renamed
+        app.kbForId(original.id) shouldBe endpoint
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

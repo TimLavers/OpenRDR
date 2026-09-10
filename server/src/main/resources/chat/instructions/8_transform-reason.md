@@ -8,6 +8,11 @@ no matter how ambiguous, incomplete, or unclear it seems. NEVER try to interpret
 yourself. The function will handle invalid or unrecognisable input and return an appropriate error message. Your job is
 only to pass the user's input to the function and relay the result.
 
+**CRITICAL**: Do NOT call {{TRANSFORM_REASON}} when the user declines to give a reason (e.g. "no", "no thanks",
+"none", "no more reasons"). A bare decline is not a reason. Instead, treat it as the user declining to provide any more
+reasons: if cornerstone cases remain to be reviewed, follow "Allowing or Disallowing the change to the Cornerstone Case
+report"; otherwise follow "Completing the report change".
+
 **CRITICAL**: Do NOT call {{TRANSFORM_REASON}} when the user is providing quoted text for adding a comment (e.g., "Add
 the comment: 'Let's surf.'"). In this case, the quoted text is the comment to be added, not a reason to be transformed.
 Follow the instructions in "Defining the change to the report" instead.

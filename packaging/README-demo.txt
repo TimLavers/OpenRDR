@@ -48,7 +48,8 @@ Running
    "Demo" pre-populated with the cases used by the three demo scenarios
    below. Shortly after, the OpenRDR desktop UI will launch.
 4. In the UI, open the KB selector and choose "Demo" if it is not already
-   the active KB.
+   the active KB. (Or ask the chat: "open Demo". The chat can also list,
+   create, close and delete knowledge bases.)
 5. To stop: close the UI window, then close the server console window
    (Ctrl+C on macOS/Linux kills both).
 

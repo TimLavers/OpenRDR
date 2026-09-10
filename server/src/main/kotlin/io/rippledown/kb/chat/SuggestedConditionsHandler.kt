@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.model.RDRCase
 
@@ -21,6 +22,7 @@ class SuggestedConditionsHandler(
         val suggestions = conditionList.suggestions.filter { it.asText() !in addedConditionTexts }
         if (suggestions.isEmpty()) {
             suggestionsBuffer.suggestions = emptyList()
+            suggestionsBuffer.shown = emptyList()
             return "No suggested conditions available for this case."
         }
         val suggestionTexts = suggestions.map { suggestion ->
@@ -28,6 +30,7 @@ class SuggestedConditionsHandler(
             "${suggestion.asText()}$editable"
         }
         suggestionsBuffer.suggestions = suggestionTexts
+        suggestionsBuffer.shown = suggestions
         return formatSuggestionsForLlm(suggestionTexts)
     }
 
@@ -61,7 +64,8 @@ class SuggestedConditionsHandler(
         const val SUGGESTIONS_DELIVERED_PREAMBLE =
             "Suggested conditions have already been displayed to the user by the system. " +
                     "Do NOT include a 'suggestions' array in your JSON response and do NOT list these suggestions back in the 'message' field. " +
-                    "Use the list below only to resolve the user's selection (by number or by text) to the exact condition text. " +
-                    "The list is:"
+                    "Use the list below only to find the NUMBER of the suggestion the user chooses, and whether it " +
+                    "is marked [editable]. Pass that number to $SELECT_SUGGESTED_CONDITION; never write the " +
+                    "condition's own text out yourself. The list is:"
     }
 }

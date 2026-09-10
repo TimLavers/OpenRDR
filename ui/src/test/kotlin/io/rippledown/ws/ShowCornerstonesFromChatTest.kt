@@ -11,6 +11,7 @@ import io.rippledown.main.Handler
 import io.rippledown.main.OpenRDRUI
 import io.rippledown.model.CaseId
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.createViewableCaseWithInterpretation
@@ -32,7 +33,9 @@ class ShowCornerstonesFromChatTest {
         api = mockk<Api>()
         handler = mockk<Handler>()
         coEvery { api.cornerstoneStatus() } returns null
-        coEvery { api.kbList() } returns emptyList()
+        val kb = KBInfo("kb_id", "KB")
+        coEvery { api.kbList() } returns listOf(kb)
+        coEvery { api.selectKB(kb.id) } returns kb
         coEvery { api.waitingCasesInfo() } returns CasesInfo()
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
@@ -60,7 +63,9 @@ class ShowCornerstonesFromChatTest {
             api.startWebSocketSession(
                 updateCornerstoneStatus = any(),
                 ruleSessionCompleted = any(),
-                updateCasesInfo = any()
+                updateCasesInfo = any(),
+                kbInfoUpdated = any(),
+                kbClosed = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -103,7 +108,9 @@ class ShowCornerstonesFromChatTest {
             api.startWebSocketSession(
                 updateCornerstoneStatus = any(),
                 ruleSessionCompleted = any(),
-                updateCasesInfo = any()
+                updateCasesInfo = any(),
+                kbInfoUpdated = any(),
+                kbClosed = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()

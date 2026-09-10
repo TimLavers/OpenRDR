@@ -5,6 +5,7 @@ import io.rippledown.constants.chat.renamedMessage
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.DOES_NOT_CORRESPOND_TO_A_CONDITION
 import io.rippledown.constants.rule.INTERPRETED_CONDITION_IS_NOT_TRUE
+import io.rippledown.constants.rule.NOT_A_VALID_VALUE
 import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
@@ -19,6 +20,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
 import io.rippledown.server.ConditionExpressionParser
@@ -894,7 +896,33 @@ class RuleSessionManager(
     override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult {
         val attributeFor: AttributeFor = { kb.attributeManager.getOrCreate(it) }
         val condition = conditionParser.parse(expression, attributeFor)
+        return validated(condition, case, expression)
+    }
 
+    override fun conditionForEditedSuggestion(
+        case: RDRCase,
+        editableCondition: EditableCondition,
+        value: String
+    ): ConditionParsingResult {
+        val editableValue = editableCondition.editableValue()
+        if (!editableValue.type.valid(value)) {
+            val asItStands = editableCondition.condition(editableValue.value).asText()
+            return ConditionParsingResult(errorMessage = NOT_A_VALID_VALUE.format(value, asItStands))
+        }
+        val condition = editableCondition.condition(value)
+        return validated(condition, case, condition.asText())
+    }
+
+    /**
+     * The stored form of [condition], or the reason it cannot be used as a
+     * condition of the rule being built. [expression] is what the user gave, so
+     * that a condition that does not hold can be reported in their own words.
+     */
+    private fun validated(
+        condition: Condition?,
+        case: RDRCase,
+        expression: String
+    ): ConditionParsingResult {
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible when validating the typed expression.
         val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)

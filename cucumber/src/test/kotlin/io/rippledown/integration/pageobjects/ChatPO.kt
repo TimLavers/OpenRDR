@@ -143,6 +143,11 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         return text != null && terms.all { text.contains(it, ignoreCase = true) }
     }
 
+    fun mostRecentBotRowConsistsOfLines(lines: List<String>): Boolean {
+        val text = snapshot().mostRecentBotText ?: return false
+        return text.lines().map { it.trim() }.filter { it.isNotEmpty() } == lines.map { it.trim() }
+    }
+
     fun mostRecentBotRowContainsAnyOfTheTerms(terms: List<String>): Boolean {
         val text = snapshot().mostRecentBotText
         return text != null && terms.any { text.contains(it, ignoreCase = true) }

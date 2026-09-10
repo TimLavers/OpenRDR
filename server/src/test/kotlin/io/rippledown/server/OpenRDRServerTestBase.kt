@@ -8,6 +8,7 @@ import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.kb.chat.ChatCoordinator
 import io.rippledown.server.routes.*
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.serialization.json.Json
@@ -18,14 +19,17 @@ open class OpenRDRServerTestBase {
     lateinit var kbEndpoint: KBEndpoint
     lateinit var serverApplication: ServerApplication
     lateinit var webSocketManager: WebSocketManager
+    lateinit var chatCoordinator: ChatCoordinator
     lateinit var httpClient: HttpClient
 
     fun ApplicationTestBuilder.setupServer() {
         kbEndpoint = mockk<KBEndpoint>()
         serverApplication = mockk<ServerApplication>()
         webSocketManager = mockk<WebSocketManager>()
+        chatCoordinator = mockk<ChatCoordinator>()
         coEvery { webSocketManager.sendCasesInfo(any()) } returns Unit
         every { serverApplication.webSocketManager } returns webSocketManager
+        every { serverApplication.chatCoordinator } returns chatCoordinator
         every { serverApplication.kbForId(kbId) } returns kbEndpoint
         every { serverApplication.kbForName(kbName) } returns kbEndpoint
         httpClient = createClient {

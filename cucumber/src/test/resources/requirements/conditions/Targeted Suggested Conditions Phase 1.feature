@@ -153,7 +153,6 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
       | Sun      | hot |
       | UV index | 4   |
       | Waves    | 2.0 |
-    And I start the client application
     # Ensure that each case gets the the comment via a different rule
     And a backdoor rule is built for case Malabar to add the comment "Let's go to the beach." with conditions:
       | Waves ≥ 1       |

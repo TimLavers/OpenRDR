@@ -33,6 +33,7 @@ val pathToRequirements = "${projectDir.path}/src/test/resources/requirements"
 fun argsForCuke() = mutableListOf(
     "--plugin", "junit:build/test-results/junit.xml",
     "--plugin", "html:build/test-results-html",
+    "--plugin", "steps.ScenarioProgress",
     "--glue", "steps"
 )
 
@@ -130,6 +131,8 @@ tasks.register("cucumberTest") {
 
 tasks.register<JavaExec>("cucumberSingleTest") {
     setupExec()
+    // The scenario total is counted before the tag filter is applied, so it would be wrong here.
+    systemProperty("scenarioProgress.hideTotal", "true")
     args = argsForCuke() + listOf(
         pathToRequirements,
         "--tags",
@@ -145,7 +148,7 @@ tasks.register<JavaExec>("cucumberSingleTest") {
  */
 tasks.register<JavaExec>("cucumberDryRun") {
     setupExec()
-    args = listOf("--glue", "steps", "--dry-run", pathToRequirements)
+    args = listOf("--glue", "steps", "--dry-run", "--plugin", "steps.ScenarioProgress", pathToRequirements)
     dependsOn("testClasses")
 }
 

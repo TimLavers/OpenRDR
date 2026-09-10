@@ -16,4 +16,5 @@ const val DOES_NOT_CORRESPOND_TO_A_CONDITION = "I do not $UNDERSTAND this expres
 const val CONDITION_IS_NOT_TRUE = "This condition is not true for this case. Please try again."
 const val INTERPRETED_CONDITION_IS_NOT_TRUE =
     "If '%s' means '%s', this reason is not true for the case. Please try again."
+const val NOT_A_VALID_VALUE = "'%s' is not a valid value for the condition '%s'. Please try again."
 

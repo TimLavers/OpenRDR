@@ -52,15 +52,6 @@ class KBSessionTest {
     }
 
     @Test
-    fun `should create a ChatSessionManager`() {
-        // Given/When
-        val csm = session.chatSessionManager
-
-        // Then
-        csm.shouldBeInstanceOf<ChatSessionManager>()
-    }
-
-    @Test
     fun `should pass webSocketManager to RuleSessionManager`() {
         // Given
         val webSocketManager = mockk<WebSocketManager>()
@@ -104,7 +95,7 @@ class KBSessionTest {
     }
 
     @Test
-    fun `should share the same RuleSessionManager between session and chatSessionManager`() {
+    fun `a rule session started through the RuleSessionManager is active`() {
         // Given - start a rule session through rsm
         val sessionCase = createCase("Case1")
         session.ruleSessionManager.startRuleSessionToAddComment(sessionCase, "Go.")

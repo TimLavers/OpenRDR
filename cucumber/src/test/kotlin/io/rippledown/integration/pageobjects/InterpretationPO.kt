@@ -264,25 +264,12 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         }
     }
 
-    private fun movePointerOverDerivedValueName(attributeName: String) {
-        val nameCtx = execute<AccessibleContext?> {
-            contextProvider().find("$DERIVED_VALUE_NAME_PREFIX$attributeName")
-        } ?: error("Derived value name not found: $attributeName")
-        val component = nameCtx.accessibleComponent
-            ?: error("Derived value name has no accessible component: $attributeName")
-        val location = execute<Point> { component.locationOnScreen }
-        val size = execute<Dimension> { component.size }
-        if (location != null && size != null) {
-            Robot().mouseMove(location.x + size.width / 2, location.y + size.height / 2)
-        }
-    }
-
     fun waitForDerivedValueFormula(attributeName: String, formula: String) {
         val normalizedExpected = formula.filter { !it.isWhitespace() }.replace("**", "").replace("^", "")
         waitUntilAsserted {
-            movePointerOverDerivedValueName(attributeName)
             val ctx = execute<AccessibleContext?> {
-                contextProvider().find(DERIVED_VALUE_FORMULA_PREFIX)
+                contextProvider().find("$DERIVED_VALUE_ROW_PREFIX$attributeName")
+                    ?.find(DERIVED_VALUE_FORMULA_PREFIX)
             }
             ctx shouldNotBe null
             val actual = execute<String> { renderedText(ctx!!) }
@@ -292,10 +279,13 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
 
     fun waitForDerivedValueConditions(attributeName: String, conditions: List<String>) {
         waitUntilAsserted {
-            movePointerOverDerivedValueName(attributeName)
+            val row = execute<AccessibleContext?> {
+                contextProvider().find("$DERIVED_VALUE_ROW_PREFIX$attributeName")
+            }
+            row shouldNotBe null
             conditions.forEach { condition ->
                 val ctx = execute<AccessibleContext?> {
-                    contextProvider().find("$DERIVED_VALUE_CONDITIONS_PREFIX$condition")
+                    row!!.find("$DERIVED_VALUE_CONDITIONS_PREFIX$condition")
                 }
                 ctx shouldNotBe null
             }

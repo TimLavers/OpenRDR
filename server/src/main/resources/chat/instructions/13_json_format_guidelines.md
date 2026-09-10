@@ -14,6 +14,11 @@ The names `{{ADD_COMMENT}}`, `{{REMOVE_COMMENT}}`, `{{REPLACE_COMMENT}}`,
 `{{PREVIOUS_CORNERSTONE}}`, `{{SHOW_CORNERSTONES}}`,
 `{{SHOW_LAST_RULE_FOR_UNDO}}`, `{{MOVE_ATTRIBUTE}}`,
 `{{RENAME_ATTRIBUTE}}`,
+`{{LIST_KNOWLEDGE_BASES}}`, `{{OPEN_KNOWLEDGE_BASE}}`,
+`{{CREATE_KNOWLEDGE_BASE}}`, `{{CLOSE_KNOWLEDGE_BASE}}`,
+`{{DELETE_KNOWLEDGE_BASE}}`, `{{ADD_DEMONSTRATION_CASE}}`,
+`{{RENAME_KNOWLEDGE_BASE}}`, `{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}`,
+`{{SET_KNOWLEDGE_BASE_DESCRIPTION}}`,
 `{{REMOVE_REASON}}`, `{{USER_ACTION}}` and `{{DEBUG_ACTION}}` are
 **JSON action values**, not function names. NEVER invoke any of them
 through the function-calling API. ALWAYS emit them as the value of
@@ -115,4 +120,3 @@ For user input "Comment123" with reason "Outdated":
   clarification before generating an actionable JSON.
 - Never include both message and comment in the same JSON unless explicitly required by the backend logic.
 - Ensure the reason field is provided if required.
-

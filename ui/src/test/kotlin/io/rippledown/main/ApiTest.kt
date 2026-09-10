@@ -3,10 +3,7 @@ package io.rippledown.main
 import io.kotest.matchers.shouldBe
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
-import io.rippledown.model.Attribute
-import io.rippledown.model.CaseId
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -140,6 +137,33 @@ class ApiTest {
         val config = config { }
         Api(mock(config)).createKB(expectedName)
         config.newKbName shouldBe expectedName
+    }
+
+    @Test
+    fun `deleteKB should return the remaining KB`() = runTest {
+        // Given
+        val remaining = KBInfo("glucose_1", "Glucose")
+        val config = config { kbRemainingAfterDeletion = remaining }
+
+        // When
+        val result = Api(mock(config)).deleteKB("thyroids_1")
+
+        // Then
+        config.deletedKbId shouldBe "thyroids_1"
+        result shouldBe remaining
+    }
+
+    @Test
+    fun `deleteKB should return null when no KB remains`() = runTest {
+        // Given
+        val config = config { kbRemainingAfterDeletion = null }
+
+        // When
+        val result = Api(mock(config)).deleteKB("thyroids_1")
+
+        // Then
+        config.deletedKbId shouldBe "thyroids_1"
+        result shouldBe null
     }
 
     @Test
@@ -289,25 +313,44 @@ class ApiTest {
     @Test
     fun `should return a response from the conversation with the model`() = runTest {
         val userMessage = "What is the meaning of life?"
-        val caseId = 1234L
         val config = config {
             expectedUserMessage = userMessage
-            expectedCaseId = caseId
             returnResponse = ChatResponse("42")
         }
-        val response = Api(mock(config)).sendUserMessage(userMessage, caseId)
+        val response = Api(mock(config)).sendUserMessage(userMessage)
         response shouldBe config.returnResponse
     }
 
     @Test
-    fun `should start a conversation with the model`() = runTest {
+    fun `should start a conversation about a case`() = runTest {
         val caseId = 1234L
         val config = config {
+            expectedKbId = "thyroids_1"
             expectedCaseId = caseId
             returnResponse = ChatResponse("42")
         }
-        val response = Api(mock(config)).startConversation(caseId)
+        val response = Api(mock(config)).startConversation("thyroids_1", caseId)
         response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `should start a conversation about a knowledge base with no case`() = runTest {
+        val config = config {
+            expectedKbId = "thyroids_1"
+            returnResponse = ChatResponse("No cases yet.")
+        }
+        val response = Api(mock(config)).startConversation("thyroids_1", null)
+        response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `should start a conversation with no knowledge base and not fetch the default one`() = runTest {
+        val config = config {
+            returnResponse = ChatResponse("No knowledge base is open.")
+        }
+        val response = Api(mock(config)).startConversation(null, null)
+        response shouldBe config.returnResponse
+        config.defaultKbFetches shouldBe 0
     }
 
     @Test

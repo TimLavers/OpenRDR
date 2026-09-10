@@ -57,6 +57,21 @@ fun startServerAndSendRulesSessionCompleted(): TestServerInfo {
     return TestServerInfo(server, actualPort)
 }
 
+fun startServerAndSendFrames(vararg frames: String): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
+        install(WebSockets)
+        routing {
+            webSocket(WEB_SOCKET) {
+                frames.forEach { send(Frame.Text(it)) }
+                delay(100)
+                close(CloseReason(CloseReason.Codes.NORMAL, "Test Complete"))
+            }
+        }
+    }.start(wait = false)
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
+    return TestServerInfo(server, actualPort)
+}
+
 fun startServerAndSendCasesInfo(casesInfo: CasesInfo): TestServerInfo {
     val server = embeddedServer(Netty, port = 0) {
         install(WebSockets)

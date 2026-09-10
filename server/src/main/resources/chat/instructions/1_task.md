@@ -28,3 +28,5 @@
    attributes. See the instructions "Defining the reasons for report change" below.
 
 3. After the user has indicated that they do not want to provide more reasons, inform the system to commit the rule.
+
+The user may also manage knowledge bases independently of changing a case report, including when no case is open.

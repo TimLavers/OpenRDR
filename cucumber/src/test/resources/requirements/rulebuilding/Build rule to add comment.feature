@@ -52,10 +52,10 @@ Feature: The user can make a rule that adds a comment to the interpretive report
     And I cancel the rule
 
   Scenario: The user should be able to build a rule to add a comment with a condition they have selected
-    Given I start the client application
-    And case Bondi is provided having data:
+    Given case Bondi is provided having data:
       | Sun  | hot       |
       | Wave | excellent |
+    And I start the client application
     And I build a rule to add the comment "Go to the beach." with condition
       | Sun is in case |
     Then  the interpretation should be "Go to the beach."

@@ -62,11 +62,18 @@ fun OpenRDRUI(
     var chatId by remember { mutableStateOf<Long>(-1) }
     var cornerstoneStatus: CornerstoneStatus? by remember { mutableStateOf(null) }
     var casesInfo by remember { mutableStateOf(CasesInfo()) }
-    var kbInfo: KBInfo? by remember { mutableStateOf(null) }
+    // KBInfo equality is id-only, so a rename produces an equal value. Always
+    // accept pushed KBInfo values so the application bar observes name changes.
+    var kbInfo: KBInfo? by remember { mutableStateOf(null, neverEqualPolicy()) }
     val voiceRecognitionService = voiceRecognition ?: remember { VoiceRecognitionService() }
     var chatPanelWidth by remember { mutableStateOf(350.dp) }
-    var conversationCaseId by remember { mutableStateOf<Long?>(null) }
     var pendingConversationResponse by remember { mutableStateOf<ChatResponse?>(null) }
+    // What the chat knows about is settled only once the KB list has been read
+    // and, if a KB is open, its cases fetched; until then no conversation is
+    // started, or the user would see a greeting for a state that is passing.
+    var kbListRead by remember { mutableStateOf(false) }
+    var casesInfoKbId by remember { mutableStateOf<String?>(null) }
+    var conversationStarted by remember { mutableStateOf(false) }
     val density = LocalDensity.current
 
     // Report panel state
@@ -99,18 +106,14 @@ fun OpenRDRUI(
     val chatControllerHandler = object : ChatControllerHandler {
         override var onBotMessageReceived: (response: ChatResponse) -> Unit = { }
         override fun sendUserMessage(message: String) {
-            val caseId = requireNotNull(currentCaseId) {
-                "currentCaseId should not be null when casesInfo.count > 0"
-            }
             // Use dispatcher to ensure API calls run on the EDT
             CoroutineScope(dispatcher).launch {
                 try {
-                    val response = api.sendUserMessage(message, caseId)
+                    val response = api.sendUserMessage(message)
                     onBotMessageReceived(response)
 
                     //refresh the case to get the latest interpretation
-                    val refreshed = api.getCase(caseId)
-                    currentCase = refreshed
+                    currentCaseId?.let { currentCase = api.getCase(it) }
                     ++chatId // Increment chatId to trigger recomposition in ChatController
                 } catch (_: Exception) {
                     //ignore
@@ -128,12 +131,22 @@ fun OpenRDRUI(
             // the lazy `kbInfo()` path to fetch the default KB and route
             // subsequent requests to the wrong KB.
             kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
+            kbListRead = true
         }
     }
 
     LaunchedEffect(kbInfo) {
         withContext(dispatcher) {
-            casesInfo = api.waitingCasesInfo()
+            val open = kbInfo
+            if (open?.id != casesInfoKbId) {
+                // Case ids are per KB, so a case of the new KB can share the id of the
+                // one showing; drop it so the new KB's case is fetched.
+                currentCaseId = null
+                currentCase = null
+                cornerstoneStatus = null
+            }
+            casesInfo = if (open == null) CasesInfo() else api.waitingCasesInfo()
+            casesInfoKbId = open?.id
         }
     }
 
@@ -173,23 +186,40 @@ fun OpenRDRUI(
         }
     }
 
-    LaunchedEffect(currentCaseId) {
+    // The context the chat is about: no KB, a KB with no cases, or a case. Null
+    // while the state is in flux (KB list not yet read, cases not yet fetched for
+    // the open KB, or a case about to be chosen), so that a conversation is started
+    // once per settled context and not for the states passed through on the way.
+    val chatContext: Pair<String?, Long?>? = run {
+        val open = kbInfo
+        val caseId = currentCaseId
+        when {
+            !kbListRead -> null
+            open == null -> Pair(null, null)
+            casesInfoKbId != open.id -> null
+            casesInfo.count == 0 -> Pair(open.id, null)
+            caseId == null -> null
+            (casesInfo.caseIds + casesInfo.cornerstoneCaseIds + casesInfo.favouriteCaseIds).none { it.id == caseId } -> null
+            else -> Pair(open.id, caseId)
+        }
+    }
+
+    LaunchedEffect(chatContext) {
+        val (kbId, caseId) = chatContext ?: return@LaunchedEffect
+        conversationStarted = false
         withContext(dispatcher) {
-            currentCaseId?.let {
-                if (conversationCaseId != it) {
-                    try {
-                        val response = api.startConversation(it)
-                        conversationCaseId = it
-                        ++chatId
-                        if (response.text.isNotBlank()) {
-                            pendingConversationResponse = response
-                        }
-                    } catch (_: Exception) {
-                        // Swallow transient failures (e.g. stale kb id during a kb switch,
-                        // or a case that is not (yet) in the current kb). The effect will
-                        // re-fire when currentCaseId changes again.
-                    }
+            try {
+                val response = api.startConversation(kbId, caseId)
+                ++chatId
+                if (response.text.isNotBlank()) {
+                    pendingConversationResponse = response
                 }
+            } catch (_: Exception) {
+                // Swallow transient failures (e.g. stale kb id during a kb switch,
+                // or a case that is not (yet) in the current kb). The effect will
+                // re-fire when the context changes again.
+            } finally {
+                conversationStarted = true
             }
         }
     }
@@ -236,7 +266,10 @@ fun OpenRDRUI(
                     if (current == null || incoming.kbName.isBlank() || incoming.kbName == current) {
                         casesInfo = incoming
                     }
-                })
+                },
+                kbInfoUpdated = { kbInfo = it },
+                kbClosed = { kbInfo = null }
+            )
         }
     }
 
@@ -321,6 +354,9 @@ fun OpenRDRUI(
                         isLoadingReport = isLoadingReport,
                         onReportToggle = { reportVisible = it }
                     )
+                } else {
+                    // Keep the chat panel on the right, where it sits once there are cases.
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
                 // Draggable divider for resizing the chat panel
@@ -342,6 +378,7 @@ fun OpenRDRUI(
                 ChatController(
                     id = chatId,
                     chatControllerHandler,
+                    conversationStarted = conversationStarted,
                     voiceRecognitionService = voiceRecognitionService,
                     modifier = Modifier.width(chatPanelWidth)
                 )

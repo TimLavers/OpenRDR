@@ -8,10 +8,13 @@ import io.rippledown.constants.api.HOST
 import io.rippledown.constants.api.PORT
 import io.rippledown.constants.api.WEB_SOCKET
 import io.rippledown.constants.chat.CASES_INFO_PREFIX
+import io.rippledown.constants.chat.KB_CLOSED
+import io.rippledown.constants.chat.KB_INFO_PREFIX
 import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
+import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -22,7 +25,9 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
     open suspend fun startSession(
         updateCornerstoneStatus: (CornerstoneStatus) -> Unit,
         ruleSessionCompleted: () -> Unit,
-        updateCasesInfo: (CasesInfo) -> Unit = {}
+        updateCasesInfo: (CasesInfo) -> Unit = {},
+        kbInfoUpdated: (KBInfo) -> Unit = {},
+        kbClosed: () -> Unit = {}
     ) {
         client.webSocket(
             method = HttpMethod.Get,
@@ -43,6 +48,10 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
                             receivedText.startsWith(CASES_INFO_PREFIX) -> {
                                 handleCasesInfo(receivedText, updateCasesInfo)
                             }
+
+                            receivedText == KB_CLOSED -> kbClosed()
+
+                            receivedText.startsWith(KB_INFO_PREFIX) -> handleKbInfo(receivedText, kbInfoUpdated)
 
                             else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                         }
@@ -67,6 +76,14 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
             updateCasesInfo(casesInfo)
         } catch (e: Exception) {
             logger.error("Error parsing cases info", e)
+        }
+    }
+
+    private fun handleKbInfo(message: String, kbInfoUpdated: (KBInfo) -> Unit) {
+        try {
+            kbInfoUpdated(message.removePrefix(KB_INFO_PREFIX).fromJsonString<KBInfo>())
+        } catch (e: Exception) {
+            logger.error("Error parsing kb info", e)
         }
     }
 

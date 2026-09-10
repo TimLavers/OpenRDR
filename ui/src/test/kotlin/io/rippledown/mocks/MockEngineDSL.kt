@@ -8,6 +8,7 @@ import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
+import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
@@ -54,13 +55,17 @@ class EngineConfig {
     var expectedMovedAttributeId: Int? = null
     var expectedTargetAttributeId: Int? = null
     var expectedUserMessage: String = ""
+    var expectedKbId: String? = null
     var newKbName: String? = null
+    var deletedKbId: String? = null
+    var kbRemainingAfterDeletion: KBInfo? = null
     var sampleKB: SampleKB? = null
 
     var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
     var lastRuleUndoCalled = false
 
     val defaultKB = KBInfo("Thyroids")
+    var defaultKbFetches = 0
     var returnKBInfo = defaultKB
     val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), defaultKB)
 }
@@ -153,6 +158,20 @@ private class EngineBuilder(private val config: EngineConfig) {
                 httpResponseData(json.encodeToString(KBInfo(name)))
             }
 
+            DELETE_KB -> {
+                config.deletedKbId = request.url.parameters[KB_ID]
+                val remaining = config.kbRemainingAfterDeletion
+                if (remaining == null) {
+                    respond(
+                        content = ByteReadChannel(""),
+                        status = HttpStatusCode.NoContent,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    httpResponseData(json.encodeToString(remaining))
+                }
+            }
+
             CREATE_KB_FROM_SAMPLE -> {
                 val body = request.body as TextContent
                 val data = Json.decodeFromString<Pair<String, SampleKB>>(body.text)
@@ -193,18 +212,19 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             DEFAULT_KB -> {
+                config.defaultKbFetches++
                 httpResponseData(json.encodeToString(config.defaultKB))
             }
 
             SEND_USER_MESSAGE -> {
                 val body = request.body as TextContent
                 body.text shouldBe config.expectedUserMessage
-                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
                 httpResponseData(json.encodeToString(config.returnResponse))
             }
 
             START_CONVERSATION -> {
-                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId.toString()
+                request.url.parameters[KB_ID] shouldBe config.expectedKbId
+                request.url.parameters[CASE_ID] shouldBe config.expectedCaseId?.toString()
                 httpResponseData(json.encodeToString(config.returnResponse))
             }
 

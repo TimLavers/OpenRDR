@@ -9,8 +9,11 @@ import io.mockk.mockk
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.ReasonTransformation
 import io.rippledown.chat.ReasonTransformer
+import io.rippledown.constants.chat.COMMIT_RULE
 import io.rippledown.constants.chat.EXEMPT_CORNERSTONE
 import io.rippledown.kb.chat.ReasonTransformHandler.Companion.ALLOW_CORNERSTONE_CORRECTION
+import io.rippledown.kb.chat.ReasonTransformHandler.Companion.DECLINE_CORRECTION
+import io.rippledown.kb.chat.ReasonTransformHandler.Companion.declineWithCornerstonesToReviewCorrection
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -45,6 +48,48 @@ class ReasonTransformHandlerTest {
 
         // Then it is passed to the transformer as usual
         coVerify { reasonTransformer.transform("allow") }
+    }
+
+    @Test
+    fun `should redirect a bare decline to the commit action when no cornerstone review is pending`() = runTest {
+        // Given no cornerstone review is pending
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 0)
+
+        // When the model routes a decline into the reason-transform function
+        val result = handler.handle(mapOf(REASON_PARAMETER to "no"))
+
+        // Then the model is redirected to commit the rule and no transform is attempted
+        result shouldBe DECLINE_CORRECTION
+        result shouldContain COMMIT_RULE
+        coVerify(exactly = 0) { reasonTransformer.transform(any()) }
+    }
+
+    @Test
+    fun `should redirect a bare decline to the cornerstone review when cornerstones remain`() = runTest {
+        // Given two cornerstone cases remain to be reviewed
+        val status = CornerstoneStatus(numberOfCornerstones = 2)
+        every { ruleService.cornerstoneStatus() } returns status
+
+        // When the model routes a decline into the reason-transform function
+        val result = handler.handle(mapOf(REASON_PARAMETER to "No thanks."))
+
+        // Then the model is redirected to the cornerstone review, and told the current status
+        result shouldBe declineWithCornerstonesToReviewCorrection(status.summary())
+        result shouldContain status.summary()
+        coVerify(exactly = 0) { reasonTransformer.transform(any()) }
+    }
+
+    @Test
+    fun `should treat text that merely starts with a decline as a reason`() = runTest {
+        // Given no cornerstone review is pending
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 0)
+        coEvery { reasonTransformer.transform(any()) } returns ReasonTransformation(message = "I do not understand")
+
+        // When the user's text is more than a bare decline
+        handler.handle(mapOf(REASON_PARAMETER to "no glucose in the case"))
+
+        // Then it is transformed as usual
+        coVerify { reasonTransformer.transform("no glucose in the case") }
     }
 
     @Test

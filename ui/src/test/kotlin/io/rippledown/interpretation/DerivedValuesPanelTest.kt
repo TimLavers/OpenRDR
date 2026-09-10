@@ -166,6 +166,28 @@ class DerivedValuesPanelTest {
     }
 
     @Test
+    fun `should expose derived value details to accessibility without requiring hover`() = runTest {
+        // Given a derived value with a formula and conditions
+        val info = DerivedValueInfo(
+            name = "BMI",
+            value = "25.3",
+            formula = "Weight / Height ^ 2",
+            conditions = listOf("Height is in case")
+        )
+        with(composeTestRule) {
+            setContent {
+                DerivedValuesPanel(derivedValues = listOf(info))
+            }
+
+            // When the pointer has not hovered over the derived value row
+
+            // Then its tooltip details still exist in the accessibility tree
+            onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}").assertExists()
+            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions.single()}").assertExists()
+        }
+    }
+
+    @Test
     fun `should show no pending state when there is no change`() = runTest {
         // Given derived values and no rule session in progress
         val values = listOf(

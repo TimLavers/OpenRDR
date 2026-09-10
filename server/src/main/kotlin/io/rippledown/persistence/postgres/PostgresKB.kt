@@ -57,6 +57,12 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
         return resultList[0]
     }
 
+    override fun rename(newName: String) {
+        transaction(db) {
+            PKBInfo.all().single().name = newName
+        }
+    }
+
     override fun attributeStore() = attributeStore
 
     override fun attributeOrderStore() = attributeOrderStore

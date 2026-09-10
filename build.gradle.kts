@@ -67,7 +67,12 @@ val demoOsClassifier: String = org.gradle.internal.os.OperatingSystem.current().
 //
 // Strategy: stage the .app + extra java binary into a build dir, codesign
 // it there, then have demoZip pull the .app from the staging dir.
-val javaHomeBin = file("${System.getProperty("java.home")}/bin")
+// The java launcher must come from the same JDK that :ui jlinks its runtime
+// from (the Java 21 toolchain), not from the JVM running Gradle, which under
+// IntelliJ may be a different, older JDK.
+val javaHomeBin = javaToolchains.launcherFor {
+    languageVersion = of(21)
+}.get().metadata.installationPath.dir("bin").asFile
 val macUiAppStagingDir = layout.buildDirectory.dir("staging/demo-mac-app")
 
 val stageMacUiApp = tasks.register<Sync>("stageMacUiApp") {

@@ -1,11 +1,9 @@
 package steps
 
-import com.google.common.base.Stopwatch
 import io.cucumber.datatable.DataTable
 import io.cucumber.docstring.DocString
 import io.cucumber.java.After
 import io.cucumber.java.Before
-import io.cucumber.java.BeforeStep
 import io.cucumber.java.Scenario
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
@@ -27,11 +25,8 @@ import java.io.File
 import java.util.concurrent.TimeUnit.*
 import java.util.zip.ZipFile
 
-const val DELAY_AFTER_CUKE_SEC = 10L
 class Defs {
     private var exportedZip: File? = null
-    private lateinit var stopwatch: Stopwatch
-
 
     // Restores keyboard focus to the last-selected case before an arrow-key press.
     // After a case is selected, ChatPanel's LaunchedEffect(id) steals focus to the
@@ -39,16 +34,13 @@ class Defs {
     private var refocusLastSelectedCase: (() -> Unit)? = null
 
     @Before("not @database")
-    fun before(scenario: Scenario) {
-        println("\nBefore scenario '${scenario.name}'")
+    fun before() {
         Awaitility.setDefaultPollInterval(10, MILLISECONDS)
-        stopwatch = Stopwatch.createStarted()
         startServerWithInMemoryDatabase()
     }
 
     @Before("@database")
-    fun beforeWithDatabase(scenario: Scenario) {
-        println("\nDB Before. Scenario: '${scenario.name}'")
+    fun beforeWithDatabase() {
         Awaitility.setDefaultPollInterval(10, MILLISECONDS)
         startServerWithPostgresDatabase()
     }
@@ -65,32 +57,30 @@ class Defs {
 
     @After
     fun after(scenario: Scenario) {
-        stopwatch.stop()
         screenshotOnFailure(scenario)
         saveServerLogsOnFailure(scenario)
         cleanup()
-        println("After scenario  '${scenario.name}', duration: ${stopwatch.elapsed(SECONDS)} seconds")
-    }
-
-    @BeforeStep
-    fun rateLimitStepDelay(scenario: Scenario) {
-        val delaySecs = scenario.sourceTagNames.firstNotNullOfOrNull { tag ->
-            Regex("rate_limit_(\\d+)s?").find(tag)?.groupValues?.get(1)?.toLongOrNull()
-        }
-        if (delaySecs != null) {
-            Thread.sleep(DELAY_AFTER_CUKE_SEC * 1_000)
-        }
     }
 
     @After("@delay_after_cuke")
     fun afterGeminiScenario(scenario: Scenario) {
-        println("Delaying for $DELAY_AFTER_CUKE_SEC secs after scenario to avoid rate limiting")
-        Thread.sleep(DELAY_AFTER_CUKE_SEC * 1_000)
+        //currently unused
     }
 
     @When("A Knowledge Base called {word} has been created")
     fun createKnowledgeBase(name: String) {
         restClient().createKB(name)
+    }
+
+    @When("The Knowledge Base called {word} has been deleted")
+    fun deleteKnowledgeBase(name: String) {
+        restClient().deleteKB(name)
+    }
+
+    // The KB is created by the Before hook; this step states that fact in the feature.
+    @Given("there is a knowledge base called {word}")
+    fun requireOnlyKnowledgeBase(name: String) {
+        restClient().kbNames() shouldBe listOf(name)
     }
 
     @When("I start the client application")
@@ -225,7 +215,12 @@ class Defs {
     }
 
     @Given("case {word} for KB {word} gets the interpretation {string} when it is provided having data:")
-    fun provideCaseWithDataForKbAndCheckInterpretation(caseName: String, kbName: String, comment: String,  dataTable: DataTable) {
+    fun provideCaseWithDataForKbAndCheckInterpretation(
+        caseName: String,
+        kbName: String,
+        comment: String,
+        dataTable: DataTable
+    ) {
         val attributeNameToValue = mutableMapOf<String, String>()
         dataTable.asMap().forEach { (t, u) -> attributeNameToValue[t] = u }
         val received = labProxy().provideCaseForKb(kbName, caseName, attributeNameToValue)
@@ -291,7 +286,7 @@ class Defs {
                         errors.add(caseName to actualInterpretation)
                     }
                 }
-        }
+            }
         if (!errors.isEmpty()) {
             println("Got wrong interps, as follows:")
             errors.forEach {

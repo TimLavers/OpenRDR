@@ -1,13 +1,14 @@
 Feature: Knowledge Base management
 
+  Background:
+    Given there is a knowledge base called Thyroids
+
   Scenario: Name of current Knowledge Base should be displayed
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     Then the displayed KB name is now Thyroids
 
   Scenario: A previously exported Knowledge Base can be imported
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     And the displayed KB name is Thyroids
     When I import the configured zipped Knowledge Base Whatever
     Then the displayed KB name is now Whatever
@@ -22,8 +23,7 @@ Feature: Knowledge Base management
     Then the displayed KB name is now Thyroids
 
   Scenario: A Knowledge Base can be created
-    Given A Knowledge Base called Thyroids has been created
-    And I start the client application
+    Given I start the client application
     And the displayed KB name is Thyroids
     When I create a Knowledge Base with the name Glucose
     Then the displayed KB name is now Glucose
@@ -34,7 +34,7 @@ Feature: Knowledge Base management
     And A Knowledge Base called A has been created
     And I start the client application
     And I activate the KB management control
-    # The current KB ("A", the most recently created) acts as the dropdown
+    # The client opens the first KB by name ("A"). It acts as the dropdown
     # trigger and is therefore excluded from the switcher list, which only
     # offers the *other* available KBs to switch to.
     Then I should see this list of available KBs:

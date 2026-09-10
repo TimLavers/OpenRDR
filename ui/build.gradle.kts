@@ -32,17 +32,22 @@ dependencies {
     testImplementation(libs.assertJSwing)
 }
 
+val toolchainJavaHome: File = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+}.get().metadata.installationPath.asFile
+
 compose.desktop {
     application {
         mainClass = "io.rippledown.main.MainKt"
         jvmArgs("--enable-native-access=ALL-UNNAMED")
 
-        // Use the JDK Gradle is running on (must be >= the project's bytecode
-        // target) for the bundled runtime that ships with createDistributable.
-        // Without this, Compose Desktop 1.10.3 jlinks its default JetBrains
-        // Runtime (Java 20), which fails to load classes compiled to
-        // bytecode 65 (Java 21) with UnsupportedClassVersionError.
-        javaHome = System.getProperty("java.home")
+        // Use the project's toolchain JDK (the one the bytecode targets) for
+        // the bundled runtime that ships with createDistributable. Without this,
+        // Compose Desktop 1.10.3 jlinks its default JetBrains Runtime (Java 20),
+        // which fails to load classes compiled to bytecode 65 (Java 21) with
+        // UnsupportedClassVersionError. The JVM running Gradle is not used
+        // because IntelliJ's Gradle JVM may be an older JDK than the toolchain.
+        javaHome = toolchainJavaHome.absolutePath
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
@@ -89,13 +94,12 @@ compose.resources {
     generateResClass = always
 }
 
-// The Compose Desktop runtime image is jlinked from `javaHome` (the JDK Gradle
-// runs on, set above). Its up-to-date check does NOT track that JDK, so if the
-// Gradle daemon later runs on a different JDK the stale runtime is silently
-// reused -- e.g. a Java 20 runtime bundled alongside a Java 21 server jar,
-// causing UnsupportedClassVersionError at demo launch. Register the JDK's
-// identity as a task input so a JDK change forces the runtime to be re-jlinked.
+// The Compose Desktop runtime image is jlinked from `javaHome` (set above). Its
+// up-to-date check does NOT track that JDK, so if the toolchain later resolves
+// to a different installation the stale runtime is silently reused -- e.g. a
+// Java 20 runtime bundled alongside a Java 21 server jar, causing
+// UnsupportedClassVersionError at demo launch. Register the JDK's identity as a
+// task input so a JDK change forces the runtime to be re-jlinked.
 tasks.matching { it.name.contains("RuntimeImage") }.configureEach {
-    inputs.property("jdkVersion", System.getProperty("java.version"))
-    inputs.property("jdkHome", System.getProperty("java.home"))
+    inputs.property("jdkHome", toolchainJavaHome.absolutePath)
 }

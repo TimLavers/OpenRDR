@@ -5,7 +5,7 @@ import io.rippledown.constants.interpretation.REPORT_TEXT
 import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.integration.utils.find
-import io.rippledown.integration.utils.mouseClickAtCentre
+import io.rippledown.integration.utils.performAccessibleClick
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
@@ -24,7 +24,9 @@ class ReportPO(private val contextProvider: () -> AccessibleContext) {
         execute<Unit> {
             val toggle = contextProvider().find(REPORT_TOGGLE)
             if (toggle != null) {
-                toggle.mouseClickAtCentre()
+                check(toggle.performAccessibleClick()) {
+                    "Report toggle has no invokable accessibility action"
+                }
             } else {
                 throw IllegalStateException("Report toggle not found in accessibility tree")
             }

@@ -1,7 +1,12 @@
 package io.rippledown.kb.chat
 
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.rippledown.constants.chat.RENAME_KNOWLEDGE_BASE
+import io.rippledown.constants.chat.SET_KNOWLEDGE_BASE_DESCRIPTION
+import io.rippledown.constants.chat.SHOW_KNOWLEDGE_BASE_DESCRIPTION
 import io.rippledown.model.*
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.AssignValue
@@ -93,5 +98,69 @@ class KBChatServiceTest {
         // Then the prompt contains the attributes that are not on the case
         systemPrompt shouldContain haemoglobin.name
         systemPrompt shouldContain sodium.name
+    }
+
+    @Test
+    fun `the prompt for a case names the open knowledge base and the available ones`() {
+        // Given
+        val case = createCaseWithInterpretation("Test Case")
+
+        // When
+        val systemPrompt =
+            KBChatService.systemPrompt(case, kbName = "Thyroids", kbNames = listOf("Glucose", "Thyroids"))
+
+        // Then
+        systemPrompt shouldNotContain "{{"
+        systemPrompt shouldContain "Thyroids"
+        systemPrompt shouldContain "Glucose, Thyroids"
+    }
+
+    @Test
+    fun `the prompt with no case has the general sections but none about the case`() {
+        // When
+        val systemPrompt = KBChatService.systemPrompt(null, kbName = "Thyroids", kbNames = listOf("Thyroids"))
+
+        // Then
+        systemPrompt shouldNotContain "{{"
+        systemPrompt shouldContain "# Context"
+        systemPrompt shouldContain "# Interactions"
+        systemPrompt shouldContain "## JSON formatting guidelines"
+        systemPrompt shouldContain "# Listing your capabilities"
+        systemPrompt shouldNotContain "# Defining the change to the report"
+        systemPrompt shouldNotContain "# Example interactions with the user"
+    }
+
+    @Test
+    fun `the prompt with no knowledge base says so`() {
+        // When
+        val systemPrompt = KBChatService.systemPrompt(null, kbName = null, kbNames = emptyList())
+
+        // Then
+        systemPrompt shouldNotContain "{{"
+        systemPrompt shouldContain KBChatService.NO_KB_NAME
+    }
+
+    @Test
+    fun `knowledge base prompt includes rename and description action contracts`() {
+        // given
+        val description = "put the user's words in `description`, exactly"
+
+        // when
+        val systemPrompt = KBChatService.systemPrompt(null, kbName = "Thyroids", kbNames = listOf("Thyroids"))
+
+        // then
+        systemPrompt shouldContain RENAME_KNOWLEDGE_BASE
+        systemPrompt shouldContain SHOW_KNOWLEDGE_BASE_DESCRIPTION
+        systemPrompt shouldContain SET_KNOWLEDGE_BASE_DESCRIPTION
+        systemPrompt shouldContain description
+        systemPrompt shouldContain "do not answer from memory"
+    }
+
+    @Test
+    fun `sections are chosen by whether there is a case`() {
+        // When / Then
+        KBChatService.mainSectionsFor(hasCase = false) shouldBe KBChatService.caseLessSections
+        KBChatService.mainSectionsFor(hasCase = true) shouldBe KBChatService.systemPromptMainSections
+        KBChatService.systemPromptMainSections shouldContainAll KBChatService.caseLessSections
     }
 }

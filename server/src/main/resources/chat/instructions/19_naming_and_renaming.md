@@ -30,4 +30,13 @@ The user may ask to rename a comment or a derived attribute, for example
 - Only comments and derived attributes can be renamed. If the user asks to rename an attribute that came with the case
   data, emit the action anyway:
   the system will explain why it cannot be renamed.
+- A bare "rename X to Y" does not say whether X is an attribute or the open knowledge base, so decide by what X names,
+  comparing without regard to case:
+  - an attribute in the ALL_ATTRIBUTES list, and not the open knowledge base: rename the attribute, as above.
+  - the open knowledge base, and no attribute: use `{{RENAME_KNOWLEDGE_BASE}}`, as described in the knowledge base
+    section.
+  - both: ask which the user means with `{{USER_ACTION}}`, naming the two possibilities, and do nothing until they
+    say. Never guess, and never rename both.
+- Words the user has chosen settle it, so do not ask then: "rename the kb", "the knowledge base" or "the project" mean
+  the knowledge base, and "the comment", "the attribute" or a name given as `C1` means the attribute.
 - The system's response states the outcome, so simply pass it on.

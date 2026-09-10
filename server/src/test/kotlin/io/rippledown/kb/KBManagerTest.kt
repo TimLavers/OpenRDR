@@ -87,6 +87,38 @@ class KBManagerTest {
     }
 
     @Test //KBM-5
+    fun `deleting a KB should return the KBInfo of the remaining KB first in alpha order`() {
+        //Given
+        val info1 = kbManager.createKB("Thyroids")
+        val info2 = kbManager.createKB("Glucose")
+        val info3 = kbManager.createKB("Lipids")
+
+        //When
+        val kbInfo = kbManager.deleteKB(info2)
+
+        //Then
+        kbInfo shouldBe info3
+
+        //And when the last KB in alpha order is deleted
+        val remaining = kbManager.deleteKB(info1)
+
+        //Then the first remaining KB in alpha order is returned
+        remaining shouldBe info3
+    }
+
+    @Test //KBM-5
+    fun `deleting the only KB should return null`() {
+        //Given
+        val info = kbManager.createKB("Thyroids")
+
+        //When
+        val kbInfo = kbManager.deleteKB(info)
+
+        //Then
+        kbInfo shouldBe null
+    }
+
+    @Test //KBM-5
     fun `delete non-existent KB`() {
         val info = KBInfo("Unknown")
         shouldThrow<IllegalArgumentException> {
@@ -140,6 +172,68 @@ class KBManagerTest {
         val id = UUID.randomUUID().toString()
         val failure = kbManager.openKB(id) as EntityRetrieval.Failure
         failure.errorMessage shouldBe "Unknown id: $id."
+    }
+
+    @Test //KBM-7
+    fun `rename a KB preserves its id and persists the new name`() {
+        // given
+        val original = kbManager.createKB("Thyroids")
+
+        // when
+        val renamed = kbManager.renameKB(original.id, "Thyroid Function")
+
+        // then
+        renamed shouldBe KBInfo(original.id, "Thyroid Function")
+        kbManager.all() shouldBe setOf(renamed)
+        kbManager = KBManager(persistenceProvider)
+        kbManager.all() shouldBe setOf(renamed)
+        val reopened = (kbManager.openKB(original.id) as EntityRetrieval.Success).entity
+        reopened.kbInfo.name shouldBe "Thyroid Function"
+    }
+
+    @Test //KBM-7
+    fun `rename refuses a name already used by another KB ignoring case`() {
+        // given
+        val thyroids = kbManager.createKB("Thyroids")
+        val glucose = kbManager.createKB("Glucose")
+
+        // when
+        val error = shouldThrow<IllegalArgumentException> {
+            kbManager.renameKB(thyroids.id, "glucose")
+        }
+
+        // then
+        error.message shouldBe "A KB with name Glucose already exists."
+        kbManager.all() shouldBe setOf(thyroids, glucose)
+    }
+
+    @Test //KBM-7
+    fun `rename refuses an unknown KB id`() {
+        // given
+        val unknownId = "unknown_1"
+
+        // when
+        val error = shouldThrow<IllegalArgumentException> {
+            kbManager.renameKB(unknownId, "New name")
+        }
+
+        // then
+        error.message shouldBe "No KB with id $unknownId was found."
+    }
+
+    @Test //KBM-7
+    fun `rename validates the new name before changing persistence`() {
+        // given
+        val original = kbManager.createKB("Thyroids")
+
+        // when
+        shouldThrow<IllegalArgumentException> {
+            kbManager.renameKB(original.id, "")
+        }
+
+        // then
+        kbManager.all() shouldBe setOf(original)
+        persistenceProvider.kbPersistence(original.id).kbInfo() shouldBe original
     }
 
     private fun add10KBs() {
