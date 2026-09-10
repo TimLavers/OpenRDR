@@ -1,5 +1,7 @@
 ---
 trigger: always_on
+description: 
+globs: 
 ---
 
 # Working together on OpenRDR
@@ -13,3 +15,4 @@ trigger: always_on
 - Verify with the automated tests you can run yourself, and give the user copy-pastable commands for the ones you cannot
   (any real cucumber run).
 - Do not create documentation or progress `.md` files for your own benefit unless the user asks for them.
+- If I type ?? when discussing an issue or suggestions, that means I am asking you the question "What do you think?"
