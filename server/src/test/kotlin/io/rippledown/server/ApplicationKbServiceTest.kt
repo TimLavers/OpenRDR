@@ -151,7 +151,7 @@ class ApplicationKbServiceTest {
     }
 
     @Test
-    fun `deleting the open KB closes it first`() = runBlocking<Unit> {
+    fun `deleting the open KB also closes it`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
@@ -164,6 +164,21 @@ class ApplicationKbServiceTest {
         app.kbList() shouldBe emptyList()
         coVerify(exactly = 1) { webSocketManager.sendKbClosed() }
         closedCount shouldBe 1
+    }
+
+    @Test
+    fun `deleting the open KB removes it from the list before telling the client`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        openEndpoint = app.kbForId(thyroids.id)
+        var listWhenClosed: List<KBInfo>? = null
+        coEvery { webSocketManager.sendKbClosed() } answers { listWhenClosed = app.kbList() }
+
+        // When
+        service.delete(thyroids)
+
+        // Then
+        listWhenClosed shouldBe emptyList()
     }
 
     @Test

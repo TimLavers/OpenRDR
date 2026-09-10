@@ -52,8 +52,9 @@ class ApplicationKbService(
     }
 
     override suspend fun delete(kbInfo: KBInfo) {
-        if (kbInfo == openKnowledgeBase()) close()
+        val wasOpen = kbInfo == openKnowledgeBase()
         application.deleteKB(kbInfo.id)
+        if (wasOpen) close()
     }
 
     override suspend fun addDemonstrationCase(): RDRCase {
