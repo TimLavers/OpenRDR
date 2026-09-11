@@ -193,11 +193,10 @@ class ChatManager(
         val tip = commentVariableTipFor(actionComment, chatResponse)
         val bufferedSuggestions = suggestionsBuffer.consume()
         val response = when {
-            bufferedSuggestions != null -> ChatResponse(chatResponse.text, bufferedSuggestions, tip)
-            !actionComment.suggestions.isNullOrEmpty() -> ChatResponse(
-                chatResponse.text,
-                actionComment.suggestions,
-                tip
+            bufferedSuggestions != null -> chatResponse.copy(suggestions = bufferedSuggestions, tip = tip)
+            !actionComment.suggestions.isNullOrEmpty() -> chatResponse.copy(
+                suggestions = actionComment.suggestions,
+                tip = tip
             )
 
             else -> chatResponse.copy(tip = tip ?: chatResponse.tip)
@@ -357,6 +356,7 @@ class ChatManager(
         if (action.changesContext && isRuleSessionActive()) return ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
         return when (val outcome = action.doIt(kbService)) {
             is KbManagementOutcome.Done -> outcome.response
+            is KbManagementOutcome.AskForName -> ChatResponse(outcome.question)
             is KbManagementOutcome.Ask -> {
                 pendingConfirmation = outcome
                 ChatResponse(outcome.question)
