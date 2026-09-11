@@ -18,7 +18,13 @@ data class DeleteKnowledgeBase(val kbName: String? = null) : KbManagementAction 
             is KbResolution.Exact -> askToDelete(resolution.kbInfo)
             is KbResolution.Partial -> askToDelete(resolution.kbInfo)
             is KbResolution.Ambiguous -> done(kbAmbiguousMessage(resolution.name, resolution.candidates))
-            is KbResolution.NotFound -> done(kbNotFoundMessage(resolution.name, resolution.available))
+            is KbResolution.NotFound -> done(
+                kbNotFoundMessage(resolution.name, resolution.available, resolution.demonstrations)
+            )
+
+            is KbResolution.Demonstration -> done(
+                kbNotFoundMessage(name, kbService.knowledgeBases().map { it.name })
+            )
         }
     }
 

@@ -19,7 +19,13 @@ data class OpenKnowledgeBase(val kbName: String) : KbManagementAction {
             }
 
             is KbResolution.Ambiguous -> done(kbAmbiguousMessage(resolution.name, resolution.candidates))
-            is KbResolution.NotFound -> done(kbNotFoundMessage(resolution.name, resolution.available))
+            is KbResolution.NotFound -> done(
+                kbNotFoundMessage(resolution.name, resolution.available, resolution.demonstrations)
+            )
+
+            is KbResolution.Demonstration -> done(
+                kbNotFoundMessage(kbName, kbService.knowledgeBases().map { it.name })
+            )
         }
 
     private suspend fun open(kbService: KnowledgeBaseService, kbInfo: KBInfo): ChatResponse {

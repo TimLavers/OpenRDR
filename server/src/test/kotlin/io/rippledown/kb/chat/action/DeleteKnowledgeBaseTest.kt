@@ -5,10 +5,40 @@ import io.mockk.*
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.sample.SampleKB.ZOO
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
 class DeleteKnowledgeBaseTest : KbActionTestBase() {
+
+    @Test
+    fun `unknown name includes demonstrations from the resolution`() = runTest {
+        // Given
+        val available = listOf("Thyroids")
+        val demonstrations = listOf("Pathology", "Zoo Animals")
+        every { kbService.resolve("Nothing") } returns KbResolution.NotFound("Nothing", available, demonstrations)
+
+        // When
+        val outcome = DeleteKnowledgeBase("Nothing").doIt(kbService)
+
+        // Then
+        outcome.text() shouldBe kbNotFoundMessage("Nothing", available, demonstrations)
+        coVerify(exactly = 0) { kbService.delete(any()) }
+    }
+
+    @Test
+    fun `demonstration temporarily returns not found without changing knowledge bases`() = runTest {
+        // Given
+        every { kbService.resolve("Zoo") } returns KbResolution.Demonstration(ZOO)
+        every { kbService.knowledgeBases() } returns listOf(thyroids)
+
+        // When
+        val outcome = DeleteKnowledgeBase("Zoo").doIt(kbService)
+
+        // Then
+        outcome.text() shouldBe kbNotFoundMessage("Zoo", listOf("Thyroids"))
+        coVerify(exactly = 0) { kbService.delete(any()) }
+    }
 
     @Test
     fun `an exact match still asks, and deletes on acceptance`() = runTest {

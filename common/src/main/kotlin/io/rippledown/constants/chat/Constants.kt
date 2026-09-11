@@ -109,6 +109,7 @@ const val CANNOT_BE_UNDONE = "This cannot be undone."
 const val DID_YOU_MEAN = "Did you mean"
 const val NO_KB_NAMED = "There is no knowledge base named"
 const val THE_KNOWLEDGE_BASES_ARE = "The knowledge bases are:"
+const val THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE = "The demonstration knowledge bases are:"
 const val MORE_THAN_ONE_KB_MATCHES = "More than one knowledge base matches"
 const val KB_ALREADY_EXISTS = "already exists"
 const val HAS_NO_CASES = "has no cases"
@@ -135,9 +136,12 @@ fun confirmKbOpenMessage(name: String) = "$DID_YOU_MEAN \"$name\"?"
 fun confirmKbCreateMessage(newName: String, existingName: String) =
     "There is already a knowledge base \"$existingName\". Create \"$newName\" as well?."
 
-fun kbNotFoundMessage(name: String, available: List<String>) =
-    if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
+fun kbNotFoundMessage(name: String, available: List<String>, demonstrations: List<String> = emptyList()): String {
+    val message = if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
     else "$NO_KB_NAMED \"$name\". $THE_KNOWLEDGE_BASES_ARE ${available.joinToString(", ")}."
+    return if (demonstrations.isEmpty()) message
+    else "$message $THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE ${demonstrations.joinToString(", ")}."
+}
 
 fun kbAmbiguousMessage(name: String, candidates: List<String>) =
     "$MORE_THAN_ONE_KB_MATCHES \"$name\": ${candidates.joinToString(", ")}. Which one?"
