@@ -62,7 +62,11 @@ class ChatManager(
      */
     private var greetingAwaitingAnswer = false
 
-    private data class PendingKbCreation(val stage: KbCreationStage, val question: String)
+    private data class PendingKbCreation(
+        val stage: KbCreationStage,
+        val question: String,
+        val actionForName: (String) -> KbManagementAction = { CreateKnowledgeBase(it) }
+    )
 
     private var pendingKbCreation: PendingKbCreation? = null
     private val kbCreationInterpreter = KbCreationReplyInterpreter(conversationService)
@@ -295,8 +299,11 @@ class ChatManager(
         // The offer is the server's question, so a plain yes is answered here as for
         // every other server question. While a name is awaited a yes is not a name.
         if (isAcceptance(message)) {
-            pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
-            return ChatResponse(NAME_THE_NEW_KB)
+            if (pending.stage == KbCreationStage.OFFER_CREATION) {
+                pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
+                return ChatResponse(NAME_THE_NEW_KB)
+            }
+            return ChatResponse(pending.question)
         }
         val reply = try {
             kbCreationInterpreter.interpret(pending.stage, pending.question, message)
@@ -311,8 +318,12 @@ class ChatManager(
         }
         return when (reply.intent) {
             KbCreationIntent.CONFIRM -> {
-                pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
-                ChatResponse(NAME_THE_NEW_KB)
+                if (pending.stage == KbCreationStage.OFFER_CREATION) {
+                    pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
+                    ChatResponse(NAME_THE_NEW_KB)
+                } else {
+                    ChatResponse(pending.question)
+                }
             }
 
             KbCreationIntent.DENY -> {
@@ -321,7 +332,7 @@ class ChatManager(
             }
 
             KbCreationIntent.CONFIRM_WITH_NAME -> {
-                val response = manageKnowledgeBases(CreateKnowledgeBase(checkNotNull(reply.kbName)))
+                val response = manageKnowledgeBases(pending.actionForName(checkNotNull(reply.kbName)))
                 pendingKbCreation = null
                 response
             }
@@ -356,7 +367,11 @@ class ChatManager(
         if (action.changesContext && isRuleSessionActive()) return ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
         return when (val outcome = action.doIt(kbService)) {
             is KbManagementOutcome.Done -> outcome.response
-            is KbManagementOutcome.AskForName -> ChatResponse(outcome.question)
+            is KbManagementOutcome.AskForName -> {
+                pendingKbCreation =
+                    PendingKbCreation(KbCreationStage.AWAITING_NAME, outcome.question, outcome.actionForName)
+                ChatResponse(outcome.question)
+            }
             is KbManagementOutcome.Ask -> {
                 pendingConfirmation = outcome
                 ChatResponse(outcome.question)

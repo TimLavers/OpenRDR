@@ -199,7 +199,7 @@ class FirstKbCreationTest {
         unclear shouldBe ChatResponse(
             if (awaitingName) ChatManager.KB_NAME_CLARIFICATION else ChatManager.KB_CREATION_CLARIFICATION
         )
-        retry shouldBe ChatResponse(NAME_THE_NEW_KB)
+        retry shouldBe ChatResponse(if (awaitingName) ChatManager.KB_NAME_CLARIFICATION else NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

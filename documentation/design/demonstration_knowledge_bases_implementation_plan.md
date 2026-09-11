@@ -300,6 +300,11 @@ through JSON and defaults to empty.
 
 ## Step 5 — `ChatManager`: one naming workflow for both create and copy
 
+Status: complete. `PendingKbCreation` has `actionForName`; `manageKnowledgeBases` stores the naming
+action from `AskForName`; `answerToKbCreation` uses `pending.actionForName` for `CONFIRM_WITH_NAME`
+and re-asks the question on a bare yes during `AWAITING_NAME`. Existing first-KB tests unchanged;
+`DemonstrationCopyNamingTest` covers the copy flow. Common and filtered server tests pass.
+
 **Files**: `ChatManager.kt`, `FirstKbCreationTest.kt` (add tests), maybe new `DemonstrationCopyNamingTest.kt`.
 
 **Implement**
