@@ -3,6 +3,7 @@ package io.rippledown.kb.chat
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
+import io.rippledown.sample.SampleKB
 
 /**
  * What a knowledge base management chat action is allowed to do. These
@@ -11,11 +12,14 @@ import io.rippledown.model.RDRCase
  */
 interface KnowledgeBaseService {
     fun knowledgeBases(): List<KBInfo>
+    fun demonstrations(): List<SampleKB>
+    fun isDemonstrationTitle(name: String): Boolean
     fun openKnowledgeBase(): KBInfo?
     fun resolve(name: String): KbResolution
     fun nearDuplicateOf(newName: String): KBInfo?
     suspend fun open(kbInfo: KBInfo)
     suspend fun create(name: String): KBInfo
+    suspend fun createFromSample(name: String, sample: SampleKB): KBInfo
     suspend fun close()
     suspend fun delete(kbInfo: KBInfo)
     suspend fun addDemonstrationCase(): RDRCase
