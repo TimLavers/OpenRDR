@@ -6,6 +6,7 @@ import io.rippledown.constants.chat.CONFIRM
 import io.rippledown.integration.pageobjects.ChatPO
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
@@ -30,6 +31,19 @@ class ChatDefsTest {
     @AfterEach
     fun tearDown() {
         unmockkStatic(::chatPO)
+    }
+
+    @Test
+    fun `click a knowledge base chip through the page object`() {
+        // Given
+        every { page.clickKbChoice("Zoo Animals") } just Runs
+
+        // When
+        defs.clickKbChip("Zoo Animals")
+
+        // Then
+        verify(exactly = 1) { page.clickKbChoice("Zoo Animals") }
+        verify(exactly = 0) { page.enterChatText(any()); page.clickSend() }
     }
 
     @ParameterizedTest

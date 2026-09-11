@@ -4,6 +4,12 @@ This is the step-by-step plan for `demonstration_knowledge_bases.md`. Read that 
 one says *what to type*. Do the steps in order. Each step ends green (`.\gradlew.bat :common:test :server:test` with
 the filters in `.windsurf/rules/running-tests.md`), and each step is a sensible commit.
 
+Review status: Steps 4–8 have been reviewed. Corrections cover greeting order and formatting, horizontal chip scrolling,
+the explicit default-KB helper, old list expectations and UTF-8 damage from the Step 8 bulk feature edit. Steps 9 and 10
+are implemented. Common and filtered server unit tests and Kover checks pass, as do the focused scrolling regression,
+eight mock-based cucumber helper tests, cucumber compilation and dry run (206 scenarios, 2,635 bound steps).
+The real `:cucumber:kb` run remains for the user to schedule; broader UI tests require approval under `AGENTS.md`.
+
 ## Ground rules for whoever implements this
 
 - Follow `.windsurf/rules/*.md`. In particular: test first; no `!!` in production code; do not add comments; do not
@@ -146,8 +152,8 @@ suspend fun createFromSample(name: String, sample: SampleKB): KBInfo
 ## Step 4 — Actions
 
 Status: complete. Common and filtered server tests pass; Kover coverage reviewed for the touched code.
-`ChatManager` handles `AskForName` by returning its question so this step compiles; storing the naming action and
-processing the reply remain in Step 5.
+The temporary question-only `AskForName` handling used for Step 4 has been replaced by the shared naming workflow in
+Step 5.
 
 ### 4a. Shared new-name validation
 

@@ -1,13 +1,39 @@
 package io.rippledown.chat
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
+import io.kotest.matchers.shouldBe
 import org.junit.Rule
 import org.junit.Test
 
 class KbChoiceRowTest {
     @get:Rule
     var composeTestRule = createComposeRule()
+
+    @Test
+    fun `demonstration chips can be scrolled and clicked in a narrow panel`() {
+        // Given
+        val names = listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+        var chosen: String? = null
+        composeTestRule.setContent {
+            Box(Modifier.width(220.dp)) {
+                KbChoiceRow(names, 0) { chosen = it }
+            }
+        }
+
+        // When
+        composeTestRule.onNodeWithContentDescription("$KB_CHOICE_ITEM${names.last()}")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+
+        // Then
+        chosen shouldBe "Zoo Animals"
+    }
 
     @Test
     fun `should display one chip per name`() {
@@ -41,7 +67,7 @@ class KbChoiceRowTest {
             onNodeWithContentDescription("$KB_CHOICE_ITEM${names[1]}").performClick()
 
             // Then
-            assert(clickedName == "Glucose") { "Expected 'Glucose' but was '$clickedName'" }
+            clickedName shouldBe "Glucose"
         }
     }
 
@@ -59,7 +85,7 @@ class KbChoiceRowTest {
             onNodeWithContentDescription("$KB_CHOICE_ITEM${names[2]}").performClick()
 
             // Then
-            assert(clickedName == "Zoo Animals") { "Expected 'Zoo Animals' but was '$clickedName'" }
+            clickedName shouldBe "Zoo Animals"
         }
     }
 

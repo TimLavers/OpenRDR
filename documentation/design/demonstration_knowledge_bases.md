@@ -4,7 +4,7 @@
 
 - Four demonstration knowledge bases the user can open and play with: Thyroid Stimulating Hormone, Contact Lense
   Prescription, Zoo Animals (each with cases and rules, as built by the `samples` cukes) and Pathology (the cases the
-  packaged demo uses, today's `SampleKB.DEMO`).
+  packaged demo uses, `SampleKB.PATHOLOGY`).
 - The chat lists them under a separate "demonstration" heading, so it is clear they cannot be deleted.
 - Opening one asks for a new name and gives the user a copy under that name. The user's copy is an ordinary knowledge
   base: it can be changed, renamed and deleted; the demonstration it came from never changes.
@@ -50,7 +50,8 @@ manner of the suggested-condition chips
 (`SuggestionListMessage` / `SuggestionListRow`), not the tip, which is display only. The server attaches them
 deterministically: `ListKnowledgeBases` returns a `ChatResponse` carrying a `kbChoices` list, so the model is never
 asked
-to classify its own reply. The open knowledge base is shown but not clickable.
+to classify its own reply. The open knowledge base is shown in the text and excluded from the chips. The row scrolls
+horizontally when its contents exceed the available width, including with fewer than five names.
 
 Clicking a chip sends "Open <name>" as an ordinary user message. Name resolution, the naming prompt for a
 demonstration, and the refusal during a rule session all happen exactly as if the user had typed it; the chips are a
@@ -59,8 +60,10 @@ starts a new conversation. There is no delete chip.
 
 ### Name resolution
 
-`resolveKbName` gains `Demonstration(sample)`, returned when the name matches a demonstration title (exact, or unique
-partial) and no stored knowledge base matches. Stored names are searched first so a user's copy is never shadowed.
+`resolveKbName` returns `Demonstration(sample)` for an exact or unique partial demonstration title. The lookup order is
+exact stored name, exact demonstration title, partial stored names, then partial demonstration titles. An exact stored
+name wins a legacy title collision; an exact demonstration title wins over a partial stored match. Multiple partial
+matches are ambiguous, and a miss lists stored names and demonstrations.
 
 Demonstration titles are reserved: `CreateKnowledgeBase` and `RenameKnowledgeBase` refuse them (case-insensitive) with
 "… is the name of a demonstration knowledge base; please choose another". This is the only new guard, and it is what
@@ -70,8 +73,9 @@ keeps resolution unambiguous.
 
 `OpenKnowledgeBase` is unchanged for the model: it still transcribes the name. On `Demonstration(sample)` the server
 asks for the copy's name, reusing the server-owned naming workflow that already exists for the first knowledge base
-(`PendingKbCreation`, stage `AWAITING_NAME`, replies read by `KbCreationReplyInterpreter`). The pending state gains what
-to do with the name: `CreateKnowledgeBase(name)` today, `CopyDemonstrationKnowledgeBase(sample, name)` here. The
+(`PendingKbCreation`, stage `AWAITING_NAME`, replies read by `KbCreationReplyInterpreter`). `AskForName` supplies the
+question and an action factory. The pending state holds what to do with the name: `CreateKnowledgeBase(name)` for an
+empty KB or `CopyDemonstrationKnowledgeBase(sample, name)` for a copy. The
 interpreter already returns `CONFIRM_WITH_NAME`, `DENY` and `OTHER_REQUEST`, so "call it Zoo2", "no" and "actually,
 open Thyroids" all work without new prompt machinery.
 
@@ -96,12 +100,12 @@ accident. With no stored knowledge base the greeting offers to create one or ope
 exactly the implicit loading being removed. `Api.kbInfo()` with no knowledge base becomes a `checkNotNull` failure;
 the chat and the UI already never reach it without one.
 
-### The `--demo` packaging
+### Packaged demo
 
-`OpenRDRServer` stops seeding a knowledge base on start: the demo script begins with "open Pathology", names the copy,
-and carries on as before. `ensureSampleKB`, `DEMO_KB_NAME` and the `--demo` argument go; `packaging/README-demo.txt`
-and `DemoZipSmokeTest` (which look for `"Demo"` in `kbList` and "Demo KB seeded." in the log) follow. The `demo` cuke
-folder's script scenario gains the opening step.
+`OpenRDRServer` no longer seeds a knowledge base on start: the packaged demo instructions begin with "open Pathology"
+and suggest naming the copy "Clinic". `ensureSampleKB`, `DEMO_KB_NAME`, `DEMO_ARG` and the launchers' `Demo` argument
+are removed. `DemoZipSmokeTest` expects an empty `kbList` on both launches. The `demo` cucumber script instead opens
+an explicit default KB and supplies its own Taylor case, as specified in implementation Step 8.
 
 ## Cukes: an explicit default knowledge base
 
@@ -109,9 +113,9 @@ folder's script scenario gains the opening step.
 - New step `Given a default KB is opened`: `restClient().createKBWithDefaultName()`. It runs in `Background`, so the
   knowledge base exists before `I start the client application`, and the client opens it as it does today. The step
   replaces `there is a knowledge base called Thyroids`.
-- Every feature whose scenarios assume Thyroids gets the `Background` (about 50 of the 52 files; the two with a
-  `Background` already merge the step in). The `samples` features and the scenarios that begin by deleting Thyroids
-  do not get it.
+- Every feature whose scenarios assume Thyroids gets the `Background`. In the chat KB-management feature the step is
+  per scenario, allowing empty-server scenarios to omit it. The `samples` features create their own KBs. Scenarios that
+  previously deleted the implicit Thyroids now start without creating it.
 - `cucumberDryRun` checks binding; the folders then need a real run.
 
 ## Decisions
@@ -148,3 +152,8 @@ a name and the copy opens with the expected case count; clicking a stored knowle
 demonstration's chip asks for a name; deleting a demonstration is refused; creating with a
 demonstration title is refused; the no-knowledge-base greeting mentions demonstrations. Run with `.\gradlew.bat
 :cucumber:kb`.
+
+Implementation review corrected alphabetical ordering and separation in no-KB greetings, horizontal chip scrolling,
+outdated list expectations and UTF-8 corruption introduced by the bulk default-KB feature edit. The seven demonstration
+scenarios are implemented; compilation, mock-based helper tests and the full cucumber dry run pass. The real
+`:cucumber:kb` run still needs the live server, model and GUI and must be scheduled by the user.

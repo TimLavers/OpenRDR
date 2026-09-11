@@ -25,7 +25,6 @@ fun KbChoiceRow(
 ) {
     val scrollState = rememberScrollState()
     val encodedNames = names.joinToString("\n")
-    val needsScroll = names.size > ROWS_BEFORE_SCROLL
 
     Column(
         modifier = Modifier
@@ -35,15 +34,14 @@ fun KbChoiceRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (needsScroll) Modifier.heightIn(max = MAX_PANEL_HEIGHT) else Modifier)
                 .background(White, RoundedCornerShape(8.dp))
                 .semantics { contentDescription = "$KB_CHOICE_LIST$index:$encodedNames" }
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(if (needsScroll) Modifier.horizontalScroll(scrollState) else Modifier)
-                    .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp),
+                    .horizontalScroll(scrollState)
+                    .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 names.forEach { name ->
@@ -61,17 +59,14 @@ fun KbChoiceRow(
                     }
                 }
             }
-            if (needsScroll) {
-                VerticalScrollbar(
+            if (scrollState.maxValue > 0) {
+                HorizontalScrollbar(
                     modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .fillMaxHeight(),
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
                     adapter = rememberScrollbarAdapter(scrollState)
                 )
             }
         }
     }
 }
-
-private const val ROWS_BEFORE_SCROLL = 10
-private val MAX_PANEL_HEIGHT = 180.dp

@@ -1,4 +1,4 @@
-﻿Feature: Derived attribute
+Feature: Derived attribute
   A case has derived attribute values assigned by the KB, a collapsible
   "Derived attributes" panel displays each derived attribute name and its value.
   Hovering over any part of a derived attribute row shows a tooltip with the
@@ -28,11 +28,11 @@
       | Glucose | 12.0 |
     And I start the client application
     And a backdoor rule is built for case Fermi to assign the value "diabetic" to the derived attribute "Diabetes status" with conditions:
-      | Glucose â‰¥ 11.0 |
+      | Glucose ≥ 11.0 |
     When I select the case Fermi
     Then the UI should show the value for derived attribute "Diabetes status" as "diabetic"
     And the UI should show the following conditions for the derived value "Diabetes status":
-      | Glucose â‰¥ 11.0 |
+      | Glucose ≥ 11.0 |
 
   Scenario: The derived attributes panel shows attribute name,formula and value
     Given case Fermi is provided with the following values, reference ranges and units:

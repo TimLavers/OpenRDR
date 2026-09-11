@@ -11,7 +11,6 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
 import io.rippledown.integration.waitUntilAsserted
@@ -80,8 +79,7 @@ class Defs {
 
     @Given("a default KB is opened")
     fun openDefaultKB() {
-        restClient().createKB(DEFAULT_PROJECT_NAME)
-        restClient().selectKBByName(DEFAULT_PROJECT_NAME)
+        restClient().createKBWithDefaultName()
     }
 
     @When("I start the client application")

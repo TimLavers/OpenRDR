@@ -9,10 +9,16 @@ Feature: Managing knowledge bases through the chat
     When I enter the following text into the chat panel:
       | What knowledge bases are available? |
     Then the chatbot response consists of the following lines:
+      | Your knowledge bases:                                          |
       | Biochemistry (open) |
       | Haematology         |
       | Lipids              |
       | Thyroids            |
+      | Demonstration knowledge bases (open one to get your own copy): |
+      | Contact Lense Prescription                                     |
+      | Pathology                                                      |
+      | Thyroid Stimulating Hormone                                    |
+      | Zoo Animals                                                    |
 
   Scenario: The option to create a KB is given if there are none
     Given I start the client application
@@ -164,7 +170,88 @@ Feature: Managing knowledge bases through the chat
     When I enter the following text into the chat panel:
       | List the knowledge bases |
     Then the chatbot response consists of the following lines:
+      | Your knowledge bases:                                          |
       | Thyroids (open) |
+      | Demonstration knowledge bases (open one to get your own copy): |
+      | Contact Lense Prescription                                     |
+      | Pathology                                                      |
+      | Thyroid Stimulating Hormone                                    |
+      | Zoo Animals                                                    |
+
+  Scenario: The list shows demonstrations
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response consists of the following lines:
+      | Your knowledge bases:                                          |
+      | Thyroids (open)                                                |
+      | Demonstration knowledge bases (open one to get your own copy): |
+      | Contact Lense Prescription                                     |
+      | Pathology                                                      |
+      | Thyroid Stimulating Hormone                                    |
+      | Zoo Animals                                                    |
+
+  Scenario: Opening a demonstration asks for a name and opens a copy
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Open Zoo Animals |
+    Then the chatbot response contains the following terms:
+      | your own copy | Zoo Animals |
+    When I enter the following text into the chat panel:
+      | Zoo2 |
+    Then the chatbot response contains the following terms:
+      | Created | Zoo2 | demonstration and opened it |
+    And the displayed KB name is now Zoo2
+    And the count of the number of cases is 101
+
+  Scenario: Clicking a stored chip opens it
+    Given a default KB is opened
+    And I start the client application
+    And the displayed KB name is now Thyroids
+    And A Knowledge Base called Lipids has been created
+    When I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response contains the following terms:
+      | Lipids | Thyroids (open) |
+    When I click the knowledge base chip "Lipids"
+    Then the displayed KB name is now Lipids
+
+  Scenario: Clicking a demonstration chip asks for a name
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response contains the following terms:
+      | Pathology |
+    When I click the knowledge base chip "Pathology"
+    Then the chatbot response contains the following terms:
+      | your own copy | Pathology |
+
+  Scenario: A demonstration cannot be deleted
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Delete Zoo Animals |
+    Then the chatbot response contains the following terms:
+      | cannot be deleted |
+    And the displayed KB name is Thyroids
+
+  Scenario: A demonstration title cannot be used
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Create a knowledge base called Pathology |
+    Then the chatbot response contains the following terms:
+      | is the name of a demonstration knowledge base |
+    And the displayed KB name is Thyroids
+
+  Scenario: No knowledge bases greeting mentions demonstrations
+    Given I start the client application
+    Then the chatbot response contains the following terms:
+      | no knowledge bases yet | demonstration | Zoo Animals |
+    And no knowledge base is shown as selected
 
   Scenario: Deleting a knowledge base is abandoned if not confirmed
     Given a default KB is opened

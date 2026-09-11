@@ -80,7 +80,7 @@ class ConstantsTest {
     fun `greeting with no stored KBs and demonstrations mentions creating and opening a demonstration`() {
         // Given
         val demonstrations =
-            listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+            listOf("Thyroid Stimulating Hormone", "Zoo Animals", "Pathology", "Contact Lense Prescription")
 
         // When
         val greeting = noKbGreeting(emptyList(), demonstrations)
@@ -95,14 +95,14 @@ class ConstantsTest {
         // Given
         val available = listOf("Glucose", "Thyroids")
         val demonstrations =
-            listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+            listOf("Thyroid Stimulating Hormone", "Zoo Animals", "Pathology", "Contact Lense Prescription")
 
         // When
         val greeting = noKbGreeting(available, demonstrations)
 
         // Then
-        greeting shouldBe "No knowledge base is open. The knowledge bases are:\nGlucose\nThyroids\n. " +
-                "The demonstration knowledge bases are: Contact Lense Prescription, Pathology, Thyroid Stimulating Hormone, Zoo Animals. " +
+        greeting shouldBe "No knowledge base is open. The knowledge bases are:\nGlucose\nThyroids\n" +
+                "The demonstration knowledge bases are: Contact Lense Prescription, Pathology, Thyroid Stimulating Hormone, Zoo Animals.\n" +
                 "Do you want to open one or create a new one?"
     }
 

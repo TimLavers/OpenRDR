@@ -1,9 +1,9 @@
-﻿# This file specifies the behaviour described in
+# This file specifies the behaviour described in
 # documentation/design/editing_derived_attribute_definitions.md.
 Feature: Editing the definition of a derived attribute
   A derived attribute has a stored definition (its formula or value). The
   user can edit that definition in place via the chat, so that the correction
-  applies everywhere the attribute is given by its definition â€” to existing
+  applies everywhere the attribute is given by its definition — to existing
   and new cases alike. No rule is built and there is no cornerstone review.
   In contrast, a case- or condition-specific correction builds an override
   rule and leaves the definition unchanged. An edit that would make an
