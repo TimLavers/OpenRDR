@@ -9,6 +9,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -29,6 +30,8 @@ class FirstKbCreationTest {
         every { kbService.openKnowledgeBase() } returns null
         every { kbService.resolve(any()) } answers { KbResolution.NotFound(firstArg(), emptyList()) }
         every { kbService.nearDuplicateOf(any()) } returns null
+        every { kbService.isDemonstrationTitle(any()) } returns false
+        every { kbService.demonstrations() } returns SampleKB.demonstrations()
         coEvery { kbService.create(any()) } answers { KBInfo("new", firstArg()) }
     }
 
@@ -310,7 +313,11 @@ class FirstKbCreationTest {
         val response = manager.response("List KBs")
 
         // Then
-        response shouldBe ChatResponse(NO_KNOWLEDGE_BASES)
+        response shouldBe ChatResponse(
+            "$NO_KNOWLEDGE_BASES_OF_YOUR_OWN\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
+                    SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
+            kbChoices = SampleKB.demonstrations().map { it.title() }.sorted()
+        )
         coVerify(exactly = 1) { conversation.response("List KBs") }
         coVerify(exactly = 0) { kbService.create(any()) }
     }

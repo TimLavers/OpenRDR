@@ -5,6 +5,29 @@ import kotlin.test.Test
 
 class ConstantsTest {
     @Test
+    fun `demonstration action messages`() {
+        // Given
+        val name = "Zoo2"
+        val title = "Zoo Animals"
+
+        // When
+        val messages = listOf(
+            kbNameReservedMessage(title),
+            kbCopiedFromDemonstrationMessage(name, title),
+            nameForDemonstrationCopyMessage(title),
+            cannotDeleteDemonstrationMessage(title)
+        )
+
+        // Then
+        messages shouldBe listOf(
+            "\"Zoo Animals\" is the name of a demonstration knowledge base; please choose another.",
+            "Created \"Zoo2\" from the Zoo Animals demonstration and opened it.",
+            "You will get your own copy of the Zoo Animals demonstration. What would you like to call it?",
+            "Zoo Animals is a demonstration knowledge base and cannot be deleted. Your own copies can be."
+        )
+    }
+
+    @Test
     fun `not found message lists stored knowledge bases and demonstrations`() {
         // Given
         val available = listOf("Glucose", "Thyroids")

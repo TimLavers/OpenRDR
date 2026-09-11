@@ -1,11 +1,9 @@
 package io.rippledown.kb.chat.action
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.*
-import io.rippledown.constants.chat.confirmKbOpenMessage
-import io.rippledown.constants.chat.kbAmbiguousMessage
-import io.rippledown.constants.chat.kbNotFoundMessage
-import io.rippledown.constants.chat.kbOpenedMessage
+import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.sample.SampleKB.ZOO
@@ -30,17 +28,19 @@ class OpenKnowledgeBaseTest : KbActionTestBase() {
     }
 
     @Test
-    fun `demonstration temporarily returns not found without changing knowledge bases`() = runTest {
+    fun `opening a demonstration asks for a copy name`() = runTest {
         // Given
-        every { kbService.resolve("Zoo") } returns KbResolution.Demonstration(ZOO)
-        every { kbService.knowledgeBases() } returns listOf(thyroids)
+        every { kbService.resolve("Zoo Animals") } returns KbResolution.Demonstration(ZOO)
 
         // When
-        val outcome = OpenKnowledgeBase("Zoo").doIt(kbService)
+        val outcome = OpenKnowledgeBase("Zoo Animals").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe kbNotFoundMessage("Zoo", listOf("Thyroids"))
+        val ask = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        ask.question shouldBe nameForDemonstrationCopyMessage("Zoo Animals")
+        ask.actionForName("Zoo2") shouldBe CopyDemonstrationKnowledgeBase(ZOO, "Zoo2")
         coVerify(exactly = 0) { kbService.open(any()) }
+        coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
     }
 
     @Test

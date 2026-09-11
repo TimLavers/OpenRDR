@@ -27,16 +27,15 @@ class DeleteKnowledgeBaseTest : KbActionTestBase() {
     }
 
     @Test
-    fun `demonstration temporarily returns not found without changing knowledge bases`() = runTest {
+    fun `a demonstration cannot be deleted`() = runTest {
         // Given
         every { kbService.resolve("Zoo") } returns KbResolution.Demonstration(ZOO)
-        every { kbService.knowledgeBases() } returns listOf(thyroids)
 
         // When
         val outcome = DeleteKnowledgeBase("Zoo").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe kbNotFoundMessage("Zoo", listOf("Thyroids"))
+        outcome.text() shouldBe "Zoo Animals is a demonstration knowledge base and cannot be deleted. Your own copies can be."
         coVerify(exactly = 0) { kbService.delete(any()) }
     }
 

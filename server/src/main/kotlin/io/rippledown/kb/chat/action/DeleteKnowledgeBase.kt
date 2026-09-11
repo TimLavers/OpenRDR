@@ -23,7 +23,7 @@ data class DeleteKnowledgeBase(val kbName: String? = null) : KbManagementAction 
             )
 
             is KbResolution.Demonstration -> done(
-                kbNotFoundMessage(name, kbService.knowledgeBases().map { it.name })
+                cannotDeleteDemonstrationMessage(resolution.sample.title())
             )
         }
     }

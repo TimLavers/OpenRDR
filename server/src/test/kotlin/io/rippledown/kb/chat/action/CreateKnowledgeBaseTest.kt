@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.rippledown.constants.chat.BLANK_NAME_MESSAGE
 import io.rippledown.constants.chat.confirmKbCreateMessage
 import io.rippledown.constants.chat.kbAlreadyExistsMessage
 import io.rippledown.constants.chat.kbCreatedMessage
@@ -11,9 +12,28 @@ import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
 import kotlinx.coroutines.test.runTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class CreateKnowledgeBaseTest : KbActionTestBase() {
+
+    @BeforeTest
+    fun stubDemonstrationTitles() {
+        every { kbService.isDemonstrationTitle(any()) } returns false
+    }
+
+    @Test
+    fun `a demonstration title is reserved`() = runTest {
+        // Given
+        every { kbService.isDemonstrationTitle("Zoo Animals") } returns true
+
+        // When
+        val outcome = CreateKnowledgeBase("Zoo Animals").doIt(kbService)
+
+        // Then
+        outcome.text() shouldBe "\"Zoo Animals\" is the name of a demonstration knowledge base; please choose another."
+        coVerify(exactly = 0) { kbService.create(any()) }
+    }
 
     @Test
     fun `a new name is created at once`() = runTest {
@@ -51,7 +71,7 @@ class CreateKnowledgeBaseTest : KbActionTestBase() {
         val outcome = CreateKnowledgeBase("   ").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe CreateKnowledgeBase.BLANK_NAME_MESSAGE
+        outcome.text() shouldBe BLANK_NAME_MESSAGE
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

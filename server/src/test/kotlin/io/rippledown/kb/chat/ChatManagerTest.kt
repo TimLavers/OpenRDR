@@ -19,6 +19,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
@@ -29,6 +30,62 @@ import kotlin.test.Test
  * @author Cascade AI
  */
 class ChatManagerTest {
+
+    @Test
+    fun `listing choices survive buffered suggestions`() = runTest {
+        // Given
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+        suggestionsBuffer.suggestions = listOf("Buffered condition")
+
+        // When
+        val response = chatManager.processActionComment(ActionComment(action = LIST_KNOWLEDGE_BASES))
+
+        // Then
+        response.kbChoices shouldBe listOf(
+            "Glucose",
+            "Contact Lense Prescription",
+            "Pathology",
+            "Thyroid Stimulating Hormone",
+            "Zoo Animals"
+        )
+        response.suggestions shouldBe listOf("Buffered condition")
+    }
+
+    @Test
+    fun `listing choices survive model suggestions`() = runTest {
+        // Given
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+
+        // When
+        val response = chatManager.processActionComment(
+            ActionComment(action = LIST_KNOWLEDGE_BASES, suggestions = listOf("Model condition"))
+        )
+
+        // Then
+        response.kbChoices shouldBe listOf(
+            "Glucose",
+            "Contact Lense Prescription",
+            "Pathology",
+            "Thyroid Stimulating Hormone",
+            "Zoo Animals"
+        )
+        response.suggestions shouldBe listOf("Model condition")
+    }
+
+    @Test
+    fun `opening a demonstration surfaces its naming question`() = runTest {
+        // Given
+        every { kbService.resolve("Zoo") } returns KbResolution.Demonstration(SampleKB.ZOO)
+
+        // When
+        val response = chatManager.processActionComment(ActionComment(action = OPEN_KNOWLEDGE_BASE, kbName = "Zoo"))
+
+        // Then
+        response shouldBe ChatResponse(nameForDemonstrationCopyMessage("Zoo Animals"))
+        coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
+    }
     lateinit var logger: Logger
     lateinit var conversationService: ConversationService
     lateinit var ruleService: RuleService
@@ -43,6 +100,8 @@ class ChatManagerTest {
         conversationService = mockk()
         ruleService = mockk()
         kbService = mockk()
+        every { kbService.isDemonstrationTitle(any()) } returns false
+        every { kbService.demonstrations() } returns SampleKB.demonstrations()
         viewableCase = mockk()
         case = mockk()
         suggestionsBuffer = SuggestionsBuffer()
@@ -144,7 +203,11 @@ class ChatManagerTest {
         val response = chatManager.response("List")
 
         // Then
-        response shouldBe ChatResponse("Glucose")
+        response shouldBe ChatResponse(
+            "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
+                    SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
+            kbChoices = listOf("Glucose") + SampleKB.demonstrations().map { it.title() }.sorted()
+        )
     }
 
     @Test
@@ -178,7 +241,11 @@ class ChatManagerTest {
         val response = chatManager.response("List")
 
         // Then
-        response shouldBe ChatResponse("Glucose")
+        response shouldBe ChatResponse(
+            "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
+                    SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
+            kbChoices = listOf("Glucose") + SampleKB.demonstrations().map { it.title() }.sorted()
+        )
     }
 
     @Test
