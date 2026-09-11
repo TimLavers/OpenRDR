@@ -9,26 +9,47 @@ internal class SampleKBTest {
 
     @Test
     fun values() {
+        // Given
+        val expected = listOf(TSH, TSH_CASES, CONTACT_LENSES, CONTACT_LENSES_CASES, ZOO, ZOO_CASES, PATHOLOGY)
+
+        // When
         val all = SampleKB.entries.toTypedArray()
+
+        // Then
         all.size shouldBe 7
-        all[0] shouldBe TSH
-        all[1] shouldBe TSH_CASES
-        all[2] shouldBe CONTACT_LENSES
-        all[3] shouldBe CONTACT_LENSES_CASES
-        all[4] shouldBe ZOO
-        all[5] shouldBe ZOO_CASES
-        all[6] shouldBe DEMO
+        all.toList() shouldBe expected
     }
 
     @Test
     fun title() {
-        TSH.title() shouldBe "Thyroid Stimulating Hormone"
-        TSH_CASES.title() shouldBe "Thyroid Stimulating Hormone - cases only"
-        CONTACT_LENSES.title() shouldBe "Contact Lense Prescription"
-        CONTACT_LENSES_CASES.title() shouldBe "Contact Lense Prescription - cases only"
-        ZOO.title() shouldBe "Zoo Animals"
-        ZOO_CASES.title() shouldBe "Zoo Animals - cases only"
-        DEMO.title() shouldBe "Demo"
+        // Given
+        val samples = SampleKB.entries
+
+        // When
+        val titles = samples.map { it.title() }
+
+        // Then
+        titles shouldBe listOf(
+            "Thyroid Stimulating Hormone",
+            "Thyroid Stimulating Hormone - cases only",
+            "Contact Lense Prescription",
+            "Contact Lense Prescription - cases only",
+            "Zoo Animals",
+            "Zoo Animals - cases only",
+            "Pathology"
+        )
+    }
+
+    @Test
+    fun demonstrations() {
+        // Given
+        val expected = listOf(TSH, CONTACT_LENSES, ZOO, PATHOLOGY)
+
+        // When
+        val demonstrations = SampleKB.demonstrations()
+
+        // Then
+        demonstrations shouldBe expected
     }
 
     @Test

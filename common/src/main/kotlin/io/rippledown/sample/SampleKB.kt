@@ -19,9 +19,13 @@ enum class SampleKB {
     ZOO_CASES {
         override fun title() = "Zoo Animals - cases only"
     },
-    DEMO {
-        override fun title() = "Demo"
+    PATHOLOGY {
+        override fun title() = "Pathology"
     };
 
     abstract fun title(): String
+
+    companion object {
+        fun demonstrations(): List<SampleKB> = listOf(TSH, CONTACT_LENSES, ZOO, PATHOLOGY)
+    }
 }

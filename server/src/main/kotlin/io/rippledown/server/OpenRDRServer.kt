@@ -96,7 +96,7 @@ fun Application.module() {
     val application = ServerApplication(persistenceProvider, webSocketManager)
     if (seedDemoOnStart) {
         try {
-            application.ensureSampleKB(DEMO_KB_NAME, SampleKB.DEMO)
+            application.ensureSampleKB(DEMO_KB_NAME, SampleKB.PATHOLOGY)
             OpenRDRServer.logger.info("Demo KB seeded.")
         } catch (e: Exception) {
             OpenRDRServer.logger.error("Failed to seed Demo KB", e)
