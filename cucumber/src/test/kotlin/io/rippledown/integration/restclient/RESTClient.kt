@@ -33,9 +33,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 typealias AttributeGetter = (String) -> Attribute
 
-class RESTClient {
+class RESTClient(private val api: Api = Api()) {
     private val endpoint = "http://localhost:$PORT"
-    private val api = Api()
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -70,7 +69,7 @@ class RESTClient {
     }
     fun deleteProcessedCaseWithName(name: String) {
         runBlocking {
-            Api().deleteCase(name)
+            api.deleteCase(name)
         }
     }
 

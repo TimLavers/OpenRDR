@@ -117,6 +117,8 @@ an explicit default KB and supplies its own Taylor case, as specified in impleme
   per scenario, allowing empty-server scenarios to omit it. The `samples` features create their own KBs. Scenarios that
   previously deleted the implicit Thyroids now start without creating it.
 - `cucumberDryRun` checks binding; the folders then need a real run.
+- Cucumber REST helpers reuse the API instance whose KB was explicitly created or selected. Case deletion must use
+  that instance too: a fresh `Api()` has no open KB and no longer falls back to an implicit Thyroids.
 
 ## Decisions
 
