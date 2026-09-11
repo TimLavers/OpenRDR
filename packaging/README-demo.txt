@@ -44,19 +44,20 @@ Running
 2. Windows:  double-click start-demo.bat
    macOS/Linux:  ./start-demo.sh  from a terminal
 3. A console window will open running the server on localhost:9090. The
-   server boots in in-memory mode AND auto-creates a knowledge base named
-   "Demo" pre-populated with the cases used by the three demo scenarios
-   below. Shortly after, the OpenRDR desktop UI will launch.
-4. In the UI, open the KB selector and choose "Demo" if it is not already
-   the active KB. (Or ask the chat: "open Demo". The chat can also list,
-   create, close and delete knowledge bases.)
+   server boots in in-memory mode. Shortly after, the OpenRDR desktop UI
+   will launch.
+4. In the chat, type:  open Pathology
+   The chat will ask for a name for your own copy (suggest "Clinic").
+   Type a name and press Enter. The Pathology demonstration KB is copied
+   and opened, pre-populated with the cases used by the three demo
+   scenarios below.
 5. To stop: close the UI window, then close the server console window
    (Ctrl+C on macOS/Linux kills both).
 
-The Demo KB
------------
+The Pathology demonstration KB
+-----------------------------
 
-The Demo KB is seeded with three cases:
+The Pathology demonstration KB is seeded with three cases:
 
   - Lindsay   waiting case, simple lab panel
               (Glucose 5.2 mmol/L [ref < 5.1], Pregnant Y, Age 21).

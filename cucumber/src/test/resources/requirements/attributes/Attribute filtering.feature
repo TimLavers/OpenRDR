@@ -1,4 +1,4 @@
-Feature: Filtering attributes in the Case View
+﻿Feature: Filtering attributes in the Case View
   # The case-view filter widget lets the user reduce the displayed attribute
   # rows to those that match a substring of the attribute name, value text,
   # reference range or units. The filter is owned by the case control so it
@@ -7,6 +7,9 @@ Feature: Filtering attributes in the Case View
   # blank/no-match queries, drag-and-drop suppression while filtered, escape
   # to clear, persistence across case selection and cornerstone changes) are
   # exercised by unit tests; this scenario is just the end-to-end happy path.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: Typing a filter restricts the case view to matching attributes
     Given a case with name Einstein is stored on the server

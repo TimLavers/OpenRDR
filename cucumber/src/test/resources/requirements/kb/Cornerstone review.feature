@@ -1,4 +1,7 @@
-Feature: Reviewing cornerstone cases
+﻿Feature: Reviewing cornerstone cases
+
+  Background:
+    Given a default KB is opened
 
   Scenario: A user message should be shown if there are no cornerstone cases
     Given a new case with the name Case1 is stored on the server

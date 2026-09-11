@@ -1,4 +1,7 @@
-Feature: Comments should be shown in a deterministic order
+﻿Feature: Comments should be shown in a deterministic order
+
+  Background:
+    Given a default KB is opened
 
   Scenario: When building a rule to append a comment to the report, the comment should appear at the end of the report
     Given case Manly is provided having data:

@@ -75,19 +75,18 @@ class DemoZipSmokeTest {
 
         waitForPortOpen(9090, timeoutSeconds = 90, strat = strat)
 
-        httpGetBody("http://localhost:9090/api/kbList") shouldContain "\"Demo\""
+        httpGetBody("http://localhost:9090/api/kbList") shouldBe "[]"
 
         Thread.sleep(15_000)
 
         strat.assertUiAlive(demoRoot)
 
-        httpGetBody("http://localhost:9090/api/kbList") shouldContain "\"Demo\""
+        httpGetBody("http://localhost:9090/api/kbList") shouldBe "[]"
 
         val serverLog = File(demoRoot, "logs/server.log")
         serverLog.shouldBeAFile()
         val serverText = serverLog.readText()
         serverText shouldContain "Starting server"
-        serverText shouldContain "Demo KB seeded."
     }
 
     private fun locateDemoZip(): File {

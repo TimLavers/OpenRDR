@@ -1,4 +1,4 @@
-@voice-is-fake
+﻿@voice-is-fake
 Feature: Voice recognition
 
   The chat panel supports voice input. Clicking the microphone button
@@ -6,7 +6,10 @@ Feature: Voice recognition
   the transcribed utterance is inserted into the chat text field. These
   scenarios use a fake voice recognition backend that bypasses the real
   microphone and Gemini transcription, so they exercise the UI wiring
-  only — not the audio pipeline or the LLM.
+  only â€” not the audio pipeline or the LLM.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: A dictated utterance is inserted into the chat text field
     Given case Bondi is provided having data:

@@ -11,6 +11,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
 import io.rippledown.integration.waitUntilAsserted
@@ -77,10 +78,10 @@ class Defs {
         restClient().deleteKB(name)
     }
 
-    // The KB is created by the Before hook; this step states that fact in the feature.
-    @Given("there is a knowledge base called {word}")
-    fun requireOnlyKnowledgeBase(name: String) {
-        restClient().kbNames() shouldBe listOf(name)
+    @Given("a default KB is opened")
+    fun openDefaultKB() {
+        restClient().createKB(DEFAULT_PROJECT_NAME)
+        restClient().selectKBByName(DEFAULT_PROJECT_NAME)
     }
 
     @When("I start the client application")

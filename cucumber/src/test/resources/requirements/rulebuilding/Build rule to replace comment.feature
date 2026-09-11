@@ -1,4 +1,7 @@
-Feature: The user can make a rule that replaces a comment the interpretive report
+﻿Feature: The user can make a rule that replaces a comment the interpretive report
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to build a rule to replace a comment
     Given a list of cases with the following names is stored on the server:

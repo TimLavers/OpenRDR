@@ -6,7 +6,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.CaseTestUtils
-import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.model.Attribute
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
@@ -37,25 +36,6 @@ internal class ServerApplicationTest {
         persistenceProvider = InMemoryPersistenceProvider()
         app = ServerApplication(persistenceProvider, mockk())
     }
-
-    @Test
-    fun `get default project`() {
-        app.kbList().size shouldBe 0
-        persistenceProvider.idStore().data().keys shouldBe emptySet()
-        val kbInfoDefault = app.getDefaultProject()
-
-        app.kbList().size shouldBe 1
-        app.kbList()[0] shouldBe kbInfoDefault
-        kbInfoDefault.name shouldBe DEFAULT_PROJECT_NAME
-        persistenceProvider.idStore().data().keys shouldBe setOf(kbInfoDefault.id)
-
-        val kbInfo2 = app.getDefaultProject()
-        kbInfo2.name shouldBe DEFAULT_PROJECT_NAME
-        kbInfo2.id shouldBe kbInfoDefault.id
-        app.kbList().size shouldBe 1
-        app.kbList()[0] shouldBe kbInfoDefault
-    }
-
 
     @Test // KBM-6
     fun `the KBs are loaded at init`() {

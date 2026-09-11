@@ -1,4 +1,7 @@
-Feature: The user should be able to see all test dates and results for a case
+﻿Feature: The user should be able to see all test dates and results for a case
+
+  Background:
+    Given a default KB is opened
 
   Scenario: Case with two episodes
     Given the configured case Case4 is stored on the server

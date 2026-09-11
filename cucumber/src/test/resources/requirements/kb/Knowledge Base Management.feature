@@ -1,7 +1,7 @@
 Feature: Knowledge Base management
 
   Background:
-    Given there is a knowledge base called Thyroids
+    Given a default KB is opened
 
   Scenario: Name of current Knowledge Base should be displayed
     Given I start the client application

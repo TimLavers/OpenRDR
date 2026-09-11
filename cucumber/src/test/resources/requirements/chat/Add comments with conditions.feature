@@ -1,5 +1,8 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Add comments with conditions
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to use the chat to add a comment with a valid condition
     Given case Bondi is provided having data:

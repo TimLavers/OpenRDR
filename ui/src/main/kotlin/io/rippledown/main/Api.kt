@@ -1,6 +1,5 @@
 package io.rippledown.main
 
-import androidx.compose.runtime.InternalComposeApi
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -30,8 +29,6 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 class Api(
@@ -47,11 +44,6 @@ class Api(
     @Volatile
     private var currentKB: KBInfo? = null
 
-    // Serialises the lazy "fetch default KB" path in [kbInfo] so that a
-    // concurrently-executing [createKBFromSample]/[selectKB]/[createKB] cannot
-    // have its write to [currentKB] clobbered by a late-arriving default-KB
-    // response.
-    private val kbInfoMutex = Mutex()
     val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
@@ -131,21 +123,7 @@ class Api(
         return currentKB ?: throw IllegalStateException("Failed to select KB")
     }
 
-    @OptIn(InternalComposeApi::class)
-    suspend fun kbInfo(): KBInfo {
-        currentKB?.let { return it }
-        return kbInfoMutex.withLock {
-            // Re-check under the lock: another caller may have populated it
-            // while we were waiting, or an explicit [createKBFromSample] /
-            // [selectKB] / [createKB] may have set it to a more-specific KB.
-            currentKB?.let { return@withLock it }
-            val fetched = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
-            // Only adopt [fetched] if nothing else set [currentKB] while the
-            // GET was in flight. If something did, that value is always more
-            // authoritative than the server's "default" KB.
-            currentKB ?: fetched.also { currentKB = it }
-        }
-    }
+    suspend fun kbInfo(): KBInfo = checkNotNull(currentKB) { "No knowledge base is open." }
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 

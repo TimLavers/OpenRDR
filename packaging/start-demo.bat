@@ -48,12 +48,12 @@ set "JAVA_EXE=ui\OpenRDR\runtime\bin\java.exe"
 if not exist "%JAVA_EXE%" set "JAVA_EXE=java"
 
 if not exist logs mkdir logs
-echo Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ...
+echo Starting OpenRDR server (in-memory mode, port 9090) ...
 rem -Djavax.net.ssl.trustStoreType=WINDOWS-ROOT makes the JVM trust whatever
 rem certificates Windows trusts. This is needed on corporate machines that
 rem MITM outbound HTTPS with a private root CA -- without it, calls to the
 rem Google Gemini API fail with PKIX path building errors.
-start "OpenRDR Server" cmd /k """!JAVA_EXE!"" -DlogFilePath=%CD%\logs\server.log -Djavax.net.ssl.trustStoreType=WINDOWS-ROOT --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory Demo"
+start "OpenRDR Server" cmd /k """!JAVA_EXE!"" -DlogFilePath=%CD%\logs\server.log -Djavax.net.ssl.trustStoreType=WINDOWS-ROOT --enable-native-access=ALL-UNNAMED -jar ""!SERVER_JAR!"" InMemory"
 
 echo Waiting for the server to accept connections ...
 set /a tries=0

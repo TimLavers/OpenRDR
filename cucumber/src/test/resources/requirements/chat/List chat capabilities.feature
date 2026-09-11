@@ -1,4 +1,7 @@
-Feature: List chat capabilities
+﻿Feature: List chat capabilities
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to see what chat capabilities are available
     Given cases are set up as follows:

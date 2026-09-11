@@ -65,7 +65,6 @@ class EngineConfig {
     var lastRuleUndoCalled = false
 
     val defaultKB = KBInfo("Thyroids")
-    var defaultKbFetches = 0
     var returnKBInfo = defaultKB
     val returnKBList = listOf(KBInfo("Glucose"), KBInfo("Lipids"), defaultKB)
 }
@@ -209,11 +208,6 @@ private class EngineBuilder(private val config: EngineConfig) {
                 } else {
                     httpResponseData("No way!")
                 }
-            }
-
-            DEFAULT_KB -> {
-                config.defaultKbFetches++
-                httpResponseData(json.encodeToString(config.defaultKB))
             }
 
             SEND_USER_MESSAGE -> {

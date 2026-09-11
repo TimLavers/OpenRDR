@@ -1,4 +1,4 @@
-# This file specifies the repeat-inferencing behaviour described in
+﻿# This file specifies the repeat-inferencing behaviour described in
 # documentation/design/repeat_inferencing.md.
 Feature: Repeat inferencing via derived attributes.
   A rule can assign a value to a derived attribute, and other rules can use
@@ -9,12 +9,15 @@ Feature: Repeat inferencing via derived attributes.
   ##############################################################################
   # Chained rules: a rule conditioned on the output of another rule
   ##############################################################################
+  Background:
+    Given a default KB is opened
+
   Scenario: A comment rule can be conditioned on a derived value assigned by another rule
     Given case Fermi is provided having data:
       | Glucose | 12.0 |
     And I start the client application
     And a backdoor rule is built for case Fermi to assign the value "diabetic" to the derived attribute "Diabetes status" with conditions:
-      | Glucose ≥ 11.0 |
+      | Glucose â‰¥ 11.0 |
     And a backdoor rule is built for case Fermi to add the comment "Diabetic diet advice given." with conditions:
       | Diabetes status is "diabetic" |
     And I select the case Fermi
@@ -30,7 +33,7 @@ Feature: Repeat inferencing via derived attributes.
       | Glucose | 12.0 |
     And I start the client application
     And a backdoor rule is built for case Curie to assign the value "7" to the derived attribute "Risk score" with conditions:
-      | Glucose ≥ 11.0 |
+      | Glucose â‰¥ 11.0 |
     And a backdoor rule is built for case Curie to add the comment "High risk patient." with conditions:
       | Risk score > 5 |
     And I select the case Curie
@@ -45,7 +48,7 @@ Feature: Repeat inferencing via derived attributes.
       | Glucose | 5.0 |
     And I start the client application
     And a backdoor rule is built for case Bohr to assign the value "diabetic" to the derived attribute "Diabetes status" with conditions:
-      | Glucose ≥ 11.0 |
+      | Glucose â‰¥ 11.0 |
     And a backdoor rule is built for case Bohr to add the comment "No evidence of diabetes." with conditions:
       | Diabetes status is not in case |
     And I select the case Bohr
@@ -85,7 +88,7 @@ Feature: Repeat inferencing via derived attributes.
   ##############################################################################
   Scenario: A condition that would create a dependency cycle is not suggested
     # "Alpha" is assigned when "Beta" is absent. A rule assigning "Beta"
-    # conditioned on "Alpha" would create the cycle Alpha → Beta → Alpha.
+    # conditioned on "Alpha" would create the cycle Alpha â†’ Beta â†’ Alpha.
     Given case Heisenberg is provided having data:
       | A | 1.0 |
     And a backdoor rule is built for case Heisenberg to assign the value "yes" to the derived attribute "Alpha" with no conditions

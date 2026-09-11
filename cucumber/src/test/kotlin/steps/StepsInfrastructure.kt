@@ -29,7 +29,6 @@ object StepsInfrastructure {
     fun startServerWithInMemoryDatabase() {
         setup()
         uiTestBase.serverProxy.start()
-        uiTestBase.restClient.createKBWithDefaultName()
     }
 
     fun startServerWithPostgresDatabase() {

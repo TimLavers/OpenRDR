@@ -1,8 +1,7 @@
 @delay_after_cuke
-Feature: Demo script — derived attributes, repeat inferencing and the AI report
+Feature: Demo script â€” derived attributes, repeat inferencing and the AI report
   This scenario is the step-by-step script for demo scenario 3 in
-  packaging/README-demo.txt, run against the same data as the seeded "Taylor"
-  case in the Demo KB. A passing run means the demo is solid.
+  packaging/README-demo.txt. A passing run means the demo is solid.
 
   It shows, in order:
   - the Derived attributes panel empty state (feature discoverability),
@@ -21,6 +20,9 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
   actions into a single plan, is work no individual rule can do, because no
   rule knows what the others concluded.
 
+  Background:
+    Given a default KB is opened
+
   Scenario: BMI and Diabetes status drive comments that the AI integrates into a report
     Given case Taylor is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
@@ -36,7 +38,7 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
     # empty state, so the audience sees where derived values will appear.
     And the derived attributes panel should show that there are none for the case
 
-    # Act 1 — a formula-based derived attribute.
+    # Act 1 â€” a formula-based derived attribute.
     And the chatbot has asked if I would like to add a comment
     When I request that the derived attribute "BMI" be added with formula "weight / height ^ 2"
     And I provide only the following reason:
@@ -44,7 +46,7 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
     Then the UI should show the value for derived attribute "BMI" as "30.93"
     And the formula showing for the derived value is "Weight/Height^2"
 
-    # Act 2 — a rule-based derived attribute. The suggested conditions are
+    # Act 2 â€” a rule-based derived attribute. The suggested conditions are
     # led by the out-of-range HbA1c (suggestion prioritisation).
     When I request that the derived attribute "Diabetes status" be added with value "diabetic"
     Then the first suggested condition is "HbA1c is high"
@@ -52,7 +54,7 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
       | HbA1c is high |
     Then the UI should show the value for derived attribute "Diabetes status" as "diabetic"
 
-    # Act 3 — repeat inferencing: comments conditioned on the derived
+    # Act 3 â€” repeat inferencing: comments conditioned on the derived
     # values. The first comment quotes the BMI via a comment variable.
     # Each comment is clipped and ends in a dangling action.
     When I request that the comment "Obesity. BMI {BMI}. Weight reduction." be added
@@ -67,7 +69,7 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
       | Diabetes status is "diabetic" |
       | HbA1c is high |
 
-    # Act 4 — the AI report. It must do more than echo the comments: it
+    # Act 4 â€” the AI report. It must do more than echo the comments: it
     # writes them up as prose and consolidates the three separate actions
     # into a single Recommendation section that appears in no one rule.
     When I click to show the report panel

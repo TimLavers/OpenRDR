@@ -70,12 +70,12 @@ if [ -z "$JAVA_BIN" ]; then
 fi
 
 mkdir -p logs
-echo "Starting OpenRDR server (in-memory mode, port 9090, with Demo KB) ..."
+echo "Starting OpenRDR server (in-memory mode, port 9090) ..."
 echo "  Server output -> logs/server-console.log"
 "$JAVA_BIN" \
     -DlogFilePath="$(pwd)/logs/server.log" \
     --enable-native-access=ALL-UNNAMED \
-    -jar "$SERVER_JAR" InMemory Demo \
+    -jar "$SERVER_JAR" InMemory \
     >logs/server-console.log 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT

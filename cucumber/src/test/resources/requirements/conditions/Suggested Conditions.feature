@@ -1,4 +1,7 @@
-Feature: When building a rule, the user is provided with candidate conditions that can either be directly added or modified and then added.
+﻿Feature: When building a rule, the user is provided with candidate conditions that can either be directly added or modified and then added.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: If a suggested condition is not editable, then clicking it adds it to the list of conditions for the rule.
     Given case Bondi is provided having data:
@@ -41,7 +44,7 @@ Feature: When building a rule, the user is provided with candidate conditions th
     And the chatbot has asked if I want to provide any more reasons and I decline
     And the chatbot has completed the action
     Then the condition showing for the comment "Beach time!" is:
-      | Waves ≤ 1.7 |
+      | Waves â‰¤ 1.7 |
 
   Scenario: When an editable condition is used, it is removed from the list of suggestions.
     Given case Bondi is provided having data:
@@ -53,7 +56,7 @@ Feature: When building a rule, the user is provided with candidate conditions th
     When I set the editable value to be "1.7"
     And the chatbot has asked if I want to provide any more reasons and I confirm
     Then the suggested conditions should not contain:
-      | Waves ≤ 1.5 |
+      | Waves â‰¤ 1.5 |
 
   Scenario: The user can request to see the suggested conditions again
     Given case Bondi is provided having data:

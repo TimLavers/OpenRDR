@@ -1,4 +1,7 @@
-Feature: Remove comment
+﻿Feature: Remove comment
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to use the chat to remove a comment with a valid condition
     Given case Bondi is provided having data:

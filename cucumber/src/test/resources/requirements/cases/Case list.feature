@@ -1,4 +1,8 @@
-Feature: Show a list of cases
+﻿Feature: Show a list of cases
+
+  Background:
+    Given a default KB is opened
+
   Scenario: Should show the list of cases that have been stored by the server
     Given a list of cases with the following names is stored on the server:
       | Case1 |

@@ -1,6 +1,5 @@
 package io.rippledown.server
 
-import io.rippledown.constants.server.DEFAULT_PROJECT_NAME
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.KBSession
@@ -44,10 +43,6 @@ class ServerApplication(
         }
     }
 
-    fun getDefaultProject(): KBInfo {
-        return kbManager.all().firstOrNull { it.name == DEFAULT_PROJECT_NAME } ?: createKB(DEFAULT_PROJECT_NAME, false)
-    }
-
     fun createKB(name: String, force: Boolean): KBInfo {
         logger.info("Creating KB, name: $name, force: $force.")
         val kbInfo = kbManager.createKB(name, force)
@@ -61,21 +56,6 @@ class ServerApplication(
         loadKnownKB(kbInfo)
         loadSampleKB(kbFor(kbInfo), sampleKB)
         return kbInfo
-    }
-
-    /**
-     * Idempotent: ensures a KB with [name] exists, creating it from
-     * [sampleKB] if it does not. Used by the server's `Demo` startup mode
-     * to pre-populate a demo KB without the user having to do anything in
-     * the UI.
-     */
-    fun ensureSampleKB(name: String, sampleKB: SampleKB): KBInfo {
-        val existing = kbManager.all().firstOrNull { it.name == name }
-        if (existing != null) {
-            logger.info("Sample KB '$name' already exists; skipping seed.")
-            return existing
-        }
-        return createKBFromSample(name, sampleKB)
     }
 
     fun selectKB(id: String): KBInfo {

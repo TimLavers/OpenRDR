@@ -1,5 +1,8 @@
-
+﻿
 Feature: Manage rule conditions
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to build a rule using a misspelled attribute name
     Given case Bondi is provided having data:

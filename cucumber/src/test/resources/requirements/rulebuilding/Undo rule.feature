@@ -1,8 +1,11 @@
-Feature: The user can undo rules via the chatbot
+﻿Feature: The user can undo rules via the chatbot
 
   Undoing the last rule is done conversationally: the user asks the chatbot to
   undo, the chatbot previews the rule that would be removed and asks for
   confirmation, and only an explicit affirmation actually performs the undo.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: When a rule is undone, the interpretation of a case changes back to what is was prior to the rule being built
     Given case Bondi is provided having data:

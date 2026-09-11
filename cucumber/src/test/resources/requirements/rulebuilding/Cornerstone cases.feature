@@ -1,4 +1,8 @@
-Feature: Creation of cornerstone cases when rules are built
+﻿Feature: Creation of cornerstone cases when rules are built
+
+  Background:
+    Given a default KB is opened
+
   Scenario: Only one copy of a case is stored as a cornerstone
     Given case Case1 is provided having data:
       | x | 1 |

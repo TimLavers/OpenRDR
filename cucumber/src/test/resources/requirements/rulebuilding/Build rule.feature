@@ -1,4 +1,8 @@
-Feature: The user can make rules that change the interpretive report
+﻿Feature: The user can make rules that change the interpretive report
+
+  Background:
+    Given a default KB is opened
+
   Scenario: When the user starts to build a rule, condition hints should be shown
     Given case Bondi is provided having data:
       | Wave | excellent |

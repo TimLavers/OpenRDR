@@ -1,5 +1,9 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Show cornerstones
+
+  Background:
+    Given a default KB is opened
+
   Scenario: The user should be able to review cornerstones when adding a comment using the chat
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |

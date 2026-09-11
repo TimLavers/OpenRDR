@@ -1,4 +1,7 @@
-Feature: Show a list of favourite cases
+﻿Feature: Show a list of favourite cases
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The favourite cases list is initially empty
     Given I start the client application

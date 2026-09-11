@@ -1,4 +1,8 @@
-Feature: Order of Attributes in Case View
+﻿Feature: Order of Attributes in Case View
+
+  Background:
+    Given a default KB is opened
+
   Scenario: Default Attribute order is by order created
     Given I start the client application
     And case CaseA is provided having data:

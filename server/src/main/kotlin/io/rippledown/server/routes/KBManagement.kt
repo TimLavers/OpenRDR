@@ -84,10 +84,6 @@ fun Application.kbManagement(application: ServerApplication) {
             call.respond(renamed)
         }
 
-        get(DEFAULT_KB) {
-            call.respond(application.getDefaultProject())
-        }
-
         get(KB_LIST) {
             call.respond(application.kbList())
         }

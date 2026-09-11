@@ -1,5 +1,8 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Remove previous rules
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to remove the previous rule using the chat
     Given cases are set up as follows:
