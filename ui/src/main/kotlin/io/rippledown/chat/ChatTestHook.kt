@@ -1,7 +1,6 @@
 package io.rippledown.chat
 
 import io.rippledown.chat.ChatTestHook.snapshotRef
-import io.rippledown.chat.ChatTestHook.update
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -33,6 +32,7 @@ object ChatTestHook {
         val mostRecentBotText: String?,
         val mostRecentSuggestionText: String?,
         val mostRecentTipText: String?,
+        val mostRecentKbChoices: List<String>?,
         val sendIsEnabled: Boolean
     ) {
         companion object {
@@ -42,6 +42,7 @@ object ChatTestHook {
                 mostRecentBotText = null,
                 mostRecentSuggestionText = null,
                 mostRecentTipText = null,
+                mostRecentKbChoices = null,
                 // Default to false so tests that poll `waitForChatReady`
                 // block until the UI has had a chance to publish its
                 // first real state.
@@ -66,6 +67,7 @@ object ChatTestHook {
             }
         val suggestionRowCount = messages.count { it is SuggestionListMessage }
         val mostRecentTip = messages.lastOrNull { it is TipMessage }?.text
+        val mostRecentKbChoices = (messages.lastOrNull { it is KbChoiceListMessage } as? KbChoiceListMessage)?.names
         snapshotRef.set(
             Snapshot(
                 messageList = messages,
@@ -73,6 +75,7 @@ object ChatTestHook {
                 mostRecentBotText = mostRecentBot,
                 mostRecentSuggestionText = mostRecentSuggestion,
                 mostRecentTipText = mostRecentTip,
+                mostRecentKbChoices = mostRecentKbChoices,
                 sendIsEnabled = sendIsEnabled
             )
         )

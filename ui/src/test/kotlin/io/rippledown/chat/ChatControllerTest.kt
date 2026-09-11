@@ -161,6 +161,33 @@ class ChatControllerTest {
             requireChatMessagesShowing(expected)
         }
     }
+
+    @Test
+    fun `should render kb choices as a KbChoiceListMessage after the bot message`() {
+        val h = object : ChatControllerHandler {
+            override fun sendUserMessage(message: String) {}
+            override var onBotMessageReceived: (ChatResponse) -> Unit = {}
+        }
+
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatController(handler = h)
+            }
+
+            // When
+            val botResponse = "Your knowledge bases:\nThyroids"
+            val kbChoices = listOf("Thyroids", "Glucose", "Zoo Animals")
+            h.onBotMessageReceived(ChatResponse(botResponse, kbChoices = kbChoices))
+
+            // Then
+            val expected = listOf(
+                BotMessage(botResponse),
+                KbChoiceListMessage(kbChoices)
+            )
+            requireChatMessagesShowing(expected)
+        }
+    }
 }
 
 fun main() {

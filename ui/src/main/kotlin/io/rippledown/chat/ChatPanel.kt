@@ -75,6 +75,13 @@ data class TipMessage(
     override val isUser: Boolean = false
 }
 
+data class KbChoiceListMessage(
+    val names: List<String>
+) : ChatMessage {
+    override val text: String = ""
+    override val isUser: Boolean = false
+}
+
 typealias OnMessageSent = (UserMessage) -> Unit
 
 const val USER = "USER_"
@@ -87,6 +94,8 @@ const val SUGGESTION_LIST = "SUGGESTION_LIST_"
 const val SUGGESTION_ITEM = "SUGGESTION_ITEM_"
 const val EDITABLE_MARKER = " [editable]"
 const val TIP = "TIP_"
+const val KB_CHOICE_LIST = "KB_CHOICE_LIST_"
+const val KB_CHOICE_ITEM = "KB_CHOICE_ITEM_"
 
 @Composable
 fun ChatPanel(
@@ -157,6 +166,12 @@ fun ChatPanel(
                             inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
                         }
                         textAreaFocusRequester.requestFocus()
+                    }
+                    is KbChoiceListMessage -> KbChoiceRow(message.names, index) { name ->
+                        if (sendIsEnabled) {
+                            onMessageSent(UserMessage("Open $name"))
+                            inputText = TextFieldValue("")
+                        }
                     }
                     else -> BotRow(message.text, index)
                 }

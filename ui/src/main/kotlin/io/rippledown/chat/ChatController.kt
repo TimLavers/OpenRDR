@@ -38,6 +38,7 @@ fun ChatController(
                     response.tip?.let { add(TipMessage(it)) }
                     add(BotMessage(response.text))
                     if (response.suggestions.isNotEmpty()) add(SuggestionListMessage(response.suggestions))
+                    if (response.kbChoices.isNotEmpty()) add(KbChoiceListMessage(response.kbChoices))
                 }
             }
             chatHistory = chatHistory + additions
