@@ -75,4 +75,56 @@ class ConstantsTest {
         // Then
         message shouldBe "There is no knowledge base named \"Nothing\". There are no knowledge bases."
     }
+
+    @Test
+    fun `greeting with no stored KBs and demonstrations mentions creating and opening a demonstration`() {
+        // Given
+        val demonstrations =
+            listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+
+        // When
+        val greeting = noKbGreeting(emptyList(), demonstrations)
+
+        // Then
+        greeting shouldBe "There are no knowledge bases yet. Do you want to create one, or open a demonstration knowledge base? " +
+                "The demonstration knowledge bases are: Contact Lense Prescription, Pathology, Thyroid Stimulating Hormone, Zoo Animals."
+    }
+
+    @Test
+    fun `greeting with stored KBs and demonstrations lists both before the question`() {
+        // Given
+        val available = listOf("Glucose", "Thyroids")
+        val demonstrations =
+            listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+
+        // When
+        val greeting = noKbGreeting(available, demonstrations)
+
+        // Then
+        greeting shouldBe "No knowledge base is open. The knowledge bases are:\nGlucose\nThyroids\n. " +
+                "The demonstration knowledge bases are: Contact Lense Prescription, Pathology, Thyroid Stimulating Hormone, Zoo Animals. " +
+                "Do you want to open one or create a new one?"
+    }
+
+    @Test
+    fun `greeting with no stored KBs and no demonstrations preserves old text`() {
+        // When
+        val greeting = noKbGreeting(emptyList())
+
+        // Then
+        greeting shouldBe "There are no knowledge bases yet. Do you want to create one?"
+    }
+
+    @Test
+    fun `greeting with stored KBs and no demonstrations preserves old text`() {
+        // Given
+        val available = listOf("Glucose", "Thyroids")
+
+        // When
+        val greeting = noKbGreeting(available)
+
+        // Then
+        greeting shouldBe "No knowledge base is open. The knowledge bases are:\nGlucose\nThyroids\n. " +
+                "Do you want to open one or create a new one?"
+    }
 }

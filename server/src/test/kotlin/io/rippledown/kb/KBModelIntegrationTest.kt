@@ -22,6 +22,7 @@ class KBModelIntegrationTest : KBTestBase() {
         super.setup()
         val kbService = mockk<KnowledgeBaseService>()
         every { kbService.knowledgeBases() } returns listOf(kb.kbInfo)
+        every { kbService.demonstrations() } returns emptyList()
         coordinator = ChatCoordinator(ChatManagerFactory(kbService), kbService)
         endpoint = KBEndpoint(session)
     }

@@ -1,6 +1,7 @@
 package io.rippledown.kb.chat
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -10,6 +11,7 @@ import io.rippledown.constants.chat.noKbGreeting
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.sample.SampleKB
 import io.rippledown.server.KBEndpoint
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -43,6 +45,7 @@ class ChatCoordinatorTest {
     fun `starting with no knowledge base gives the fixed greeting naming the available knowledge bases`() = runTest {
         // Given
         every { kbService.knowledgeBases() } returns listOf(glucose, thyroids)
+        every { kbService.demonstrations() } returns emptyList()
         every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
         val greeting = noKbGreeting(listOf("Glucose", "Thyroids"))
         coEvery { chatManager.startConversation(null, greeting) } returns ChatResponse(greeting)
@@ -53,6 +56,25 @@ class ChatCoordinatorTest {
         // Then
         response shouldBe ChatResponse(greeting)
         coordinator.context() shouldBe ChatContext.NoKnowledgeBase
+    }
+
+    @Test
+    fun `starting with no knowledge base and demonstrations greets with demonstration names`() = runTest {
+        // Given
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns SampleKB.demonstrations()
+        every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
+        val demoTitles = SampleKB.demonstrations().map { it.title() }
+        val greeting = noKbGreeting(emptyList(), demoTitles)
+        coEvery { chatManager.startConversation(null, greeting) } returns ChatResponse(greeting)
+
+        // When
+        val response = coordinator.startConversation(ChatContext.NoKnowledgeBase)
+
+        // Then
+        response shouldBe ChatResponse(greeting)
+        greeting shouldContain "demonstration knowledge base"
+        greeting shouldContain "Zoo Animals"
     }
 
     @Test
@@ -94,6 +116,7 @@ class ChatCoordinatorTest {
     fun `a user message goes to the current chat manager`() = runTest {
         // Given
         every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
         every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
         coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
         coordinator.startConversation(ChatContext.NoKnowledgeBase)
@@ -122,6 +145,7 @@ class ChatCoordinatorTest {
         val startFinished = CompletableDeferred<ChatResponse>()
         val order = mutableListOf<String>()
         every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
         every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
         coEvery { chatManager.startConversation(null, any()) } coAnswers {
             order += "start"
@@ -171,6 +195,7 @@ class ChatCoordinatorTest {
         val first = mockk<ChatManager>()
         val second = mockk<ChatManager>()
         every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
         every { factory.create(ChatContext.NoKnowledgeBase) } returnsMany listOf(first, second)
         coEvery { first.startConversation(null, any()) } returns ChatResponse("")
         coEvery { second.startConversation(null, any()) } returns ChatResponse("")

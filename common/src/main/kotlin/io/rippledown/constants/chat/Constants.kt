@@ -165,16 +165,24 @@ fun kbAmbiguousMessage(name: String, candidates: List<String>) =
 
 fun demoCaseAddedMessage(caseName: String) = "$DEMO_CASE_ADDED \"$caseName\"."
 
-fun noKbGreeting(available: List<String>) =
-    if (available.isEmpty()) "$NO_KBS_YET Do you want to create one?"
-    else "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE${
-        available.joinToString(
-            prefix = "\n",
-            separator = "\n",
-            postfix = "\n"
-        )
-    }. " +
-            "Do you want to open one or create a new one?"
+fun noKbGreeting(available: List<String>, demonstrations: List<String> = emptyList()) =
+    if (available.isEmpty()) {
+        if (demonstrations.isEmpty()) "$NO_KBS_YET Do you want to create one?"
+        else "$NO_KBS_YET Do you want to create one, or open a demonstration knowledge base? " +
+                "$THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE ${demonstrations.joinToString(", ")}."
+    } else {
+        val demoPart = if (demonstrations.isEmpty()) "" else "$THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE ${
+            demonstrations.joinToString(", ")
+        }. "
+        "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE${
+            available.joinToString(
+                prefix = "\n",
+                separator = "\n",
+                postfix = "\n"
+            )
+        }. $demoPart" +
+                "Do you want to open one or create a new one?"
+    }
 
 fun emptyKbGreeting(kbName: String) =
     "The $kbName knowledge base $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +

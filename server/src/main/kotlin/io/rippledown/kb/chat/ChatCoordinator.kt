@@ -55,7 +55,10 @@ class ChatCoordinator(
     }
 
     private fun greetingFor(context: ChatContext): String? = when (context) {
-        is ChatContext.NoKnowledgeBase -> noKbGreeting(kbService.knowledgeBases().map { it.name })
+        is ChatContext.NoKnowledgeBase -> noKbGreeting(
+            kbService.knowledgeBases().map { it.name },
+            kbService.demonstrations().map { it.title() }
+        )
         is ChatContext.KnowledgeBaseOnly -> emptyKbGreeting(context.endpoint.kbInfo().name)
         is ChatContext.CaseInKnowledgeBase -> null
     }
