@@ -45,7 +45,8 @@ greeting with no knowledge bases mentions that a demonstration can be opened as 
 
 #### The list is clickable
 
-The same names are shown as chips under the message, in the two groups, in the manner of the suggested-condition chips
+The same names are shown as chips under the message, in one row, stored names first and then demonstrations, in the
+manner of the suggested-condition chips
 (`SuggestionListMessage` / `SuggestionListRow`), not the tip, which is display only. The server attaches them
 deterministically: `ListKnowledgeBases` returns a `ChatResponse` carrying a `kbChoices` list, so the model is never
 asked
