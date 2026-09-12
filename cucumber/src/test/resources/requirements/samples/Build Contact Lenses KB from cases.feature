@@ -1,7 +1,7 @@
 Feature: The Contact Lenses Prescription KB can be built from cases.
   Scenario: Build the Contact Lenses KB from cases
     Given I start the client application
-    And I create a Knowledge Base with the name ContactLenses based on the "Contact Lense Prescription - cases only" sample
+    And I create a Knowledge Base with the name ContactLenses based on the "Contact Lens Prescription - cases only" sample
     Then the count of the number of cases is 24
 
     And the backdoor selects the Knowledge Base "ContactLenses"

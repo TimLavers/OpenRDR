@@ -168,14 +168,14 @@ class KBChatServiceTest {
     fun `system prompt includes demonstration knowledge base names when provided`() {
         // Given
         val demonstrationNames =
-            listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+            listOf("Contact Lens Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
 
         // When
         val systemPrompt = KBChatService.systemPrompt(null, demonstrationNames = demonstrationNames)
 
         // Then
         systemPrompt shouldNotContain "{{"
-        systemPrompt shouldContain "Contact Lense Prescription"
+        systemPrompt shouldContain "Contact Lens Prescription"
         systemPrompt shouldContain "Zoo Animals"
         systemPrompt shouldContain "demonstration knowledge bases"
     }

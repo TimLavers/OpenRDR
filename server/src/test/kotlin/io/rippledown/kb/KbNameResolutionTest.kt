@@ -16,7 +16,7 @@ class KbNameResolutionTest {
     private val stored = listOf(thyroids, glucose)
     private val demos = SampleKB.demonstrations()
     private val demoTitles =
-        listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+        listOf("Contact Lens Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
 
 
     @Test
@@ -128,7 +128,7 @@ class KbNameResolutionTest {
         resolution shouldBe KbResolution.Ambiguous(
             "o",
             listOf(
-                "Contact Lense Prescription",
+                "Contact Lens Prescription",
                 "Glucose",
                 "Pathology",
                 "Thyroid Stimulating Hormone",

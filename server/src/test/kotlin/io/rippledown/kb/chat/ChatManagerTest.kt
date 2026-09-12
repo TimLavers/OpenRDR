@@ -33,6 +33,45 @@ import kotlin.test.Test
 class ChatManagerTest {
 
     @Test
+    fun `a new condition gets a server question before cornerstone review`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            ActionComment(action = USER_ACTION, message = "Allow the change to Case2?").toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("age is young")
+
+        // Then
+        response.text shouldBe "Added the condition. Do you want to provide any more reasons?"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `the model cannot commit in the same turn that adds a condition`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            suggestionsBuffer.suggestions = listOf("age is young", "tear production is reduced")
+            ActionComment(action = COMMIT_RULE).toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("age is young")
+
+        // Then
+        response.text shouldBe "Added the condition. Do you want to provide any more reasons?"
+        response.suggestions shouldBe listOf("tear production is reduced")
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+        coVerify(exactly = 0) { ruleService.sendRuleSessionCompleted() }
+    }
+
+    @Test
     fun `listing choices survive buffered suggestions`() = runTest {
         // Given
         every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))

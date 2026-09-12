@@ -32,8 +32,8 @@ internal class SampleKBTest {
         titles shouldBe listOf(
             "Thyroid Stimulating Hormone",
             "Thyroid Stimulating Hormone - cases only",
-            "Contact Lense Prescription",
-            "Contact Lense Prescription - cases only",
+            "Contact Lens Prescription",
+            "Contact Lens Prescription - cases only",
             "Zoo Animals",
             "Zoo Animals - cases only",
             "Pathology"

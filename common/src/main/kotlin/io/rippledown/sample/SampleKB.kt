@@ -8,10 +8,10 @@ enum class SampleKB {
         override fun title() = "Thyroid Stimulating Hormone - cases only"
     },
     CONTACT_LENSES {
-        override fun title() = "Contact Lense Prescription"
+        override fun title() = "Contact Lens Prescription"
     },
     CONTACT_LENSES_CASES {
-        override fun title() = "Contact Lense Prescription - cases only"
+        override fun title() = "Contact Lens Prescription - cases only"
     },
     ZOO {
         override fun title() = "Zoo Animals"

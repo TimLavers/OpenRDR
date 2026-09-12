@@ -11,6 +11,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.chat.KnowledgeBaseListing
 import org.jetbrains.skia.Image
@@ -28,7 +29,7 @@ class KbChoiceRowTest {
         // Given
         val listing = KnowledgeBaseListing(
             listOf("Biochemistry", "Haematology", "Lipids", "Thyroids"),
-            listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals"),
+            listOf("Contact Lens Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals"),
             "Biochemistry"
         )
         val chosen = mutableListOf<String>()
@@ -51,17 +52,22 @@ class KbChoiceRowTest {
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
         composeTestRule.onNodeWithText("Demonstration knowledge bases")
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-        composeTestRule.onNodeWithText("Opening a demonstration creates your own named copy").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Your knowledge bases help").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Demonstration knowledge bases help").assertIsDisplayed()
         (listing.storedNames + listing.demonstrationNames).forEach {
             composeTestRule.onAllNodesWithText(it).assertCountEquals(1)
         }
         composeTestRule.onNodeWithContentDescription("${KB_CHOICE_ITEM}Biochemistry").assertIsNotEnabled()
-        composeTestRule.onNodeWithText("Open").assertIsDisplayed()
+        composeTestRule.onNodeWithText("(current)").assertIsDisplayed()
         val first =
             composeTestRule.onNodeWithContentDescription("${KB_CHOICE_ITEM}Pathology").fetchSemanticsNode().boundsInRoot
         val last = zoo.fetchSemanticsNode().boundsInRoot
         last.top shouldBeGreaterThan first.bottom
         last.left shouldBe first.left
+        first.height shouldBeLessThan 25f
+        composeTestRule.onNodeWithContentDescription("Your knowledge bases help").performMouseInput { enter() }
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Click a knowledge base to open it.").assertExists()
         val screenshot = Image.makeFromBitmap(composeTestRule.onRoot().captureToImage().asSkiaBitmap())
         File("build/reports/kb-list.png").apply { parentFile.mkdirs() }
             .writeBytes(requireNotNull(screenshot.encodeToData()).bytes)

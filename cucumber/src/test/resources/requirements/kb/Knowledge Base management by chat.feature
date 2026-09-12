@@ -16,7 +16,7 @@ Feature: Managing knowledge bases through the chat
       | Lipids              |
       | Thyroids            |
       | Demonstration knowledge bases (open one to get your own copy): |
-      | Contact Lense Prescription                                     |
+      | Contact Lens Prescription                                      |
       | Pathology                                                      |
       | Thyroid Stimulating Hormone                                    |
       | Zoo Animals                                                    |
@@ -175,7 +175,7 @@ Feature: Managing knowledge bases through the chat
       | Your knowledge bases:                                          |
       | Thyroids (open) |
       | Demonstration knowledge bases (open one to get your own copy): |
-      | Contact Lense Prescription                                     |
+      | Contact Lens Prescription                                      |
       | Pathology                                                      |
       | Thyroid Stimulating Hormone                                    |
       | Zoo Animals                                                    |
@@ -189,7 +189,7 @@ Feature: Managing knowledge bases through the chat
       | Your knowledge bases:                                          |
       | Thyroids (open)                                                |
       | Demonstration knowledge bases (open one to get your own copy): |
-      | Contact Lense Prescription                                     |
+      | Contact Lens Prescription                                      |
       | Pathology                                                      |
       | Thyroid Stimulating Hormone                                    |
       | Zoo Animals                                                    |

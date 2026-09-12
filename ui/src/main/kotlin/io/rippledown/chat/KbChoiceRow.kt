@@ -1,14 +1,16 @@
 package io.rippledown.chat
 
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,6 +21,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.constants.chat.NO_KNOWLEDGE_BASES_OF_YOUR_OWN
@@ -38,9 +41,7 @@ fun KbChoiceRow(
             .padding(12.dp)
     ) {
         Column(Modifier.semantics { contentDescription = "$KB_CHOICE_LIST$index" }) {
-            Text(
-                "Your knowledge bases", fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.semantics { heading() })
+            KnowledgeBaseHeading("Your knowledge bases", "Click a knowledge base to open it.")
             Spacer(Modifier.height(4.dp))
             if (listing.storedNames.isEmpty()) {
                 Text(
@@ -51,17 +52,34 @@ fun KbChoiceRow(
             listing.storedNames.forEach { name ->
                 KnowledgeBaseItem(name, name == listing.openName, enabled, onChosen)
             }
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Demonstration knowledge bases", fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.semantics { heading() })
-            Text(
-                "Opening a demonstration creates your own named copy", fontSize = 12.sp, color = Color.DarkGray,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+            Spacer(Modifier.height(12.dp))
+            KnowledgeBaseHeading(
+                "Demonstration knowledge bases",
+                "Click a demonstration to open it. You will get your own copy and be asked to give it a name."
             )
+            Spacer(Modifier.height(4.dp))
             listing.demonstrationNames.forEach { name ->
                 KnowledgeBaseItem(name, false, enabled, onChosen)
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun KnowledgeBaseHeading(title: String, help: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.DarkGray,
+            modifier = Modifier.semantics { heading() })
+        TooltipArea(tooltip = {
+            Surface(color = Color(0xFF333333), contentColor = Color.White, shape = RoundedCornerShape(4.dp)) {
+                Text(help, fontSize = 12.sp, modifier = Modifier.widthIn(max = 280.dp).padding(8.dp))
+            }
+        }) {
+            Icon(
+                Icons.Outlined.Info, contentDescription = "$title help", tint = Color.DarkGray,
+                modifier = Modifier.padding(start = 6.dp).size(14.dp).semantics { stateDescription = help })
         }
     }
 }
@@ -86,14 +104,18 @@ private fun KnowledgeBaseItem(name: String, isOpen: Boolean, enabled: Boolean, o
                 contentDescription = "$KB_CHOICE_ITEM$name"
                 if (isOpen) stateDescription = "Open"
             }
-            .heightIn(min = 40.dp)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .heightIn(min = 24.dp)
+            .padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(name, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Text(
+            name, fontSize = 13.sp, modifier = Modifier.weight(1f, fill = false),
+            color = if (active) Color(0xFF3949AB) else Color.DarkGray,
+            textDecoration = if (active) TextDecoration.Underline else TextDecoration.None
+        )
         if (isOpen) {
             Text(
-                "Open", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.DarkGray,
+                "(current)", fontSize = 12.sp, color = Color.DarkGray,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }

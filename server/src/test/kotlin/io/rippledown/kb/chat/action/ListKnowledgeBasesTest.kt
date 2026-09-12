@@ -12,10 +12,10 @@ import kotlin.test.Test
 
 class ListKnowledgeBasesTest : KbActionTestBase() {
     private val demoTitles =
-        listOf("Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+        listOf("Contact Lens Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
     private val demonstrationSection = """
         Demonstration knowledge bases (open one to get your own copy):
-        Contact Lense Prescription
+        Contact Lens Prescription
         Pathology
         Thyroid Stimulating Hormone
         Zoo Animals
