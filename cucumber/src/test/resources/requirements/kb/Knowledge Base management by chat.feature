@@ -1,6 +1,5 @@
 Feature: Managing knowledge bases through the chat
 
-  @single
   Scenario: The available knowledge bases can be listed if there are any
     Given a default KB is opened
     Given A Knowledge Base called Lipids has been created
@@ -20,7 +19,6 @@ Feature: Managing knowledge bases through the chat
       | Pathology                                                      |
       | Thyroid Stimulating Hormone                                    |
       | Zoo Animals                                                    |
-    And pause
 
   Scenario: The option to create a KB is given if there are none
     Given I start the client application

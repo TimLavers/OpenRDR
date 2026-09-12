@@ -53,6 +53,10 @@
   have to type the confirmation.
 - Similarly for "allow" and "do not allow" when reviewing cornerstone cases.
 
+**KB management**
+
+- Show the KB description when hovering over a KB that is listed
+
 **Testing**
 
 - Run all tests in github actions for each push
