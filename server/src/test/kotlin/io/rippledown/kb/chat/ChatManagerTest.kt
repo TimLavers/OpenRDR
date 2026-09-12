@@ -33,10 +33,155 @@ import kotlin.test.Test
 class ChatManagerTest {
 
     @Test
-    fun `a new condition gets a server question before cornerstone review`() = runTest {
+    fun `an invalid action in the opening response falls back to its text`() = runTest {
+        // Given
+        val malformed = "{\"action\": 123, \"message\": \"Welcome\"}"
+        coEvery { conversationService.startConversation() } returns malformed
+
+        // When
+        val response = chatManager.startConversation(viewableCase)
+
+        // Then
+        response.text shouldBe malformed
+    }
+
+    @Test
+    fun `an invalid action without a new condition gives an error rather than claiming success`() = runTest {
+        // Given
+        val malformed = "{\"action\": 123, \"message\": \"Done\"}"
+        coEvery { conversationService.response(any()) } returns malformed
+
+        // When
+        val response = chatManager.response("add a reason")
+
+        // Then
+        response.text shouldBe "$SYSTEM_ERROR_PREFIX: '$malformed'"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `the reply to the server question is sent with that question as context`() = runTest {
         // Given
         every { ruleService.isRuleSessionActive() } returns true
         every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            ActionComment(action = USER_ACTION, message = "Allow the change to Case2?").toJsonString()
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.response(any()) } returns ActionComment(action = COMMIT_RULE).toJsonString()
+
+        // When
+        val response = chatManager.response("no")
+
+        // Then
+        coVerify {
+            conversationService.response(match {
+                it.contains("[The server asked the user: Added the condition. Do you want to provide any more reasons?]") &&
+                        it.endsWith("\nno")
+            })
+        }
+        response.text shouldBe CHAT_BOT_DONE_MESSAGE
+        coVerify(exactly = 1) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `each further condition gets another opportunity to add reasons`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            "Allow the change?"
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns
+                    setOf("age is young", "tear production is reduced")
+            ActionComment(action = COMMIT_RULE).toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("tear production is reduced")
+
+        // Then
+        response.text shouldBe "Added the condition. Do you want to provide any more reasons?"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `an unsuccessful reason keeps the model explanation and does not claim it was added`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+        coEvery { conversationService.response(any()) } returns
+                ActionComment(action = USER_ACTION, message = "That condition is already in the rule.").toJsonString()
+
+        // When
+        val response = chatManager.response("age is young")
+
+        // Then
+        response.text shouldBe "That condition is already in the rule."
+    }
+
+    @Test
+    fun `the server question survives an unavailable model on the next reply`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            "Allow the change?"
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.response(any()) } throws IllegalStateException("offline")
+
+        // When
+        val failed = chatManager.response("yes")
+        coEvery { conversationService.response(any()) } returns "Please provide another reason."
+        val retried = chatManager.response("yes")
+
+        // Then
+        failed.text shouldBe AI_UNAVAILABLE_MESSAGE
+        retried.text shouldBe "Please provide another reason."
+        coVerify(exactly = 2) {
+            conversationService.response(match { it.contains("[The server asked the user:") && it.endsWith("\nyes") })
+        }
+    }
+
+    @Test
+    fun `a new conversation clears the previous reason question`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            "Allow the change?"
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.startConversation() } returns "How can I help?"
+        chatManager.startConversation(viewableCase)
+        coEvery { conversationService.response(any()) } returns "Please provide another reason."
+
+        // When
+        chatManager.response("yes")
+
+        // Then
+        coVerify { conversationService.response(match { !it.contains("[The server asked the user:") && it.endsWith("\nyes") }) }
+    }
+
+    @Test
+    fun `a new condition gets a server question before cornerstone review`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        val cornerstoneCase = mockk<ViewableCase>()
+        every { cornerstoneCase.name } returns "Case2"
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus(
+            cornerstoneToReview = cornerstoneCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 2
+        )
         coEvery { conversationService.response(any()) } coAnswers {
             every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
             ActionComment(action = USER_ACTION, message = "Allow the change to Case2?").toJsonString()

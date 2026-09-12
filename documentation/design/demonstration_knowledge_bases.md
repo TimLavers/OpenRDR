@@ -2,7 +2,7 @@
 
 ## Goals
 
-- Four demonstration knowledge bases the user can open and play with: Thyroid Stimulating Hormone, Contact Lense
+- Four demonstration knowledge bases the user can open and play with: Thyroid Stimulating Hormone, Contact Lens
   Prescription, Zoo Animals (each with cases and rules, as built by the `samples` cukes) and Pathology (the cases the
   packaged demo uses, `SampleKB.PATHOLOGY`).
 - The chat lists them under a separate "demonstration" heading, so it is clear they cannot be deleted.
@@ -33,7 +33,7 @@ Your knowledge bases:
 Thyroids (open)
 
 Demonstration knowledge bases (open one to get your own copy):
-Contact Lense Prescription
+Contact Lens Prescription
 Pathology
 Thyroid Stimulating Hormone
 Zoo Animals
@@ -45,10 +45,12 @@ greeting with no knowledge bases mentions that a demonstration can be opened as 
 
 #### The list is clickable
 
-The bot renders one vertical list with bold, accessible headings for "Your knowledge bases" and "Demonstration
-knowledge bases". Each name appears once, in a full-width clickable row with hover and keyboard-focus highlighting.
-The open KB is marked "Open" and inactive. The demonstration heading has smaller explanatory text: "Opening a
-demonstration creates your own named copy". Empty stored lists still show their heading and an empty-state message.
+The bot renders one compact vertical list with muted, accessible headings for "Your knowledge bases" and
+"Demonstration knowledge bases". Each name appears once, in a full-width clickable row with underlined blue text,
+a hand pointer, and hover and keyboard-focus highlighting. The open KB has an inline "(current)" marker and is inactive.
+An info icon beside each heading explains the action on hover: "Click a knowledge base to open it" or "Click a
+demonstration to open it. You will get your own copy and be asked to give it a name."
+Empty stored lists still show their heading and an empty-state message.
 The list uses the chat's vertical scrolling; it has no separate horizontal chip row.
 
 `ListKnowledgeBases` supplies `ChatResponse.kbListing`, a `KnowledgeBaseListing` containing stored names,

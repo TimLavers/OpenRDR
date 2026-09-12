@@ -276,7 +276,7 @@ Thyroids (open)
 Glucose
 
 Demonstration knowledge bases (open one to get your own copy):
-Contact Lense Prescription
+Contact Lens Prescription
 Pathology
 Thyroid Stimulating Hormone
 Zoo Animals
@@ -297,7 +297,7 @@ alphabetically.
 stored names **excluding the open one**, then demonstration titles, same order as the text.
 
 **Test first** (`ListKnowledgeBasesTest`): the exact text above for (thyroids open, glucose) and for no stored KBs;
-`kbChoices` = `["Glucose", "Contact Lense Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals"]`;
+`kbChoices` = `["Glucose", "Contact Lens Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals"]`;
 with nothing open, `Thyroids` is included in `kbChoices` too. Also `ChatResponseTest` (common): `kbChoices` round-trips
 through JSON and defaults to empty.
 
@@ -369,7 +369,7 @@ is KbManagementOutcome.AskForName -> {
 **Greeting text**
 
 - No stored KBs:
-  `"There are no knowledge bases yet. Do you want to create one, or open a demonstration knowledge base? The demonstration knowledge bases are: Contact Lense Prescription, Pathology, Thyroid Stimulating Hormone, Zoo Animals."`
+  `"There are no knowledge bases yet. Do you want to create one, or open a demonstration knowledge base? The demonstration knowledge bases are: Contact Lens Prescription, Pathology, Thyroid Stimulating Hormone, Zoo Animals."`
   Keep `NO_KBS_YET` as the first sentence so the existing cuke term still matches. A plain "yes" still means
   "create" (server-owned `OFFER_CREATION` flow, unchanged); "open Zoo" goes through the interpreter as
   `OTHER_REQUEST` to the model.
@@ -504,7 +504,7 @@ Scenarios:
 
 1. **The list shows demonstrations**: default KB opened; "List the knowledge bases" → lines:
    `Your knowledge bases:`, `Thyroids (open)`, `Demonstration knowledge bases (open one to get your own copy):`,
-   `Contact Lense Prescription`, `Pathology`, `Thyroid Stimulating Hormone`, `Zoo Animals`.
+   `Contact Lens Prescription`, `Pathology`, `Thyroid Stimulating Hormone`, `Zoo Animals`.
 2. **Opening a demonstration asks for a name and opens a copy**: "Open Zoo Animals" → terms `your own copy`,
    `Zoo Animals`; then `Zoo2` → terms `Created`, `Zoo2`, `demonstration and opened it`; displayed KB name is now
    `Zoo2`; count of cases is 101.

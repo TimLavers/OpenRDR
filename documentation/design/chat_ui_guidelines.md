@@ -35,3 +35,7 @@ If either fails, the answer belongs in the text field.
 | "Provide more reasons?" buttons               | No         | The real answer is usually a reason, in words; a button invites a worse one. |
 | Delete knowledge base chip                    | No         | Irreversible; confirmation is the point.                                     |
 | Anything that needs a value or an explanation | No         | Not a closed set.                                                            |
+
+KB list rows use compact spacing, blue underlined names and hover/focus highlighting. The current KB is inactive
+and marked "(current)" immediately after its name. Muted section headings have info icons with hover instructions,
+including the naming and copy behaviour for demonstrations.

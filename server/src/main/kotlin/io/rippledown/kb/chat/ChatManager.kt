@@ -30,6 +30,7 @@ class ChatManager(
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
+    private var pendingReasonQuestion: String? = null
 
     // Whether the once-per-session tip about embedding case values in a comment using braces has been
     // resolved for this session - either because it has been shown, or because the user has already
@@ -77,6 +78,7 @@ class ChatManager(
      */
     suspend fun startConversation(viewableCase: ViewableCase?, greeting: String? = null): ChatResponse {
         currentCase = viewableCase
+        pendingReasonQuestion = null
         pendingKbCreation = null
         greetingAwaitingAnswer = false
         val response = try {
@@ -147,7 +149,11 @@ class ChatManager(
             // suggested conditions as it is when the model makes the request.
             return processActionComment(offered)
         }
-        val messageToSend = augmentWithCornerstoneStatus(message)
+        val question = pendingReasonQuestion.takeIf { isRuleSessionActive() }
+        val messageWithQuestion = if (question == null) message
+        else "[The server asked the user: $question]\n$message"
+        val messageToSend = augmentWithCornerstoneStatus(messageWithQuestion)
+        val conditionsBefore = ruleService?.currentRuleSessionConditionTexts().orEmpty().toSet()
         val response = try {
             conversationService.response(messageToSend)
         } catch (e: Exception) {
@@ -155,6 +161,13 @@ class ChatManager(
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
+        pendingReasonQuestion = null
+        if (ruleService != null && ruleService.isRuleSessionActive()
+            && ruleService.currentRuleSessionConditionTexts().any { it !in conditionsBefore }
+        ) {
+            pendingReasonQuestion = MORE_REASONS_QUESTION
+            return processActionComment(ActionComment(action = USER_ACTION, message = MORE_REASONS_QUESTION))
+        }
         try {
             // Extract the first JSON object from the response (the model may sometimes
             // return multiple JSON objects, but only the first should be processed since
@@ -397,6 +410,7 @@ class ChatManager(
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
         const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
         const val DEFAULT_TIP_EXAMPLE_ATTRIBUTE = "TSH"
+        const val MORE_REASONS_QUESTION = "Added the condition. Do you want to provide any more reasons?"
 
         // Actions whose successful execution starts a rule session, after which the user must be shown
         // suggested conditions.

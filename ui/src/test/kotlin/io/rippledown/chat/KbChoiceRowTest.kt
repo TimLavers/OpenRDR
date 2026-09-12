@@ -65,10 +65,15 @@ class KbChoiceRowTest {
         last.top shouldBeGreaterThan first.bottom
         last.left shouldBe first.left
         first.height shouldBeLessThan 25f
-        composeTestRule.onNodeWithContentDescription("Your knowledge bases help").performMouseInput { enter() }
-        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Your knowledge bases help").performMouseInput { moveTo(center) }
+        composeTestRule.mainClock.advanceTimeBy(1_000)
+        composeTestRule.waitUntil(2_000) {
+            composeTestRule.onAllNodesWithText("Click a knowledge base to open it.").fetchSemanticsNodes().isNotEmpty()
+        }
         composeTestRule.onNodeWithText("Click a knowledge base to open it.").assertExists()
-        val screenshot = Image.makeFromBitmap(composeTestRule.onRoot().captureToImage().asSkiaBitmap())
+        val screenshot = Image.makeFromBitmap(
+            composeTestRule.onNodeWithContentDescription("${BOT}0").captureToImage().asSkiaBitmap()
+        )
         File("build/reports/kb-list.png").apply { parentFile.mkdirs() }
             .writeBytes(requireNotNull(screenshot.encodeToData()).bytes)
     }
