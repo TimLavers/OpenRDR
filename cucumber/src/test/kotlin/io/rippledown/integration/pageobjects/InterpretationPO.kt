@@ -25,10 +25,11 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
      * shows that comment's conditions.
      */
     fun movePointerToComment(comment: String) {
-        waitForInterpretationTextToContain(comment)
-        val cell = commentCellShowing(comment)
-            ?: throw AssertionError("No comment row showing \"$comment\". Showing: ${commentsShown()}")
-        movePointerOverCentreOf(cell)
+        waitUntilAsserted(seconds = 30) {
+            val cell = commentCellShowing(comment)
+                ?: throw AssertionError("No comment row showing \"$comment\". Showing: ${commentsShown()}")
+            movePointerOverCentreOf(cell)
+        }
     }
 
     /**
