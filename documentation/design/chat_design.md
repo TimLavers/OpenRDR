@@ -132,6 +132,39 @@ The chat LLM will operate in a multi-turn chat environment following the sequenc
     cornerstone case. If not, the user is prompted for more conditions.
 12. once all the reasons have been entered, the model informs the system to commit the rule session
 
+## Server conversation components
+
+`ChatManager` coordinates the conversation transport, action dispatch and response decoding. Three delegates own the
+workflow and presentation policies, with direct unit tests as well as the existing tests through `ChatManager`:
+
+| Component                   | Responsibility and state                                                                                                                                                                         |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `KnowledgeBaseConversation` | Greeting, creation/naming and confirmations. Its sealed state is `Idle`, `Greeting`, `Creating(stage, question, actionForName)` or `Confirming(offer)`.                                          |
+| `RuleConversation`          | Cornerstone allow replies, corrected assignment offers, condition snapshots and the further-reasons question. Its sealed state is `Ready`, `OfferedAssignment(action)` or `AwaitingReasonReply`. |
+| `ChatResponseEnricher`      | Suggestion precedence, fetching missing suggestions, filtering used conditions and the once-per-conversation comment-variable tip.                                                               |
+
+The states are local to each workflow. `RuleService` remains the authority for the active rule session and cornerstone
+status; the conversation does not maintain a duplicate rule-building state machine. No state-machine framework is
+needed: sealed types and exhaustive transitions make the pending server question explicit.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Greeting: ordinary greeting
+    Idle --> Creating: creation offer or copy naming request
+    Greeting --> Idle: next reply
+    Creating --> Creating: confirm, clarify or retry
+    Creating --> Confirming: name needs confirmation
+    Creating --> Idle: created, declined or changed subject
+    Idle --> Confirming: action asks for confirmation
+    Confirming --> Idle: next reply
+```
+
+Dispatch preserves the existing precedence: explicit cornerstone allowance, KB workflow reply, corrected assignment
+acceptance, then the model. A completed model turn is checked for added conditions before its final action can run.
+Transport failure leaves the reason question available for retry. Starting a conversation resets all three delegates,
+including any confirmation or formula offer from the preceding conversation.
+
 ## UI design
 
 The UI design will be a simple chat panel with the following features:
@@ -141,4 +174,3 @@ The UI design will be a simple chat panel with the following features:
 
 The chat panel will be hidden by default, but can be shown by the user by clicking an icon on the application bar.
 Showing the chat panel will automatically start the chat session with the model.
-

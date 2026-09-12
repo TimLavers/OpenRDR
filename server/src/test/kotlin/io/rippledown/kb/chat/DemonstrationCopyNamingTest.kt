@@ -77,7 +77,7 @@ class DemonstrationCopyNamingTest {
         val later = manager.response("yes")
 
         // Then
-        denied shouldBe ChatResponse(ChatManager.KB_CREATION_DECLINED)
+        denied shouldBe ChatResponse(KnowledgeBaseConversation.KB_CREATION_DECLINED)
         later shouldBe ChatResponse("What would you like to do?")
         coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
         coVerify(exactly = 0) { kbService.create(any()) }
@@ -173,7 +173,7 @@ class DemonstrationCopyNamingTest {
         val copied = manager.response("Zoo2")
 
         // Then
-        clarification shouldBe ChatResponse(ChatManager.KB_NAME_CLARIFICATION)
+        clarification shouldBe ChatResponse(KnowledgeBaseConversation.KB_NAME_CLARIFICATION)
         repeated shouldBe clarification
         copied shouldBe ChatResponse(kbCopiedFromDemonstrationMessage("Zoo2", "Zoo Animals"))
         coVerify(exactly = 1) { kbService.createFromSample("Zoo2", ZOO) }

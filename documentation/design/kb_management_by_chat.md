@@ -67,7 +67,8 @@ Rename, describe, list and the demonstration case are not.
 
 An action that needs the user's say-so returns `KbManagementOutcome.Ask(question, thenDo)` instead of a response. The
 question goes to the user and `thenDo`, a lambda that has already captured the resolved `KBInfo`, is held by
-`ChatManager` for exactly one turn. A plain acceptance runs it without consulting the model; anything else drops it and
+`KnowledgeBaseConversation.State.Confirming` for exactly one turn. A plain acceptance runs it without consulting the
+model; anything else drops it and
 goes to the model as usual. The model is told never to ask for confirmation itself, because the server asks when it
 needs
 to, and a lambda rather than an action class means there is nothing the model could name to skip the question.
@@ -80,7 +81,7 @@ for every other server question, and moves to or stays at naming. Any other repl
 question and stage, and the model returns an intent (`CONFIRM`, `DENY`, `CONFIRM_WITH_NAME`, `UNCLEAR`,
 `OTHER_REQUEST`) plus, where given, the name exactly as the user wrote it, in their language. The server chooses the
 transition, validates the name, and executes. Malformed or off-contract model output executes nothing and keeps the
-stage. `PendingKbCreation` holds an action factory: `CreateKnowledgeBase` for an empty KB or
+stage. `KnowledgeBaseConversation.State.Creating` holds an action factory: `CreateKnowledgeBase` for an empty KB or
 `CopyDemonstrationKnowledgeBase` for a demonstration copy. `KbManagementOutcome.AskForName` starts the latter directly
 at `AWAITING_NAME`, preserving its question on a plain confirmation. Both actions use the same blank, duplicate,
 reserved-title and near-duplicate checks. The server decides, the model reads.

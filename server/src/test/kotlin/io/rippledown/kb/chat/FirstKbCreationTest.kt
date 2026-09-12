@@ -160,7 +160,7 @@ class FirstKbCreationTest {
         val later = manager.response("yes")
 
         // Then
-        denied shouldBe ChatResponse(ChatManager.KB_CREATION_DECLINED)
+        denied shouldBe ChatResponse(KnowledgeBaseConversation.KB_CREATION_DECLINED)
         later shouldBe ChatResponse("What would you like to do?")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
@@ -198,9 +198,9 @@ class FirstKbCreationTest {
 
         // Then
         unclear shouldBe ChatResponse(
-            if (awaitingName) ChatManager.KB_NAME_CLARIFICATION else ChatManager.KB_CREATION_CLARIFICATION
+            if (awaitingName) KnowledgeBaseConversation.KB_NAME_CLARIFICATION else KnowledgeBaseConversation.KB_CREATION_CLARIFICATION
         )
-        retry shouldBe ChatResponse(if (awaitingName) ChatManager.KB_NAME_CLARIFICATION else NAME_THE_NEW_KB)
+        retry shouldBe ChatResponse(if (awaitingName) KnowledgeBaseConversation.KB_NAME_CLARIFICATION else NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 
@@ -262,7 +262,7 @@ class FirstKbCreationTest {
         val retry = manager.response("oui")
 
         // Then
-        invalid shouldBe ChatResponse(ChatManager.KB_CREATION_CLARIFICATION)
+        invalid shouldBe ChatResponse(KnowledgeBaseConversation.KB_CREATION_CLARIFICATION)
         retry shouldBe ChatResponse(NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
         coVerify(exactly = 0) { kbService.delete(any()) }

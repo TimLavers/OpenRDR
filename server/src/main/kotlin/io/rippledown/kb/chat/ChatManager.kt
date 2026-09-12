@@ -2,440 +2,103 @@ package io.rippledown.kb.chat
 
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
-import io.rippledown.constants.chat.*
+import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
+import io.rippledown.constants.chat.NO_KB_OPEN_MESSAGE
+import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
-import io.rippledown.kb.chat.action.*
-import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.kb.chat.action.ChatAction
+import io.rippledown.kb.chat.action.KbManagementAction
+import io.rippledown.kb.chat.action.UserAction
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
-import kotlinx.coroutines.CancellationException
 
 interface ModelResponder {
     suspend fun response(message: String): ChatResponse
 }
 
-/**
- * Manages the chat conversation with the user, processing messages and actions based on the AI model's responses.
- *
- * @author Cascade AI
- */
 class ChatManager(
     val conversationService: ConversationService,
     val ruleService: RuleService?,
-    private val kbService: KnowledgeBaseService,
-    private val suggestionsBuffer: SuggestionsBuffer = SuggestionsBuffer(),
-    private val suggestedConditionsHandler: FunctionCallHandler? = null,
+    kbService: KnowledgeBaseService,
+    suggestionsBuffer: SuggestionsBuffer = SuggestionsBuffer(),
+    suggestedConditionsHandler: FunctionCallHandler? = null,
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
-    private var pendingReasonQuestion: String? = null
-
-    // Whether the once-per-session tip about embedding case values in a comment using braces has been
-    // resolved for this session - either because it has been shown, or because the user has already
-    // demonstrated they know the facility by using a variable in a comment. Reset implicitly because a
-    // new ChatManager is created for each conversation (i.e. each case selection).
-    private var commentVariableTipResolved = false
-
-    /**
-     * The assignment the user is being offered, when the server has refused the
-     * expression they gave and put another to them. Held so that their yes can be
-     * acted on here: the model is told to re-send the offered expression, but it
-     * re-sends the original often enough, and the two of them then ask and refuse
-     * the same thing for ever. Kept for one turn only, that being the turn in
-     * which the offer can be accepted.
-     */
-    private var offeredAssignment: ActionComment? = null
-
-    /**
-     * The question a knowledge base action has put to the user, held for the one
-     * turn in which a yes can answer it. Run here, not by the model, so that the
-     * model cannot answer its own question.
-     */
-    private var pendingConfirmation: KbManagementOutcome.Ask? = null
-
-    /**
-     * Whether the greeting the user has just been shown is still awaiting its
-     * answer. The greeting is the server's own question, so the server answers a
-     * plain acceptance of it; the model never saw the question, and has been known
-     * to deny having asked it. Open for the first message only.
-     */
-    private var greetingAwaitingAnswer = false
-
-    private data class PendingKbCreation(
-        val stage: KbCreationStage,
-        val question: String,
-        val actionForName: (String) -> KbManagementAction = { CreateKnowledgeBase(it) }
+    private val knowledgeBases = KnowledgeBaseConversation(
+        kbService, KbCreationReplyInterpreter(conversationService), ruleService
     )
+    private val rules = RuleConversation(ruleService)
+    private val responses = ChatResponseEnricher(ruleService, suggestionsBuffer, suggestedConditionsHandler)
 
-    private var pendingKbCreation: PendingKbCreation? = null
-    private val kbCreationInterpreter = KbCreationReplyInterpreter(conversationService)
-
-    /**
-     * When [greeting] is given the conversation has no opening message: the chat is
-     * started so that the model is ready, and the greeting is what the user sees.
-     */
     suspend fun startConversation(viewableCase: ViewableCase?, greeting: String? = null): ChatResponse {
         currentCase = viewableCase
-        pendingReasonQuestion = null
-        pendingKbCreation = null
-        greetingAwaitingAnswer = false
+        knowledgeBases.reset()
+        rules.reset()
+        responses.reset()
         val response = try {
             conversationService.startConversation()
         } catch (e: Exception) {
             logger.error("Failed to start conversation", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
-        if (greeting != null) {
-            if (viewableCase == null && kbService.knowledgeBases().isEmpty() && kbService.openKnowledgeBase() == null) {
-                pendingKbCreation = PendingKbCreation(KbCreationStage.OFFER_CREATION, greeting)
-            } else {
-                greetingAwaitingAnswer = true
-            }
-            return ChatResponse(greeting)
-        }
+        if (greeting != null) return knowledgeBases.greet(viewableCase, greeting)
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
-        // When the case already has comments the model replies in prose
-        // (e.g. "This case has the following comments: ... Would you
-        // like to add another one, or replace or remove one of them?")
-        // instead of emitting a JSON ActionComment. Mirror the robustness
-        // of `processConversationResponse` here: extract any JSON
-        // fragments and, if there are none, surface the raw text as a
-        // plain bot message rather than 500ing.
-        return try {
-            val jsonFragments = extractJsonFragments(response)
-            if (jsonFragments.isEmpty()) {
-                ChatResponse(response)
-            } else {
-                processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
-            }
-        } catch (e: Exception) {
-            logger.error("Failed to process start-conversation ActionComment: $response", e)
-            ChatResponse(response)
-        }
+        return dispatchModelResponse(response, opening = true)
     }
 
     override suspend fun response(message: String): ChatResponse {
-        return processConversationResponse(message)
-    }
-
-    private suspend fun processConversationResponse(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
-        // Deterministic cornerstone exemption: when the user confirms allowing
-        // the report change to a cornerstone case, run the action directly
-        // instead of relying on the model to emit ExemptCornerstone. The model
-        // sometimes routes "allow" into a function call or a UserAction and
-        // never emits the exemption, leaving the cornerstone un-exempted.
-        if (ruleService != null
-            && ruleService.isRuleSessionActive()
-            && ReasonTransformHandler.isAllowConfirmation(message)
-            && ruleService.cornerstoneStatus().numberOfCornerstones > 0
-        ) {
-            return ExemptCornerstone().doIt(ruleService, currentCase, this)
-        }
-        answerToKbCreation(message)?.let { return it }
-        answerToGreeting(message)?.let { return it }
-        val pending = pendingConfirmation
-        pendingConfirmation = null
-        if (pending != null && isAcceptance(message)) {
-            return pending.thenDo(kbService)
-        }
-        // Deterministic acceptance of an expression the server itself offered.
-        val offered = offeredAssignment
-        offeredAssignment = null
-        if (offered != null && isAcceptance(message) && !isRuleSessionActive()) {
-            // Through the whole pipeline, so that the assignment is followed by
-            // suggested conditions as it is when the model makes the request.
-            return processActionComment(offered)
-        }
-        val question = pendingReasonQuestion.takeIf { isRuleSessionActive() }
-        val messageWithQuestion = if (question == null) message
-        else "[The server asked the user: $question]\n$message"
-        val messageToSend = augmentWithCornerstoneStatus(messageWithQuestion)
-        val conditionsBefore = ruleService?.currentRuleSessionConditionTexts().orEmpty().toSet()
+        rules.cornerstoneAction(message)?.let { return executeAction(it) }
+        knowledgeBases.answer(message)?.let { return it }
+        rules.assignmentAction(message)?.let { return processActionComment(it) }
+        val turn = rules.prepareTurn(message)
         val response = try {
-            conversationService.response(messageToSend)
+            conversationService.response(turn.message)
         } catch (e: Exception) {
             logger.error("Failed to send message: $message", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
-        pendingReasonQuestion = null
-        if (ruleService != null && ruleService.isRuleSessionActive()
-            && ruleService.currentRuleSessionConditionTexts().any { it !in conditionsBefore }
-        ) {
-            pendingReasonQuestion = MORE_REASONS_QUESTION
-            return processActionComment(ActionComment(action = USER_ACTION, message = MORE_REASONS_QUESTION))
-        }
-        try {
-            // Extract the first JSON object from the response (the model may sometimes
-            // return multiple JSON objects, but only the first should be processed since
-            // actions like ExemptCornerstone handle continuations via recursive calls)
-            val jsonFragments = extractJsonFragments(response)
-            if (jsonFragments.isEmpty()) {
-                // Mirror startConversation: when the model replies in prose
-                // rather than JSON (e.g. an off-script clarifying question),
-                // surface the raw text as a plain bot message rather than
-                // returning an empty response that leaves the chat panel
-                // silent. An empty ChatResponse here previously caused
-                // cucumber scenarios such as "The comments given for a case
-                // are returned by the interpretation service" to hang for
-                // 60s waiting for suggestions that never arrived.
-                return ChatResponse(response)
-            }
-            return processActionComment(jsonFragments.first().sanitizeLlmJson().fromJsonString<ActionComment>())
-        } catch (e: Exception) {
-            logger.error("Failed to process ActionComment: $response", e)
-            return ChatResponse("$SYSTEM_ERROR_PREFIX: '$response'")
-        }
+        rules.completeTurn(turn)?.let { return processActionComment(it) }
+        return dispatchModelResponse(response)
     }
 
-    //Either pass on the model's response to the user or take some action
     suspend fun processActionComment(actionComment: ActionComment): ChatResponse {
-        val action = actionComment.createActionInstance()
-        val chatResponse = when (action) {
+        val response = executeAction(actionComment)
+        rules.rememberOffer(actionComment)
+        return responses.enrich(actionComment, response, currentCase)
+    }
+
+    private suspend fun executeAction(actionComment: ActionComment): ChatResponse =
+        when (val action = actionComment.createActionInstance()) {
             null -> {
                 logger.error("Unknown actionComment: ${actionComment.action}")
                 ChatResponse("")
             }
-
             is UserAction -> ChatResponse(action.message)
-            is KbManagementAction -> manageKnowledgeBases(action)
+            is KbManagementAction -> knowledgeBases.execute(action)
             is ChatAction ->
                 if (ruleService == null) ChatResponse(NO_KB_OPEN_MESSAGE)
                 else action.doIt(ruleService, currentCase, this)
         }
-        rememberAnyOfferedAssignment(actionComment)
-        val tip = commentVariableTipFor(actionComment, chatResponse)
-        val bufferedSuggestions = suggestionsBuffer.consume()
-        val response = when {
-            bufferedSuggestions != null -> chatResponse.copy(suggestions = bufferedSuggestions, tip = tip)
-            !actionComment.suggestions.isNullOrEmpty() -> chatResponse.copy(
-                suggestions = actionComment.suggestions,
-                tip = tip
-            )
 
-            else -> chatResponse.copy(tip = tip ?: chatResponse.tip)
-        }
-        return withoutConditionsAlreadyInTheRule(ensureSuggestionsAfterStartingRuleSession(actionComment, response))
+    private suspend fun dispatchModelResponse(response: String, opening: Boolean = false): ChatResponse = try {
+        val json = extractJsonFragments(response).firstOrNull()
+        if (json == null) ChatResponse(response)
+        else processActionComment(json.sanitizeLlmJson().fromJsonString<ActionComment>())
+    } catch (e: Exception) {
+        val context = if (opening) "start-conversation ActionComment" else "ActionComment"
+        logger.error("Failed to process $context: $response", e)
+        ChatResponse(if (opening) response else "$SYSTEM_ERROR_PREFIX: '$response'")
     }
-
-    /**
-     * Notes the assignment the user is being offered, when the request just made
-     * was for a value expression the server puts back to them. Nothing is noted
-     * for any other request, so an offer is only ever answered by the message
-     * that follows the question.
-     */
-    private fun rememberAnyOfferedAssignment(actionComment: ActionComment) {
-        if (actionComment.action != ASSIGN_DERIVED_VALUE) return
-        val attributeName = actionComment.attributeName ?: return
-        val valueExpression = actionComment.valueExpression ?: return
-        val offered = ruleService?.offeredValueExpressionFor(valueExpression) ?: return
-        offeredAssignment = ActionComment(
-            action = ASSIGN_DERIVED_VALUE,
-            attributeName = attributeName,
-            valueExpression = offered
-        )
-    }
-
-    /**
-     * Drops any suggestion that is already a condition of the rule being built.
-     *
-     * [SuggestedConditionsHandler] does exclude the conditions added so far, but it does so when the
-     * *model* calls it, which can be earlier in the same turn than the condition is added. The model
-     * sometimes calls {@code getSuggestedConditions} and then {@code selectSuggestion} in the one turn,
-     * in which case the buffered list was computed before the selected condition existed and would
-     * re-offer the very condition the user just chose. Filtering here, as the response is assembled,
-     * uses the session's conditions as they finally stand, so it is immune to the order of the model's
-     * function calls. It also covers the list the model may echo back in its own JSON, which nothing
-     * else filters.
-     */
-    private fun withoutConditionsAlreadyInTheRule(response: ChatResponse): ChatResponse {
-        if (response.suggestions.isEmpty()) return response
-        val alreadyUsed = ruleService?.currentRuleSessionConditionTexts() ?: return response
-        if (alreadyUsed.isEmpty()) return response
-        val remaining = response.suggestions.filterNot {
-            SuggestedConditionsHandler.conditionTextOf(it) in alreadyUsed
-        }
-        return if (remaining.size == response.suggestions.size) response else response.copy(suggestions = remaining)
-    }
-
-    /**
-     * Guarantee that suggested conditions accompany the response when an action has just started a
-     * rule session. The model is instructed to call {@code getSuggestedConditions} immediately after
-     * the session starts, but some models (e.g. Gemini flash-lite) instead go straight to asking the
-     * user for a reason, leaving the user with a question and no suggestions - which stalls the flow.
-     * In that case, populate the suggestions deterministically.
-     */
-    private suspend fun ensureSuggestionsAfterStartingRuleSession(
-        actionComment: ActionComment,
-        response: ChatResponse
-    ): ChatResponse {
-        if (actionComment.action !in SESSION_STARTING_ACTIONS) return response
-        if (response.suggestions.isNotEmpty()) return response
-        val handler = suggestedConditionsHandler ?: return response
-        if (!isRuleSessionActive()) return response
-        handler.handle(emptyMap())
-        val suggestions = suggestionsBuffer.consume()
-        return if (suggestions.isNullOrEmpty()) response else response.copy(suggestions = suggestions)
-    }
-
-    /**
-     * The first time the user adds a comment in a session, return a short one-line tip explaining that a
-     * comment can include a case value by wrapping an attribute name in braces (e.g. {Glucose}). The tip
-     * is delivered on the [ChatResponse.tip] channel so the UI can render it distinctly. It is shown at
-     * most once per session and is suppressed when the user has already used the facility (i.e. the comment
-     * already contains a placeholder) or when the add was rejected because a rule session was already active.
-     */
-    private fun commentVariableTipFor(actionComment: ActionComment, chatResponse: ChatResponse): String? {
-        if (commentVariableTipResolved) return null
-        if (ruleService == null) return null
-        if (actionComment.action != ADD_COMMENT) return null
-        if (chatResponse.text == RULE_SESSION_ALREADY_ACTIVE_ERROR) return null
-        val comment = actionComment.comment ?: return null
-        if (comment.contains("{")) {
-            // The user has already used the facility, so they know about it: never offer the tip this
-            // session, even for later comments that don't use a variable.
-            commentVariableTipResolved = true
-            return null
-        }
-        commentVariableTipResolved = true
-        // Use the first attribute of the displayed case as the example, falling back to a generic name
-        // if the case has no attributes, so the tip is concrete and relevant to what the user is seeing.
-        val exampleAttribute = currentCase?.attributes()?.firstOrNull()?.name ?: DEFAULT_TIP_EXAMPLE_ATTRIBUTE
-        return commentVariableTip(exampleAttribute)
-    }
-
-    private suspend fun answerToKbCreation(message: String): ChatResponse? {
-        val pending = pendingKbCreation ?: return null
-        // The offer is the server's question, so a plain yes is answered here as for
-        // every other server question. While a name is awaited a yes is not a name.
-        if (isAcceptance(message)) {
-            if (pending.stage == KbCreationStage.OFFER_CREATION) {
-                pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
-                return ChatResponse(NAME_THE_NEW_KB)
-            }
-            return ChatResponse(pending.question)
-        }
-        val reply = try {
-            kbCreationInterpreter.interpret(pending.stage, pending.question, message)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: IllegalArgumentException) {
-            logger.warn("Invalid KB creation interpretation", e)
-            return ChatResponse(clarifyKbCreation(pending))
-        } catch (e: Exception) {
-            logger.error("Failed to interpret KB creation reply", e)
-            return ChatResponse(AI_UNAVAILABLE_MESSAGE)
-        }
-        return when (reply.intent) {
-            KbCreationIntent.CONFIRM -> {
-                if (pending.stage == KbCreationStage.OFFER_CREATION) {
-                    pendingKbCreation = PendingKbCreation(KbCreationStage.AWAITING_NAME, NAME_THE_NEW_KB)
-                    ChatResponse(NAME_THE_NEW_KB)
-                } else {
-                    ChatResponse(pending.question)
-                }
-            }
-
-            KbCreationIntent.DENY -> {
-                pendingKbCreation = null
-                ChatResponse(KB_CREATION_DECLINED)
-            }
-
-            KbCreationIntent.CONFIRM_WITH_NAME -> {
-                val response = manageKnowledgeBases(pending.actionForName(checkNotNull(reply.kbName)))
-                pendingKbCreation = null
-                response
-            }
-
-            KbCreationIntent.UNCLEAR -> ChatResponse(clarifyKbCreation(pending))
-            KbCreationIntent.OTHER_REQUEST -> {
-                pendingKbCreation = null
-                null // The ordinary conversation handles the explicit change of subject.
-            }
-        }
-    }
-
-    private fun clarifyKbCreation(pending: PendingKbCreation): String {
-        val question = when (pending.stage) {
-            KbCreationStage.OFFER_CREATION -> KB_CREATION_CLARIFICATION
-            KbCreationStage.AWAITING_NAME -> KB_NAME_CLARIFICATION
-        }
-        pendingKbCreation = pending.copy(question = question)
-        return question
-    }
-
-    /** Other greetings still use the existing demonstration-case acceptance path. */
-    private suspend fun answerToGreeting(message: String): ChatResponse? {
-        if (!greetingAwaitingAnswer) return null
-        greetingAwaitingAnswer = false
-        if (!isAcceptance(message)) return null
-        if (kbService.openKnowledgeBase() == null) return null
-        return manageKnowledgeBases(AddDemonstrationCase())
-    }
-
-    private suspend fun manageKnowledgeBases(action: KbManagementAction): ChatResponse {
-        if (action.changesContext && isRuleSessionActive()) return ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
-        return when (val outcome = action.doIt(kbService)) {
-            is KbManagementOutcome.Done -> outcome.response
-            is KbManagementOutcome.AskForName -> {
-                pendingKbCreation =
-                    PendingKbCreation(KbCreationStage.AWAITING_NAME, outcome.question, outcome.actionForName)
-                ChatResponse(outcome.question)
-            }
-            is KbManagementOutcome.Ask -> {
-                pendingConfirmation = outcome
-                ChatResponse(outcome.question)
-            }
-        }
-    }
-
-    private fun augmentWithCornerstoneStatus(message: String): String {
-        val status = ruleService?.takeIf { it.isRuleSessionActive() }?.cornerstoneStatus() ?: return message
-        return "$CURRENT_CORNERSTONE_STATUS_PREFIX${status.summary()}]\n$message"
-    }
-
-    private fun isRuleSessionActive() = ruleService?.isRuleSessionActive() == true
 
     companion object {
-        const val KB_CREATION_DECLINED = "OK, I won't create a knowledge base. You can ask to create one later."
-        const val KB_CREATION_CLARIFICATION =
-            "A knowledge base holds cases and rules used to generate reports. Would you like to create one? " +
-                    "You can also give its name, or say no."
-        const val KB_NAME_CLARIFICATION = "What would you like to call the new knowledge base? You can also cancel."
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
-        const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
-        const val DEFAULT_TIP_EXAMPLE_ATTRIBUTE = "TSH"
-        const val MORE_REASONS_QUESTION = "Added the condition. Do you want to provide any more reasons?"
-
-        // Actions whose successful execution starts a rule session, after which the user must be shown
-        // suggested conditions.
-        val SESSION_STARTING_ACTIONS = setOf(
-            ADD_COMMENT,
-            REMOVE_COMMENT,
-            REPLACE_COMMENT,
-            ASSIGN_DERIVED_VALUE,
-            REMOVE_DERIVED_VALUE,
-            REPLACE_DERIVED_VALUE,
-        )
-
-        // Plain acceptances of a question the server asked, in which the user has
-        // nothing to say but yes. Anything else, including a correction of their
-        // own, goes to the model.
-        private val ACCEPTANCES = setOf(
-            "yes", "y", "yes please", "yep", "yeah", "ok", "okay", "sure",
-            "correct", "that's right", "do it", "please do",
-        )
-
-        fun isAcceptance(message: String) = message.trim().trimEnd('.', '!').lowercase() in ACCEPTANCES
-
-        fun commentVariableTip(exampleAttributeName: String) =
-            "Tip: you can include a case value in a comment by wrapping an attribute name in " +
-                    "$COMMENT_VARIABLE_TIP_KEYWORD, e.g. {$exampleAttributeName}."
     }
 }
 

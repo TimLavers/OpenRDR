@@ -76,7 +76,8 @@ keeps resolution unambiguous.
 
 `OpenKnowledgeBase` is unchanged for the model: it still transcribes the name. On `Demonstration(sample)` the server
 asks for the copy's name, reusing the server-owned naming workflow that already exists for the first knowledge base
-(`PendingKbCreation`, stage `AWAITING_NAME`, replies read by `KbCreationReplyInterpreter`). `AskForName` supplies the
+(`KnowledgeBaseConversation.State.Creating`, stage `AWAITING_NAME`, replies read by `KbCreationReplyInterpreter`).
+`AskForName` supplies the
 question and an action factory. The pending state holds what to do with the name: `CreateKnowledgeBase(name)` for an
 empty KB or `CopyDemonstrationKnowledgeBase(sample, name)` for a copy. The
 interpreter already returns `CONFIRM_WITH_NAME`, `DENY` and `OTHER_REQUEST`, so "call it Zoo2", "no" and "actually,
@@ -132,7 +133,7 @@ an explicit default KB and supplies its own Taylor case, as specified in impleme
   keeps `resolveKbName` a single ordered lookup; letting user names shadow demonstrations would hide a demonstration
   behind a copy with the same name.
 - **Reuse the naming workflow.** `kb_management_by_chat.md` said the first-knowledge-base workflow was the pattern to
-  extend; this is the second workflow, so `PendingKbCreation` becomes the shared abstraction rather than a new one.
+  extend; both workflows share `KnowledgeBaseConversation.State.Creating` and its action factory.
 - **Reverses a non-goal.** `kb_management_by_chat.md` listed creating from a sample as a non-goal; it is now in scope
   through the demonstration list. The GUI "Create KB from sample" dialog stays for now.
 - **Nothing in the cukes is loaded that a feature does not name.** The lazy default is deleted rather than left unused.

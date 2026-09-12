@@ -7,10 +7,10 @@ import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
-import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
-import io.rippledown.kb.chat.ChatManager.Companion.commentVariableTip
+import io.rippledown.kb.chat.ChatResponseEnricher.Companion.commentVariableTip
+import io.rippledown.kb.chat.RuleConversation.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.model.Attribute
@@ -31,6 +31,24 @@ import kotlin.test.Test
  * @author Cascade AI
  */
 class ChatManagerTest {
+
+    @Test
+    fun `starting a new conversation drops a pending deletion confirmation`() = runTest {
+        // Given
+        val scratch = KBInfo("s1", "Scratch")
+        every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
+        chatManager.processActionComment(ActionComment(DELETE_KNOWLEDGE_BASE, kbName = "Scratch"))
+        coEvery { conversationService.startConversation() } returns "Welcome"
+        coEvery { conversationService.response("yes") } returns "What would you like to do?"
+
+        // When
+        chatManager.startConversation(viewableCase)
+        val response = chatManager.response("yes")
+
+        // Then
+        response.text shouldBe "What would you like to do?"
+        coVerify(exactly = 0) { kbService.delete(any()) }
+    }
 
     @Test
     fun `an invalid action in the opening response falls back to its text`() = runTest {
