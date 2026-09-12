@@ -30,7 +30,7 @@ If either fails, the answer belongs in the text field.
 | Affordance                                    | Verdict    | Why                                                                          |
 |-----------------------------------------------|------------|------------------------------------------------------------------------------|
 | Suggested-condition chips                     | Yes, built | Closed list from the suggester; consumed by the rule being built.            |
-| Knowledge base list chips (open on click)     | Yes, built | Closed, tiny; opening restarts the conversation, so the chips go with it.    |
+| Knowledge base list rows (open on click)      | Yes, built | One grouped vertical list; opening restarts the conversation and clears it.  |
 | Cornerstone "Allow" / "Don't allow"           | Yes        | Binary, one shot. Not yet built.                                             |
 | "Provide more reasons?" buttons               | No         | The real answer is usually a reason, in words; a button invites a worse one. |
 | Delete knowledge base chip                    | No         | Irreversible; confirmation is the point.                                     |

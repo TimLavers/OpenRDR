@@ -45,18 +45,19 @@ greeting with no knowledge bases mentions that a demonstration can be opened as 
 
 #### The list is clickable
 
-The same names are shown as chips under the message, in one row, stored names first and then demonstrations, in the
-manner of the suggested-condition chips
-(`SuggestionListMessage` / `SuggestionListRow`), not the tip, which is display only. The server attaches them
-deterministically: `ListKnowledgeBases` returns a `ChatResponse` carrying a `kbChoices` list, so the model is never
-asked
-to classify its own reply. The open knowledge base is shown in the text and excluded from the chips. The row scrolls
-horizontally when its contents exceed the available width, including with fewer than five names.
+The bot renders one vertical list with bold, accessible headings for "Your knowledge bases" and "Demonstration
+knowledge bases". Each name appears once, in a full-width clickable row with hover and keyboard-focus highlighting.
+The open KB is marked "Open" and inactive. The demonstration heading has smaller explanatory text: "Opening a
+demonstration creates your own named copy". Empty stored lists still show their heading and an empty-state message.
+The list uses the chat's vertical scrolling; it has no separate horizontal chip row.
 
-Clicking a chip sends "Open <name>" as an ordinary user message. Name resolution, the naming prompt for a
-demonstration, and the refusal during a rule session all happen exactly as if the user had typed it; the chips are a
-shortcut, not a second code path. They vanish on their own: opening a knowledge base changes the chat context, which
-starts a new conversation. There is no delete chip.
+`ListKnowledgeBases` supplies `ChatResponse.kbListing`, a `KnowledgeBaseListing` containing stored names,
+demonstration names and the open name. The UI renders this structure rather than parsing the response prose. The
+response text remains available for history and acceptance-test observations, but is not displayed a second time.
+
+Clicking a row or activating it with the keyboard sends "Open <name>" as an ordinary user message. Name resolution,
+the naming prompt for a demonstration, and refusal during a rule session follow the typed-message path. Rows are
+disabled while chat is busy. Opening a KB changes context and starts a new conversation, clearing the old list.
 
 ### Name resolution
 
@@ -145,13 +146,13 @@ an explicit default KB and supplies its own Taylor case, as specified in impleme
 
 Server, no model: `resolveKbName` with demonstration titles (exact, partial, shadowed by a stored name);
 `OpenKnowledgeBase` → awaiting a name; `CopyDemonstrationKnowledgeBase` validation and creation; `DeleteKnowledgeBase`
-refusal; reserved titles on create and rename; `ListKnowledgeBases` format and `kbChoices` (open one excluded);
-`ChatManager` name-awaiting flow for a demonstration (confirm with name, deny, other request). UI: the chip rows render
-the two groups and a click sends "Open <name>".
+refusal; reserved titles on create and rename; `ListKnowledgeBases` text and structured `kbListing` (including the open
+name); `ChatManager` name-awaiting flow for a demonstration (confirm with name, deny, other request). UI: one grouped
+vertical list, an inactive open row, busy-state disabling, and mouse/keyboard activation through "Open <name>".
 
 Cukes, in `kb/Knowledge Base management by chat.feature`: the list shows both sections; opening a demonstration asks for
-a name and the copy opens with the expected case count; clicking a stored knowledge base's chip opens it; clicking a
-demonstration's chip asks for a name; deleting a demonstration is refused; creating with a
+a name and the copy opens with the expected case count; clicking a stored knowledge base's row opens it; clicking a
+demonstration's row asks for a name; deleting a demonstration is refused; creating with a
 demonstration title is refused; the no-knowledge-base greeting mentions demonstrations. Run with `.\gradlew.bat
 :cucumber:kb`.
 

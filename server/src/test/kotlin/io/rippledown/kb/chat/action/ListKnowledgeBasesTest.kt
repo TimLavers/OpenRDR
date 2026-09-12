@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -37,7 +38,7 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         // Then
         outcome.shouldBeInstanceOf<KbManagementOutcome.Done>().response shouldBe ChatResponse(
             "Your knowledge bases:\nThyroids (open)\nGlucose\n\n$demonstrationSection",
-            kbChoices = listOf("Glucose") + demoTitles
+            kbListing = KnowledgeBaseListing(listOf("Thyroids", "Glucose"), demoTitles, "Thyroids")
         )
     }
 
@@ -53,7 +54,7 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         // Then
         outcome.shouldBeInstanceOf<KbManagementOutcome.Done>().response shouldBe ChatResponse(
             "Your knowledge bases:\nGlucose\nThyroids\n\n$demonstrationSection",
-            kbChoices = listOf("Glucose", "Thyroids") + demoTitles
+            kbListing = KnowledgeBaseListing(listOf("Glucose", "Thyroids"), demoTitles)
         )
     }
 
@@ -69,7 +70,7 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         // Then
         outcome.shouldBeInstanceOf<KbManagementOutcome.Done>().response shouldBe ChatResponse(
             "You have no knowledge bases of your own.\n\n$demonstrationSection",
-            kbChoices = demoTitles
+            kbListing = KnowledgeBaseListing(emptyList(), demoTitles)
         )
     }
 

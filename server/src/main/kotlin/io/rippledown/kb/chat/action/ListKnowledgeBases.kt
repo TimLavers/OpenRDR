@@ -6,6 +6,7 @@ import io.rippledown.constants.chat.OPEN_SUFFIX
 import io.rippledown.constants.chat.YOUR_KNOWLEDGE_BASES
 import io.rippledown.kb.chat.KnowledgeBaseService
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
 
 class ListKnowledgeBases : KbManagementAction {
     override val changesContext = false
@@ -19,7 +20,7 @@ class ListKnowledgeBases : KbManagementAction {
                 all.joinToString("\n") { if (it == open) it.name + OPEN_SUFFIX else it.name }
         val text = "$storedSection\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                 demonstrations.joinToString("\n")
-        val choices = all.filterNot { it == open }.map { it.name } + demonstrations
-        return KbManagementOutcome.Done(ChatResponse(text, kbChoices = choices))
+        val listing = KnowledgeBaseListing(all.map { it.name }, demonstrations, open?.name)
+        return KbManagementOutcome.Done(ChatResponse(text, kbListing = listing))
     }
 }

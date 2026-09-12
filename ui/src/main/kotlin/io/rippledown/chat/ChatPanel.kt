@@ -40,6 +40,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.voice.RecordingIndicator
 import io.rippledown.voice.VoiceInputButton
 import io.rippledown.voice.VoiceRecognition
@@ -76,9 +77,9 @@ data class TipMessage(
 }
 
 data class KbChoiceListMessage(
-    val names: List<String>
+    override val text: String,
+    val listing: KnowledgeBaseListing
 ) : ChatMessage {
-    override val text: String = ""
     override val isUser: Boolean = false
 }
 
@@ -167,7 +168,7 @@ fun ChatPanel(
                         }
                         textAreaFocusRequester.requestFocus()
                     }
-                    is KbChoiceListMessage -> KbChoiceRow(message.names, index) { name ->
+                    is KbChoiceListMessage -> KbChoiceRow(message.listing, index, enabled = sendIsEnabled) { name ->
                         if (sendIsEnabled) {
                             onMessageSent(UserMessage("Open $name"))
                             inputText = TextFieldValue("")

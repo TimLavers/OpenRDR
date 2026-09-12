@@ -200,8 +200,8 @@ class ChatDefs {
         chatPO().clickSuggestion(text)
     }
 
-    @When("I click the knowledge base chip {string}")
-    fun clickKbChip(name: String) = chatPO().clickKbChoice(name)
+    @When("I click the knowledge base {string} in the list")
+    fun clickKbChoice(name: String) = chatPO().clickKbChoice(name)
 
     @And("I enter the suggested condition index {int}")
     fun clickTheSuggestedConditionAtIndex(index: Int) {

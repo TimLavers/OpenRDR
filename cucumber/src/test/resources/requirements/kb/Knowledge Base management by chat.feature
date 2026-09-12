@@ -208,7 +208,7 @@ Feature: Managing knowledge bases through the chat
     And the displayed KB name is now Zoo2
     And the count of the number of cases is 101
 
-  Scenario: Clicking a stored chip opens it
+  Scenario: Clicking a stored knowledge base in the list opens it
     Given a default KB is opened
     And I start the client application
     And the displayed KB name is now Thyroids
@@ -217,17 +217,17 @@ Feature: Managing knowledge bases through the chat
       | List the knowledge bases |
     Then the chatbot response contains the following terms:
       | Lipids | Thyroids (open) |
-    When I click the knowledge base chip "Lipids"
+    When I click the knowledge base "Lipids" in the list
     Then the displayed KB name is now Lipids
 
-  Scenario: Clicking a demonstration chip asks for a name
+  Scenario: Clicking a demonstration in the list asks for a name
     Given a default KB is opened
     And I start the client application
     When I enter the following text into the chat panel:
       | List the knowledge bases |
     Then the chatbot response contains the following terms:
       | Pathology |
-    When I click the knowledge base chip "Pathology"
+    When I click the knowledge base "Pathology" in the list
     Then the chatbot response contains the following terms:
       | your own copy | Pathology |
 

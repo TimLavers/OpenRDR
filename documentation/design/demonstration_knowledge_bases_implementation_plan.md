@@ -12,6 +12,10 @@ The real `:cucumber:kb` run remains for the user to schedule; broader UI tests r
 
 ## Ground rules for whoever implements this
 
+Subsequent usability change: the grouped vertical list in `demonstration_knowledge_bases.md` supersedes Step 7's
+separate horizontal chips. The response now carries `kbListing: KnowledgeBaseListing?`, containing stored names,
+demonstration names and the open name, instead of flat `kbChoices`. The list itself is clickable and renders once.
+
 - Follow `.windsurf/rules/*.md`. In particular: test first; no `!!` in production code; do not add comments; do not
   commit — the user commits.
 - Do not invent new mechanisms. Every piece of this reuses something that exists: `createKBFromSample`,

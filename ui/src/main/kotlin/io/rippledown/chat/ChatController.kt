@@ -27,7 +27,11 @@ fun ChatController(
 
     handler.onBotMessageReceived = { response ->
         val lastBotMessage = chatHistory.lastOrNull()
-        val isDuplicate = lastBotMessage is BotMessage && lastBotMessage.text == response.text
+        val isDuplicate = when (lastBotMessage) {
+            is KbChoiceListMessage -> lastBotMessage.text == response.text && lastBotMessage.listing == response.kbListing
+            is BotMessage -> lastBotMessage.text == response.text && response.kbListing == null
+            else -> false
+        }
         if (!isDuplicate) {
             val additions = buildList {
                 if (response.text.isEmpty()) {
@@ -36,9 +40,10 @@ fun ChatController(
                     // The tip is shown ahead of the bot's message so it lands right after the
                     // user's comment, before the suggestions are presented.
                     response.tip?.let { add(TipMessage(it)) }
-                    add(BotMessage(response.text))
+                    val listing = response.kbListing
+                    if (listing == null) add(BotMessage(response.text))
+                    else add(KbChoiceListMessage(response.text, listing))
                     if (response.suggestions.isNotEmpty()) add(SuggestionListMessage(response.suggestions))
-                    if (response.kbChoices.isNotEmpty()) add(KbChoiceListMessage(response.kbChoices))
                 }
             }
             chatHistory = chatHistory + additions

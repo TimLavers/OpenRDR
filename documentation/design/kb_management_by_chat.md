@@ -47,18 +47,18 @@ interface with two kinds: the existing `ChatAction`, which works on the open kno
 (`ApplicationKbService`, which delegates to `ServerApplication` and pushes the result over the web socket).
 `ChatManager` dispatches on the kind; a `ChatAction` with no knowledge base open is refused with a fixed message.
 
-| Action                                         | Behaviour                                                                                           |
-|------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| `ListKnowledgeBases`                           | Separate stored and demonstration sections; chips for all except the open KB.                       |
-| `OpenKnowledgeBase(kbName)`                    | Opens an exact stored match, confirms a partial stored match; a demonstration asks for a copy name. |
-| `CopyDemonstrationKnowledgeBase(sample, name)` | Server-only action: validates the name, builds the sample and opens the stored copy.                |
-| `CreateKnowledgeBase(kbName)`                  | Refuses clashes and reserved demonstration titles; confirms near-duplicates.                        |
-| `CloseKnowledgeBase`                           | Tells the client to close; nothing changes on the server.                                           |
-| `DeleteKnowledgeBase(kbName?)`                 | Refuses demonstrations; confirms deletion of a stored KB, defaulting to the open one.               |
-| `AddDemonstrationCase`                         | Adds Einstein to the open knowledge base.                                                           |
-| `RenameKnowledgeBase(newName)`                 | Renames the open knowledge base, refusing reserved demonstration titles; keeps the id.              |
-| `ShowKnowledgeBaseDescription`                 | Reads the description from the server; the model never answers from memory.                         |
-| `SetKnowledgeBaseDescription`                  | Replaces the whole description with the user's words, transcribed not composed.                     |
+| Action                                         | Behaviour                                                                                            |
+|------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `ListKnowledgeBases`                           | One vertical list with stored/demo headings and clickable names; the open KB is marked and inactive. |
+| `OpenKnowledgeBase(kbName)`                    | Opens an exact stored match, confirms a partial stored match; a demonstration asks for a copy name.  |
+| `CopyDemonstrationKnowledgeBase(sample, name)` | Server-only action: validates the name, builds the sample and opens the stored copy.                 |
+| `CreateKnowledgeBase(kbName)`                  | Refuses clashes and reserved demonstration titles; confirms near-duplicates.                         |
+| `CloseKnowledgeBase`                           | Tells the client to close; nothing changes on the server.                                            |
+| `DeleteKnowledgeBase(kbName?)`                 | Refuses demonstrations; confirms deletion of a stored KB, defaulting to the open one.                |
+| `AddDemonstrationCase`                         | Adds Einstein to the open knowledge base.                                                            |
+| `RenameKnowledgeBase(newName)`                 | Renames the open knowledge base, refusing reserved demonstration titles; keeps the id.               |
+| `ShowKnowledgeBaseDescription`                 | Reads the description from the server; the model never answers from memory.                          |
+| `SetKnowledgeBaseDescription`                  | Replaces the whole description with the user's words, transcribed not composed.                      |
 
 Actions that change what the chat is about (open, create, copy, close, delete) are refused while a rule is being built.
 Rename, describe, list and the demonstration case are not.
@@ -100,7 +100,8 @@ although new demonstration-title collisions are refused on create, copy and rena
 cornerstones.
 The client sets `Api.currentKB` before the UI sees the event, then its existing cascade (`kbInfo` → cases → first case →
 `startConversation`) does the rest. Chat requests carry the ids they are given. The lazy default knowledge base endpoint
-has been removed; `Api.kbInfo()` requires an open knowledge base. List chips send ordinary `Open <name>` messages
+has been removed; `Api.kbInfo()` requires an open knowledge base. Clickable list rows send ordinary `Open <name>`
+messages
 through the same chat pipeline as typed text.
 
 ## Decisions

@@ -18,6 +18,7 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
@@ -42,12 +43,9 @@ class ChatManagerTest {
         val response = chatManager.processActionComment(ActionComment(action = LIST_KNOWLEDGE_BASES))
 
         // Then
-        response.kbChoices shouldBe listOf(
-            "Glucose",
-            "Contact Lense Prescription",
-            "Pathology",
-            "Thyroid Stimulating Hormone",
-            "Zoo Animals"
+        response.kbListing shouldBe KnowledgeBaseListing(
+            listOf("Glucose"),
+            SampleKB.demonstrations().map { it.title() }.sorted()
         )
         response.suggestions shouldBe listOf("Buffered condition")
     }
@@ -64,12 +62,9 @@ class ChatManagerTest {
         )
 
         // Then
-        response.kbChoices shouldBe listOf(
-            "Glucose",
-            "Contact Lense Prescription",
-            "Pathology",
-            "Thyroid Stimulating Hormone",
-            "Zoo Animals"
+        response.kbListing shouldBe KnowledgeBaseListing(
+            listOf("Glucose"),
+            SampleKB.demonstrations().map { it.title() }.sorted()
         )
         response.suggestions shouldBe listOf("Model condition")
     }
@@ -206,7 +201,7 @@ class ChatManagerTest {
         response shouldBe ChatResponse(
             "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                     SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
-            kbChoices = listOf("Glucose") + SampleKB.demonstrations().map { it.title() }.sorted()
+            kbListing = KnowledgeBaseListing(listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted())
         )
     }
 
@@ -244,7 +239,7 @@ class ChatManagerTest {
         response shouldBe ChatResponse(
             "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                     SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
-            kbChoices = listOf("Glucose") + SampleKB.demonstrations().map { it.title() }.sorted()
+            kbListing = KnowledgeBaseListing(listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted())
         )
     }
 

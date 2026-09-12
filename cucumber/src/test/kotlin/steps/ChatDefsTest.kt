@@ -34,12 +34,12 @@ class ChatDefsTest {
     }
 
     @Test
-    fun `click a knowledge base chip through the page object`() {
+    fun `click a knowledge base row through the page object`() {
         // Given
         every { page.clickKbChoice("Zoo Animals") } just Runs
 
         // When
-        defs.clickKbChip("Zoo Animals")
+        defs.clickKbChoice("Zoo Animals")
 
         // Then
         verify(exactly = 1) { page.clickKbChoice("Zoo Animals") }

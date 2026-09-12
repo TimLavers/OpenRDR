@@ -6,9 +6,12 @@ import kotlin.test.Test
 
 class ChatResponseTest {
     @Test
-    fun `knowledge base choices round trip through JSON`() {
+    fun `structured knowledge base listing round trips through JSON`() {
         // Given
-        val response = ChatResponse("Choose", listOf("Condition"), "Tip", listOf("Glucose", "Zoo Animals"))
+        val response = ChatResponse(
+            "Choose", listOf("Condition"), "Tip",
+            KnowledgeBaseListing(listOf("Glucose", "Thyroids"), listOf("Zoo Animals"), "Thyroids")
+        )
 
         // When
         val restored = Json.decodeFromString<ChatResponse>(Json.encodeToString(response))
@@ -18,7 +21,7 @@ class ChatResponseTest {
     }
 
     @Test
-    fun `knowledge base choices default to empty`() {
+    fun `knowledge base listing defaults to absent`() {
         // Given
         val json = """{"text":"Hello"}"""
 
@@ -26,8 +29,20 @@ class ChatResponseTest {
         val restored = Json.decodeFromString<ChatResponse>(json)
 
         // Then
-        restored.kbChoices shouldBe emptyList()
+        restored.kbListing shouldBe null
         restored shouldBe ChatResponse("Hello")
-        ChatResponse("Hello").kbChoices shouldBe emptyList()
+        ChatResponse("Hello").kbListing shouldBe null
+    }
+
+    @Test
+    fun `listing supports no stored or open knowledge base`() {
+        // Given
+        val json = """{"text":"Choose","kbListing":{"storedNames":[],"demonstrationNames":["Zoo Animals"]}}"""
+
+        // When
+        val restored = Json.decodeFromString<ChatResponse>(json)
+
+        // Then
+        restored.kbListing shouldBe KnowledgeBaseListing(emptyList(), listOf("Zoo Animals"))
     }
 }

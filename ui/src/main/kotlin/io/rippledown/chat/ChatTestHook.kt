@@ -58,7 +58,7 @@ object ChatTestHook {
      * called from a Compose `SideEffect` inside [ChatPanel].
      */
     fun update(messages: List<ChatMessage>, sendIsEnabled: Boolean) {
-        val mostRecentBot = messages.lastOrNull { it is BotMessage }?.text
+        val mostRecentBot = messages.lastOrNull { it is BotMessage || it is KbChoiceListMessage }?.text
         val mostRecentSuggestion = (messages.lastOrNull { it is SuggestionListMessage } as? SuggestionListMessage)
             ?.let { msg ->
                 msg.suggestions.mapIndexed { i, s ->
@@ -67,7 +67,10 @@ object ChatTestHook {
             }
         val suggestionRowCount = messages.count { it is SuggestionListMessage }
         val mostRecentTip = messages.lastOrNull { it is TipMessage }?.text
-        val mostRecentKbChoices = (messages.lastOrNull { it is KbChoiceListMessage } as? KbChoiceListMessage)?.names
+        val mostRecentKbChoices =
+            (messages.lastOrNull { it is KbChoiceListMessage } as? KbChoiceListMessage)?.listing?.let {
+                it.storedNames.filterNot { name -> name == it.openName } + it.demonstrationNames
+            }
         snapshotRef.set(
             Snapshot(
                 messageList = messages,

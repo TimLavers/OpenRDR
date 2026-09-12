@@ -7,5 +7,5 @@ data class ChatResponse(
     val text: String,
     val suggestions: List<String> = emptyList(),
     val tip: String? = null,
-    val kbChoices: List<String> = emptyList()
+    val kbListing: KnowledgeBaseListing? = null
 )

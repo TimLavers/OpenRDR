@@ -9,6 +9,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
 import kotlinx.coroutines.CancellationException
@@ -316,7 +317,7 @@ class FirstKbCreationTest {
         response shouldBe ChatResponse(
             "$NO_KNOWLEDGE_BASES_OF_YOUR_OWN\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                     SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
-            kbChoices = SampleKB.demonstrations().map { it.title() }.sorted()
+            kbListing = KnowledgeBaseListing(emptyList(), SampleKB.demonstrations().map { it.title() }.sorted())
         )
         coVerify(exactly = 1) { conversation.response("List KBs") }
         coVerify(exactly = 0) { kbService.create(any()) }
