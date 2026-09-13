@@ -147,9 +147,10 @@ through the same chat pipeline as typed text.
 
 ## Acceptance tests
 
-`cucumber/src/test/resources/requirements/kb/Knowledge Base management by chat.feature`, run with
+`cucumber/src/test/resources/requirements/kb/Knowledge Base Management.feature`, run with
 `.\gradlew.bat :cucumber:kb`.
 
-`Knowledge Base Management.feature` retains only import and export scenarios. The chat feature covers the other
-operations, including description formatting and persistence across KB switches. Features that need a sample as setup
+`Knowledge Base Management.feature` covers import, export and all chat operations, including description formatting
+and persistence across KB switches. Setup is per scenario so empty-server scenarios remain empty. Features that need a
+sample as setup
 create it through the API before launching the client.

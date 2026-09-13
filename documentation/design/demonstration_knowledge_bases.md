@@ -155,7 +155,7 @@ refusal; reserved titles on create and rename; `ListKnowledgeBases` text and str
 name); `ChatManager` name-awaiting flow for a demonstration (confirm with name, deny, other request). UI: one grouped
 vertical list, an inactive open row, busy-state disabling, and mouse/keyboard activation through "Open <name>".
 
-Cukes, in `kb/Knowledge Base management by chat.feature`: the list shows both sections; opening a demonstration asks for
+Cukes, in `kb/Knowledge Base Management.feature`: the list shows both sections; opening a demonstration asks for
 a name and the copy opens with the expected case count; clicking a stored knowledge base's row opens it; clicking a
 demonstration's row asks for a name; deleting a demonstration is refused; creating with a
 demonstration title is refused; the no-knowledge-base greeting mentions demonstrations. Run with `.\gradlew.bat
