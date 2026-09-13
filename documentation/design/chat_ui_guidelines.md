@@ -5,6 +5,9 @@
 The chat exists to replace standing GUI controls, not to grow new ones. Open-ended input — typed or spoken — is the
 default way to do anything, and the model interprets it. Persistent controls are not reintroduced beside the chat.
 
+The KB-name menu retains only Import KB and Export KB for file operations. All other KB management uses chat,
+including the clickable lists of stored and demonstration knowledge bases.
+
 ## Inline affordances: the test
 
 An ephemeral control inside the chat (a chip, a button under a message) may be added only when **both** hold:

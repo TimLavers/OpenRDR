@@ -24,7 +24,7 @@ import io.rippledown.constants.main.APPLICATION_BAR_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.model.KBInfo
 
-interface AppBarHandler : KBControlHandler, KbEditControlHandler {
+interface AppBarHandler : KBControlHandler {
     var isRuleSessionInProgress: Boolean
 }
 

@@ -28,7 +28,6 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.sample.SampleKB
 import io.rippledown.voice.VoiceRecognition
 import io.rippledown.voice.VoiceRecognitionService
 import kotlinx.coroutines.CoroutineDispatcher
@@ -277,22 +276,6 @@ fun OpenRDRUI(
         topBar = {
             ApplicationBar(kbInfo, object : AppBarHandler {
                 override var isRuleSessionInProgress = ruleInProgress
-                override var selectKB: (id: String) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        kbInfo = api.selectKB(it)
-                    }
-                }
-                override var createKB: (name: String) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        kbInfo = api.createKB(it)
-                    }
-                }
-                override var createKBFromSample: (name: String, sample: SampleKB) -> Unit =
-                    { name: String, sample: SampleKB ->
-                        CoroutineScope(dispatcher).launch {
-                            kbInfo = api.createKBFromSample(name, sample)
-                        }
-                    }
                 override var importKB: (data: File) -> Unit = {
                     CoroutineScope(dispatcher).launch {
                         kbInfo = api.importKBFromZip(it)
@@ -303,13 +286,7 @@ fun OpenRDRUI(
                         api.exportKBToZip(it)
                     }
                 }
-                override suspend fun kbList(): List<KBInfo> = api.kbList()
-                override var setKbDescription: (description: String) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        api.setKbDescription(it)
-                    }
-                }
-                override suspend fun kbDescription(): String = api.kbDescription()
+
             })
         },
     ) { paddingValues ->

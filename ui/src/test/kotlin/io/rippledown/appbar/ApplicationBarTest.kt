@@ -5,7 +5,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
@@ -28,7 +27,6 @@ class ApplicationBarTest {
     @Before
     fun setUp() {
         handler = mockk<AppBarHandler>()
-        coEvery { handler.kbList() } returns emptyList()
     }
 
     @Test
@@ -82,7 +80,6 @@ class ApplicationBarTest {
 fun main() {
     val bondiInfo = KBInfo("Bondi")
     val handler = mockk<AppBarHandler>()
-    coEvery { handler.kbList() } returns emptyList()
 
     application {
         Window(onCloseRequest = ::exitApplication) {

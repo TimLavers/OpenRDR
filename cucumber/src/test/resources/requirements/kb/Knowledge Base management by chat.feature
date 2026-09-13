@@ -314,18 +314,40 @@ Feature: Managing knowledge bases through the chat
       | already exists |
     And the displayed KB name is Thyroids
 
-  Scenario: The description of the open knowledge base can be set and read back
+  Scenario: Knowledge base descriptions can be edited through chat and persist across switches
     Given a default KB is opened
+    And A Knowledge Base called Zinc has been created
     And I start the client application
+    And the displayed KB name is Thyroids
+    And the KB description is:
+    """
+    """
     When I enter the following text into the chat panel:
-      | Set the description to: A basic thyroid management KB. |
+      | Set the description to: # Thyroids\nA basic thyroid management KB.\nSee: https://thyroid.rules.info/basic |
     Then the chatbot response contains the following terms:
       | Description | updated |
     And the KB description is:
     """
+    # Thyroids
     A basic thyroid management KB.
+    See: https://thyroid.rules.info/basic
     """
     When I enter the following text into the chat panel:
       | What is the description of this knowledge base? |
     Then the chatbot response contains the following terms:
-      | A basic thyroid management KB. |
+      | # Thyroids | A basic thyroid management KB. | https://thyroid.rules.info/basic |
+    When I enter the following text into the chat panel:
+      | Open Zinc |
+    Then the displayed KB name is now Zinc
+    And the KB description is:
+    """
+    """
+    When I enter the following text into the chat panel:
+      | Open Thyroids |
+    Then the displayed KB name is now Thyroids
+    And the KB description is:
+    """
+    # Thyroids
+    A basic thyroid management KB.
+    See: https://thyroid.rules.info/basic
+    """

@@ -4,8 +4,8 @@ Feature: KB available as API endpoint
     Given a default KB is opened
 
   Scenario: Attributes are created as required from interpreted cases
-    Given I start the client application
-    And I create a Knowledge Base with the name Glucose
+    Given A Knowledge Base called Glucose has been created
+    And I start the client application
     And case Case1 for KB Glucose is provided having data:
       | Age     | 34  |
       | Sex     | M   |
@@ -17,8 +17,8 @@ Feature: KB available as API endpoint
       | Glucose |
 
   Scenario: Attribute names are case sensitive
-    Given I start the client application
-    And I create a Knowledge Base with the name Glucose
+    Given A Knowledge Base called Glucose has been created
+    And I start the client application
     And case Case1 for KB Glucose is provided having data:
       | Age | 34    |
       | age | 12520 |
@@ -28,8 +28,8 @@ Feature: KB available as API endpoint
       | age |
 
   Scenario: The comments given for a case are returned by the interpretation service
-    Given I start the client application
-    And I create a Knowledge Base with the name Glucose
+    Given A Knowledge Base called Glucose has been created
+    And I start the client application
     And case Case1 for KB Glucose is provided having data:
         | Age     | 34  |
         | Sex     | M   |

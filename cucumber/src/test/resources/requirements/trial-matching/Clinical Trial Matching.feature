@@ -4,8 +4,8 @@ Feature: A sample KB can be created for Clinical Trial Matching.
     Given a default KB is opened
 
   Scenario: Clinical Trial Matching KB
-    Given I start the client application
-    And I create a Knowledge Base with the name OncoTreeMatch
+    Given A Knowledge Base called OncoTreeMatch has been created
+    And I start the client application
     And I send a case to "OncoTreeMatch" for each row in the trial-conditions file
     And the backdoor selects the Knowledge Base "OncoTreeMatch"
     And the count of the number of cases is 1508

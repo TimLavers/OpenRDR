@@ -16,6 +16,9 @@
 Non-goals: import and export (both need a file path), incremental editing of the description,
 and more than one client at a time.
 
+The KB-name menu contains only **Import KB** and **Export KB**, retaining their file dialogs. Creation, demonstration
+copies, listing, switching and descriptions use chat; their duplicate menu items and dialogs have been removed.
+
 ## How it works
 
 ### One conversation, owned by the application
@@ -137,8 +140,7 @@ through the same chat pipeline as typed text.
   state
   uses `neverEqualPolicy()` to recompose.
 - **The description is replaced, not edited, by chat.** A conversation is a poor place to edit a multi-paragraph
-  document; the GUI dialog remains for anything finer. Reading it back is a server action because the description is not
-  in the prompt.
+  document. Reading it back is a server action because the description is not in the prompt.
 - **The model transcribes names; the server resolves them.** For open, create, delete and rename the model must pass the
   name exactly as the user gave it, even when it is obviously close to an existing one. If the model "corrected" it, the
   user would never be asked about a partial match.
@@ -147,3 +149,7 @@ through the same chat pipeline as typed text.
 
 `cucumber/src/test/resources/requirements/kb/Knowledge Base management by chat.feature`, run with
 `.\gradlew.bat :cucumber:kb`.
+
+`Knowledge Base Management.feature` retains only import and export scenarios. The chat feature covers the other
+operations, including description formatting and persistence across KB switches. Features that need a sample as setup
+create it through the API before launching the client.

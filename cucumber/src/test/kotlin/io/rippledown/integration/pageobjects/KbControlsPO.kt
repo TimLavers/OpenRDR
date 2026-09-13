@@ -4,9 +4,13 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
-import io.rippledown.constants.kb.SWITCH_KB_HEADER_TEXT
-import io.rippledown.constants.main.*
-import io.rippledown.integration.utils.*
+import io.rippledown.constants.main.EXPORT_KB_TEXT
+import io.rippledown.constants.main.IMPORT_KB_TEXT
+import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
+import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findAndClick
+import io.rippledown.integration.utils.renderedText
+import io.rippledown.integration.utils.waitForComposeDialogToShow
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
@@ -38,41 +42,6 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
         return text
     }
 
-    fun createKB(name: String) {
-        openDropdownMenu()
-        clickDropdownItem(CREATE_KB_TEXT)
-        val dialog = waitForComposeDialogToShow()
-        CreateKbOperator(dialog).createKB(name)
-    }
-
-    fun createKBFromSample(name: String, sampleTitle: String) {
-        openDropdownMenu()
-        clickDropdownItem(CREATE_KB_FROM_SAMPLE_TEXT)
-        val dialog = waitForComposeDialogToShow()
-        CreateKbFromSampleOperator(dialog).createKbFromSample(name, sampleTitle)
-    }
-
-    fun selectKB(name: String) {
-        // The current KB is shown as the dropdown trigger and is excluded from
-        // the switcher list, so "selecting" it again is a no-op.
-        if (currentKB() == name) return
-        openDropdownMenu()
-        // Poll until the named KB appears as a child of the dropdown — the
-        // accessibility tree can lag the visual render by a few frames.
-        lateinit var menuItem: AccessibleContext
-        waitUntilAsserted {
-            val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-                ?: throw AssertionError("KB dropdown not yet available")
-            // Match by rendered text instead of `accessibleName`: under
-            // Compose 1.11 the LABEL node's accessibleName can include the
-            // parent's contentDescription as a prefix (see findLabelChildren),
-            // so an exact `name == accessibleName` check fails.
-            menuItem = dropDown.findLabelByRenderedText(name)
-                ?: throw AssertionError("KB '$name' not yet available in dropdown")
-        }
-        menuItem.accessibleAction.doAccessibleAction(0)
-    }
-
     fun importKB(filePath: String) {
         openDropdownMenu()
         clickDropdownItem(IMPORT_KB_TEXT)
@@ -98,18 +67,6 @@ class KbControlsPO(private val contextProvider: () -> AccessibleContext) {
         waitUntilAsserted {
             contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX) shouldNotBe null
         }
-    }
-
-    fun availableKBs(): List<String> {
-        // The dropdown may not have rendered yet when this is called; return
-        // an empty list so callers using `waitUntilAsserted` see an
-        // AssertionError (not an NPE) and keep polling.
-        val dropDown = contextProvider().find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-            ?: return emptyList()
-        // The dropdown has a non-selectable section header above the list of
-        // KBs ("Switch knowledge base"); strip it out so callers only see the
-        // actual KB names.
-        return dropDown.findLabelChildren().filter { it != SWITCH_KB_HEADER_TEXT }
     }
 
     fun expandDropdownMenu() {

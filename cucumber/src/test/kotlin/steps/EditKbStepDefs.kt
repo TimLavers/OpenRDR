@@ -13,22 +13,12 @@ class EditKbStepDefs {
 
     private val chatDefs = ChatDefs()
 
-    @When("I set the KB description to:")
-    fun i_set_the_description_to(description: DocString) {
-        val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
-        descriptionOperator.setDescription(description.content)
-    }
-
     @Then("the KB description is:")
     fun the_KBDescriptionIsNow(description: DocString) {
-        val expectedText = description.content ?: ""
-        val descriptionOperator = editCurrentKbControlPO().showDescriptionOperator()
-        // Poll: the dialog's text-field accessibility node can lag a frame or
-        // two behind waitForComposeDialogToShow(), so a single read can NPE.
+        val kbName = kbControlsPO().currentKB()
         waitUntilAsserted {
-            descriptionOperator.description() shouldBe expectedText
+            restClient().kbDescription(kbName) shouldBe description.content
         }
-        descriptionOperator.cancel()
     }
 
     /**

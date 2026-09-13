@@ -1,10 +1,10 @@
 package steps
 
-import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.kb.NO_KB_SELECTED
 import io.rippledown.integration.waitUntilAsserted
+import io.rippledown.sample.SampleKB
 
 class KbStepDefs {
 
@@ -28,32 +28,10 @@ class KbStepDefs {
         }
     }
 
-    @Then("I activate the KB management control")
-    fun activateTheKBManagementControl() {
-        kbControlsPO().expandDropdownMenu()
-    }
-
-    @Then("I (should )see this list of available KBs:")
-    fun requireListOfAvailableKBs(dataTable: DataTable) {
-        val expectedKBs = dataTable.asList()
-        waitUntilAsserted {
-            kbControlsPO().availableKBs() shouldBe expectedKBs
-        }
-    }
-
-    @Then("I create a Knowledge Base with the name {word}")
-    fun createAKnowledgeBaseWithTheName(kbName: String) {
-        kbControlsPO().createKB(kbName)
-    }
-
-    @Then("I create a Knowledge Base with the name {word} based on the {string} sample")
-    fun createAKnowledgeBaseWithTheNameBasedOnSample(kbName: String, sampleTitle: String) {
-        kbControlsPO().createKBFromSample(kbName, sampleTitle)
-    }
-
-    @Then("I select the Knowledge Base named {word}")
-    fun selectTheKnowledgeBaseNamed(kbName: String) {
-        kbControlsPO().selectKB(kbName)
+    @Then("A Knowledge Base called {word} has been created from the {string} sample")
+    fun createKnowledgeBaseFromSample(kbName: String, sampleTitle: String) {
+        val sample = SampleKB.entries.single { it.title() == sampleTitle }
+        restClient().createKBFromSample(kbName, sample)
     }
 
     @Then("the KB controls (are )(should be )hidden")

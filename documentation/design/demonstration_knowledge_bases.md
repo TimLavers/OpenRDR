@@ -17,12 +17,13 @@
 
 The four demonstrations already exist as code: `SampleKB.TSH`, `CONTACT_LENSES`, `ZOO` and `PATHOLOGY` (renamed from
 `DEMO`, title "Pathology"), built by the sample
-builders that `ServerApplication.createKBFromSample` runs (the "Create KB from sample" menu item and the `samples` cukes
-use exactly this). So a demonstration knowledge base is never persisted. "Opening" one is `createKBFromSample(newName,
+builders that `ServerApplication.createKBFromSample` runs; the chat and the `samples` cucumber fixtures use the same
+builders. So a demonstration knowledge base is never persisted. "Opening" one is `createKBFromSample(newName,
 sample)`; the copy is stored, the demonstration is not, and there is nothing to guard against deletion, no flag to
 persist and no schema change.
 
-`SampleKB.demonstrations()` returns the four; the `_CASES` variants stay available to the GUI dialog only.
+`SampleKB.demonstrations()` returns the four; the `_CASES` variants remain available through the sample API for
+acceptance-test fixtures.
 
 ### Listing
 
@@ -135,7 +136,8 @@ an explicit default KB and supplies its own Taylor case, as specified in impleme
 - **Reuse the naming workflow.** `kb_management_by_chat.md` said the first-knowledge-base workflow was the pattern to
   extend; both workflows share `KnowledgeBaseConversation.State.Creating` and its action factory.
 - **Reverses a non-goal.** `kb_management_by_chat.md` listed creating from a sample as a non-goal; it is now in scope
-  through the demonstration list. The GUI "Create KB from sample" dialog stays for now.
+  through the demonstration list. The duplicate GUI dialog has been removed; sample scenarios create their fixtures
+  through the API before starting the client.
 - **Nothing in the cukes is loaded that a feature does not name.** The lazy default is deleted rather than left unused.
 - **Clickable list, no delete chip.** The list passes the test for an inline chat affordance: the answer set is closed
   and tiny, and the control vanishes after one use. Deletion is confirmed and irreversible, so a one-click chip for it

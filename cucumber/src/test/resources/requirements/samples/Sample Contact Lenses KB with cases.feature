@@ -3,8 +3,8 @@ Feature: A sample KB can be created that has the Contact Lens Prescription cases
 #  We check the data for each case and check that the interpretations of a couple of cases are blank.
 
   Scenario: Contact Lenses cases
-    Given I start the client application
-    And I create a Knowledge Base with the name ContactLenseCases based on the "Contact Lens Prescription - cases only" sample
+    Given A Knowledge Base called ContactLensCases has been created from the "Contact Lens Prescription - cases only" sample
+    And I start the client application
     Then the count of the number of cases is 24
     When I select case Case1
     Then I see these case values:

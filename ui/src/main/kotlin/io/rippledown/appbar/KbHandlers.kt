@@ -1,21 +1,9 @@
 package io.rippledown.appbar
 
-import io.rippledown.model.KBInfo
-import io.rippledown.sample.SampleKB
 import java.io.File
 
-/** Operations on the workspace's set of knowledge bases. */
+/** File operations on knowledge bases; other management is handled through chat. */
 interface KBControlHandler {
-    var selectKB: (id: String) -> Unit
-    var createKB: (name: String) -> Unit
-    var createKBFromSample: (name: String, sample: SampleKB) -> Unit
     var importKB: (data: File) -> Unit
     var exportKB: (data: File) -> Unit
-    suspend fun kbList(): List<KBInfo>
-}
-
-/** Operations on the currently-selected knowledge base. */
-interface KbEditControlHandler {
-    var setKbDescription: (name: String) -> Unit
-    suspend fun kbDescription(): String
 }

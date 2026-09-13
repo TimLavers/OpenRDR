@@ -2,8 +2,8 @@ Feature: A sample KB can be created that has the Contact Lens Prescription cases
 
 #  We just check a couple of the cases as there's another test that checks them all.
   Scenario: Contact Lenses cases
-    Given I start the client application
-    And I create a Knowledge Base with the name ContactLenseRules based on the "Contact Lens Prescription" sample
+    Given A Knowledge Base called ContactLensRules has been created from the "Contact Lens Prescription" sample
+    And I start the client application
     Then the count of the number of cases is 24
 
     When I select case Case1

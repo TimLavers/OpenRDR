@@ -5,9 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.appbar.KB_INFO_ITEM
 import io.rippledown.appbar.assertKbNameIs
-import io.rippledown.appbar.clickDropdown
 import io.rippledown.casecontrol.*
 import io.rippledown.chat.BotMessage
 import io.rippledown.chat.requireChatMessagesShowing
@@ -902,7 +900,14 @@ class OpenRDRUITest {
         val caseIdB = CaseId(id = 2, name = "case B")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
-        coEvery { api.selectKB("id_b") } returns kbB
+        var kbInfoUpdated: (KBInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            kbInfoUpdated = arg(3)
+        }
+        coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
+            kbInfoUpdated(kbB)
+            ChatResponse("Opened KB_B")
+        }
         var casesForCurrentKb = CasesInfo(listOf(caseIdA))
         coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
@@ -916,14 +921,13 @@ class OpenRDRUITest {
             waitForCaseToBeShowing("case A")
             coVerify(atLeast = 1) { api.waitingCasesInfo() }
 
-            //When - user selects KB-B from the dropdown; server state now reflects KB-B's cases
+            //When - user opens KB-B through chat; server state now reflects KB-B's cases
             casesForCurrentKb = CasesInfo(listOf(caseIdB))
-            clickDropdown()
-            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+            typeChatMessageAndClickSend("Open KB_B")
 
             //Then - casesInfo was refetched and KB-B's case is shown
             waitForCaseToBeShowing("case B")
-            coVerify { api.selectKB("id_b") }
+            coVerify { api.sendUserMessage("Open KB_B") }
             coVerify(atLeast = 2) { api.waitingCasesInfo() }
         }
     }
@@ -935,7 +939,14 @@ class OpenRDRUITest {
         val kbB = KBInfo("id_b", "KB_B")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
-        coEvery { api.selectKB("id_b") } returns kbB
+        var kbInfoUpdated: (KBInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            kbInfoUpdated = arg(3)
+        }
+        coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
+            kbInfoUpdated(kbB)
+            ChatResponse("Opened KB_B")
+        }
         var casesForCurrentKb = CasesInfo(listOf(CaseId(id = 1, name = "case A")))
         var caseForCurrentKb = createViewableCaseWithInterpretation("case A", 1)
         coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
@@ -950,8 +961,7 @@ class OpenRDRUITest {
             //When - the user switches to KB-B, whose only case also has id 1
             casesForCurrentKb = CasesInfo(listOf(CaseId(id = 1, name = "case B")))
             caseForCurrentKb = createViewableCaseWithInterpretation("case B", 1)
-            clickDropdown()
-            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+            typeChatMessageAndClickSend("Open KB_B")
 
             //Then - the case view shows KB-B's case, not the stale KB-A one
             waitForCaseToBeShowing("case B")
@@ -968,7 +978,14 @@ class OpenRDRUITest {
         val caseB1 = CaseId(id = 3, name = "b-1")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
-        coEvery { api.selectKB("id_b") } returns kbB
+        var kbInfoUpdated: (KBInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            kbInfoUpdated = arg(3)
+        }
+        coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
+            kbInfoUpdated(kbB)
+            ChatResponse("Opened KB_B")
+        }
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("a-1", 1)
         coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("a-2", 2)
         coEvery { api.getCase(3) } returns createViewableCaseWithInterpretation("b-1", 3)
@@ -985,8 +1002,7 @@ class OpenRDRUITest {
 
             //When - user selects KB-B, which has different cases
             casesForCurrentKb = CasesInfo(listOf(caseB1))
-            clickDropdown()
-            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+            typeChatMessageAndClickSend("Open KB_B")
 
             //Then - list now shows only KB-B's case
             waitForCaseToBeShowing("b-1")

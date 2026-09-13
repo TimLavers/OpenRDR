@@ -1,8 +1,8 @@
 Feature: The TSH KB can be built from cases.
 
   Scenario: Build the TSH KB from cases
-    Given I start the client application
-    And I create a Knowledge Base with the name TSH based on the "Thyroid Stimulating Hormone - cases only" sample
+    Given A Knowledge Base called TSH has been created from the "Thyroid Stimulating Hormone - cases only" sample
+    And I start the client application
     Then the count of the number of cases is 34
 
     And the backdoor selects the Knowledge Base "TSH"

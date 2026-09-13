@@ -1,8 +1,8 @@
 Feature: The Zoo KB can be built using the backdoor rule-building endpoint.
 
   Scenario: Build the Zoo KB from cases
-    Given I start the client application
-    And I create a Knowledge Base with the name Zoo based on the "Zoo Animals - cases only" sample
+    Given A Knowledge Base called Zoo has been created from the "Zoo Animals - cases only" sample
+    And I start the client application
     Then the count of the number of cases is 101
 
     And the backdoor selects the Knowledge Base "Zoo"
