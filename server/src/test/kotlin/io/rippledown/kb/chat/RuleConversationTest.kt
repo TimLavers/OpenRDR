@@ -75,6 +75,26 @@ class RuleConversationTest {
     }
 
     @Test
+    fun `the acknowledgement lists all newly added conditions without repeating existing ones`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus()
+        every { service.currentRuleSessionConditionTexts() } returns setOf("age is young")
+        val turn = conversation.prepareTurn("elevated waves and UV")
+        every { service.currentRuleSessionConditionTexts() } returns
+                linkedSetOf("age is young", "Waves is high", "UV is high")
+
+        // When
+        val action = conversation.completeTurn(turn)
+
+        // Then
+        action shouldBe ActionComment(
+            USER_ACTION, message = "Added:\nWaves is high\nUV is high\n\nDo you want to provide any more reasons?"
+        )
+        conversation.state shouldBe RuleConversation.State.AwaitingReasonReply
+    }
+
+    @Test
     fun `a failed or duplicate condition does not create a further reasons question`() {
         // Given
         every { service.isRuleSessionActive() } returns true
@@ -161,7 +181,9 @@ class RuleConversationTest {
         val next = conversation.prepareTurn("no")
 
         // Then
-        action shouldBe ActionComment(USER_ACTION, message = RuleConversation.MORE_REASONS_QUESTION)
+        action shouldBe ActionComment(
+            USER_ACTION, message = "Added:\nage is young\n\nDo you want to provide any more reasons?"
+        )
         conversation.state shouldBe RuleConversation.State.AwaitingReasonReply
         next.message shouldBe "[Current cornerstone status: Cornerstone: null, Index: -1, Total: 0]\n" +
                 "[The server asked the user: ${RuleConversation.MORE_REASONS_QUESTION}]\nno"

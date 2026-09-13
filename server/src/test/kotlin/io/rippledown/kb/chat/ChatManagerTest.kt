@@ -95,12 +95,34 @@ class ChatManagerTest {
         // Then
         coVerify {
             conversationService.response(match {
-                it.contains("[The server asked the user: Added the condition. Do you want to provide any more reasons?]") &&
+                it.contains("[The server asked the user: Do you want to provide any more reasons?]") &&
                         it.endsWith("\nno")
             })
         }
         response.text shouldBe CHAT_BOT_DONE_MESSAGE
         coVerify(exactly = 1) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `a parsed expression retains its canonical condition in the server acknowledgement`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("Waves is high")
+            ActionComment(
+                action = USER_ACTION,
+                message = "Added your reason 'Waves is high'. Do you want to provide any more reasons?"
+            ).toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("elevated waves")
+
+        // Then
+        response.text shouldBe "Added:\nWaves is high\n\nDo you want to provide any more reasons?"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
     }
 
     @Test
@@ -123,7 +145,7 @@ class ChatManagerTest {
         val response = chatManager.response("tear production is reduced")
 
         // Then
-        response.text shouldBe "Added the condition. Do you want to provide any more reasons?"
+        response.text shouldBe "Added:\ntear production is reduced\n\nDo you want to provide any more reasons?"
         coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
     }
 
@@ -209,7 +231,7 @@ class ChatManagerTest {
         val response = chatManager.response("age is young")
 
         // Then
-        response.text shouldBe "Added the condition. Do you want to provide any more reasons?"
+        response.text shouldBe "Added:\nage is young\n\nDo you want to provide any more reasons?"
         coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
     }
 
@@ -228,7 +250,7 @@ class ChatManagerTest {
         val response = chatManager.response("age is young")
 
         // Then
-        response.text shouldBe "Added the condition. Do you want to provide any more reasons?"
+        response.text shouldBe "Added:\nage is young\n\nDo you want to provide any more reasons?"
         response.suggestions shouldBe listOf("tear production is reduced")
         coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
         coVerify(exactly = 0) { ruleService.sendRuleSessionCompleted() }
@@ -361,7 +383,7 @@ class ChatManagerTest {
     @Test
     fun `without a rule service a message for the user is passed through`() = runTest {
         // Given
-        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        chatManager = ChatManager(conversationService, null, kbService)
         val fromModel = ActionComment(action = USER_ACTION, message = "Open or create a knowledge base.").toJsonString()
         coEvery { conversationService.response("Help") } returns fromModel
 

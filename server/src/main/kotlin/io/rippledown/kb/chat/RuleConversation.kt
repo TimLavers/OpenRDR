@@ -51,13 +51,14 @@ class RuleConversation(private val service: RuleService?) {
 
     fun completeTurn(turn: Turn): ActionComment? {
         reset()
-        if (service != null && service.isRuleSessionActive()
-            && service.currentRuleSessionConditionTexts().any { it !in turn.conditionsBefore }
-        ) {
-            state = State.AwaitingReasonReply
-            return ActionComment(USER_ACTION, message = MORE_REASONS_QUESTION)
-        }
-        return null
+        if (service == null || !service.isRuleSessionActive()) return null
+        val addedConditions = service.currentRuleSessionConditionTexts().filterNot { it in turn.conditionsBefore }
+        if (addedConditions.isEmpty()) return null
+        state = State.AwaitingReasonReply
+        return ActionComment(
+            USER_ACTION,
+            message = "Added:\n${addedConditions.joinToString("\n")}\n\n$MORE_REASONS_QUESTION"
+        )
     }
 
     fun rememberOffer(action: ActionComment) {
@@ -72,6 +73,6 @@ class RuleConversation(private val service: RuleService?) {
 
     companion object {
         const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
-        const val MORE_REASONS_QUESTION = "Added the condition. Do you want to provide any more reasons?"
+        const val MORE_REASONS_QUESTION = "Do you want to provide any more reasons?"
     }
 }
