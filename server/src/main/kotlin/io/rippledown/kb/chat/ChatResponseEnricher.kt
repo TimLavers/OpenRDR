@@ -54,7 +54,7 @@ class ChatResponseEnricher(
      * function calls. It also covers the list the model may echo back in its own JSON, which nothing
      * else filters.
      */
-    private fun withoutConditionsAlreadyInTheRule(response: ChatResponse): ChatResponse {
+    internal fun withoutConditionsAlreadyInTheRule(response: ChatResponse): ChatResponse {
         if (response.suggestions.isEmpty()) return response
         val alreadyUsed = ruleService?.currentRuleSessionConditionTexts() ?: return response
         if (alreadyUsed.isEmpty()) return response
@@ -71,7 +71,7 @@ class ChatResponseEnricher(
      * user for a reason, leaving the user with a question and no suggestions - which stalls the flow.
      * In that case, populate the suggestions deterministically.
      */
-    private suspend fun ensureSuggestionsAfterStartingRuleSession(
+    internal suspend fun ensureSuggestionsAfterStartingRuleSession(
         actionComment: ActionComment,
         response: ChatResponse
     ): ChatResponse {
@@ -91,7 +91,7 @@ class ChatResponseEnricher(
      * most once per session and is suppressed when the user has already used the facility (i.e. the comment
      * already contains a placeholder) or when the add was rejected because a rule session was already active.
      */
-    private fun commentVariableTipFor(
+    internal fun commentVariableTipFor(
         actionComment: ActionComment,
         chatResponse: ChatResponse,
         currentCase: ViewableCase?

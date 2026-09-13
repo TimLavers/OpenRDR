@@ -143,6 +143,14 @@ workflow and presentation policies, with direct unit tests as well as the existi
 | `RuleConversation`          | Cornerstone allow replies, corrected assignment offers, condition snapshots and the further-reasons question. Its sealed state is `Ready`, `OfferedAssignment(action)` or `AwaitingReasonReply`. |
 | `ChatResponseEnricher`      | Suggestion precedence, fetching missing suggestions, filtering used conditions and the once-per-conversation comment-variable tip.                                                               |
 
+The three policy methods in `ChatResponseEnricher` are internal and tested directly: filtering conditions already
+used, fetching missing suggestions and deciding when to offer the comment-variable tip. Tests through `enrich`
+cover their composition, suggestion precedence and preservation of response fields.
+
+Requests to list reasons already added to a rule are distinct from requests for suggested conditions. The model
+instructions distinguish them explicitly; the acceptance test asks for reasons already added and checks the exact
+formal condition texts.
+
 The states are local to each workflow. `RuleService` remains the authority for the active rule session and cornerstone
 status; the conversation does not maintain a duplicate rule-building state machine. No state-machine framework is
 needed: sealed types and exhaustive transitions make the pending server question explicit.

@@ -79,6 +79,11 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
 
 ## Step 7. Allow the user to see all reasons:
 
+- Requests such as "What reasons are there?" or "List the reasons I have already added to the current rule" ask for
+  conditions already in the rule. Show their formal condition text, including numeric values, rather than suggestions
+  for additional conditions. If no reasons have been added, say so.
+- Do not call {{GET_SUGGESTED_CONDITIONS}} for these requests: it returns candidates to add, not the reasons already
+  added.
 - If the user asks to see the reasons entered so far, list them to the user as a numbered list with one reason per line,
   for example:
 
@@ -88,5 +93,4 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
   "message": "1. <first reason>\\n2. <second reason>\\n3. <third reason>"
 }
 ```
-
 

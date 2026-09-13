@@ -445,7 +445,7 @@ class ChatDefs {
 
     @And("I ask to see the reasons")
     fun askToSeeReasons() {
-        enterChatTextAndSend("What reasons are there?")
+        enterChatTextAndSend("Please list the reasons I have already added to the current rule.")
     }
 
     @When("I ask to see the suggestions again")
