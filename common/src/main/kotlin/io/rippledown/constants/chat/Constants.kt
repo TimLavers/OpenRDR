@@ -124,9 +124,16 @@ const val BLANK_NAME_MESSAGE = "Please give the new knowledge base a name."
 const val KB_NAME_RESERVED = "is the name of a demonstration knowledge base"
 const val KB_COPIED_FROM_DEMONSTRATION = "demonstration and opened it"
 const val CANNOT_BE_DELETED = "cannot be deleted"
-const val YOUR_KNOWLEDGE_BASES = "Your knowledge bases:"
+const val YOUR_KNOWLEDGE_BASES_TITLE = "Your knowledge bases"
+const val DEMONSTRATION_KNOWLEDGE_BASES_TITLE = "Demonstration knowledge bases"
+const val YOUR_KNOWLEDGE_BASES = "$YOUR_KNOWLEDGE_BASES_TITLE:"
 const val NO_KNOWLEDGE_BASES_OF_YOUR_OWN = "You have no knowledge bases of your own."
-const val DEMONSTRATION_KNOWLEDGE_BASES_HEADING = "Demonstration knowledge bases (open one to get your own copy):"
+const val DEMONSTRATION_KNOWLEDGE_BASES_HEADING =
+    "$DEMONSTRATION_KNOWLEDGE_BASES_TITLE (open one to get your own copy):"
+const val YOUR_KNOWLEDGE_BASES_HELP = "Click a knowledge base to open it."
+const val DEMONSTRATION_KNOWLEDGE_BASES_HELP =
+    "Click a demonstration to open it. You will get your own copy and be asked to give it a name."
+const val CURRENT_KB_LABEL = "(current)"
 
 fun kbNameReservedMessage(name: String) = "\"$name\" $KB_NAME_RESERVED; please choose another."
 fun kbCopiedFromDemonstrationMessage(name: String, title: String) =

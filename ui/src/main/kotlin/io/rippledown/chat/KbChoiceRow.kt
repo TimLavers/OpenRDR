@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.rippledown.constants.chat.NO_KNOWLEDGE_BASES_OF_YOUR_OWN
+import io.rippledown.constants.chat.*
 import io.rippledown.model.chat.KnowledgeBaseListing
 
 val KbDescription = SemanticsPropertyKey<String>("KbDescription")
@@ -43,7 +43,7 @@ fun KbChoiceRow(
             .padding(12.dp)
     ) {
         Column(Modifier.semantics { contentDescription = "$KB_CHOICE_LIST$index" }) {
-            KnowledgeBaseHeading("Your knowledge bases", "Click a knowledge base to open it.")
+            KnowledgeBaseHeading(YOUR_KNOWLEDGE_BASES_TITLE, YOUR_KNOWLEDGE_BASES_HELP)
             Spacer(Modifier.height(4.dp))
             if (listing.storedNames.isEmpty()) {
                 Text(
@@ -56,8 +56,8 @@ fun KbChoiceRow(
             }
             Spacer(Modifier.height(12.dp))
             KnowledgeBaseHeading(
-                "Demonstration knowledge bases",
-                "Click a demonstration to open it. You will get your own copy and be asked to give it a name."
+                DEMONSTRATION_KNOWLEDGE_BASES_TITLE,
+                DEMONSTRATION_KNOWLEDGE_BASES_HELP
             )
             Spacer(Modifier.height(4.dp))
             listing.demonstrationNames.forEach { name ->
@@ -145,7 +145,7 @@ private fun KnowledgeBaseItemRow(
         )
         if (isOpen) {
             Text(
-                "(current)", fontSize = 12.sp, color = Color.DarkGray,
+                CURRENT_KB_LABEL, fontSize = 12.sp, color = Color.DarkGray,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }

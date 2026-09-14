@@ -53,7 +53,18 @@ class KbChoiceRowTest {
         composeTestRule.onNodeWithText("Demonstration knowledge bases")
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
         composeTestRule.onNodeWithContentDescription("Your knowledge bases help").assertIsDisplayed()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription, "Click a knowledge base to open it."
+                )
+            )
         composeTestRule.onNodeWithContentDescription("Demonstration knowledge bases help").assertIsDisplayed()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "Click a demonstration to open it. You will get your own copy and be asked to give it a name."
+                )
+            )
         (listing.storedNames + listing.demonstrationNames).forEach {
             composeTestRule.onAllNodesWithText(it).assertCountEquals(1)
         }

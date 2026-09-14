@@ -51,6 +51,8 @@ The bot renders one compact vertical list with muted, accessible headings for "Y
 a hand pointer, and hover and keyboard-focus highlighting. The open KB has an inline "(current)" marker and is inactive.
 An info icon beside each heading explains the action on hover: "Click a knowledge base to open it" or "Click a
 demonstration to open it. You will get your own copy and be asked to give it a name."
+The UI titles, help text and current-KB marker are defined in `constants/chat/Constants.kt`; the transcript headings
+reuse the same titles with their existing punctuation and explanation.
 Empty stored lists still show their heading and an empty-state message.
 The list uses the chat's vertical scrolling; it has no separate horizontal chip row.
 
