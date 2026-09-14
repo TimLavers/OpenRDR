@@ -161,7 +161,7 @@ class Api(
                 )
             )
         }.body()
-        return currentKB!!
+        return checkNotNull(currentKB) { "Import did not return a knowledge base." }
     }
 
     suspend fun exportKBToZip(destination: File) {
@@ -391,4 +391,3 @@ class Api(
         return HttpStatusCode.OK
     }
 }
-
