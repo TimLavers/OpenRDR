@@ -95,10 +95,15 @@ const val ADD_DEMONSTRATION_CASE = "AddDemonstrationCase"
 const val RENAME_KNOWLEDGE_BASE = "RenameKnowledgeBase"
 const val SHOW_KNOWLEDGE_BASE_DESCRIPTION = "ShowKnowledgeBaseDescription"
 const val SET_KNOWLEDGE_BASE_DESCRIPTION = "SetKnowledgeBaseDescription"
+const val IMPORT_KNOWLEDGE_BASE = "ImportKnowledgeBase"
+const val EXPORT_KNOWLEDGE_BASE = "ExportKnowledgeBase"
+const val KB_IMPORT_FILE_DIALOG_MESSAGE = "Choose a knowledge base ZIP file to import."
+
+fun kbExportFileDialogMessage(name: String) = "Choose where to save \"$name\" as a ZIP file."
 
 const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Do you want to see the list, or open or create one."
 const val KB_ACTION_DURING_RULE_MESSAGE =
-    "Please finish or cancel the current rule before opening, creating, closing or deleting a knowledge base."
+    "Please finish or cancel the current rule before opening, creating, closing, deleting, importing or exporting a knowledge base."
 const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."
 const val OPEN_SUFFIX = " (open)"
 const val KB_OPENED = "Opened"

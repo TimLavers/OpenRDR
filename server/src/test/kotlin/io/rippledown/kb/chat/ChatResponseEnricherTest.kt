@@ -7,8 +7,10 @@ import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.model.Attribute
+import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KbFileDialogRequest
 import io.rippledown.model.chat.KnowledgeBaseListing
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -19,6 +21,33 @@ class ChatResponseEnricherTest {
     private val service = mockk<RuleService>()
     private val buffer = SuggestionsBuffer()
     private val enricher = ChatResponseEnricher(service, buffer)
+
+    @ParameterizedTest
+    @ValueSource(strings = ["none", "model", "buffer"])
+    fun `response enrichment preserves file requests`(suggestionSource: String) = runTest {
+        // Given
+        every { service.currentRuleSessionConditionTexts() } returns emptySet()
+        val requests = listOf(
+            KbFileDialogRequest.Import("import-1"),
+            KbFileDialogRequest.Export("export-1", KBInfo("kb_1", "Thyroids"))
+        )
+        requests.forEach { request ->
+            val suggestions = if (suggestionSource == "none") emptyList() else listOf("age is young")
+            if (suggestionSource == "buffer") buffer.suggestions = suggestions
+            val action = ActionComment(
+                IMPORT_KNOWLEDGE_BASE,
+                suggestions = if (suggestionSource == "model") suggestions else null
+            )
+            val original = ChatResponse("Choose a file", kbFileDialogRequest = request)
+
+            // When
+            val response = enricher.enrich(action, original, null)
+
+            // Then
+            response shouldBe original.copy(suggestions = suggestions)
+            response.kbFileDialogRequest shouldBe request
+        }
+    }
 
     @Test
     fun `enrich attaches a generated tip alongside model suggestions`() = runTest {

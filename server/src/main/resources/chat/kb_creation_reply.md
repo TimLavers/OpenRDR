@@ -13,7 +13,8 @@ Allowed intents:
   At AWAITING_NAME, a bare name or "call it Thyroid" also means this. Extract only the name, preserving its spelling,
   case and language exactly. Never invent or translate a name. A bare agreement is not a name.
 - UNCLEAR: ambiguous, conditional or insufficient agreement, or a question about the current offer. Do not guess.
-- OTHER_REQUEST: an explicit different request, such as listing KBs, rather than an answer or a question about this
+- OTHER_REQUEST: an explicit different request, such as listing KBs or importing or exporting a KB, rather than an
+  answer or a question about this
   offer.
   The server will leave this workflow and handle that request separately.
 

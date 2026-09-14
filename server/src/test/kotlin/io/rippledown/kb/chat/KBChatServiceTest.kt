@@ -20,6 +20,24 @@ import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
+    fun `file operation contracts are available with and without a case`() {
+        // Given
+        val cases = listOf(null, createCaseWithInterpretation("Test Case"))
+
+        cases.forEach { case ->
+            // When
+            val prompt = KBChatService.systemPrompt(case)
+
+            // Then
+            prompt shouldContain "\"action\": \"ImportKnowledgeBase\""
+            prompt shouldContain "\"action\": \"ExportKnowledgeBase\""
+            prompt shouldContain "Do not ask for a file path"
+            prompt shouldContain "open that knowledge base first"
+            prompt shouldNotContain "{{"
+        }
+    }
+
+    @Test
     fun `system instruction should not contain placeholders`() {
         // Given
         val case = createCaseWithInterpretation("Test Case")

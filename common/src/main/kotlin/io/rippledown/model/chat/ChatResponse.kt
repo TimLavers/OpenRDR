@@ -7,5 +7,6 @@ data class ChatResponse(
     val text: String,
     val suggestions: List<String> = emptyList(),
     val tip: String? = null,
-    val kbListing: KnowledgeBaseListing? = null
+    val kbListing: KnowledgeBaseListing? = null,
+    val kbFileDialogRequest: KbFileDialogRequest? = null
 )

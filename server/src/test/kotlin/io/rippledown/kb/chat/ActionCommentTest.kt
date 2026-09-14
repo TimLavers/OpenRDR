@@ -5,12 +5,28 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.*
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.Test
 
 /**
  * @author Cascade AI
  */
 class ActionCommentTest {
+    @ParameterizedTest
+    @ValueSource(strings = ["ImportKnowledgeBase", "ExportKnowledgeBase"])
+    fun `file operation actions are parsed without arguments`(name: String) {
+        // Given
+        val json = """{"action":"$name"}"""
+
+        // When
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
+
+        // Then
+        action?.javaClass?.simpleName shouldBe name
+        action.shouldBeInstanceOf<KbManagementAction>()
+    }
+
     @Test
     fun `parser CopyCaseToFavouritesWithNewName from JSON`() {
         // Given

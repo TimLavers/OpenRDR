@@ -5,6 +5,18 @@ import kotlin.test.Test
 
 class ConstantsTest {
     @Test
+    fun `export chooser message identifies the KB without claiming completion`() {
+        // Given
+        val name = "Thyroid Function"
+
+        // When
+        val message = kbExportFileDialogMessage(name)
+
+        // Then
+        message shouldBe "Choose where to save \"Thyroid Function\" as a ZIP file."
+    }
+
+    @Test
     fun `demonstration action messages`() {
         // Given
         val name = "Zoo2"

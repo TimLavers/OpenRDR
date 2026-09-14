@@ -30,8 +30,10 @@ class ChatResponseTest {
 
         // Then
         restored.kbListing shouldBe null
+        restored.kbFileDialogRequest shouldBe null
         restored shouldBe ChatResponse("Hello")
         ChatResponse("Hello").kbListing shouldBe null
+        Json.encodeToString(ChatResponse("Hello")) shouldBe json
     }
 
     @Test

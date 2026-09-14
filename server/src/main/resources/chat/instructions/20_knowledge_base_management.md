@@ -12,6 +12,33 @@ asks for anything else, tell them to open or create a knowledge base first.
 The system carries out each of these actions and replies to the user itself. Output the action as soon as the user's
 request is clear; do not ask the user to confirm first, and do not describe what you are about to do.
 
+## Importing and exporting a knowledge base
+
+If the user asks to import a knowledge base from a ZIP archive, output:
+
+```json
+{
+  "action": "{{IMPORT_KNOWLEDGE_BASE}}"
+}
+```
+
+If the user asks to export the open knowledge base, output:
+
+```json
+{
+  "action": "{{EXPORT_KNOWLEDGE_BASE}}"
+}
+```
+
+These actions take no arguments. Do not ask for a file path or put one in the action. The application selects files
+through native dialogs and reports the actual result. Do not claim that an import or export has completed.
+Import is available without an open knowledge base. If export is requested with none open, still emit the export
+action; the server explains the refusal. The server also refuses both actions while a rule is being built.
+
+Export targets the open stored knowledge base only. If the user names a different KB, use `{{USER_ACTION}}` to ask
+them to open that knowledge base first. If they name a built-in demonstration, ask them to open a named copy first.
+Do not silently export the current KB when another one was requested.
+
 ## Listing the knowledge bases
 
 If the user asks which knowledge bases there are, output:
