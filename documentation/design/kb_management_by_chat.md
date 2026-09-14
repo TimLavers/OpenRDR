@@ -18,6 +18,7 @@ and more than one client at a time.
 
 The KB-name menu contains only **Import KB** and **Export KB**, retaining their file dialogs. Creation, demonstration
 copies, listing, switching and descriptions use chat; their duplicate menu items and dialogs have been removed.
+Export is disabled when no KB is open; Import remains available. Opening or closing a KB updates Export's availability.
 
 ## How it works
 

@@ -1,5 +1,6 @@
 package io.rippledown.appbar
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.mockk
@@ -51,9 +52,10 @@ class KbAnchorMenuTest {
     }
 
     @Test
-    fun `should show placeholder and file actions when no KB is selected`() {
+    fun `export is enabled only while a KB is open and import stays enabled`() {
         // Given
-        composeTestRule.setContent { KbAnchorMenu(null, handler) }
+        val selectedKb = mutableStateOf<KBInfo?>(null)
+        composeTestRule.setContent { KbAnchorMenu(selectedKb.value, handler) }
 
         // When
         composeTestRule.clickDropdown()
@@ -62,7 +64,23 @@ class KbAnchorMenuTest {
         with(composeTestRule) {
             onNodeWithTag(KB_NAME_ID, useUnmergedTree = true).assertTextEquals(NO_KB_SELECTED)
             onNodeWithText(IMPORT_KB_TEXT).assertIsEnabled()
+            onNodeWithText(EXPORT_KB_TEXT).assertIsNotEnabled()
+
+            // When
+            runOnIdle { selectedKb.value = bondiInfo }
+
+            // Then
+            onNodeWithTag(KB_NAME_ID, useUnmergedTree = true).assertTextEquals(bondiInfo.name)
+            onNodeWithText(IMPORT_KB_TEXT).assertIsEnabled()
             onNodeWithText(EXPORT_KB_TEXT).assertIsEnabled()
+
+            // When
+            runOnIdle { selectedKb.value = null }
+
+            // Then
+            onNodeWithTag(KB_NAME_ID, useUnmergedTree = true).assertTextEquals(NO_KB_SELECTED)
+            onNodeWithText(IMPORT_KB_TEXT).assertIsEnabled()
+            onNodeWithText(EXPORT_KB_TEXT).assertIsNotEnabled()
         }
     }
 

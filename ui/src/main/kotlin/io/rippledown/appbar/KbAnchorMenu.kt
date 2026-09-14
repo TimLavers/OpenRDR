@@ -67,6 +67,7 @@ fun KbAnchorMenu(kbInfo: KBInfo?, handler: AppBarHandler) {
             MenuItem(
                 text = EXPORT_KB_TEXT,
                 description = EXPORT_KB_TEXT,
+                enabled = kbInfo != null,
                 onClick = { expanded = false; exportKbDialog = true }
             )
         }
@@ -107,10 +108,12 @@ private fun KbAnchorTrigger(kbName: String, onClick: () -> Unit) {
 private fun MenuItem(
     text: String,
     description: String,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     DropdownMenuItem(
         onClick = onClick,
+        enabled = enabled,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
         modifier = Modifier
             .height(28.dp)
