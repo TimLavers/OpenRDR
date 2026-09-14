@@ -195,20 +195,6 @@ Feature: Knowledge Base management
       | Thyroid Stimulating Hormone                                    |
       | Zoo Animals                                                    |
 
-  Scenario: The list shows demonstrations
-    Given a default KB is opened
-    And I start the client application
-    When I enter the following text into the chat panel:
-      | List the knowledge bases |
-    Then the chatbot response consists of the following lines:
-      | Your knowledge bases:                                          |
-      | Thyroids (open)                                                |
-      | Demonstration knowledge bases (open one to get your own copy): |
-      | Contact Lens Prescription                                      |
-      | Pathology                                                      |
-      | Thyroid Stimulating Hormone                                    |
-      | Zoo Animals                                                    |
-
   Scenario: A refused demonstration copy name can be corrected without restarting
     Given a default KB is opened
     And I start the client application

@@ -177,6 +177,7 @@ demonstration title is refused; the no-knowledge-base greeting mentions demonstr
 :cucumber:kb`.
 
 Implementation review corrected alphabetical ordering and separation in no-KB greetings, horizontal chip scrolling,
-outdated list expectations and UTF-8 corruption introduced by the bulk default-KB feature edit. The seven demonstration
-scenarios are implemented; compilation, mock-based helper tests and the full cucumber dry run pass. The real
+outdated list expectations and UTF-8 corruption introduced by the bulk default-KB feature edit. Demonstration listing
+is covered by the existing listing and deletion scenarios; the duplicate "The list shows demonstrations" scenario
+has been removed. Compilation, mock-based helper tests and the full cucumber dry run pass. The real
 `:cucumber:kb` run still needs the live server, model and GUI and must be scheduled by the user.

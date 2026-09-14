@@ -491,6 +491,10 @@ undefined steps.
 
 ## Step 9 — New cuke scenarios (`kb/Knowledge Base management by chat.feature`)
 
+Review update: these scenarios now live in `kb/Knowledge Base Management.feature`. The standalone "The list shows
+demonstrations" scenario was removed because the existing listing and deletion scenarios assert the same headings
+and demonstration names.
+
 Add, using existing steps (`I enter the following text into the chat panel`, `the chatbot response contains the
 following terms`, `the chatbot response consists of the following lines`, `the displayed KB name is now`, `the count
 of the number of cases is`), plus one new step:
