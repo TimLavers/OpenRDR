@@ -89,6 +89,10 @@ stage. `KnowledgeBaseConversation.State.Creating` holds an action factory: `Crea
 at `AWAITING_NAME`, preserving its question on a plain confirmation. Both actions use the same blank, duplicate,
 reserved-title and near-duplicate checks. The server decides, the model reads.
 
+At `OFFER_CREATION`, a `CONFIRM_WITH_NAME` reply naming a demonstration opens its copy-naming workflow. For example,
+replying "Zoo Animals" to the empty-server greeting asks for the copy's name; replying "Zoo2" then creates that copy.
+At `AWAITING_NAME`, the supplied name names the new KB or copy, so demonstration titles remain reserved.
+
 ### Name resolution
 
 `resolveKbName` searches in order: exact stored name, exact demonstration title, partial stored names, partial

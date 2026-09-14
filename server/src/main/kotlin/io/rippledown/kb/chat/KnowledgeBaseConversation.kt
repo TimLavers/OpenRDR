@@ -3,10 +3,7 @@ package io.rippledown.kb.chat
 import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.constants.chat.KB_ACTION_DURING_RULE_MESSAGE
 import io.rippledown.constants.chat.NAME_THE_NEW_KB
-import io.rippledown.kb.chat.action.AddDemonstrationCase
-import io.rippledown.kb.chat.action.CreateKnowledgeBase
-import io.rippledown.kb.chat.action.KbManagementAction
-import io.rippledown.kb.chat.action.KbManagementOutcome
+import io.rippledown.kb.chat.action.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
@@ -109,7 +106,12 @@ class KnowledgeBaseConversation(
 
             KbCreationIntent.CONFIRM_WITH_NAME -> {
                 reset()
-                execute(pending.actionForName(checkNotNull(reply.kbName)))
+                val name = checkNotNull(reply.kbName).trim()
+                val action =
+                    if (pending.stage == KbCreationStage.OFFER_CREATION && service.isDemonstrationTitle(name)) {
+                        OpenKnowledgeBase(name)
+                    } else pending.actionForName(name)
+                execute(action)
             }
 
             KbCreationIntent.UNCLEAR -> clarify(pending)

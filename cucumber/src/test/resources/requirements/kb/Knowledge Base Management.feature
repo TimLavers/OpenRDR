@@ -264,11 +264,21 @@ Feature: Knowledge Base management
       | is the name of a demonstration knowledge base |
     And the displayed KB name is Thyroids
 
-  Scenario: No knowledge bases greeting mentions demonstrations
+  Scenario: A demonstration named in reply to the no knowledge bases greeting can be opened
     Given I start the client application
     Then the chatbot response contains the following terms:
       | no knowledge bases yet | demonstration | Zoo Animals |
     And no knowledge base is shown as selected
+    When I enter the following text into the chat panel:
+      | Zoo Animals |
+    Then the chatbot response contains the following terms:
+      | your own copy | Zoo Animals |
+    When I enter the following text into the chat panel:
+      | Zoo2 |
+    Then the chatbot response contains the following terms:
+      | Created | Zoo2 | demonstration and opened it |
+    And the displayed KB name is now Zoo2
+    And the count of the number of cases is 101
 
   Scenario: Deleting a knowledge base is abandoned if not confirmed
     Given a default KB is opened

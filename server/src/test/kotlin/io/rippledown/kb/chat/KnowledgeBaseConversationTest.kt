@@ -7,16 +7,16 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
-import io.rippledown.constants.chat.KB_ACTION_DURING_RULE_MESSAGE
-import io.rippledown.constants.chat.NAME_THE_NEW_KB
-import io.rippledown.constants.chat.demoCaseAddedMessage
+import io.rippledown.constants.chat.*
+import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.action.KbManagementAction
 import io.rippledown.kb.chat.action.KbManagementOutcome
+import io.rippledown.kb.chat.action.OpenKnowledgeBase
 import io.rippledown.kb.chat.action.done
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -29,6 +29,103 @@ class KnowledgeBaseConversationTest {
     private val interpreter = mockk<KbCreationReplyInterpreter>()
     private val rules = mockk<RuleService>()
     private val conversation = KnowledgeBaseConversation(service, interpreter, rules)
+
+    @ParameterizedTest
+    @EnumSource(SampleKB::class, names = ["TSH", "CONTACT_LENSES", "ZOO", "PATHOLOGY"])
+    fun `a demonstration title offered as the first reply asks for a copy name`(sample: SampleKB) = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        every { service.knowledgeBases() } returns emptyList()
+        every { service.openKnowledgeBase() } returns null
+        val greeting = noKbGreeting(emptyList())
+        val name = sample.title().lowercase()
+        every { service.isDemonstrationTitle(name) } returns true
+        every { service.resolve(name) } returns KbResolution.Demonstration(sample)
+        coEvery { interpreter.interpret(KbCreationStage.OFFER_CREATION, greeting, name) } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, " $name ")
+        conversation.greet(null, greeting)
+
+        // When
+        val response = conversation.answer(name)
+
+        // Then
+        val question = nameForDemonstrationCopyMessage(sample.title())
+        response shouldBe ChatResponse(question)
+        val pending = conversation.state.shouldBeInstanceOf<KnowledgeBaseConversation.State.Creating>()
+        pending.stage shouldBe KbCreationStage.AWAITING_NAME
+        pending.question shouldBe question
+        coVerify(exactly = 0) { service.create(any()) }
+        coVerify(exactly = 0) { service.createFromSample(any(), any()) }
+
+        // Given
+        every { service.isDemonstrationTitle("MyCopy") } returns false
+        every { service.resolve("MyCopy") } returns KbResolution.NotFound("MyCopy", emptyList())
+        every { service.nearDuplicateOf("MyCopy") } returns null
+        coEvery { service.createFromSample("MyCopy", sample) } returns KBInfo("copy", "MyCopy")
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, question, "MyCopy") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "MyCopy")
+
+        // When
+        val created = conversation.answer("MyCopy")
+
+        // Then
+        created shouldBe ChatResponse(kbCopiedFromDemonstrationMessage("MyCopy", sample.title()))
+        coVerify(exactly = 1) { service.createFromSample("MyCopy", sample) }
+        coVerify(exactly = 0) { service.create(any()) }
+        conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+    }
+
+    @Test
+    fun `an ordinary name offered as the first reply creates an empty knowledge base`() = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        every { service.knowledgeBases() } returns emptyList()
+        every { service.openKnowledgeBase() } returns null
+        val greeting = noKbGreeting(emptyList())
+        every { service.isDemonstrationTitle("Research") } returns false
+        every { service.resolve("Research") } returns KbResolution.NotFound("Research", emptyList())
+        every { service.nearDuplicateOf("Research") } returns null
+        coEvery { service.create("Research") } returns KBInfo("research", "Research")
+        coEvery { interpreter.interpret(KbCreationStage.OFFER_CREATION, greeting, "Research") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Research")
+        conversation.greet(null, greeting)
+
+        // When
+        val response = conversation.answer("Research")
+
+        // Then
+        response shouldBe ChatResponse(kbCreatedMessage("Research"))
+        coVerify(exactly = 1) { service.create("Research") }
+        coVerify(exactly = 0) { service.createFromSample(any(), any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `a reserved title at the naming stage is refused rather than opening a different demonstration`(copy: Boolean) =
+        runTest {
+            // Given
+            every { rules.isRuleSessionActive() } returns false
+            every { service.knowledgeBases() } returns emptyList()
+            every { service.openKnowledgeBase() } returns null
+            every { service.isDemonstrationTitle("Pathology") } returns true
+            every { service.resolve("Zoo Animals") } returns KbResolution.Demonstration(SampleKB.ZOO)
+            if (copy) conversation.execute(OpenKnowledgeBase("Zoo Animals"))
+            else {
+                conversation.greet(null, noKbGreeting(emptyList()))
+                conversation.answer("yes")
+            }
+            coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, any(), "Pathology") } returns
+                    KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Pathology")
+
+            // When
+            val response = conversation.answer("Pathology")
+
+            // Then
+            response shouldBe ChatResponse(kbNameReservedMessage("Pathology"))
+            coVerify(exactly = 0) { service.resolve("Pathology") }
+            coVerify(exactly = 0) { service.create(any()) }
+            coVerify(exactly = 0) { service.createFromSample(any(), any()) }
+        }
 
     @Test
     fun `an ordinary greeting offers a demo case for the open knowledge base only once`() = runTest {
