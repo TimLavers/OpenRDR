@@ -21,9 +21,13 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         Zoo Animals
     """.trimIndent()
 
+    private val demoDescriptions = SampleKB.demonstrations().associate { it.title() to it.description() }
+
     @BeforeTest
     fun stubDemonstrations() {
         every { kbService.demonstrations() } returns SampleKB.demonstrations()
+        every { kbService.description(thyroids) } returns "# Thyroids\nA basic thyroid management KB."
+        every { kbService.description(glucose) } returns ""
     }
 
     @Test
@@ -38,7 +42,10 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         // Then
         outcome.shouldBeInstanceOf<KbManagementOutcome.Done>().response shouldBe ChatResponse(
             "Your knowledge bases:\nThyroids (open)\nGlucose\n\n$demonstrationSection",
-            kbListing = KnowledgeBaseListing(listOf("Thyroids", "Glucose"), demoTitles, "Thyroids")
+            kbListing = KnowledgeBaseListing(
+                listOf("Thyroids", "Glucose"), demoTitles, "Thyroids",
+                demoDescriptions + ("Thyroids" to "Thyroids")
+            )
         )
     }
 
@@ -54,7 +61,10 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         // Then
         outcome.shouldBeInstanceOf<KbManagementOutcome.Done>().response shouldBe ChatResponse(
             "Your knowledge bases:\nGlucose\nThyroids\n\n$demonstrationSection",
-            kbListing = KnowledgeBaseListing(listOf("Glucose", "Thyroids"), demoTitles)
+            kbListing = KnowledgeBaseListing(
+                listOf("Glucose", "Thyroids"), demoTitles,
+                descriptions = demoDescriptions + ("Thyroids" to "Thyroids")
+            )
         )
     }
 
@@ -70,7 +80,7 @@ class ListKnowledgeBasesTest : KbActionTestBase() {
         // Then
         outcome.shouldBeInstanceOf<KbManagementOutcome.Done>().response shouldBe ChatResponse(
             "You have no knowledge bases of your own.\n\n$demonstrationSection",
-            kbListing = KnowledgeBaseListing(emptyList(), demoTitles)
+            kbListing = KnowledgeBaseListing(emptyList(), demoTitles, descriptions = demoDescriptions)
         )
     }
 

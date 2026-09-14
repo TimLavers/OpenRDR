@@ -335,7 +335,11 @@ class ActionCommentTest {
             newName = "Thyroid Function"
         ).createActionInstance() shouldBe RenameKnowledgeBase("Thyroid Function")
         ActionComment(SHOW_KNOWLEDGE_BASE_DESCRIPTION)
-            .createActionInstance().shouldBeInstanceOf<ShowKnowledgeBaseDescription>()
+            .createActionInstance() shouldBe ShowKnowledgeBaseDescription(null)
+        ActionComment(
+            SHOW_KNOWLEDGE_BASE_DESCRIPTION,
+            kbName = "Glucose"
+        ).createActionInstance() shouldBe ShowKnowledgeBaseDescription("Glucose")
         ActionComment(
             SET_KNOWLEDGE_BASE_DESCRIPTION,
             description = "A thyroid KB."

@@ -41,4 +41,6 @@ If either fails, the answer belongs in the text field.
 
 KB list rows use compact spacing, blue underlined names and hover/focus highlighting. The current KB is inactive
 and marked "(current)" immediately after its name. Muted section headings have info icons with hover instructions,
-including the naming and copy behaviour for demonstrations.
+including the naming and copy behaviour for demonstrations. Hovering a row shows a one-line summary of that KB's
+description; a tooltip is passive disclosure, not a control, so it does not need the affordance test. The full
+description is asked for in the chat.

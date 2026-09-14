@@ -83,8 +83,7 @@ class ApplicationKbService(
         return renamed
     }
 
-    override fun description(): String =
-        checkNotNull(openEndpoint()) { "No knowledge base is open." }.description()
+    override fun description(kbInfo: KBInfo): String = application.kbFor(kbInfo).description()
 
     override fun setDescription(text: String) {
         checkNotNull(openEndpoint()) { "No knowledge base is open." }.setDescription(text)

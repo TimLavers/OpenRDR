@@ -27,6 +27,8 @@ import org.slf4j.Logger
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
+fun demonstrationDescriptions() = SampleKB.demonstrations().associate { it.title() to it.description() }
+
 /**
  * @author Cascade AI
  */
@@ -269,7 +271,8 @@ class ChatManagerTest {
         // Then
         response.kbListing shouldBe KnowledgeBaseListing(
             listOf("Glucose"),
-            SampleKB.demonstrations().map { it.title() }.sorted()
+            SampleKB.demonstrations().map { it.title() }.sorted(),
+            descriptions = demonstrationDescriptions()
         )
         response.suggestions shouldBe listOf("Buffered condition")
     }
@@ -288,7 +291,8 @@ class ChatManagerTest {
         // Then
         response.kbListing shouldBe KnowledgeBaseListing(
             listOf("Glucose"),
-            SampleKB.demonstrations().map { it.title() }.sorted()
+            SampleKB.demonstrations().map { it.title() }.sorted(),
+            descriptions = demonstrationDescriptions()
         )
         response.suggestions shouldBe listOf("Model condition")
     }
@@ -321,6 +325,7 @@ class ChatManagerTest {
         kbService = mockk()
         every { kbService.isDemonstrationTitle(any()) } returns false
         every { kbService.demonstrations() } returns SampleKB.demonstrations()
+        every { kbService.description(any()) } returns ""
         viewableCase = mockk()
         case = mockk()
         suggestionsBuffer = SuggestionsBuffer()
@@ -425,7 +430,10 @@ class ChatManagerTest {
         response shouldBe ChatResponse(
             "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                     SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
-            kbListing = KnowledgeBaseListing(listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted())
+            kbListing = KnowledgeBaseListing(
+                listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted(),
+                descriptions = demonstrationDescriptions()
+            )
         )
     }
 
@@ -463,7 +471,10 @@ class ChatManagerTest {
         response shouldBe ChatResponse(
             "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                     SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
-            kbListing = KnowledgeBaseListing(listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted())
+            kbListing = KnowledgeBaseListing(
+                listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted(),
+                descriptions = demonstrationDescriptions()
+            )
         )
     }
 

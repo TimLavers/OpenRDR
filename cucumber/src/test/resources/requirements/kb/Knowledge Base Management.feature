@@ -388,3 +388,13 @@ Feature: Knowledge Base management
     A basic thyroid management KB.
     See: https://thyroid.rules.info/basic
     """
+
+  Scenario: The description of a knowledge base that is not open can be read
+    Given a default KB is opened
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | What is the description of Zoo Animals? |
+    Then the chatbot response contains the following terms:
+      | Description of | Zoo Animals | Compton and Kang |
+    And the displayed KB name is Thyroids

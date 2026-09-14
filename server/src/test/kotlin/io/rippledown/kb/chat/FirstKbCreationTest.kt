@@ -33,6 +33,7 @@ class FirstKbCreationTest {
         every { kbService.nearDuplicateOf(any()) } returns null
         every { kbService.isDemonstrationTitle(any()) } returns false
         every { kbService.demonstrations() } returns SampleKB.demonstrations()
+        every { kbService.description(any()) } returns ""
         coEvery { kbService.create(any()) } answers { KBInfo("new", firstArg()) }
     }
 
@@ -317,7 +318,10 @@ class FirstKbCreationTest {
         response shouldBe ChatResponse(
             "$NO_KNOWLEDGE_BASES_OF_YOUR_OWN\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
                     SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
-            kbListing = KnowledgeBaseListing(emptyList(), SampleKB.demonstrations().map { it.title() }.sorted())
+            kbListing = KnowledgeBaseListing(
+                emptyList(), SampleKB.demonstrations().map { it.title() }.sorted(),
+                descriptions = demonstrationDescriptions()
+            )
         )
         coVerify(exactly = 1) { conversation.response("List KBs") }
         coVerify(exactly = 0) { kbService.create(any()) }

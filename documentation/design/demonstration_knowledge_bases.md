@@ -55,8 +55,20 @@ Empty stored lists still show their heading and an empty-state message.
 The list uses the chat's vertical scrolling; it has no separate horizontal chip row.
 
 `ListKnowledgeBases` supplies `ChatResponse.kbListing`, a `KnowledgeBaseListing` containing stored names,
-demonstration names and the open name. The UI renders this structure rather than parsing the response prose. The
-response text remains available for history and acceptance-test observations, but is not displayed a second time.
+demonstration names, the open name and a description per name. The UI renders this structure rather than parsing the
+response prose. The response text remains available for history and acceptance-test observations, but is not displayed
+a second time.
+
+#### Descriptions on hover
+
+Hovering a row shows a one-line summary of that knowledge base's description in the same tooltip style as the heading
+help. For a stored KB the summary is `summaryOf(description)`: the first non-blank line with any Markdown heading marks
+stripped, cut to `SUMMARY_MAX_LENGTH` (120) characters with an ellipsis. A blank description gives no tooltip. Each
+demonstration has a fixed one-line `SampleKB.description()`. The tooltip is deliberately short: descriptions are
+Markdown and can run to several lines, and a scrolling tooltip disappears when the pointer moves to it. The full text
+is a chat request away: `ShowKnowledgeBaseDescription` takes an optional `kbName`, resolved like any other, so "What is
+the description of Zoo Animals?" answers with `Description of "Zoo Animals":` and the text; a partial stored match is
+described without asking, since reading changes nothing.
 
 Clicking a row or activating it with the keyboard sends "Open <name>" as an ordinary user message. Name resolution,
 the naming prompt for a demonstration, and refusal during a rule session follow the typed-message path. Rows are

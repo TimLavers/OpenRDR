@@ -305,7 +305,20 @@ class ApplicationKbServiceTest {
         service.setDescription("A thyroid knowledge base.")
 
         // then
-        service.description() shouldBe "A thyroid knowledge base."
+        service.description(thyroids) shouldBe "A thyroid knowledge base."
+    }
+
+    @Test
+    fun `the description of a knowledge base that is not open can be read`() {
+        // given
+        val thyroids = app.createKB("Thyroids", false)
+        val glucose = app.createKB("Glucose", false)
+        app.kbForId(glucose.id).setDescription("Glucose rules.")
+        openEndpoint = app.kbForId(thyroids.id)
+
+        // when / then
+        service.description(glucose) shouldBe "Glucose rules."
+        service.description(thyroids) shouldBe ""
     }
 
     @Test

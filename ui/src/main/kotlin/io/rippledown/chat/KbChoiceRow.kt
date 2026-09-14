@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import io.rippledown.constants.chat.NO_KNOWLEDGE_BASES_OF_YOUR_OWN
 import io.rippledown.model.chat.KnowledgeBaseListing
 
+val KbDescription = SemanticsPropertyKey<String>("KbDescription")
+
 @Composable
 fun KbChoiceRow(
     listing: KnowledgeBaseListing,
@@ -50,7 +52,7 @@ fun KbChoiceRow(
                 )
             }
             listing.storedNames.forEach { name ->
-                KnowledgeBaseItem(name, name == listing.openName, enabled, onChosen)
+                KnowledgeBaseItem(name, name == listing.openName, enabled, listing.descriptions[name], onChosen)
             }
             Spacer(Modifier.height(12.dp))
             KnowledgeBaseHeading(
@@ -59,10 +61,20 @@ fun KbChoiceRow(
             )
             Spacer(Modifier.height(4.dp))
             listing.demonstrationNames.forEach { name ->
-                KnowledgeBaseItem(name, false, enabled, onChosen)
+                KnowledgeBaseItem(name, false, enabled, listing.descriptions[name], onChosen)
             }
         }
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HelpTooltip(text: String, content: @Composable () -> Unit) {
+    TooltipArea(tooltip = {
+        Surface(color = Color(0xFF333333), contentColor = Color.White, shape = RoundedCornerShape(4.dp)) {
+            Text(text, fontSize = 12.sp, modifier = Modifier.widthIn(max = 280.dp).padding(8.dp))
+        }
+    }, content = content)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -72,11 +84,7 @@ private fun KnowledgeBaseHeading(title: String, help: String) {
         Text(
             title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.DarkGray,
             modifier = Modifier.semantics { heading() })
-        TooltipArea(tooltip = {
-            Surface(color = Color(0xFF333333), contentColor = Color.White, shape = RoundedCornerShape(4.dp)) {
-                Text(help, fontSize = 12.sp, modifier = Modifier.widthIn(max = 280.dp).padding(8.dp))
-            }
-        }) {
+        HelpTooltip(help) {
             Icon(
                 Icons.Outlined.Info, contentDescription = "$title help", tint = Color.DarkGray,
                 modifier = Modifier.padding(start = 6.dp).size(14.dp).semantics { stateDescription = help })
@@ -85,7 +93,28 @@ private fun KnowledgeBaseHeading(title: String, help: String) {
 }
 
 @Composable
-private fun KnowledgeBaseItem(name: String, isOpen: Boolean, enabled: Boolean, onChosen: (String) -> Unit) {
+private fun KnowledgeBaseItem(
+    name: String,
+    isOpen: Boolean,
+    enabled: Boolean,
+    description: String?,
+    onChosen: (String) -> Unit
+) {
+    if (description.isNullOrBlank()) {
+        KnowledgeBaseItemRow(name, isOpen, enabled, null, onChosen)
+    } else {
+        HelpTooltip(description) { KnowledgeBaseItemRow(name, isOpen, enabled, description, onChosen) }
+    }
+}
+
+@Composable
+private fun KnowledgeBaseItemRow(
+    name: String,
+    isOpen: Boolean,
+    enabled: Boolean,
+    description: String?,
+    onChosen: (String) -> Unit
+) {
     val interactions = remember { MutableInteractionSource() }
     val hovered by interactions.collectIsHoveredAsState()
     val focused by interactions.collectIsFocusedAsState()
@@ -103,6 +132,7 @@ private fun KnowledgeBaseItem(name: String, isOpen: Boolean, enabled: Boolean, o
             .semantics {
                 contentDescription = "$KB_CHOICE_ITEM$name"
                 if (isOpen) stateDescription = "Open"
+                if (description != null) this[KbDescription] = description
             }
             .heightIn(min = 24.dp)
             .padding(horizontal = 8.dp, vertical = 2.dp),

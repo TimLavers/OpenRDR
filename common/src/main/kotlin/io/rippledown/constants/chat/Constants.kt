@@ -145,6 +145,7 @@ fun kbDeletedMessage(name: String) = "$KB_DELETED \"$name\"."
 fun kbRenamedMessage(oldName: String, newName: String) = "Renamed \"$oldName\" to \"$newName\"."
 fun kbAlreadyExistsMessage(name: String) = "A knowledge base named \"$name\" $KB_ALREADY_EXISTS."
 fun kbHasNoDescriptionMessage(name: String) = "\"$name\" has no description."
+fun kbDescriptionOfMessage(name: String, description: String) = "Description of \"$name\":\n$description"
 fun kbDescriptionUpdatedMessage(name: String) = "Description of \"$name\" updated."
 fun confirmKbDeletionMessage(name: String) =
     "Delete the knowledge base \"$name\"? $CANNOT_BE_UNDONE"

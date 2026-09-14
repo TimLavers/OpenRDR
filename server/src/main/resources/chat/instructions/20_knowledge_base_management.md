@@ -133,12 +133,15 @@ the request is ambiguous. Ask which they mean rather than choosing; the naming a
 
 ## Reading the knowledge base description
 
-If the user asks what the description of the open knowledge base is, always emit
-`{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}`; do not answer from memory.
+If the user asks what the description of a knowledge base is, always emit
+`{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}`; do not answer from memory. If the user names a knowledge base, including a
+demonstration, output the name exactly as the user gave it; if they name none, omit `kbName`, and the open knowledge
+base is meant.
 
 ```json
 {
-  "action": "{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}"
+  "action": "{{SHOW_KNOWLEDGE_BASE_DESCRIPTION}}",
+  "kbName": "<name given by the user>"
 }
 ```
 

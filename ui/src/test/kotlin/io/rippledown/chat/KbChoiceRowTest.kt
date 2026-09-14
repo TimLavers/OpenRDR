@@ -95,6 +95,33 @@ class KbChoiceRowTest {
     }
 
     @Test
+    fun `hovering a knowledge base shows its description summary`() {
+        // Given
+        val listing = KnowledgeBaseListing(
+            listOf("Lipids", "Thyroids"), listOf("Zoo Animals"), "Thyroids",
+            mapOf("Thyroids" to "Thyroid management rules.", "Zoo Animals" to "Classifies animals.")
+        )
+        composeTestRule.setContent { KbChoiceRow(listing, 0) }
+
+        // When
+        composeTestRule.onNodeWithContentDescription("${KB_CHOICE_ITEM}Zoo Animals")
+            .performMouseInput { moveTo(center) }
+        composeTestRule.mainClock.advanceTimeBy(1_000)
+
+        // Then
+        composeTestRule.waitUntil(2_000) {
+            composeTestRule.onAllNodesWithText("Classifies animals.").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Classifies animals.").assertExists()
+        composeTestRule.onNodeWithContentDescription("${KB_CHOICE_ITEM}Zoo Animals")
+            .assert(SemanticsMatcher.expectValue(KbDescription, "Classifies animals."))
+        composeTestRule.onNodeWithContentDescription("${KB_CHOICE_ITEM}Thyroids")
+            .assert(SemanticsMatcher.expectValue(KbDescription, "Thyroid management rules."))
+        composeTestRule.onNodeWithContentDescription("${KB_CHOICE_ITEM}Lipids")
+            .assert(SemanticsMatcher.keyNotDefined(KbDescription))
+    }
+
+    @Test
     fun `rows are disabled while chat is busy`() {
         // Given
         val listing = KnowledgeBaseListing(listOf("Lipids"), listOf("Pathology"))
