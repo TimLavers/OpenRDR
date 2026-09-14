@@ -351,7 +351,6 @@ Feature: Knowledge Base management
       | already exists |
     And the displayed KB name is Thyroids
 
-  @single
   Scenario: Knowledge base descriptions can be edited through chat and persist across switches
     Given a default KB is opened
     And A Knowledge Base called Zinc has been created
@@ -389,7 +388,6 @@ Feature: Knowledge Base management
     A basic thyroid management KB.
     See: https://thyroid.rules.info/basic
     """
-    And pause
 
   Scenario: Setting the description of a named knowledge base leaves the open one alone
     Given a default KB is opened
