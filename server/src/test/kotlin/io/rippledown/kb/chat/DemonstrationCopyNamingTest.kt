@@ -85,6 +85,41 @@ class DemonstrationCopyNamingTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = ["Thyroids", "Pathology"])
+    fun `a refused copy name keeps the demonstration and accepts a replacement`(name: String) = runTest {
+        // Given
+        manager.response("Open Zoo Animals")
+        every { kbService.isDemonstrationTitle(name) } returns (name == "Pathology")
+        every { kbService.resolve("Thyroids") } returns KbResolution.Exact(KBInfo("existing", "Thyroids"))
+        coEvery { conversation.response(any()) } returns namedReply(name)
+        val reason = if (name == "Pathology") kbNameReservedMessage(name) else kbAlreadyExistsMessage(name)
+
+        // When
+        val refused = manager.response(name)
+        val repeated = manager.response("yes")
+
+        // Then
+        refused shouldBe ChatResponse("$reason\n\n$question")
+        repeated shouldBe refused
+        coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
+
+        // Given
+        val prompt = slot<String>()
+        coEvery { conversation.response(capture(prompt)) } returns namedReply("Zoo2")
+
+        // When
+        val copied = manager.response("ok, Zoo2")
+
+        // Then
+        copied shouldBe ChatResponse(kbCopiedFromDemonstrationMessage("Zoo2", "Zoo Animals"))
+        prompt.captured shouldContain "AWAITING_NAME"
+        prompt.captured shouldContain reason.toJsonString().removeSurrounding("\"")
+        prompt.captured shouldContain question
+        coVerify(exactly = 1) { kbService.createFromSample("Zoo2", ZOO) }
+        coVerify(exactly = 0) { kbService.create(any()) }
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = ["yes", "oui"])
     fun `agreement without a name repeats the demonstration question and preserves the copy action`(reply: String) =
         runTest {

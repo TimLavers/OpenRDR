@@ -2,6 +2,7 @@ package io.rippledown.kb.chat.action
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -30,7 +31,9 @@ class CopyDemonstrationKnowledgeBaseTest : KbActionTestBase() {
         val outcome = action.doIt(kbService)
 
         // Then
-        outcome.text() shouldBe BLANK_NAME_MESSAGE
+        val retry = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        retry.question shouldBe BLANK_NAME_MESSAGE + "\n\n" + nameForDemonstrationCopyMessage("Zoo Animals")
+        retry.actionForName("Zoo2") shouldBe CopyDemonstrationKnowledgeBase(ZOO, "Zoo2")
         verify(exactly = 0) { kbService.resolve(any()) }
         coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
     }
@@ -44,7 +47,9 @@ class CopyDemonstrationKnowledgeBaseTest : KbActionTestBase() {
         val outcome = CopyDemonstrationKnowledgeBase(ZOO, " pathology ").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe kbNameReservedMessage("pathology")
+        val retry = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        retry.question shouldBe kbNameReservedMessage("pathology") + "\n\n" + nameForDemonstrationCopyMessage("Zoo Animals")
+        retry.actionForName("Zoo2") shouldBe CopyDemonstrationKnowledgeBase(ZOO, "Zoo2")
         verify(exactly = 0) { kbService.resolve(any()) }
         coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
     }
@@ -58,7 +63,9 @@ class CopyDemonstrationKnowledgeBaseTest : KbActionTestBase() {
         val outcome = CopyDemonstrationKnowledgeBase(ZOO, "thyroids").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe kbAlreadyExistsMessage("Thyroids")
+        val retry = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        retry.question shouldBe kbAlreadyExistsMessage("Thyroids") + "\n\n" + nameForDemonstrationCopyMessage("Zoo Animals")
+        retry.actionForName("Zoo2") shouldBe CopyDemonstrationKnowledgeBase(ZOO, "Zoo2")
         verify(exactly = 0) { kbService.nearDuplicateOf(any()) }
         coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
     }

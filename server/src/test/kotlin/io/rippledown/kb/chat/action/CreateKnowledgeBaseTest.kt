@@ -1,13 +1,11 @@
 package io.rippledown.kb.chat.action
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.rippledown.constants.chat.BLANK_NAME_MESSAGE
-import io.rippledown.constants.chat.confirmKbCreateMessage
-import io.rippledown.constants.chat.kbAlreadyExistsMessage
-import io.rippledown.constants.chat.kbCreatedMessage
+import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
@@ -31,7 +29,9 @@ class CreateKnowledgeBaseTest : KbActionTestBase() {
         val outcome = CreateKnowledgeBase("Zoo Animals").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe "\"Zoo Animals\" is the name of a demonstration knowledge base; please choose another."
+        val retry = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        retry.question shouldBe kbNameReservedMessage("Zoo Animals") + "\n\n" + NAME_THE_NEW_KB
+        retry.actionForName("Research") shouldBe CreateKnowledgeBase("Research")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 
@@ -71,7 +71,9 @@ class CreateKnowledgeBaseTest : KbActionTestBase() {
         val outcome = CreateKnowledgeBase("   ").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe BLANK_NAME_MESSAGE
+        val retry = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        retry.question shouldBe BLANK_NAME_MESSAGE + "\n\n" + NAME_THE_NEW_KB
+        retry.actionForName("Research") shouldBe CreateKnowledgeBase("Research")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 
@@ -84,7 +86,9 @@ class CreateKnowledgeBaseTest : KbActionTestBase() {
         val outcome = CreateKnowledgeBase("thyroids").doIt(kbService)
 
         // Then
-        outcome.text() shouldBe kbAlreadyExistsMessage("Thyroids")
+        val retry = outcome.shouldBeInstanceOf<KbManagementOutcome.AskForName>()
+        retry.question shouldBe kbAlreadyExistsMessage("Thyroids") + "\n\n" + NAME_THE_NEW_KB
+        retry.actionForName("Research") shouldBe CreateKnowledgeBase("Research")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

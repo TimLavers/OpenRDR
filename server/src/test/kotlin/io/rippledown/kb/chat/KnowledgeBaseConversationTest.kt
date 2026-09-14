@@ -121,7 +121,10 @@ class KnowledgeBaseConversationTest {
             val response = conversation.answer("Pathology")
 
             // Then
-            response shouldBe ChatResponse(kbNameReservedMessage("Pathology"))
+            val question = if (copy) nameForDemonstrationCopyMessage("Zoo Animals") else NAME_THE_NEW_KB
+            response shouldBe ChatResponse(kbNameReservedMessage("Pathology") + "\n\n" + question)
+            conversation.state.shouldBeInstanceOf<KnowledgeBaseConversation.State.Creating>().stage shouldBe
+                    KbCreationStage.AWAITING_NAME
             coVerify(exactly = 0) { service.resolve("Pathology") }
             coVerify(exactly = 0) { service.create(any()) }
             coVerify(exactly = 0) { service.createFromSample(any(), any()) }

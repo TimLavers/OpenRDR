@@ -324,7 +324,7 @@ class FirstKbCreationTest {
     }
 
     @Test
-    fun `server validation still refuses an existing name`() = runTest {
+    fun `a refused name at the initial offer can be corrected without restarting creation`() = runTest {
         // Given a KB created elsewhere after the initial greeting
         coEvery { conversation.response(any()) } returns namedReply("Thyroid")
         manager.startConversation(null, noKbGreeting(emptyList()))
@@ -334,8 +334,20 @@ class FirstKbCreationTest {
         val response = manager.response("Create Thyroid")
 
         // Then
-        response shouldBe ChatResponse(kbAlreadyExistsMessage("Thyroid"))
+        response shouldBe ChatResponse(kbAlreadyExistsMessage("Thyroid") + "\n\n" + NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
+
+        // Given
+        val prompt = slot<String>()
+        coEvery { conversation.response(capture(prompt)) } returns namedReply("Research")
+
+        // When
+        val created = manager.response("ok, Research")
+
+        // Then
+        created shouldBe ChatResponse(kbCreatedMessage("Research"))
+        prompt.captured shouldContain "AWAITING_NAME"
+        coVerify(exactly = 1) { kbService.create("Research") }
     }
 
     @Test

@@ -11,13 +11,17 @@ import io.rippledown.model.chat.ChatResponse
 suspend fun outcomeForNewKbName(
     kbService: KnowledgeBaseService,
     rawName: String,
+    nameQuestion: String,
+    actionForName: (String) -> KbManagementAction,
     create: suspend (KnowledgeBaseService, String) -> ChatResponse
 ): KbManagementOutcome {
+    fun askAgain(reason: String) = KbManagementOutcome.AskForName("$reason\n\n$nameQuestion", actionForName)
+
     val name = rawName.trim()
-    if (name.isEmpty()) return done(BLANK_NAME_MESSAGE)
-    if (kbService.isDemonstrationTitle(name)) return done(kbNameReservedMessage(name))
+    if (name.isEmpty()) return askAgain(BLANK_NAME_MESSAGE)
+    if (kbService.isDemonstrationTitle(name)) return askAgain(kbNameReservedMessage(name))
     val existing = kbService.resolve(name)
-    if (existing is KbResolution.Exact) return done(kbAlreadyExistsMessage(existing.kbInfo.name))
+    if (existing is KbResolution.Exact) return askAgain(kbAlreadyExistsMessage(existing.kbInfo.name))
     val nearDuplicate = kbService.nearDuplicateOf(name)
     if (nearDuplicate != null) {
         return KbManagementOutcome.Ask(confirmKbCreateMessage(name, nearDuplicate.name)) { create(it, name) }

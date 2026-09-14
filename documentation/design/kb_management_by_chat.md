@@ -94,6 +94,12 @@ At `OFFER_CREATION`, a `CONFIRM_WITH_NAME` reply naming a demonstration opens it
 replying "Zoo Animals" to the empty-server greeting asks for the copy's name; replying "Zoo2" then creates that copy.
 At `AWAITING_NAME`, the supplied name names the new KB or copy, so demonstration titles remain reserved.
 
+A blank, reserved or already-used name returns `AskForName` with the refusal followed by the naming question and
+retains the action for creating the KB or copying the selected demonstration. The next reply is interpreted at
+`AWAITING_NAME`; a plain agreement repeats the question, and a corrected name retries without reopening the
+demonstration. Repeated refusals replace the previous refusal. Success clears naming, near-duplicates transfer to
+confirmation, and cancellation or another request leave the workflow as usual.
+
 ### Name resolution
 
 `resolveKbName` searches in order: exact stored name, exact demonstration title, partial stored names, partial

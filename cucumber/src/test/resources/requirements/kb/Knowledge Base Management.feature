@@ -209,7 +209,7 @@ Feature: Knowledge Base management
       | Thyroid Stimulating Hormone                                    |
       | Zoo Animals                                                    |
 
-  Scenario: Opening a demonstration asks for a name and opens a copy
+  Scenario: A refused demonstration copy name can be corrected without restarting
     Given a default KB is opened
     And I start the client application
     When I enter the following text into the chat panel:
@@ -217,7 +217,17 @@ Feature: Knowledge Base management
     Then the chatbot response contains the following terms:
       | your own copy | Zoo Animals |
     When I enter the following text into the chat panel:
-      | Zoo2 |
+      | Thyroids |
+    Then the chatbot response contains the following terms:
+      | already exists | your own copy | Zoo Animals |
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Pathology |
+    Then the chatbot response contains the following terms:
+      | is the name of a demonstration knowledge base | your own copy | Zoo Animals |
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | ok, Zoo2 |
     Then the chatbot response contains the following terms:
       | Created | Zoo2 | demonstration and opened it |
     And the displayed KB name is now Zoo2
