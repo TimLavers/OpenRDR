@@ -8,6 +8,13 @@ default way to do anything, and the model interprets it. Persistent controls are
 The KB-name menu retains only Import KB and Export KB for file operations. All other KB management uses chat,
 including the clickable lists of stored and demonstration knowledge bases.
 
+Planned: replace those final menu items with chat requests that immediately open native file dialogs through FileKit.
+The application bar then displays only the current KB name. This is a deliberate exception to text-only open-ended
+input: choosing a local file is better served by the operating system's file browser. It is a temporary system dialog,
+launched by a server-validated structured request, with no standing control or extra "Choose file" chat button.
+The client handles the chosen file directly and reports the result; paths are not ordinary messages sent to the model.
+See [the import/export design](demonstration_knowledge_bases.md#import-and-export-through-chat-planned).
+
 ## Inline affordances: the test
 
 An ephemeral control inside the chat (a chip, a button under a message) may be added only when **both** hold:

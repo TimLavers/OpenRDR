@@ -10,6 +10,9 @@ are implemented. Common and filtered server unit tests and Kover checks pass, as
 eight mock-based cucumber helper tests, cucumber compilation and dry run (206 scenarios, 2,635 bound steps).
 The real `:cucumber:kb` run remains for the user to schedule; broader UI tests require approval under `AGENTS.md`.
 
+Planned extension: Steps 11–15 move import and export into chat using native FileKit dialogs, then remove the last
+KB menus. These steps are not implemented. Steps 1–10 above describe the completed demonstration work.
+
 ## Ground rules for whoever implements this
 
 Subsequent usability change: the grouped vertical list in `demonstration_knowledge_bases.md` supersedes Step 7's
@@ -537,6 +540,95 @@ Run: `.\gradlew.bat :cucumber:kb` — needs the live server, model and GUI; ask 
 
 ---
 
+## Step 11 — Structured import/export requests
+
+Read the "Import and export through chat" section of the design first. Inspect the current action dispatch,
+`KnowledgeBaseConversation`, `ChatResponseEnricher`, `ChatController`, `Api` and import/export routes before editing.
+Keep each step test-first and independently green; retain the menus until Step 14.
+
+**Files**: common `model/chat/ChatResponse.kt`, a new `KbFileDialogRequest.kt`, and `constants/chat/Constants.kt`;
+server `kb/chat/action/ImportKnowledgeBase.kt` and `ExportKnowledgeBase.kt`, action dispatch tests, and
+`chat/instructions/20_knowledge_base_management.md` with its prompt-variable wiring.
+
+**Test first**: nullable request defaults preserve existing JSON; both request variants round-trip with their id;
+import is available with no KB or an empty KB; export captures the open KB and is refused with none open; both
+actions are refused during a rule session. Exercise the same dispatch from a normal conversation and from the
+no-KB greeting's pending creation state. Check that response enrichment preserves the request and action parsing
+recognises both actions. A refusal contains no file-dialog request.
+
+**Implement**: add an optional `kbFileDialogRequest` to `ChatResponse`, with serializable import and export variants.
+Each has a server-generated request id; export also carries the selected `KBInfo`. Add no-argument
+`ImportKnowledgeBase` and `ExportKnowledgeBase` actions. Use the existing KB service and conversation guards;
+do not put file I/O in `ChatManager`. Return deterministic pre-dialog text and the request, never a success claim.
+The prompt identifies intent only, without asking for or interpreting local paths. Export targets the open KB;
+users open a named KB or demonstration copy before exporting it. Shared messages belong in the common constants.
+
+## Step 12 — Native file dialogs behind a testable client boundary
+
+**Files**: `gradle/libs.versions.toml`, `ui/build.gradle.kts`, and a small file-dialog interface and FileKit adapter
+under `ui/src/main/kotlin/io/rippledown/`. Check packaging runtime configuration for native dependencies.
+
+**Test first**: use a fake dialog implementation to pin single `.zip` selection, cancellation, suggested export
+filename, and save-destination handling. Cover KB names containing characters invalid in filenames: sanitising
+the suggested filename must not rename the KB. Verify that an existing destination requires overwrite confirmation.
+
+**Implement**: replace the unused `com.darkrockstudios:mpfilepicker` dependency with compatible FileKit dialogs
+dependencies. Provide suspend operations to choose an archive or a save destination, returning cancellation
+explicitly. Use a `.zip` filter and a suggested `<KB name>.zip` filename. Associate dialogs with the application
+window; keep blocking file work off the UI thread. Verify native overwrite behaviour; add confirmation if the
+selected platform implementation does not provide it. Keep native dialog calls confined to the adapter so normal
+tests never drive an OS chooser. Verify open, save and cancel manually in a packaged Windows launch when scheduled.
+
+## Step 13 — Execute requests once and report actual results in chat
+
+**Files**: a small `KbFileTransferController` in the UI with separately tested logic; `ChatController.kt`,
+`OpenRDRUI.kt`, `Api.kt` and relevant HTTP helper tests. Reuse the existing import and export HTTP endpoints.
+
+**Test first**: import success opens the returned KB; export uses the captured KB id even if the current context
+changes; duplicate delivery and recomposition do not repeat a dialog or transfer; a new request id permits a new
+operation even when the text is identical. Cover cancellation of each dialog (no HTTP or write), HTTP and local
+read/write failures, busy-state release, and absence of premature success. Pin export bytes and destination using
+temporary files and MockEngine. Import validation errors, including reserved titles and malformed archives, reach
+chat. A successful import's completion message survives the ensuing conversation restart and the first case appears.
+
+**Implement**: the controller owns `Idle`, `ChoosingFile` and `Transferring` states and consumes request ids once.
+Dispatch requests from the response event, never directly from a composable body or by parsing bot text. Keep
+request deduplication distinct from `ChatController`'s existing display-text deduplication. Disable chat submission
+until the operation ends. Pass export's captured KB identity explicitly to the API instead of looking up mutable
+`currentKB` after the chooser closes. Use the existing import/open context cascade and retain its completion text
+in the resulting chat. Export does not switch context. Show fixed success, cancellation or failure messages based
+on actual outcomes; do not send local paths or those outcomes as fabricated user messages to the model. Release
+pending state on cancellation and failure, allowing the user to retry by making another request.
+
+## Step 14 — Remove the remaining menus and migrate acceptance tests
+
+**Files**: `appbar/ApplicationBar.kt`, `KbAnchorMenu.kt`, `KbHandlers.kt`, `OpenRDRUI.kt`, associated UI tests
+and page objects; `cucumber/src/test/resources/requirements/kb/Knowledge Base Management.feature` and its steps.
+
+**Test first**: rewrite the existing import and export scenarios to request the operation through chat, preserving
+archive round-trip and displayed-KB assertions. Supply file selections through the injectable dialog boundary in
+automated tests; exercise real HTTP transfer and application state, not a bypass of the chat request. Add coverage
+for import on an empty server, cancellation and export with no KB open. Pin the always-visible read-only KB label
+and absence of the dropdown. Retain unit coverage of request guards and transfer failures from Steps 11 and 13.
+
+**Implement**: remove `KbAnchorMenu` and its path-entry dialogs, simplify `ApplicationBar` to the KB label, and
+remove obsolete menu handlers, constants and page-object methods after searching all call sites. Remove only tests
+whose menu behaviour has gone; keep import/export behaviour covered through chat. Do not leave a hidden path-entry
+dialog or add a permanent replacement button. Update affected documentation and user instructions.
+
+## Step 15 — Final verification of chat file operations
+
+After each implementation step, run `:common:test` separately and the required filtered `:server:cleanTest
+:server:test` command from `.windsurf/rules/running-tests.md`. Generate Kover for touched classes in configured
+modules and inspect their uncovered lines. Run focused non-UI tests for the new client controller and HTTP paths;
+use the existing JUnit 5 test infrastructure without introducing a framework migration for Compose UI tests.
+
+Run `:cucumber:compileTestKotlin` and `:cucumber:cucumberDryRun` after changing acceptance coverage. Ask before
+running more than one UI test, and leave live `:cucumber:kb` execution to the user under the project rules. Schedule
+a native-dialog check from the packaged Windows application: import, export, cancel and overwrite confirmation.
+Record checks actually completed and any remaining manual verification; mark Steps 11–15 complete only when their
+required work is done. Do not commit.
+
 ## Order of commits (suggested messages)
 
 1. `Rename SampleKB.DEMO to PATHOLOGY; SampleKB.demonstrations()`
@@ -549,3 +641,8 @@ Run: `.\gradlew.bat :cucumber:kb` — needs the live server, model and GUI; ask 
 8. `Cukes: explicit "a default KB is opened"; remove lazy default KB and demo seeding`
 9. `Cukes: demonstration knowledge base scenarios`
 10. `Docs: demonstration knowledge bases`
+11. `Add structured chat requests for KB import and export`
+12. `Add native KB file dialogs with FileKit`
+13. `Handle KB file transfers and report results in chat`
+14. `Replace remaining KB menus with chat file operations`
+15. `Verify chat import and export workflows`

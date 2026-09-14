@@ -13,12 +13,18 @@
 - Everything that matters is deterministic and unit-tested on the server without a model: name resolution, ambiguity,
   confirmation, refusal during a rule session.
 
-Non-goals: import and export (both need a file path), incremental editing of the description,
-and more than one client at a time.
+Non-goals: incremental editing of the description and more than one client at a time.
 
 The KB-name menu contains only **Import KB** and **Export KB**, retaining their file dialogs. Creation, demonstration
 copies, listing, switching and descriptions use chat; their duplicate menu items and dialogs have been removed.
 Export is disabled when no KB is open; Import remains available. Opening or closing a KB updates Export's availability.
+
+Agreed next change (not yet implemented): "Import a KB" and "Export this KB" will immediately launch native Open
+and Save As dialogs through FileKit. The server validates the request and sends a structured instruction; the client
+handles local files and reports completion or cancellation in chat. This removes the remaining menu and path-entry
+dialogs while retaining the KB name as a read-only label.
+See [the design](demonstration_knowledge_bases.md#import-and-export-through-chat-planned)
+and [implementation Steps 11–15](demonstration_knowledge_bases_implementation_plan.md#step-11--structured-importexport-requests).
 
 ## How it works
 

@@ -121,6 +121,45 @@ Like open and create, it is refused while a rule is being built.
 `DeleteKnowledgeBase` on a `Demonstration` resolution answers "Zoo Animals is a demonstration knowledge base and cannot
 be deleted. Your own copies can be." No confirmation, nothing to do.
 
+### Import and export through chat (planned)
+
+Import and export will move from the remaining KB menu items into chat. An explicit request immediately opens a
+native file dialog; there is no additional "Choose file" chat button and no request to type a path. The KB name
+remains visible in the application bar as a read-only label after the menu is removed.
+
+| Request          | Dialog and result                                                                                                  |
+|------------------|--------------------------------------------------------------------------------------------------------------------|
+| "Import a KB"    | Open-file dialog filtered to `.zip`; import the selected archive, open its KB and confirm its name in chat.        |
+| "Export this KB" | Save As dialog with a suggested filename such as `Thyroids.zip`; confirm the destination after the write succeeds. |
+
+Use [FileKit](https://github.com/vinceglb/FileKit) for native open and save dialogs, including the Windows system
+dialogs. Material 3 provides no built-in desktop file chooser. Replace the existing unused `mpfilepicker` dependency:
+its [repository](https://github.com/Wavesonics/compose-multiplatform-file-picker) is archived and recommends FileKit.
+Choose a version compatible with the project's Kotlin and Compose versions when implementing, and verify the
+packaged desktop runtime as well as development launches.
+
+The model identifies import or export intent. The server validates the action and supplies a structured, one-use
+file-dialog request in `ChatResponse`; the client does not infer an operation from response prose. Import works
+without an open KB. Export requires an open stored KB and captures its identity before showing the chooser. Both
+operations remain unavailable during rule building, matching the current menu restriction. Refusals produce chat
+text without launching a dialog. Exporting a built-in demonstration requires first opening a named copy.
+
+The client owns local file selection and filesystem access, reuses the import/export HTTP endpoints, and reports
+the actual result through deterministic chat messages. Paths and file contents are not sent to the model. Export
+uses the captured KB id, so a later context change cannot silently export a different KB. The Save As flow confirms
+replacement of an existing file before writing. Import retains the server's archive validation and reserved-title
+guard; choosing a filename does not rename the KB inside the archive.
+
+A small client controller owns explicit `Idle`, `ChoosingFile` and `Transferring` states. A request id prevents
+recomposition or duplicate response delivery from opening a second chooser or repeating a transfer. Chat submission
+is disabled while the operation is pending. Cancellation returns to idle, changes no KB or file, and says "Import
+cancelled." or "Export cancelled." Errors are shown in chat and release the busy state; success is reported only
+after completion. An imported KB follows the existing client context-change sequence, with its completion message
+retained in the new chat rather than lost when the conversation restarts. Export leaves the current KB and case alone.
+
+The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. The current
+menus stay until the chat flows and replacement acceptance coverage work; this section records agreed future work.
+
 ### Startup
 
 Unchanged. The client opens the first stored knowledge base; demonstrations are not stored, so they are never opened by
