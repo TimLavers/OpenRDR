@@ -80,8 +80,16 @@ disabled while chat is busy. Opening a KB changes context and starts a new conve
 
 `resolveKbName` returns `Demonstration(sample)` for an exact or unique partial demonstration title. The lookup order is
 exact stored name, exact demonstration title, partial stored names, then partial demonstration titles. An exact stored
-name wins a legacy title collision; an exact demonstration title wins over a partial stored match. Multiple partial
-matches are ambiguous, and a miss lists stored names and demonstrations.
+name wins a legacy title collision; an exact demonstration title wins over a partial stored match. One stored partial
+match wins even when demonstrations also match. Several stored partial matches are ambiguous and include matching
+demonstrations as candidates; with no stored match, several demonstration partial matches are ambiguous.
+A miss lists stored names and demonstrations.
+
+For example, after copying Zoo Animals as "Zoo2", "open Zoo" asks whether to open Zoo2. "Open Zoo Animals" still
+selects the demonstration; "open Animals" also does so if no stored name contains "Animals". Near-duplicate warnings
+compare stored names only, so "Zoo Animal" is allowed without a warning when no stored name resembles it. Such a
+name also takes precedence for "open Zoo". These are intentional consequences of the lookup order and exact-title
+reservation.
 
 Demonstration titles are reserved, ignoring case and surrounding whitespace. Chat actions give the refusal
 "… is the name of a demonstration knowledge base; please choose another". `KBManager.createKB` (even with `force=true`)
