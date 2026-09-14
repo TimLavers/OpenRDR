@@ -124,11 +124,9 @@ fun OpenRDRUI(
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
-            // Pick the first KB and explicitly select it on the server so
-            // that Api.currentKB matches what the UI displays. Just reading
-            // kbList() leaves Api.currentKB unset, which would later cause
-            // the lazy `kbInfo()` path to fetch the default KB and route
-            // subsequent requests to the wrong KB.
+            // Explicit selection sets Api.currentKB to the KB displayed by the UI.
+            // Reading kbList() alone leaves it unset, so subsequent KB-scoped
+            // requests would fail because no knowledge base is open.
             kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
             kbListRead = true
         }
