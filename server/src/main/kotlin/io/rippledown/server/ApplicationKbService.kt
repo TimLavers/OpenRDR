@@ -85,8 +85,8 @@ class ApplicationKbService(
 
     override fun description(kbInfo: KBInfo): String = application.kbFor(kbInfo).description()
 
-    override fun setDescription(text: String) {
-        checkNotNull(openEndpoint()) { "No knowledge base is open." }.setDescription(text)
+    override fun setDescription(kbInfo: KBInfo, text: String) {
+        application.kbFor(kbInfo).setDescription(text)
     }
 
     override fun isRuleSessionActive() = openEndpoint()?.session?.ruleSessionManager?.isRuleSessionActive() == true

@@ -62,7 +62,7 @@ interface with two kinds: the existing `ChatAction`, which works on the open kno
 | `AddDemonstrationCase`                         | Adds Einstein to the open knowledge base.                                                            |
 | `RenameKnowledgeBase(newName)`                 | Renames the open knowledge base, refusing reserved demonstration titles; keeps the id.               |
 | `ShowKnowledgeBaseDescription(kbName?)`        | Reads a description from the server, of the open KB or a named stored KB or demonstration.           |
-| `SetKnowledgeBaseDescription`                  | Replaces the whole description with the user's words, transcribed not composed.                      |
+| `SetKnowledgeBaseDescription(text, kbName?)`   | Replaces the whole description of the open or a named stored KB; confirms a partial, refuses demos.  |
 
 Actions that change what the chat is about (open, create, copy, close, delete) are refused while a rule is being built.
 Rename, describe, list and the demonstration case are not.

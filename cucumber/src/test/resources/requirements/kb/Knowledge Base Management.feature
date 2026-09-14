@@ -351,6 +351,7 @@ Feature: Knowledge Base management
       | already exists |
     And the displayed KB name is Thyroids
 
+  @single
   Scenario: Knowledge base descriptions can be edited through chat and persist across switches
     Given a default KB is opened
     And A Knowledge Base called Zinc has been created
@@ -388,6 +389,25 @@ Feature: Knowledge Base management
     A basic thyroid management KB.
     See: https://thyroid.rules.info/basic
     """
+    And pause
+
+  Scenario: Setting the description of a named knowledge base leaves the open one alone
+    Given a default KB is opened
+    And A Knowledge Base called Zinc has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Set the description for zinc to be "metallic kb" |
+    Then the chatbot response contains the following terms:
+      | Description of | Zinc | updated |
+    And the KB description is:
+    """
+    """
+    When I enter the following text into the chat panel:
+      | What is the description of Zinc? |
+    Then the chatbot response contains the following terms:
+      | Description of | Zinc | metallic kb |
+    And the displayed KB name is Thyroids
 
   Scenario: The description of a knowledge base that is not open can be read
     Given a default KB is opened

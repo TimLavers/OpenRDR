@@ -344,6 +344,11 @@ class ActionCommentTest {
             SET_KNOWLEDGE_BASE_DESCRIPTION,
             description = "A thyroid KB."
         ).createActionInstance() shouldBe SetKnowledgeBaseDescription("A thyroid KB.")
+        ActionComment(
+            SET_KNOWLEDGE_BASE_DESCRIPTION,
+            description = "metallic kb",
+            kbName = "zinc"
+        ).createActionInstance() shouldBe SetKnowledgeBaseDescription("metallic kb", "zinc")
     }
 
     @Test

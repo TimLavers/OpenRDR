@@ -148,11 +148,14 @@ base is meant.
 ## Replacing the knowledge base description
 
 If the user asks to set or replace the description, put the user's words in `description`, exactly. Do not summarise,
-rewrite, or embellish them. The description may contain Markdown and line breaks.
+rewrite, or embellish them. The description may contain Markdown and line breaks. If the user names a knowledge base,
+output the name exactly as the user gave it in `kbName`; if they name none, omit `kbName`, and the open knowledge base
+is meant. Never drop the name and apply the description to the open knowledge base.
 
 ```json
 {
   "action": "{{SET_KNOWLEDGE_BASE_DESCRIPTION}}",
-  "description": "<the user's exact description>"
+  "description": "<the user's exact description>",
+  "kbName": "<name given by the user>"
 }
 ```

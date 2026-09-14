@@ -138,6 +138,9 @@ fun nameForDemonstrationCopyMessage(title: String) =
 fun cannotDeleteDemonstrationMessage(title: String) =
     "$title is a demonstration knowledge base and $CANNOT_BE_DELETED. Your own copies can be."
 
+fun cannotDescribeDemonstrationMessage(title: String) =
+    "$title is a demonstration knowledge base and its description cannot be changed. Your own copies can be."
+
 fun kbOpenedMessage(name: String) = "$KB_OPENED \"$name\"."
 fun kbCreatedMessage(name: String) = "$KB_CREATED \"$name\"."
 fun kbClosedMessage(name: String) = "$KB_CLOSED_MESSAGE \"$name\"."

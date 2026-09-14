@@ -25,6 +25,6 @@ interface KnowledgeBaseService {
     suspend fun addDemonstrationCase(): RDRCase
     suspend fun rename(newName: String): KBInfo
     fun description(kbInfo: KBInfo): String
-    fun setDescription(text: String)
+    fun setDescription(kbInfo: KBInfo, text: String)
     fun isRuleSessionActive(): Boolean
 }
