@@ -69,9 +69,12 @@ exact stored name, exact demonstration title, partial stored names, then partial
 name wins a legacy title collision; an exact demonstration title wins over a partial stored match. Multiple partial
 matches are ambiguous, and a miss lists stored names and demonstrations.
 
-Demonstration titles are reserved: `CreateKnowledgeBase` and `RenameKnowledgeBase` refuse them (case-insensitive) with
-"… is the name of a demonstration knowledge base; please choose another". This is the only new guard, and it is what
-keeps resolution unambiguous.
+Demonstration titles are reserved, ignoring case and surrounding whitespace. Chat actions give the refusal
+"… is the name of a demonstration knowledge base; please choose another". `KBManager.createKB` (even with `force=true`)
+and `renameKB` enforce the same reservation for direct and REST calls. Import creates persistence through `KBImporter`,
+so it validates the archive name there before writing any data. These paths share `requireUnreservedKbName`.
+Existing stored KBs with legacy title collisions remain readable and can be renamed; no automatic migration changes
+their names. Exact stored-name precedence remains for those legacy collisions.
 
 ### Opening a demonstration
 

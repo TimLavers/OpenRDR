@@ -1,6 +1,7 @@
 package io.rippledown.kb.export
 
 import io.rippledown.kb.KB
+import io.rippledown.kb.requireUnreservedKbName
 import io.rippledown.persistence.PersistenceProvider
 import java.io.File
 
@@ -9,6 +10,7 @@ class KBImporter(source: File, private val persistenceProvider: PersistenceProvi
     fun import(): KB {
         // Extract the name and id.
         val kbInfo = KBInfoImporter(kbDetailsFile).import()
+        requireUnreservedKbName(kbInfo.name)
 
         // Comments are comment attributes, so an export that still has
         // conclusions predates that and cannot be imported. Reject it before

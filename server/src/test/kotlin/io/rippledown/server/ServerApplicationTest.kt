@@ -6,14 +6,22 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.CaseTestUtils
+import io.rippledown.constants.chat.kbNameReservedMessage
+import io.rippledown.kb.KB
+import io.rippledown.kb.export.KBExporter
+import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.Attribute
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.Result
 import io.rippledown.persistence.PersistenceProvider
+import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
@@ -35,6 +43,39 @@ internal class ServerApplicationTest {
     fun setup() {
         persistenceProvider = InMemoryPersistenceProvider()
         app = ServerApplication(persistenceProvider, mockk())
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["create", "sample", "rename", "import"])
+    fun `all application write paths reject reserved names without changing stored KBs`(
+        operation: String,
+        @TempDir directory: File
+    ) {
+        // Given
+        val original = app.createKB("MyCopy", false)
+        val name = "Pathology"
+        KBExporter(directory, KB(InMemoryKB(KBInfo(name)))).export()
+        val zip = Zipper(directory).zip()
+
+        // When
+        val error = shouldThrow<IllegalArgumentException> {
+            when (operation) {
+                "create" -> app.createKB(name, true)
+                "sample" -> app.createKBFromSample(name, SampleKB.TSH_CASES)
+                "rename" -> app.renameKB(original.id, name)
+                "import" -> app.importKBFromZip(zip)
+                else -> error("Unknown operation $operation")
+            }
+        }
+
+        // Then
+        error.message shouldBe kbNameReservedMessage(name)
+        app.kbList().map { it.name } shouldBe listOf("MyCopy")
+        app.kbService.knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
+        app.openChatEndpoint() shouldBe null
+        app.kbForId(original.id).kbInfo().name shouldBe "MyCopy"
+        persistenceProvider.idStore().data().keys shouldBe setOf(original.id)
+        persistenceProvider.kbPersistence(original.id).kbInfo().name shouldBe "MyCopy"
     }
 
     @Test // KBM-6

@@ -1,5 +1,6 @@
 package io.rippledown.kb
 
+import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
 
@@ -59,6 +60,10 @@ fun resolveKbName(
 
 fun isDemonstrationTitle(name: String, demonstrations: Collection<SampleKB>): Boolean =
     demonstrations.any { it.title().equals(name.trim(), ignoreCase = true) }
+
+internal fun requireUnreservedKbName(name: String) {
+    require(!isDemonstrationTitle(name, SampleKB.demonstrations())) { kbNameReservedMessage(name.trim()) }
+}
 
 fun nearDuplicateOf(newName: String, kbInfos: Collection<KBInfo>): KBInfo? {
     val wanted = newName.trim()

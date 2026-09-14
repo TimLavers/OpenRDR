@@ -120,9 +120,13 @@ class ApplicationKbServiceTest {
     }
 
     @Test
-    fun `stored exact name still takes precedence over a demonstration`() {
+    fun `a legacy stored exact name still takes precedence over a demonstration`() {
         // Given
-        val zoo = app.createKB("Zoo Animals", false)
+        val persistence = InMemoryPersistenceProvider()
+        val zoo = KBInfo("legacy_zoo", "Zoo Animals")
+        persistence.createKBPersistence(zoo)
+        app = ServerApplication(persistence, webSocketManager)
+        service = ApplicationKbService(app, webSocketManager, { openEndpoint }, { closedCount++ }, { now })
 
         // When
         val resolution = service.resolve("Zoo Animals")

@@ -18,7 +18,6 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
                 val kbInfo = persistenceProvider.kbPersistence(id).kbInfo()
                 kbInfos.add(kbInfo)
             } catch (e: Exception) {
-                // todo test for this
                 logger.warn("Could not open KB for $it, as shown.", e)
             }
         }
@@ -29,6 +28,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
     }
 
     fun createKB(name: String, force: Boolean = false): KBInfo {
+        requireUnreservedKbName(name)
         if (!force) {
             val existingKBInfo = kbInfos.firstOrNull { it.name.equals(name, true) }
             if (existingKBInfo != null) {
@@ -53,6 +53,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
     fun renameKB(id: String, newName: String): KBInfo {
         val existing = kbInfos.firstOrNull { it.id == id }
             ?: throw IllegalArgumentException("No KB with id $id was found.")
+        requireUnreservedKbName(newName)
         val clash = kbInfos.firstOrNull { it.id != id && it.name.equals(newName, ignoreCase = true) }
         if (clash != null) {
             throw IllegalArgumentException("A KB with name ${clash.name} already exists.")

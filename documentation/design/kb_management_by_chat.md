@@ -101,7 +101,9 @@ demonstration titles. Matching ignores case. Stored matches return `Exact` or `P
 `Demonstration(sample)`. Multiple partial matches are `Ambiguous`; a miss returns `NotFound` with stored and
 demonstration names. No edit distance is used. Partial stored matches ask before opening or deleting; a demonstration
 asks for a copy name when opened and is refused when deleted. An existing stored name wins an exact title collision,
-although new demonstration-title collisions are refused on create, copy and rename.
+although new demonstration-title collisions are refused on create, copy, rename and import. `KBManager` and
+`KBImporter` enforce the reservation before persistence writes, including REST creation with `force=true`;
+the chat retains its own validation to give conversational refusals.
 
 ### The GUI follows the server
 
