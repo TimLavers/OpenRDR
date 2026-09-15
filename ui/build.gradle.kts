@@ -17,7 +17,7 @@ dependencies {
     implementation(libs.markdownRenderer)
     implementation(libs.markdownRendererM3)
     implementation(libs.logback)
-    implementation(libs.filepicker)
+    implementation(libs.filekit.dialogs)
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.kotlinx)
     implementation(libs.commonsCodec)
@@ -69,6 +69,7 @@ compose.desktop {
                 "java.security.jgss",
                 "jdk.crypto.cryptoki",
                 "jdk.unsupported",
+                "jdk.security.auth",
             )
             val platformModules = if (org.gradle.internal.os.OperatingSystem.current().isWindows)
                 baseModules + "jdk.crypto.mscapi" else baseModules

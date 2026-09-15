@@ -133,10 +133,19 @@ remains visible in the application bar as a read-only label after the menu is re
 | "Export this KB" | Save As dialog with a suggested filename such as `Thyroids.zip`; confirm the destination after the write succeeds. |
 
 Use [FileKit](https://github.com/vinceglb/FileKit) for native open and save dialogs, including the Windows system
-dialogs. Material 3 provides no built-in desktop file chooser. Replace the existing unused `mpfilepicker` dependency:
-its [repository](https://github.com/Wavesonics/compose-multiplatform-file-picker) is archived and recommends FileKit.
-Choose a version compatible with the project's Kotlin and Compose versions when implementing, and verify the
-packaged desktop runtime as well as development launches.
+dialogs. Material 3 provides no built-in desktop file chooser. FileKit 0.14.1 replaces the unused `mpfilepicker`
+dependency; its published Kotlin 2.3.21 and coroutine 1.10.2 dependencies are compatible with this project.
+`KbFileDialogs` returns `FileSelection.Selected` or `Cancelled`. `FileKitKbFileDialogs` prepares ZIP choices and
+safe filename suggestions, and delegates native calls to `FileKitDialogLauncher` through an injectable
+`FileDialogLauncher`. It takes the application's AWT window as its owner and runs dialog calls on `Dispatchers.IO`.
+Tests use a fake launcher or stub FileKit's entry points, without opening native dialogs.
+
+Only the suggested filename is sanitised: Windows-invalid characters become underscores, trailing dots and spaces
+are removed, reserved device names are prefixed with an underscore, and an empty result becomes `knowledge-base`.
+The KB name and the chosen destination remain unchanged. FileKit's Windows `IFileSaveDialog` retains the native
+[default overwrite prompt](https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog), so no second
+application confirmation is added. The packaged runtime includes FileKit, JNA and its Windows DLL, and
+`jdk.security.auth` for FileKit's Linux support. Interactive native-dialog verification remains to be scheduled.
 
 The model identifies import or export intent. The server validates the action and supplies a structured, one-use
 file-dialog request in `ChatResponse`; the client does not infer an operation from response prose. Import works
@@ -160,8 +169,8 @@ retained in the new chat rather than lost when the conversation restarts. Export
 The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. The current
 menus stay until the chat flows and replacement acceptance coverage work. Step 11 is implemented: the server
 emits `ChatResponse.kbFileDialogRequest` with a fresh request id and, for export, the open `KBInfo`. Serialization,
-action dispatch, prompt wiring and refusals are tested. Client dialog handling and file transfers from chat remain
-planned in Steps 12–13; the existing menus still perform import and export.
+action dispatch, prompt wiring and refusals are tested. Step 12's dialog adapter is implemented and tested; Step 13
+will connect it to chat and perform transfers. The existing menus still perform import and export.
 
 ### Startup
 

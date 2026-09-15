@@ -11,7 +11,8 @@ eight mock-based cucumber helper tests, cucumber compilation and dry run (206 sc
 The real `:cucumber:kb` run remains for the user to schedule; broader UI tests require approval under `AGENTS.md`.
 
 Planned extension: Steps 11–15 move import and export into chat using native FileKit dialogs, then remove the last
-KB menus. Step 11 is complete; Steps 12–15 remain pending. Steps 1–10 describe the completed demonstration work.
+KB menus. Step 11 is complete. Step 12 is implemented with automated checks; its interactive packaged-dialog check
+remains to be scheduled. Steps 13–15 remain pending. Steps 1–10 describe the completed demonstration work.
 
 ## Ground rules for whoever implements this
 
@@ -572,6 +573,15 @@ The prompt identifies intent only, without asking for or interpreting local path
 users open a named KB or demonstration copy before exporting it. Shared messages belong in the common constants.
 
 ## Step 12 — Native file dialogs behind a testable client boundary
+
+Status: implemented. `KbFileDialogs`, `FileKitKbFileDialogs` and `FileDialogLauncher` isolate selection and native
+calls from the upcoming transfer controller. FileKit 0.14.1 replaces `mpfilepicker`; `jdk.security.auth` is included
+in the packaged runtime. The JUnit 5 tests live in the existing cucumber test module and use fake or stubbed dialogs:
+29 tests cover selection, cancellation, filename boundaries, destination preservation, failures and FileKit arguments.
+`:ui:createDistributable` passes; its files include FileKit and JNA with the Windows native library. Windows overwrite
+confirmation was verified against FileKit's published source and the documented `IFileSaveDialog` defaults. The
+interactive packaged open/save/cancel/overwrite check is still pending scheduling under Step 15. No chat wiring,
+file transfer or menu removal has been implemented in this step. Kover is not configured for UI classes.
 
 **Files**: `gradle/libs.versions.toml`, `ui/build.gradle.kts`, and a small file-dialog interface and FileKit adapter
 under `ui/src/main/kotlin/io/rippledown/`. Check packaging runtime configuration for native dependencies.
