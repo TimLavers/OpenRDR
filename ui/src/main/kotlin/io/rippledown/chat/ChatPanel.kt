@@ -125,7 +125,7 @@ fun ChatPanel(
 
     LaunchedEffect(messages) {
         if (messages.isNotEmpty()) {
-            listState.scrollToItem(messages.size - 1)
+            listState.requestScrollToItem(messages.size - 1)
         }
         if (messages.lastOrNull() is SuggestionListMessage) {
             suggestionSendPending = false

@@ -14,9 +14,51 @@ import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
 import java.io.File
+import java.util.zip.ZipException
 import kotlin.test.Test
 
 class KBManagementTest: OpenRDRServerTestBase() {
+
+    @Test
+    fun `damaged zip is returned as a readable bad request`() = testApplication {
+        // Given
+        setupServer()
+        every { serverApplication.importKBFromZip(any()) } throws ZipException("invalid entry size")
+
+        // When
+        val response = httpClient.post(IMPORT_KB) {
+            setBody(MultiPartFormDataContent(formData {
+                append("document", byteArrayOf(80, 75), Headers.build {
+                    append(HttpHeaders.ContentDisposition, "filename=\"damaged.zip\"")
+                })
+            }))
+        }
+
+        // Then
+        response.status shouldBe HttpStatusCode.BadRequest
+        response.bodyAsText() shouldBe "Invalid zip for KB import."
+    }
+
+    @Test
+    fun `import validation refusal is returned as a readable bad request`() = testApplication {
+        // Given
+        setupServer()
+        val message = "Pathology is the name of a demonstration knowledge base; please choose another"
+        every { serverApplication.importKBFromZip(any()) } throws IllegalArgumentException(message)
+
+        // When
+        val response = httpClient.post(IMPORT_KB) {
+            setBody(MultiPartFormDataContent(formData {
+                append("document", byteArrayOf(1, 2), Headers.build {
+                    append(HttpHeaders.ContentDisposition, "filename=\"archive.zip\"")
+                })
+            }))
+        }
+
+        // Then
+        response.status shouldBe HttpStatusCode.BadRequest
+        response.bodyAsText() shouldBe message
+    }
 
      @Test
     fun kbList() = testApplication {

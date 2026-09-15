@@ -14,6 +14,7 @@ import io.rippledown.server.OpenRDRServer.logger
 import io.rippledown.server.ServerApplication
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
+import java.util.zip.ZipException
 
 fun Application.kbManagement(application: ServerApplication) {
     routing {
@@ -32,7 +33,15 @@ fun Application.kbManagement(application: ServerApplication) {
                     }
                     buffered.flush()
                     val bytes = partReader.toByteArray()
-                    val kbInfo = application.importKBFromZip(bytes)
+                    val kbInfo = try {
+                        application.importKBFromZip(bytes)
+                    } catch (invalid: IllegalArgumentException) {
+                        call.respondText(invalid.message.orEmpty(), status = HttpStatusCode.BadRequest)
+                        return@forEachPart
+                    } catch (_: ZipException) {
+                        call.respondText("Invalid zip for KB import.", status = HttpStatusCode.BadRequest)
+                        return@forEachPart
+                    }
                     call.respond(OK, kbInfo)
                 }
             }

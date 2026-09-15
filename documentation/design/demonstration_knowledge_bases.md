@@ -121,11 +121,12 @@ Like open and create, it is refused while a rule is being built.
 `DeleteKnowledgeBase` on a `Demonstration` resolution answers "Zoo Animals is a demonstration knowledge base and cannot
 be deleted. Your own copies can be." No confirmation, nothing to do.
 
-### Import and export through chat (planned)
+### Import and export through chat
 
-Import and export will move from the remaining KB menu items into chat. An explicit request immediately opens a
-native file dialog; there is no additional "Choose file" chat button and no request to type a path. The KB name
-remains visible in the application bar as a read-only label after the menu is removed.
+Import and export are available through chat. An explicit request immediately opens a native file dialog; there is
+no additional "Choose file" chat button and no request to type a path. The remaining KB menu items stay until Step 14
+migrates their acceptance coverage. After their removal, the KB name remains visible as a read-only application-bar
+label.
 
 | Request          | Dialog and result                                                                                                  |
 |------------------|--------------------------------------------------------------------------------------------------------------------|
@@ -174,11 +175,24 @@ cancelled." or "Export cancelled." Errors are shown in chat and release the busy
 after completion. An imported KB follows the existing client context-change sequence, with its completion message
 retained in the new chat rather than lost when the conversation restarts. Export leaves the current KB and case alone.
 
+`KbFileTransferController` owns the operation state and consumed request ids. `ChatState` keeps transcript rendering
+and text deduplication separate from request delivery: a new request id still opens a dialog when its prose repeats.
+Local completion and failure messages enter the transcript directly, without a model call. The application supplies
+the native dialog adapter with its window; tests inject fake selections. Import invalidates the loaded case context
+even when the archive replaces the currently open KB with identical KB and case ids. The existing context effects
+then fetch its cases and restart the conversation. The transcript persists across that restart.
+
+`Api` performs file reads and writes on `Dispatchers.IO` and checks HTTP status before accepting an import or
+writing export bytes. Export takes the KB identity captured in the request. Failed HTTP exports leave an existing
+destination untouched. Import validation and damaged-ZIP errors return readable HTTP 400 responses, which are shown
+in chat. Chat auto-scrolling requests the next layout pass rather than forcing layout during composition updates.
+
 The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. The current
 menus stay until the chat flows and replacement acceptance coverage work. Step 11 is implemented: the server
 emits `ChatResponse.kbFileDialogRequest` with a fresh request id and, for export, the open `KBInfo`. Serialization,
-action dispatch, prompt wiring and refusals are tested. Step 12's dialog adapter is implemented and tested; Step 13
-will connect it to chat and perform transfers. The existing menus still perform import and export.
+action dispatch, prompt wiring and refusals are tested. Steps 12 and 13 are implemented: chat launches the native
+dialog adapter and performs transfers. The existing menus still perform import and export. Packaged Windows and
+macOS native-dialog checks remain scheduled work under Step 15.
 
 ### Startup
 

@@ -20,7 +20,10 @@ import io.rippledown.casecontrol.CaseSelector
 import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
+import io.rippledown.chat.ChatState
 import io.rippledown.cornerstone.CornerstoneTestHook
+import io.rippledown.files.KbFileDialogs
+import io.rippledown.files.KbFileTransferController
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
@@ -30,10 +33,7 @@ import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.voice.VoiceRecognition
 import io.rippledown.voice.VoiceRecognitionService
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
 import java.awt.Cursor
 import java.io.File
@@ -48,7 +48,8 @@ interface Handler {
 fun OpenRDRUI(
     handler: Handler,
     dispatcher: CoroutineDispatcher = MainUIDispatcher,
-    voiceRecognition: VoiceRecognition? = null
+    voiceRecognition: VoiceRecognition? = null,
+    fileDialogs: KbFileDialogs? = null
 ) {
     val api = handler.api
     // An Attribute is equal to another with the same id, whatever its name (see
@@ -73,6 +74,19 @@ fun OpenRDRUI(
     var kbListRead by remember { mutableStateOf(false) }
     var casesInfoKbId by remember { mutableStateOf<String?>(null) }
     var conversationStarted by remember { mutableStateOf(false) }
+    var kbImportRevision by remember { mutableIntStateOf(0) }
+    val chatState = remember { ChatState() }
+    val scope = rememberCoroutineScope()
+    val fileTransfers = remember(api, fileDialogs) {
+        fileDialogs?.let { dialogs ->
+            KbFileTransferController(dialogs, api, onImported = { imported ->
+                conversationStarted = false
+                casesInfoKbId = null
+                kbInfo = imported
+                ++kbImportRevision
+            }, onMessage = chatState::localMessage)
+        }
+    }
     val density = LocalDensity.current
 
     // Report panel state
@@ -112,7 +126,9 @@ fun OpenRDRUI(
                     onBotMessageReceived(response)
 
                     //refresh the case to get the latest interpretation
-                    currentCaseId?.let { currentCase = api.getCase(it) }
+                    if (response.kbFileDialogRequest == null) {
+                        currentCaseId?.let { currentCase = api.getCase(it) }
+                    }
                     ++chatId // Increment chatId to trigger recomposition in ChatController
                 } catch (_: Exception) {
                     //ignore
@@ -132,7 +148,7 @@ fun OpenRDRUI(
         }
     }
 
-    LaunchedEffect(kbInfo) {
+    LaunchedEffect(kbInfo, kbImportRevision) {
         withContext(dispatcher) {
             val open = kbInfo
             if (open?.id != casesInfoKbId) {
@@ -201,7 +217,7 @@ fun OpenRDRUI(
         }
     }
 
-    LaunchedEffect(chatContext) {
+    LaunchedEffect(chatContext, kbImportRevision) {
         val (kbId, caseId) = chatContext ?: return@LaunchedEffect
         conversationStarted = false
         withContext(dispatcher) {
@@ -355,7 +371,14 @@ fun OpenRDRUI(
                     chatControllerHandler,
                     conversationStarted = conversationStarted,
                     voiceRecognitionService = voiceRecognitionService,
-                    modifier = Modifier.width(chatPanelWidth)
+                    modifier = Modifier.width(chatPanelWidth),
+                    state = chatState,
+                    fileTransferInProgress = fileTransfers?.state?.let { it != KbFileTransferController.State.Idle } == true,
+                    onFileDialogRequested = { request ->
+                        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                            checkNotNull(fileTransfers) { "File dialogs have not been configured." }.handle(request)
+                        }
+                    }
                 )
             }
             LaunchedEffect(pendingConversationResponse) {

@@ -12,7 +12,8 @@ The real `:cucumber:kb` run remains for the user to schedule; broader UI tests r
 
 Planned extension: Steps 11–15 move import and export into chat using native FileKit dialogs, then remove the last
 KB menus. Step 11 is complete. Step 12 is implemented with automated checks; its interactive packaged-dialog check
-remains to be scheduled. Steps 13–15 remain pending. Steps 1–10 describe the completed demonstration work.
+remains to be scheduled. Step 13 is implemented and its automated checks pass. Steps 14–15 remain pending.
+Steps 1–10 describe the completed demonstration work.
 
 ## Ground rules for whoever implements this
 
@@ -604,6 +605,19 @@ tests never drive an OS chooser. Verify open, save and cancel manually in packag
 when scheduled; build each native package on the target OS and architecture.
 
 ## Step 13 — Execute requests once and report actual results in chat
+
+Status: implemented. `KbFileTransferController` consumes request ids and owns choosing/transferring state;
+`ChatState` separates transcript updates from file-request delivery. Both application launchers supply the native
+adapter. Import opens the returned KB and refreshes its first case, including re-import with unchanged KB/case ids;
+completion remains in the transcript after the new greeting. Export uses the captured KB identity. File I/O runs
+off the UI thread; HTTP failures cannot overwrite the export destination. Import validation and damaged ZIPs return
+readable errors. The import UI regression also exposed synchronous auto-scrolling during Compose updates; scrolling
+now requests the next layout pass.
+
+Validation: 59 headless dialog/controller/chat-state/API tests, one focused UI test, 799 common tests and 1,649
+filtered server tests pass. The server Kover source report was reviewed: all lines of `KBManagement.kt`, including
+the new error responses, are covered. UI classes are outside the configured Kover modules. The menus remain for
+Step 14; live cucumber and packaged Windows/macOS native-dialog verification remain for Step 15.
 
 **Files**: a small `KbFileTransferController` in the UI with separately tested logic; `ChatController.kt`,
 `OpenRDRUI.kt`, `Api.kt` and relevant HTTP helper tests. Reuse the existing import and export HTTP endpoints.

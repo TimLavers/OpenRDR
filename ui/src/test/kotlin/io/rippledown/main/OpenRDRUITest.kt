@@ -7,19 +7,19 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
-import io.rippledown.chat.BotMessage
-import io.rippledown.chat.requireChatMessagesShowing
-import io.rippledown.chat.requireChatPanelIsDisplayed
-import io.rippledown.chat.typeChatMessageAndClickSend
+import io.rippledown.chat.*
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.interpretation.DERIVED_VALUE_ROW_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_VALUE_PREFIX
 import io.rippledown.constants.main.APPLICATION_BAR_ID
+import io.rippledown.files.FileSelection
+import io.rippledown.files.KbFileDialogs
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KbFileDialogRequest
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
@@ -33,15 +33,83 @@ import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.createViewableCaseWithInterpretation
 import io.rippledown.utils.defaultDate
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
+import java.io.File
 import kotlin.test.Test
 
 
 @OptIn(ExperimentalTestApi::class)
 class OpenRDRUITest {
+    @Test
+    fun `chat import opens its first case and retains completion after restarting the conversation`() = runTest {
+        // Given
+        val dialogs = mockk<KbFileDialogs>()
+        val selection = CompletableDeferred<FileSelection>()
+        val archive = File("Clinic.zip")
+        val imported = KBInfo("imported", "Clinic")
+        val caseId = CaseId(1, "First imported case")
+        coEvery { api.kbList() } returns emptyList()
+        coEvery { api.startConversation(null, null) } returns ChatResponse("Welcome")
+        coEvery { api.sendUserMessage("Import a KB") } returns ChatResponse(
+            "Choose a file", kbFileDialogRequest = KbFileDialogRequest.Import("one")
+        )
+        coEvery { dialogs.chooseImportArchive() } coAnswers { selection.await() }
+        coEvery { api.importKBFromZip(archive) } returns imported
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation(caseId.name, 1)
+        coEvery { api.startConversation(imported.id, 1) } returns ChatResponse("Imported case greeting")
+
+        with(composeTestRule) {
+            setContent { OpenRDRUI(handler, fileDialogs = dialogs) }
+            requireChatMessagesShowing(listOf(BotMessage("Welcome")))
+
+            // When
+            typeChatMessageAndClickSend("Import a KB")
+
+            // Then
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsNotEnabled()
+            onNodeWithContentDescription(CHAT_SEND).assertIsNotEnabled()
+            coVerify(exactly = 0) { api.importKBFromZip(any()) }
+            selection.complete(FileSelection.Selected(archive))
+            waitForCaseToBeShowing(caseId.name)
+            assertKbNameIs(imported.name)
+            requireChatMessagesShowing(
+                listOf(
+                    BotMessage("Welcome"), UserMessage("Import a KB"), BotMessage("Choose a file"),
+                    BotMessage("Imported \"Clinic\" and opened it."), BotMessage("Imported case greeting")
+                )
+            )
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsEnabled().performTextInput("Next request")
+            onNodeWithContentDescription(CHAT_SEND).assertIsEnabled()
+            coVerify(exactly = 1) { api.sendUserMessage("Import a KB") }
+            coVerify(exactly = 1) { api.importKBFromZip(archive) }
+            coVerify(exactly = 1) { api.startConversation(imported.id, 1) }
+
+            // Given the archive replaces the KB that is already open, with the same case id
+            coEvery { api.sendUserMessage("Import again") } returns ChatResponse(
+                "Choose a file", kbFileDialogRequest = KbFileDialogRequest.Import("two")
+            )
+            coEvery { dialogs.chooseImportArchive() } returns FileSelection.Selected(archive)
+            coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("Replacement case", 1)
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(CaseId(1, "Replacement case")))
+            coEvery { api.startConversation(imported.id, 1) } returns ChatResponse("Replacement greeting")
+
+            // When
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).performTextClearance()
+            typeChatMessageAndClickSend("Import again")
+
+            // Then
+            waitForCaseToBeShowing("Replacement case")
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsEnabled()
+            coVerify(exactly = 2) { api.importKBFromZip(archive) }
+            coVerify(exactly = 2) { api.startConversation(imported.id, 1) }
+        }
+    }
+
     @get:Rule
     val composeTestRule = createComposeRule()
 

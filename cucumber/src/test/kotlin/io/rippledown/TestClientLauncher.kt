@@ -11,6 +11,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.TITLE
+import io.rippledown.files.FileKitKbFileDialogs
 import io.rippledown.main.*
 import io.rippledown.voice.VoiceRecognition
 import kotlinx.coroutines.Dispatchers.Unconfined
@@ -84,7 +85,10 @@ class TestClientLauncher {
                 ) {
                     composeWindow = this.window
                     applyAppIcon(this.window)
-                    OpenRDRUI(handler, dispatcher = Unconfined, voiceRecognition = voiceRecognition)
+                    OpenRDRUI(
+                        handler, dispatcher = Unconfined, voiceRecognition = voiceRecognition,
+                        fileDialogs = remember(window) { FileKitKbFileDialogs(window) }
+                    )
                 }
             }
         }

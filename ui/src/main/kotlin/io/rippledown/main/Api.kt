@@ -29,7 +29,10 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 class Api(
     engine: HttpClientEngine = CIO.create(),
@@ -143,9 +146,8 @@ class Api(
     }
 
     suspend fun importKBFromZip(file: File): KBInfo {
-        val data = file.readBytes()
-        currentKB = client.post("$API_URL$IMPORT_KB") {
-            contentType(ContentType.Application.Zip)
+        val data = withContext(Dispatchers.IO) { file.readBytes() }
+        val response = client.post("$API_URL$IMPORT_KB") {
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -154,21 +156,36 @@ class Api(
                             data,
                             Headers.build {
                                 append(HttpHeaders.ContentType, "application/zip")
-                                append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                                append(HttpHeaders.ContentDisposition, "filename=${file.name.quote()}")
                             }
                         )
                     }
                 )
             )
-        }.body()
-        return checkNotNull(currentKB) { "Import did not return a knowledge base." }
+        }
+        response.requireFileTransferSuccess()
+        val imported = checkNotNull(response.body<KBInfo?>()) { "Import did not return a knowledge base." }
+        currentKB = imported
+        return imported
     }
 
     suspend fun exportKBToZip(destination: File) {
-        val bytes = client.get("$API_URL/api/exportKB") {
-            setKBParameter()
-        }.body<ByteArray>()
-        destination.writeBytes(bytes)
+        exportKBToZip(destination, kbInfo())
+    }
+
+    suspend fun exportKBToZip(destination: File, kbInfo: KBInfo) {
+        val response = client.get("$API_URL$EXPORT_KB") {
+            parameter(KB_ID, kbInfo.id)
+        }
+        response.requireFileTransferSuccess()
+        val bytes = response.body<ByteArray>()
+        withContext(Dispatchers.IO) { destination.writeBytes(bytes) }
+    }
+
+    private suspend fun HttpResponse.requireFileTransferSuccess() {
+        if (!status.isSuccess()) {
+            throw IOException(bodyAsText().ifBlank { "Server returned HTTP ${status.value}." })
+        }
     }
 
     suspend fun getCase(caseId: Long): ViewableCase? {
