@@ -132,20 +132,28 @@ remains visible in the application bar as a read-only label after the menu is re
 | "Import a KB"    | Open-file dialog filtered to `.zip`; import the selected archive, open its KB and confirm its name in chat.        |
 | "Export this KB" | Save As dialog with a suggested filename such as `Thyroids.zip`; confirm the destination after the write succeeds. |
 
-Use [FileKit](https://github.com/vinceglb/FileKit) for native open and save dialogs, including the Windows system
-dialogs. Material 3 provides no built-in desktop file chooser. FileKit 0.14.1 replaces the unused `mpfilepicker`
+Windows and macOS (Intel and Apple Silicon) are required platforms. Use
+[FileKit](https://github.com/vinceglb/FileKit) for Windows system dialogs and macOS `NSOpenPanel` / `NSSavePanel`.
+Material 3 provides no built-in desktop file chooser. FileKit 0.14.1 replaces the unused `mpfilepicker`
 dependency; its published Kotlin 2.3.21 and coroutine 1.10.2 dependencies are compatible with this project.
 `KbFileDialogs` returns `FileSelection.Selected` or `Cancelled`. `FileKitKbFileDialogs` prepares ZIP choices and
 safe filename suggestions, and delegates native calls to `FileKitDialogLauncher` through an injectable
-`FileDialogLauncher`. It takes the application's AWT window as its owner and runs dialog calls on `Dispatchers.IO`.
-Tests use a fake launcher or stub FileKit's entry points, without opening native dialogs.
+`FileDialogLauncher`. It supplies the application's AWT window and runs dialog calls on `Dispatchers.IO`.
+Windows uses that window as the owner. FileKit's macOS implementation dispatches AppKit work to the main thread
+and uses application-modal panels; it does not attach a sheet to the supplied AWT window. Tests use a fake launcher
+or stub FileKit's entry points, without opening native dialogs.
 
 Only the suggested filename is sanitised: Windows-invalid characters become underscores, trailing dots and spaces
 are removed, reserved device names are prefixed with an underscore, and an empty result becomes `knowledge-base`.
 The KB name and the chosen destination remain unchanged. FileKit's Windows `IFileSaveDialog` retains the native
-[default overwrite prompt](https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog), so no second
-application confirmation is added. The packaged runtime includes FileKit, JNA and its Windows DLL, and
-`jdk.security.auth` for FileKit's Linux support. Interactive native-dialog verification remains to be scheduled.
+[default overwrite prompt](https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog).
+On macOS, `NSSavePanel`
+likewise [asks before replacing an existing file](https://developer.apple.com/documentation/appkit/nsopensavepaneldelegate/panel(_:userenteredfilename:confirmed:)).
+No second application confirmation is added. The packaged runtime includes FileKit and JNA; the JNA archive
+contains Windows DLLs and macOS native libraries for both Intel and Apple Silicon. It also includes
+`jdk.security.auth` for FileKit's Linux support. Build the native application on its target OS and architecture.
+Interactive verification of open, save, cancel and overwrite confirmation remains required on both Windows and
+macOS; inspecting the libraries in a Windows package does not verify execution on a Mac.
 
 The model identifies import or export intent. The server validates the action and supplies a structured, one-use
 file-dialog request in `ChatResponse`; the client does not infer an operation from response prose. Import works

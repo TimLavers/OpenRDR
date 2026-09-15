@@ -578,9 +578,12 @@ Status: implemented. `KbFileDialogs`, `FileKitKbFileDialogs` and `FileDialogLaun
 calls from the upcoming transfer controller. FileKit 0.14.1 replaces `mpfilepicker`; `jdk.security.auth` is included
 in the packaged runtime. The JUnit 5 tests live in the existing cucumber test module and use fake or stubbed dialogs:
 29 tests cover selection, cancellation, filename boundaries, destination preservation, failures and FileKit arguments.
-`:ui:createDistributable` passes; its files include FileKit and JNA with the Windows native library. Windows overwrite
-confirmation was verified against FileKit's published source and the documented `IFileSaveDialog` defaults. The
-interactive packaged open/save/cancel/overwrite check is still pending scheduling under Step 15. No chat wiring,
+`:ui:createDistributable` passes on Windows; its files include FileKit and JNA with Windows native libraries and
+macOS libraries for Intel and Apple Silicon. Source inspection confirms that FileKit selects `NSOpenPanel` and
+`NSSavePanel` on macOS, dispatching AppKit work to the main thread. Native overwrite confirmation was checked
+against FileKit's published source and the documented Windows and macOS panel behaviour. macOS execution has not
+been verified from this Windows environment. Interactive packaged open/save/cancel/overwrite checks on both
+platforms are still pending scheduling under Step 15. No chat wiring,
 file transfer or menu removal has been implemented in this step. Kover is not configured for UI classes.
 
 **Files**: `gradle/libs.versions.toml`, `ui/build.gradle.kts`, and a small file-dialog interface and FileKit adapter
@@ -592,10 +595,13 @@ the suggested filename must not rename the KB. Verify that an existing destinati
 
 **Implement**: replace the unused `com.darkrockstudios:mpfilepicker` dependency with compatible FileKit dialogs
 dependencies. Provide suspend operations to choose an archive or a save destination, returning cancellation
-explicitly. Use a `.zip` filter and a suggested `<KB name>.zip` filename. Associate dialogs with the application
-window; keep blocking file work off the UI thread. Verify native overwrite behaviour; add confirmation if the
+explicitly. Use a `.zip` filter and a suggested `<KB name>.zip` filename. Support Windows and macOS, including Intel
+and Apple Silicon Macs. Supply the application window for ownership where FileKit supports it; macOS uses
+application-modal panels rather than a window-attached sheet. Keep blocking file work off the UI thread and let
+FileKit dispatch native AppKit calls to the main thread. Verify native overwrite behaviour; add confirmation if the
 selected platform implementation does not provide it. Keep native dialog calls confined to the adapter so normal
-tests never drive an OS chooser. Verify open, save and cancel manually in a packaged Windows launch when scheduled.
+tests never drive an OS chooser. Verify open, save and cancel manually in packaged Windows and macOS launches
+when scheduled; build each native package on the target OS and architecture.
 
 ## Step 13 — Execute requests once and report actual results in chat
 
@@ -643,7 +649,11 @@ use the existing JUnit 5 test infrastructure without introducing a framework mig
 
 Run `:cucumber:compileTestKotlin` and `:cucumber:cucumberDryRun` after changing acceptance coverage. Ask before
 running more than one UI test, and leave live `:cucumber:kb` execution to the user under the project rules. Schedule
-a native-dialog check from the packaged Windows application: import, export, cancel and overwrite confirmation.
+a native-dialog check from packaged Windows and macOS applications, covering Intel and Apple Silicon Mac builds:
+import, export, cancel, overwrite acceptance and refusal, ZIP filtering, filenames with spaces and Unicode, and
+return of focus to the application. On macOS, launch the packaged `.app` through the existing demo launcher and
+check that the native panels remain responsive. Build and verify each package on its target OS and architecture;
+stubbed dialog tests and a Windows package build do not substitute for macOS execution.
 Record checks actually completed and any remaining manual verification; mark Steps 11–15 complete only when their
 required work is done. Do not commit.
 
