@@ -11,7 +11,7 @@ eight mock-based cucumber helper tests, cucumber compilation and dry run (206 sc
 The real `:cucumber:kb` run remains for the user to schedule; broader UI tests require approval under `AGENTS.md`.
 
 Planned extension: Steps 11–15 move import and export into chat using native FileKit dialogs, then remove the last
-KB menus. These steps are not implemented. Steps 1–10 above describe the completed demonstration work.
+KB menus. Step 11 is complete; Steps 12–15 remain pending. Steps 1–10 describe the completed demonstration work.
 
 ## Ground rules for whoever implements this
 
@@ -541,6 +541,14 @@ Run: `.\gradlew.bat :cucumber:kb` — needs the live server, model and GUI; ask 
 ---
 
 ## Step 11 — Structured import/export requests
+
+Status: complete. `ChatResponse.kbFileDialogRequest` carries serializable import/export variants with a fresh
+server-generated request id; export captures the open `KBInfo`. Both no-argument actions are wired into the prompt
+and existing dispatch, including escape from the no-KB creation offer and refusal during rule building. Tests cover
+JSON compatibility, request identity, enrichment and context guards. All 799 common and 1,647 filtered server tests
+pass. Kover reports 100% line coverage for the new actions and request types; the new prompt mappings and export
+message are covered. Existing client code does not yet consume the requests: no chooser or transfer is launched
+from chat until Steps 12–13, and the menus remain until Step 14.
 
 Read the "Import and export through chat" section of the design first. Inspect the current action dispatch,
 `KnowledgeBaseConversation`, `ChatResponseEnricher`, `ChatController`, `Api` and import/export routes before editing.

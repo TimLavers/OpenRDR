@@ -158,7 +158,10 @@ after completion. An imported KB follows the existing client context-change sequ
 retained in the new chat rather than lost when the conversation restarts. Export leaves the current KB and case alone.
 
 The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. The current
-menus stay until the chat flows and replacement acceptance coverage work; this section records agreed future work.
+menus stay until the chat flows and replacement acceptance coverage work. Step 11 is implemented: the server
+emits `ChatResponse.kbFileDialogRequest` with a fresh request id and, for export, the open `KBInfo`. Serialization,
+action dispatch, prompt wiring and refusals are tested. Client dialog handling and file transfers from chat remain
+planned in Steps 12–13; the existing menus still perform import and export.
 
 ### Startup
 

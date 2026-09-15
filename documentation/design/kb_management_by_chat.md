@@ -19,7 +19,8 @@ The KB-name menu contains only **Import KB** and **Export KB**, retaining their 
 copies, listing, switching and descriptions use chat; their duplicate menu items and dialogs have been removed.
 Export is disabled when no KB is open; Import remains available. Opening or closing a KB updates Export's availability.
 
-Agreed next change (not yet implemented): "Import a KB" and "Export this KB" will immediately launch native Open
+Agreed next change (server requests implemented; client handling pending): "Import a KB" and "Export this KB" will
+immediately launch native Open
 and Save As dialogs through FileKit. The server validates the request and sends a structured instruction; the client
 handles local files and reports completion or cancellation in chat. This removes the remaining menu and path-entry
 dialogs while retaining the KB name as a read-only label.
