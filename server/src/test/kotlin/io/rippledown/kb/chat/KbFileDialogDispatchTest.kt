@@ -91,7 +91,10 @@ class KbFileDialogDispatchTest {
             response.kbFileDialogRequest shouldBe null
         }
         coVerify(exactly = 1) { model.response(match { it.contains("OFFER_CREATION") }) }
-        coVerify(exactly = 1) { model.response(match { it.contains("importing or exporting a KB") }) }
+        // Markdown line wrapping must not change whether the instruction is present.
+        coVerify(exactly = 1) {
+            model.response(match { it.replace(Regex("\\s+"), " ").contains("importing or exporting a KB") })
+        }
         coVerify(exactly = 1) { model.response(action) }
         coVerify(exactly = 0) { service.create(any()) }
 

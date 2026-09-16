@@ -23,6 +23,7 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
             message is TipMessage -> "$TIP$idx:${message.text}"
             else -> "$BOT$idx:${message.text}"
         }
+        waitUntilAtLeastOneExists(hasContentDescription(expectedLabel))
         if (message is KbChoiceListMessage) {
             onNodeWithContentDescription(expectedLabel).assertExists()
             runOnIdle { ChatTestHook.snapshot().messageList[idx] shouldBe message }
