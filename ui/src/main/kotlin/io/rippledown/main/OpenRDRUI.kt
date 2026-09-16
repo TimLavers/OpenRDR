@@ -73,6 +73,17 @@ fun OpenRDRUI(
     var casesInfoKbId by remember { mutableStateOf<String?>(null) }
     var conversationStarted by remember { mutableStateOf(false) }
     var kbImportRevision by remember { mutableIntStateOf(0) }
+    var kbDescription by remember(api, kbInfo?.id, kbImportRevision) { mutableStateOf<String?>(null) }
+    LaunchedEffect(api, kbInfo?.id, chatId, kbImportRevision) {
+        val open = kbInfo ?: return@LaunchedEffect
+        kbDescription = try {
+            api.kbDescription(open)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            "Description could not be loaded."
+        }
+    }
     val chatState = remember { ChatState() }
     val scope = rememberCoroutineScope()
     val fileTransfers = remember(api, fileDialogs) {
@@ -286,7 +297,7 @@ fun OpenRDRUI(
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo)
+            ApplicationBar(kbInfo, kbDescription)
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {

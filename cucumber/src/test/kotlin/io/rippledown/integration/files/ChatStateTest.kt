@@ -3,12 +3,54 @@ package io.rippledown.integration.files
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
+import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KbFileDialogRequest
 import io.rippledown.model.chat.KnowledgeBaseListing
 import org.junit.jupiter.api.Test
 
 class ChatStateTest {
+    @Test
+    fun `capability text is observable as the latest bot response for acceptance tests`() {
+        // Given
+        val card = CapabilityListMessage(
+            "Knowledge bases: import, export",
+            listOf(CapabilitySection("Knowledge bases", listOf("import", "export")))
+        )
+
+        // When
+        ChatTestHook.update(listOf(BotMessage("Welcome"), card), sendIsEnabled = true)
+
+        // Then
+        try {
+            ChatTestHook.snapshot().mostRecentBotText shouldBe card.text
+        } finally {
+            ChatTestHook.reset()
+        }
+    }
+
+    @Test
+    fun `capability cards replace plain rendering and deduplicate by content`() {
+        // Given
+        val state = ChatState()
+        val sections = listOf(CapabilitySection("KBs", listOf("Import", "Export")))
+        state.receive(ChatResponse("Help")) {}
+
+        // When
+        state.receive(ChatResponse("Help", capabilities = sections)) {}
+        state.receive(ChatResponse("Help", capabilities = sections)) {}
+        val updated = sections + CapabilitySection("Cases", listOf("Copy"))
+        state.receive(ChatResponse("Help", capabilities = updated)) {}
+        state.receive(ChatResponse("Help")) {}
+
+        // Then
+        state.history shouldBe listOf(
+            BotMessage("Help"), CapabilityListMessage("Help", sections),
+            CapabilityListMessage("Help", updated), BotMessage("Help")
+        )
+        state.awaitingResponse shouldBe false
+    }
+
     @Test
     fun `empty response displays the fallback but still dispatches a file request`() {
         // Given

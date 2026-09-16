@@ -669,6 +669,10 @@ dialog or add a permanent replacement button. Update affected documentation and 
 
 ## Step 15 — Final verification of chat file operations
 
+Verification update: the user reports that all KB management cukes pass and manual Windows import/export works.
+Rule-building cukes, Windows cancellation/overwrite/filter/filename/focus checks, and packaged macOS checks remain
+unverified. The Windows report does not establish whether the tested launch was packaged. Step 15 remains open.
+
 After each implementation step, run `:common:test` separately and the required filtered `:server:cleanTest
 :server:test` command from `.windsurf/rules/running-tests.md`. Generate Kover for touched classes in configured
 modules and inspect their uncovered lines. Run focused non-UI tests for the new client controller and HTTP paths;

@@ -6,6 +6,22 @@ import kotlin.test.Test
 
 class ChatResponseTest {
     @Test
+    fun `capability sections round trip and old responses have no sections`() {
+        // Given
+        val response = ChatResponse(
+            "Help",
+            capabilities = listOf(CapabilitySection("Knowledge bases", listOf("Import", "Export")))
+        )
+
+        // When
+        val restored = Json.decodeFromString<ChatResponse>(Json.encodeToString(response))
+
+        // Then
+        restored shouldBe response
+        Json.decodeFromString<ChatResponse>("""{"text":"Hello"}""").capabilities shouldBe emptyList()
+    }
+
+    @Test
     fun `structured knowledge base listing round trips through JSON`() {
         // Given
         val response = ChatResponse(

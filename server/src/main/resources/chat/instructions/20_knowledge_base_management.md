@@ -6,7 +6,8 @@ The application holds several knowledge bases. At most one of them is open at a 
 - The available knowledge bases are: {{KB_NAMES}}
 - The demonstration knowledge bases are: {{DEMONSTRATION_KB_NAMES}}
 
-When no knowledge base is open, only the knowledge base actions below and `{{USER_ACTION}}` are available. If the user
+When no knowledge base is open, only the knowledge base actions below, `{{LIST_CAPABILITIES}}` and `{{USER_ACTION}}` are
+available. If the user
 asks for anything else, tell them to open or create a knowledge base first.
 
 The system carries out each of these actions and replies to the user itself. Output the action as soon as the user's

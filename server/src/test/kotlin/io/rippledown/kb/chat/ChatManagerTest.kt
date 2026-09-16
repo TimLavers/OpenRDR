@@ -33,6 +33,24 @@ fun demonstrationDescriptions() = SampleKB.demonstrations().associate { it.title
  * @author Cascade AI
  */
 class ChatManagerTest {
+    @Test
+    fun `capability action returns a structured catalogue with or without a current case`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns "Hello"
+        coEvery { conversationService.response(any()) } returns """{"action":"ListCapabilities"}"""
+        val withoutKb = ChatManager(conversationService, null, kbService)
+
+        // When
+        val noCase = withoutKb.response("What can you do?")
+        chatManager.startConversation(viewableCase)
+        val withCase = chatManager.response("What can you do?")
+
+        // Then
+        noCase.capabilities.map { it.heading } shouldBe listOf("Knowledge bases")
+        withCase.capabilities.size shouldBe 6
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
 
     @Test
     fun `starting a new conversation drops a pending deletion confirmation`() = runTest {
@@ -575,17 +593,18 @@ class ChatManagerTest {
         coEvery { conversationService.response(match { it.contains("[Interpret a reply") }) } returns
                 """{"intent":"OTHER_REQUEST"}"""
         coEvery { conversationService.response("What can you do?") } returns
-                ActionComment(action = USER_ACTION, message = "I can manage knowledge bases.").toJsonString()
+                ActionComment(action = LIST_CAPABILITIES).toJsonString()
         coEvery { conversationService.response("yes") } returns
                 ActionComment(action = USER_ACTION, message = "Yes to what?").toJsonString()
         chatManager.startConversation(null, greeting = noKbGreeting(emptyList()))
 
         // When
-        chatManager.response("What can you do?")
+        val help = chatManager.response("What can you do?")
         val lateYes = chatManager.response("yes")
 
         // Then
         lateYes shouldBe ChatResponse("Yes to what?")
+        help.capabilities.map { it.heading } shouldBe listOf("Knowledge bases")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

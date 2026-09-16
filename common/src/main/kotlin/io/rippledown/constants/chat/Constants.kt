@@ -1,5 +1,7 @@
 package io.rippledown.constants.chat
 
+const val LIST_CAPABILITIES = "ListCapabilities"
+
 const val CONFIRM = "confirm"
 const val SUGGESTION = "suggestion"
 const val REASON = "reason"

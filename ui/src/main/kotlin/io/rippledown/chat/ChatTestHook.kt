@@ -58,7 +58,9 @@ object ChatTestHook {
      * called from a Compose `SideEffect` inside [ChatPanel].
      */
     fun update(messages: List<ChatMessage>, sendIsEnabled: Boolean) {
-        val mostRecentBot = messages.lastOrNull { it is BotMessage || it is KbChoiceListMessage }?.text
+        val mostRecentBot = messages.lastOrNull {
+            it is BotMessage || it is KbChoiceListMessage || it is CapabilityListMessage
+        }?.text
         val mostRecentSuggestion = (messages.lastOrNull { it is SuggestionListMessage } as? SuggestionListMessage)
             ?.let { msg ->
                 msg.suggestions.mapIndexed { i, s ->

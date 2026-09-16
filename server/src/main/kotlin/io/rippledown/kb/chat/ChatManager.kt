@@ -9,6 +9,7 @@ import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.ChatAction
 import io.rippledown.kb.chat.action.KbManagementAction
+import io.rippledown.kb.chat.action.ListCapabilities
 import io.rippledown.kb.chat.action.UserAction
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
@@ -79,6 +80,7 @@ class ChatManager(
                 ChatResponse("")
             }
             is UserAction -> ChatResponse(action.message)
+            is ListCapabilities -> action.response(hasCase = currentCase != null)
             is KbManagementAction -> knowledgeBases.execute(action)
             is ChatAction ->
                 if (ruleService == null) ChatResponse(NO_KB_OPEN_MESSAGE)

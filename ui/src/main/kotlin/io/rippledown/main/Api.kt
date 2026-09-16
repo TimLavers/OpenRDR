@@ -130,10 +130,12 @@ class Api(
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
-    suspend fun kbDescription(): String {
+    suspend fun kbDescription(): String = kbDescription(kbInfo())
+
+    suspend fun kbDescription(kbInfo: KBInfo): String {
         return client.get("$API_URL$KB_DESCRIPTION") {
             contentType(Plain)
-            setKBParameter()
+            parameter(KB_ID, kbInfo.id)
         }.body()
     }
 

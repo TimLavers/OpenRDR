@@ -8,12 +8,35 @@ default way to do anything, and the model interprets it. Persistent controls are
 All KB management uses chat, including the clickable lists of stored and demonstration knowledge bases. The
 application bar displays the current KB name as a read-only label, or "No KB selected"; there is no KB menu.
 
+An outlined info icon beside the open KB name shows its description on hover or keyboard focus. The tooltip uses
+the case panels' dark surface and 12 sp text, wrapping at 400 dp. An empty description says "No description set.
+You can add one through chat." No icon is shown without an open KB. Descriptions are fetched for the displayed KB
+on opening/import and after chat operations, so editing the description is reflected without reopening the KB.
+Loading and fetch failures have explicit messages. This is passive information, not a KB-management control.
+
 Import and export requests immediately open native file dialogs through FileKit.
 This is a deliberate exception to text-only open-ended
 input: choosing a local file is better served by the operating system's file browser. It is a temporary system dialog,
 launched by a server-validated structured request, with no standing control or extra "Choose file" chat button.
 The client handles the chosen file directly and reports the result; paths are not ordinary messages sent to the model.
 See [the import/export design](demonstration_knowledge_bases.md#import-and-export-through-chat).
+
+## Capability summary
+
+The server-owned capability catalogue includes ZIP import/export, demonstration KB copies and cases,
+reading and changing KB descriptions, editing derived definitions, managing rule reasons, and favourite cases,
+alongside report comments and layout operations. Without a current case, the summary offers KB operations only;
+it explains that import needs no open KB and export does.
+
+Implemented: a separate help card within the chat, with its own vertical scrollbar and a height capped at 380 dp or
+85% of the available message area, whichever is smaller. Headings use the case panels' 13 sp semibold dark-grey
+style. The first bullet is 2 dp below its heading; groups are separated by 10 dp. The chat input remains outside the
+card and visible while the user scrolls it.
+
+The model emits `ListCapabilities`; the server supplies explicit `CapabilitySection` headings and items through
+`ChatResponse.capabilities`. The prompt no longer maintains a duplicate catalogue. The response retains a plain-text
+equivalent for accessibility and transcript consumers; the client renders the catalogue once as a card. A new section
+list remains visible even if its accompanying text matches a previous reply.
 
 ## Inline affordances: the test
 

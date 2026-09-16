@@ -25,8 +25,9 @@ class ChatState {
     fun receive(response: ChatResponse, onFileDialogRequested: (KbFileDialogRequest) -> Unit) {
         val lastBotMessage = history.lastOrNull()
         val isDuplicate = when (lastBotMessage) {
+            is CapabilityListMessage -> lastBotMessage.text == response.text && lastBotMessage.sections == response.capabilities
             is KbChoiceListMessage -> lastBotMessage.text == response.text && lastBotMessage.listing == response.kbListing
-            is BotMessage -> lastBotMessage.text == response.text && response.kbListing == null
+            is BotMessage -> lastBotMessage.text == response.text && response.kbListing == null && response.capabilities.isEmpty()
             else -> false
         }
         if (!isDuplicate) {
@@ -38,8 +39,17 @@ class ChatState {
                     // user's comment, before the suggestions are presented.
                     response.tip?.let { add(TipMessage(it)) }
                     val listing = response.kbListing
-                    if (listing == null) add(BotMessage(response.text))
-                    else add(KbChoiceListMessage(response.text, listing))
+                    when {
+                        response.capabilities.isNotEmpty() -> add(
+                            CapabilityListMessage(
+                                response.text,
+                                response.capabilities
+                            )
+                        )
+
+                        listing != null -> add(KbChoiceListMessage(response.text, listing))
+                        else -> add(BotMessage(response.text))
+                    }
                     if (response.suggestions.isNotEmpty()) add(SuggestionListMessage(response.suggestions))
                 }
             }

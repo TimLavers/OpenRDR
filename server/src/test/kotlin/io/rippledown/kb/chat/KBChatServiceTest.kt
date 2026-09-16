@@ -20,6 +20,29 @@ import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
+    fun `capability action is available in every context without a model written catalogue`() {
+        // Given
+        val contexts = listOf(
+            null to null,
+            null to "Thyroids",
+            createCaseWithInterpretation("Test Case") to "Thyroids"
+        )
+
+        contexts.forEach { (case, kbName) ->
+            // When
+            val summary = KBChatService.systemPrompt(case, kbName = kbName)
+                .substringAfter("# Listing your capabilities")
+                .substringBefore("\n# ")
+
+            // Then
+            summary shouldContain "\"action\": \"ListCapabilities\""
+            summary shouldContain "Do not write your own list"
+            summary shouldContain "also available during rule building"
+            summary shouldNotContain "{{"
+        }
+    }
+
+    @Test
     fun `file operation contracts are available with and without a case`() {
         // Given
         val cases = listOf(null, createCaseWithInterpretation("Test Case"))

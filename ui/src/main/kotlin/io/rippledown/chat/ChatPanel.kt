@@ -40,6 +40,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.voice.RecordingIndicator
 import io.rippledown.voice.VoiceInputButton
@@ -84,6 +85,13 @@ data class KbChoiceListMessage(
 }
 
 typealias OnMessageSent = (UserMessage) -> Unit
+
+data class CapabilityListMessage(
+    override val text: String,
+    val sections: List<CapabilitySection>
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
 
 const val USER = "USER_"
 const val BOT = "BOT_"
@@ -144,44 +152,50 @@ fun ChatPanel(
             .semantics { contentDescription = "$NUMBER_OF_CHAT_MESSAGES_${messages.size}" }
     ) {
         // Chat messages area
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp),
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
-        ) {
-            itemsIndexed(messages) { index, message ->
-                when (message) {
-                    is UserMessage -> UserRow(message.text, index)
-                    is TipMessage -> TipRow(message.text, index)
-                    is SuggestionListMessage -> SuggestionListRow(
-                        message.suggestions, index
-                    ) { suggestion, isEditable ->
-                        if (isEditable && sendIsEnabled && !suggestionSendPending) {
-                            suggestionSendPending = true
-                            onMessageSent(UserMessage("$suggestion$EDITABLE_MARKER"))
-                            inputText = TextFieldValue("")
-                        } else if (!isEditable) {
-                            inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val capabilityHeight = minOf(380.dp, maxHeight * 0.85f)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 8.dp, end = 8.dp, top = 8.dp),
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
+            ) {
+                itemsIndexed(messages) { index, message ->
+                    when (message) {
+                        is CapabilityListMessage -> CapabilityCard(message, index, capabilityHeight)
+                        is UserMessage -> UserRow(message.text, index)
+                        is TipMessage -> TipRow(message.text, index)
+                        is SuggestionListMessage -> SuggestionListRow(
+                            message.suggestions, index
+                        ) { suggestion, isEditable ->
+                            if (isEditable && sendIsEnabled && !suggestionSendPending) {
+                                suggestionSendPending = true
+                                onMessageSent(UserMessage("$suggestion$EDITABLE_MARKER"))
+                                inputText = TextFieldValue("")
+                            } else if (!isEditable) {
+                                inputText = TextFieldValue(suggestion, selection = TextRange(suggestion.length))
+                            }
+                            textAreaFocusRequester.requestFocus()
                         }
-                        textAreaFocusRequester.requestFocus()
-                    }
-                    is KbChoiceListMessage -> KbChoiceRow(message.listing, index, enabled = sendIsEnabled) { name ->
-                        if (sendIsEnabled) {
-                            onMessageSent(UserMessage("Open $name"))
-                            inputText = TextFieldValue("")
+
+                        is KbChoiceListMessage -> KbChoiceRow(message.listing, index, enabled = sendIsEnabled) { name ->
+                            if (sendIsEnabled) {
+                                onMessageSent(UserMessage("Open $name"))
+                                inputText = TextFieldValue("")
+                            }
                         }
+
+                        else -> BotRow(message.text, index)
                     }
-                    else -> BotRow(message.text, index)
+                }
+                if (!sendIsEnabled) {
+                    item {
+                        TypingIndicator()
+                    }
                 }
             }
-            if (!sendIsEnabled) {
-                item {
-                    TypingIndicator()
-                }
-            }
+
         }
 
         // Visible cue while voice capture is active. Gemini does not stream
