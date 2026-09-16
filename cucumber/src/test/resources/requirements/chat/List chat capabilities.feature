@@ -3,7 +3,6 @@
   Background:
     Given a default KB is opened
 
-  @single
   Scenario: The user should be able to see what chat capabilities are available
     Given cases are set up as follows:
       | Case name | attribute name | value | comment    | condition    |
@@ -31,4 +30,3 @@
       | favourites    |
       | reasons       |
     And the capabilities are shown in a formatted card
-    And pause
