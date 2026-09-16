@@ -42,6 +42,11 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
         return result
     }
 
+    fun register(kb: KB) {
+        kbInfos.add(kb.kbInfo)
+        openKbs[kb.kbInfo.id] = kb
+    }
+
     fun deleteKB(kbInfo: KBInfo): KBInfo? {
         val idOfKBToBeDeleted = kbInfos.firstOrNull{ it.id == kbInfo.id} ?: throw IllegalArgumentException("No KB with id $kbInfo was found.")
         persistenceProvider.destroyKBPersistence(idOfKBToBeDeleted)

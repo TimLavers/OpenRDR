@@ -107,6 +107,7 @@ class ServerApplication(
         val rootDir = subDirectories[0]
         val kb = KBImporter(rootDir, persistenceProvider).import()
         logger.info("Imported KB with name: '${kb.kbInfo.name}' and id: '${kb.kbInfo.id}' from zip.")
+        kbManager.register(kb)
         idToKBEndpoint[kb.kbInfo.id] = kbEndpoint(kb)
         return kb.kbInfo
     }

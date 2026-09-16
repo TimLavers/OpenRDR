@@ -341,5 +341,20 @@ internal class ServerApplicationTest {
         app.kbForId(original.id) shouldBe endpoint
     }
 
+    @Test
+    fun `an imported KB is immediately available for management`(@TempDir directory: File) {
+        // Given
+        val application = ServerApplication(InMemoryPersistenceProvider(), mockk())
+        val info = KBInfo("Imported clinic")
+        KBExporter(directory, KB(InMemoryKB(info))).export()
+
+        // When
+        val imported = application.importKBFromZip(Zipper(directory).zip())
+
+        // Then
+        application.kbForId(imported.id).kbInfo() shouldBe imported
+        application.kbList() shouldContain imported
+    }
+
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)
 }
