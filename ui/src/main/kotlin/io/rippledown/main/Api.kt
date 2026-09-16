@@ -169,10 +169,6 @@ class Api(
         return imported
     }
 
-    suspend fun exportKBToZip(destination: File) {
-        exportKBToZip(destination, kbInfo())
-    }
-
     suspend fun exportKBToZip(destination: File, kbInfo: KBInfo) {
         val response = client.get("$API_URL$EXPORT_KB") {
             parameter(KB_ID, kbInfo.id)

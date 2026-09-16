@@ -12,7 +12,6 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.CaseControl
 import io.rippledown.casecontrol.CaseControlHandler
@@ -36,7 +35,6 @@ import io.rippledown.voice.VoiceRecognitionService
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
 import java.awt.Cursor
-import java.io.File
 
 interface Handler {
     var api: Api
@@ -288,20 +286,7 @@ fun OpenRDRUI(
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, object : AppBarHandler {
-                override var isRuleSessionInProgress = ruleInProgress
-                override var importKB: (data: File) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        kbInfo = api.importKBFromZip(it)
-                    }
-                }
-                override var exportKB: (data: File) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        api.exportKBToZip(it)
-                    }
-                }
-
-            })
+            ApplicationBar(kbInfo)
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {

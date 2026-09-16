@@ -1,89 +1,60 @@
 package io.rippledown.appbar
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import io.mockk.every
-import io.mockk.mockk
 import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
-import io.rippledown.constants.kb.KB_CONTROL_ID
 import io.rippledown.constants.kb.KB_NAME_ID
+import io.rippledown.constants.kb.NO_KB_SELECTED
 import io.rippledown.model.KBInfo
-import org.junit.Before
 import org.junit.Rule
 import kotlin.test.Test
 
 class ApplicationBarTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
-
     private val bondiInfo = KBInfo("Bondi")
 
-    lateinit var handler: AppBarHandler
+    @Test
+    fun `KB label is always read only with no menu`() {
+        // Given
+        val selected = mutableStateOf<KBInfo?>(null)
+        composeTestRule.setContent { ApplicationBar(selected.value) }
 
-    @Before
-    fun setUp() {
-        handler = mockk<AppBarHandler>()
+        // When
+        val label = composeTestRule.onNodeWithTag(KB_NAME_ID, useUnmergedTree = true)
+
+        // Then
+        label.assertTextEquals(NO_KB_SELECTED).assertHasNoClickAction()
+        composeTestRule.onAllNodes(hasClickAction()).assertCountEquals(0)
+        composeTestRule.runOnIdle { selected.value = bondiInfo }
+        label.assertTextEquals(bondiInfo.name).assertHasNoClickAction()
+        composeTestRule.onAllNodes(hasClickAction()).assertCountEquals(0)
+        composeTestRule.runOnIdle { selected.value = null }
+        label.assertTextEquals(NO_KB_SELECTED).assertHasNoClickAction()
     }
 
     @Test
     fun `should show current KB name`() {
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(bondiInfo, handler = handler)
-            }
-            assertKbNameIs(bondiInfo.name)
-            onNodeWithTag(testTag = KB_NAME_ID, useUnmergedTree = true).assertExists()
-        }
-    }
+        // Given
+        composeTestRule.setContent { ApplicationBar(bondiInfo) }
 
-    @Test
-    fun `should show KB selector if not rule building`() {
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(bondiInfo, handler = handler)
-            }
-            onNodeWithTag(testTag = KB_CONTROL_ID, useUnmergedTree = true).assertExists()
-        }
-    }
+        // When
+        val label = composeTestRule.onNodeWithTag(KB_NAME_ID, useUnmergedTree = true)
 
-    @Test
-    fun `should remove KB selector but keep read-only KB name while rule building`() {
-        every { handler.isRuleSessionInProgress } returns true
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(KBInfo("Bondi"), handler = handler)
-            }
-            // The interactive selector (dropdown trigger + menu) must not be
-            // present during rule building so the user cannot switch or edit
-            // the knowledge base.
-            onNodeWithTag(testTag = KB_CONTROL_ID).assertDoesNotExist()
-            // But the current KB name is still visible as read-only context.
-            assertKbNameIs("Bondi")
-        }
+        // Then
+        label.assertTextEquals(bondiInfo.name)
     }
 
     @Test
     fun semantics() {
-        with(composeTestRule) {
-            setContent {
-                ApplicationBar(KBInfo("Bondi"), handler = handler)
-            }
-            onNodeWithContentDescription(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION).assertExists()
-        }
-    }
-}
+        // Given
+        composeTestRule.setContent { ApplicationBar(bondiInfo) }
 
-fun main() {
-    val bondiInfo = KBInfo("Bondi")
-    val handler = mockk<AppBarHandler>()
+        // When
+        val label = composeTestRule.onNodeWithContentDescription(KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION)
 
-    application {
-        Window(onCloseRequest = ::exitApplication) {
-            ApplicationBar(bondiInfo, handler = handler)
-        }
+        // Then
+        label.assertExists()
     }
 }

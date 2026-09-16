@@ -12,6 +12,7 @@ import androidx.compose.ui.window.application
 import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.TITLE
 import io.rippledown.files.FileKitKbFileDialogs
+import io.rippledown.files.KbFileDialogs
 import io.rippledown.main.*
 import io.rippledown.voice.VoiceRecognition
 import kotlinx.coroutines.Dispatchers.Unconfined
@@ -56,7 +57,7 @@ class TestClientLauncher {
     private lateinit var composeWindow: ComposeWindow
     private lateinit var thread: Thread
 
-    fun launchClient(voiceRecognition: VoiceRecognition? = null): ComposeWindow {
+    fun launchClient(voiceRecognition: VoiceRecognition? = null, fileDialogs: KbFileDialogs? = null): ComposeWindow {
         val api = Api(clientCIO)
         installComposeDisposalExceptionFilter()
         thread = Thread {
@@ -87,7 +88,7 @@ class TestClientLauncher {
                     applyAppIcon(this.window)
                     OpenRDRUI(
                         handler, dispatcher = Unconfined, voiceRecognition = voiceRecognition,
-                        fileDialogs = remember(window) { FileKitKbFileDialogs(window) }
+                        fileDialogs = fileDialogs ?: remember(window) { FileKitKbFileDialogs(window) }
                     )
                 }
             }

@@ -11,9 +11,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.rippledown.integration.proxy.ConfiguredTestData
 import io.rippledown.integration.proxy.TestResultDetail
-import io.rippledown.integration.waitUntilAsserted
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
 import steps.StepsInfrastructure.saveServerLogsOnFailure
@@ -21,12 +19,9 @@ import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
 import steps.StepsInfrastructure.startServerWithInMemoryDatabase
 import steps.StepsInfrastructure.startServerWithPostgresDatabase
-import java.io.File
 import java.util.concurrent.TimeUnit.*
-import java.util.zip.ZipFile
 
 class Defs {
-    private var exportedZip: File? = null
 
     // Restores keyboard focus to the last-selected case before an arrow-key press.
     // After a case is selected, ChatPanel's LaunchedEffect(id) steals focus to the
@@ -163,39 +158,6 @@ class Defs {
 
         // The attributes are created when the cases are parsed, so select them in the right order.
         caseCountPO().waitForCountOfNumberOfCasesToBe(3)
-    }
-
-    @Given("I import the configured zipped Knowledge Base {word}")
-    fun importConfiguredZippedKnowledgeBase(toImport: String) {
-        val zipFile = ConfiguredTestData.kbZipFile(toImport)
-        kbControlsPO().importKB(zipFile.absolutePath)
-    }
-
-    @And("I export the current Knowledge Base")
-    fun exportTheCurrentKnowledgeBase() {
-        val destination = File.createTempFile("Exported", ".zip")
-        exportedZip = destination
-        kbControlsPO().exportKB(destination.absolutePath)
-        // The client writes the zip asynchronously, and createTempFile has
-        // already made an empty file, so wait for the content rather than for
-        // the file to exist.
-        waitUntilAsserted { destination.holdsAnExportedKB() shouldBe true }
-    }
-
-    private fun File.holdsAnExportedKB() = try {
-        ZipFile(this).use { zip ->
-            zip.entries().asSequence().any { it.name.endsWith("Details.txt") }
-        }
-    } catch (_: Exception) {
-        false
-    }
-
-    @Given("I import the previously exported Knowledge Base")
-    fun importThePreviouslyExportedKnowledgeBase() {
-        require(exportedZip != null) {
-            "Import of previously exported KB attempted but exported KB is null."
-        }
-        kbControlsPO().importKB(exportedZip!!.absolutePath)
     }
 
     @Given("case {word} is provided having data:")

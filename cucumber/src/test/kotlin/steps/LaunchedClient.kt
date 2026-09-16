@@ -23,7 +23,7 @@ class LaunchedClient {
      */
     private val fakeVoiceRecognition: FakeVoiceRecognition? =
         if (StepsInfrastructure.useFakeVoice) FakeVoiceRecognition() else null
-    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition)
+    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition, StepsInfrastructure.fileDialogs)
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
 
     fun voiceRecognition(): FakeVoiceRecognition = fakeVoiceRecognition

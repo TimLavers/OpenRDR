@@ -34,13 +34,4 @@ class KbStepDefs {
         restClient().createKBFromSample(kbName, sample)
     }
 
-    @Then("the KB controls (are )(should be )hidden")
-    fun theKBControlsAreShouldBeHidden() {
-        kbControlsPO().requireKbControlsToBeHidden()
-    }
-
-    @Then("the KB controls (are )(should be )shown")
-    fun theKBControlsAreShouldBeShown() {
-        kbControlsPO().requireKbControlsToBeShown()
-    }
 }

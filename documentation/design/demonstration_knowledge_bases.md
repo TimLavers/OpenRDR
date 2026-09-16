@@ -124,9 +124,9 @@ be deleted. Your own copies can be." No confirmation, nothing to do.
 ### Import and export through chat
 
 Import and export are available through chat. An explicit request immediately opens a native file dialog; there is
-no additional "Choose file" chat button and no request to type a path. The remaining KB menu items stay until Step 14
-migrates their acceptance coverage. After their removal, the KB name remains visible as a read-only application-bar
-label.
+no additional "Choose file" chat button and no request to type a path. The KB menus and path-entry dialogs have been
+removed. The KB name remains visible as a read-only application-bar label, including during rule building; with no
+KB open, the label reads "No KB selected".
 
 | Request          | Dialog and result                                                                                                  |
 |------------------|--------------------------------------------------------------------------------------------------------------------|
@@ -159,7 +159,7 @@ macOS; inspecting the libraries in a Windows package does not verify execution o
 The model identifies import or export intent. The server validates the action and supplies a structured, one-use
 file-dialog request in `ChatResponse`; the client does not infer an operation from response prose. Import works
 without an open KB. Export requires an open stored KB and captures its identity before showing the chooser. Both
-operations remain unavailable during rule building, matching the current menu restriction. Refusals produce chat
+operations remain unavailable during rule building. Refusals produce chat
 text without launching a dialog. Exporting a built-in demonstration requires first opening a named copy.
 
 The client owns local file selection and filesystem access, reuses the import/export HTTP endpoints, and reports
@@ -187,12 +187,15 @@ writing export bytes. Export takes the KB identity captured in the request. Fail
 destination untouched. Import validation and damaged-ZIP errors return readable HTTP 400 responses, which are shown
 in chat. Chat auto-scrolling requests the next layout pass rather than forcing layout during composition updates.
 
-The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. The current
-menus stay until the chat flows and replacement acceptance coverage work. Step 11 is implemented: the server
+The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. Step 11 is
+implemented: the server
 emits `ChatResponse.kbFileDialogRequest` with a fresh request id and, for export, the open `KBInfo`. Serialization,
 action dispatch, prompt wiring and refusals are tested. Steps 12 and 13 are implemented: chat launches the native
-dialog adapter and performs transfers. The existing menus still perform import and export. Packaged Windows and
-macOS native-dialog checks remain scheduled work under Step 15.
+dialog adapter and performs transfers. Step 14 removes the remaining menus and migrates their acceptance scenarios
+to chat, with scripted selections injected at the dialog boundary. These scenarios retain real HTTP transfer and
+application state changes and cover archive round-trip, import without an open KB, cancellation and refusal to
+export without an open KB. Headless tests, the focused UI regression and the Cucumber dry run pass. Live acceptance
+runs and packaged Windows/macOS native-dialog checks remain scheduled work under Step 15.
 
 ### Startup
 

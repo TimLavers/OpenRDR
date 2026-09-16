@@ -1,21 +1,89 @@
 Feature: Knowledge Base management
 
-  Scenario: A previously exported Knowledge Base can be imported
+  @file-dialogs-are-fake
+  Scenario: A previously exported Knowledge Base can be imported through chat
     Given a default KB is opened
     And I start the client application
     And the displayed KB name is Thyroids
-    When I import the configured zipped Knowledge Base Whatever
-    Then the displayed KB name is now Whatever
+    And the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
+    And the displayed KB name is now Whatever
 
-  Scenario: A Knowledge Base can be exported
+  @file-dialogs-are-fake
+  Scenario: A Knowledge Base can be exported and imported through chat
     Given a default KB is opened
+    And case ExportedCase is provided having data:
+      | Sun | warm |
     And I start the client application
     And the displayed KB name is Thyroids
-    And I export the current Knowledge Base
-    And I import the configured zipped Knowledge Base Whatever
+    And the file chooser will select an export destination
+    When I enter the following text into the chat panel:
+      | Export this KB |
+    Then the chat history contains "Exported \"Thyroids\" to"
+    And the exported archive contains a knowledge base
+    And the displayed KB name is Thyroids
+    And I should see the case ExportedCase as the current case
+    Given the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
     And the displayed KB name is Whatever
-    When I import the previously exported Knowledge Base
-    Then the displayed KB name is now Thyroids
+    Given the file chooser will select the previously exported KB archive
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Thyroids\" and opened it."
+    And the displayed KB name is now Thyroids
+    And I should see the case ExportedCase as the current case
+
+  @file-dialogs-are-fake
+  Scenario: A Knowledge Base can be imported when none is open
+    Given I start the client application
+    And no knowledge base is shown as selected
+    And the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
+    And the displayed KB name is now Whatever
+
+  @file-dialogs-are-fake
+  Scenario: Cancelling import leaves the current KB open and allows another request
+    Given a default KB is opened
+    And I start the client application
+    And the import file chooser will be cancelled
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Import cancelled."
+    And the displayed KB name is Thyroids
+    Given the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
+    And the displayed KB name is now Whatever
+
+  @file-dialogs-are-fake
+  Scenario: Cancelling export leaves the current KB and case unchanged
+    Given a default KB is opened
+    And case ExportedCase is provided having data:
+      | Sun | warm |
+    And I start the client application
+    And the export file chooser will be cancelled
+    When I enter the following text into the chat panel:
+      | Export this KB |
+    Then the chat history contains "Export cancelled."
+    And the displayed KB name is Thyroids
+    And I should see the case ExportedCase as the current case
+
+  @file-dialogs-are-fake
+  Scenario: Export without an open KB does not open a file chooser
+    Given I start the client application
+    When I enter the following text into the chat panel:
+      | Export this KB |
+    Then the chatbot response contains the following terms:
+      | No knowledge base is open |
+    And no knowledge base is shown as selected
+    And the file chooser has not been opened
 
   Scenario: The available knowledge bases can be listed if there are any
     Given a default KB is opened

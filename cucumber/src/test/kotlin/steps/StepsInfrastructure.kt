@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.java.Scenario
 import io.rippledown.integration.UITestBase
+import io.rippledown.integration.files.ScriptedKbFileDialogs
 import steps.StepsInfrastructure.client
 import steps.StepsInfrastructure.uiTestBase
 import java.io.File
@@ -21,6 +22,7 @@ object StepsInfrastructure {
      * free-play scenarios.
      */
     var useFakeVoice: Boolean = false
+    var fileDialogs: ScriptedKbFileDialogs? = null
 
     private fun setup() {
         uiTestBase = UITestBase()
@@ -98,6 +100,7 @@ object StepsInfrastructure {
         launchedClient = null
         uiTestBase.serverProxy.shutdown()
         useFakeVoice = false
+        fileDialogs = null
     }
 }
 

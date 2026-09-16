@@ -5,15 +5,15 @@
 The chat exists to replace standing GUI controls, not to grow new ones. Open-ended input — typed or spoken — is the
 default way to do anything, and the model interprets it. Persistent controls are not reintroduced beside the chat.
 
-The KB-name menu retains only Import KB and Export KB for file operations. All other KB management uses chat,
-including the clickable lists of stored and demonstration knowledge bases.
+All KB management uses chat, including the clickable lists of stored and demonstration knowledge bases. The
+application bar displays the current KB name as a read-only label, or "No KB selected"; there is no KB menu.
 
-Planned: replace those final menu items with chat requests that immediately open native file dialogs through FileKit.
-The application bar then displays only the current KB name. This is a deliberate exception to text-only open-ended
+Import and export requests immediately open native file dialogs through FileKit.
+This is a deliberate exception to text-only open-ended
 input: choosing a local file is better served by the operating system's file browser. It is a temporary system dialog,
 launched by a server-validated structured request, with no standing control or extra "Choose file" chat button.
 The client handles the chosen file directly and reports the result; paths are not ordinary messages sent to the model.
-See [the import/export design](demonstration_knowledge_bases.md#import-and-export-through-chat-planned).
+See [the import/export design](demonstration_knowledge_bases.md#import-and-export-through-chat).
 
 ## Inline affordances: the test
 

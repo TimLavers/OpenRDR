@@ -6,7 +6,7 @@
   opens it), and **open** one by name.
 - With a knowledge base open: **close** it, **delete** it (or another, by name) after confirmation, **rename** it, and
   **show** or **replace** its description.
-- The GUI reflects each change without the user touching the anchor menu: the name in the bar, the case list, the chat
+- The GUI reflects each chat operation: the name in the bar, the case list, the chat
   context.
 - The chat is usable when the knowledge base has no cases, and when no knowledge base is open at all. An empty knowledge
   base offers a demonstration case.
@@ -15,16 +15,14 @@
 
 Non-goals: incremental editing of the description and more than one client at a time.
 
-The KB-name menu contains only **Import KB** and **Export KB**, retaining their file dialogs. Creation, demonstration
-copies, listing, switching and descriptions use chat; their duplicate menu items and dialogs have been removed.
-Export is disabled when no KB is open; Import remains available. Opening or closing a KB updates Export's availability.
+All KB management uses chat. The menus and path-entry dialogs have been removed; the application bar retains the
+KB name as a read-only label. With no KB open, it shows "No KB selected".
 
-Agreed next change (server requests implemented; client handling pending): "Import a KB" and "Export this KB" will
-immediately launch native Open
-and Save As dialogs through FileKit. The server validates the request and sends a structured instruction; the client
-handles local files and reports completion or cancellation in chat. This removes the remaining menu and path-entry
-dialogs while retaining the KB name as a read-only label.
-See [the design](demonstration_knowledge_bases.md#import-and-export-through-chat-planned)
+"Import a KB" and "Export this KB" immediately launch native Open and Save As dialogs through FileKit. The server
+validates the request and sends a structured instruction; the client handles local files and reports success,
+cancellation or failure in chat. Import works without an open KB; export is refused in chat when none is open.
+Both operations are refused during rule building. Local paths and file contents are not sent to the model.
+See [the design](demonstration_knowledge_bases.md#import-and-export-through-chat)
 and [implementation Steps 11–15](demonstration_knowledge_bases_implementation_plan.md#step-11--structured-importexport-requests).
 
 ## How it works

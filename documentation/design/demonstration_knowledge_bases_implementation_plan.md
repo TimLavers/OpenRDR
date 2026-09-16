@@ -12,7 +12,7 @@ The real `:cucumber:kb` run remains for the user to schedule; broader UI tests r
 
 Planned extension: Steps 11–15 move import and export into chat using native FileKit dialogs, then remove the last
 KB menus. Step 11 is complete. Step 12 is implemented with automated checks; its interactive packaged-dialog check
-remains to be scheduled. Step 13 is implemented and its automated checks pass. Steps 14–15 remain pending.
+remains to be scheduled. Steps 13 and 14 are implemented and their automated checks pass. Step 15 remains pending.
 Steps 1–10 describe the completed demonstration work.
 
 ## Ground rules for whoever implements this
@@ -639,6 +639,19 @@ on actual outcomes; do not send local paths or those outcomes as fabricated user
 pending state on cancellation and failure, allowing the user to retry by making another request.
 
 ## Step 14 — Remove the remaining menus and migrate acceptance tests
+
+Status: implemented. The application bar always shows the read-only KB label; the remaining menus, path-entry
+dialogs, handlers and unused constants are removed. Menu-only tests and page objects were removed because that
+behaviour no longer exists. Import/export scenarios now request operations through chat and inject selections at
+the file-dialog boundary, preserving real transfers and archive round-trip assertions. New scenarios cover import
+without an open KB, cancellation, retry and refusal to export with no KB open. Rule-building scenarios retain
+case-list visibility checks and now assert that the KB name remains visible.
+
+Validation: 62 headless dialog/controller/chat-state/API/helper tests, one focused UI test, 799 common tests and
+1,649 filtered server tests pass. Cucumber compilation and dry run pass (206 scenarios, 2,683 bound steps). Common
+Kover was generated and the two touched constant-file source reports reviewed: they contain no executable lines.
+UI and cucumber classes are outside the configured Kover modules. Live acceptance runs and packaged native-dialog
+checks on Windows and macOS remain for Step 15.
 
 **Files**: `appbar/ApplicationBar.kt`, `KbAnchorMenu.kt`, `KbHandlers.kt`, `OpenRDRUI.kt`, associated UI tests
 and page objects; `cucumber/src/test/resources/requirements/kb/Knowledge Base Management.feature` and its steps.

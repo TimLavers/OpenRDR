@@ -24,17 +24,12 @@ import io.rippledown.constants.main.APPLICATION_BAR_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.model.KBInfo
 
-interface AppBarHandler : KBControlHandler {
-    var isRuleSessionInProgress: Boolean
-}
-
 private val AppBarBackground = Color(0xFF4F4A8C)
 private val AppBarHeight = 44.dp
 
 @Composable
 fun ApplicationBar(
     kbInfo: KBInfo?,
-    handler: AppBarHandler,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -48,14 +43,7 @@ fun ApplicationBar(
             }
             .testTag(APPLICATION_BAR_ID)
     ) {
-        if (!handler.isRuleSessionInProgress) {
-            KbAnchorMenu(kbInfo, handler)
-        } else {
-            // During rule building the user must not be able to switch or edit
-            // the knowledge base, but we still show the current KB name so the
-            // context is not lost. No dropdown icon is shown.
-            ReadOnlyKbName(kbInfo)
-        }
+        ReadOnlyKbName(kbInfo)
     }
 }
 

@@ -67,22 +67,22 @@
       | Sun is in case |
     Then the interpretation should be "Go for a surf."
 
-  Scenario: The KB controls and case list should be disabled when building a rule
+  Scenario: The case list is hidden and the KB name remains visible when building a rule
     Given a new case is stored on the server
     And I start the client application
-    And the KB controls are shown
+    And the displayed KB name is Thyroids
     And I request that the comment "Let's surf." be added
-    Then the KB controls should be hidden
+    Then the displayed KB name is Thyroids
     And the case list should be hidden
 
-  Scenario: The KB controls and case list should be re-enabled after cancelling a rule
+  Scenario: The case list is restored and the KB name remains visible after cancelling a rule
     Given a new case is stored on the server
     And I start the client application
     And I request that the comment "Let's surf." be added
-    And the KB controls are hidden
+    And the displayed KB name is Thyroids
     And the case list is hidden
     When I cancel the rule
-    Then the KB controls should be shown
+    Then the displayed KB name is Thyroids
     And the case list should be shown
 
   Scenario: When the user starts to build a rule to add a comment, the rule action should be shown
