@@ -78,6 +78,21 @@ class KBManagerTest {
     }
 
     @Test
+    fun `registering a KB with a known id replaces the previous info and instance`() {
+        // Given
+        val original = kbManager.createKB("Thyroids")
+        kbManager.renameKB(original.id, "Thyroid Function")
+        val reimported = KB(persistenceProvider.createKBPersistence(KBInfo(original.id, "Thyroids")))
+
+        // When
+        kbManager.register(reimported)
+
+        // Then
+        kbManager.all().map { it.name } shouldBe listOf("Thyroids")
+        (kbManager.openKB(original.id) as EntityRetrieval.Success).entity shouldBe reimported
+    }
+
+    @Test
     fun `a legacy KB with a reserved name can still be opened and renamed`() {
         // Given
         val legacy = KBInfo("legacy_id", "Pathology")

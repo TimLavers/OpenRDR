@@ -22,8 +22,7 @@ KB name as a read-only label. With no KB open, it shows "No KB selected".
 validates the request and sends a structured instruction; the client handles local files and reports success,
 cancellation or failure in chat. Import works without an open KB; export is refused in chat when none is open.
 Both operations are refused during rule building. Local paths and file contents are not sent to the model.
-See [the design](demonstration_knowledge_bases.md#import-and-export-through-chat)
-and [implementation Steps 11–15](demonstration_knowledge_bases_implementation_plan.md#step-11--structured-importexport-requests).
+See [the design](demonstration_knowledge_bases.md#import-and-export-through-chat).
 
 ## How it works
 
@@ -56,21 +55,26 @@ interface with two kinds: the existing `ChatAction`, which works on the open kno
 (`ApplicationKbService`, which delegates to `ServerApplication` and pushes the result over the web socket).
 `ChatManager` dispatches on the kind; a `ChatAction` with no knowledge base open is refused with a fixed message.
 
-| Action                                         | Behaviour                                                                                            |
-|------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| `ListKnowledgeBases`                           | One vertical list with stored/demo headings and clickable names; the open KB is marked and inactive. |
-| `OpenKnowledgeBase(kbName)`                    | Opens an exact stored match, confirms a partial stored match; a demonstration asks for a copy name.  |
-| `CopyDemonstrationKnowledgeBase(sample, name)` | Server-only action: validates the name, builds the sample and opens the stored copy.                 |
-| `CreateKnowledgeBase(kbName)`                  | Refuses clashes and reserved demonstration titles; confirms near-duplicates.                         |
-| `CloseKnowledgeBase`                           | Tells the client to close; nothing changes on the server.                                            |
-| `DeleteKnowledgeBase(kbName?)`                 | Refuses demonstrations; confirms deletion of a stored KB, defaulting to the open one.                |
-| `AddDemonstrationCase`                         | Adds Einstein to the open knowledge base.                                                            |
-| `RenameKnowledgeBase(newName)`                 | Renames the open knowledge base, refusing reserved demonstration titles; keeps the id.               |
-| `ShowKnowledgeBaseDescription(kbName?)`        | Reads a description from the server, of the open KB or a named stored KB or demonstration.           |
-| `SetKnowledgeBaseDescription(text, kbName?)`   | Replaces the whole description of the open or a named stored KB; confirms a partial, refuses demos.  |
+| Action                                         | Behaviour                                                                                             |
+|------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `ListKnowledgeBases`                           | One vertical list with stored/demo headings and clickable names; the open KB is marked and inactive.  |
+| `OpenKnowledgeBase(kbName)`                    | Opens an exact stored match, confirms a partial stored match; a demonstration asks for a copy name.   |
+| `CopyDemonstrationKnowledgeBase(sample, name)` | Server-only action: validates the name, builds the sample and opens the stored copy.                  |
+| `CreateKnowledgeBase(kbName)`                  | Refuses clashes and reserved demonstration titles; confirms near-duplicates.                          |
+| `CloseKnowledgeBase`                           | Tells the client to close; nothing changes on the server.                                             |
+| `DeleteKnowledgeBase(kbName?)`                 | Refuses demonstrations; confirms deletion of a stored KB, defaulting to the open one.                 |
+| `AddDemonstrationCase`                         | Adds Einstein to the open knowledge base.                                                             |
+| `RenameKnowledgeBase(newName)`                 | Renames the open knowledge base, refusing reserved demonstration titles; keeps the id.                |
+| `ShowKnowledgeBaseDescription(kbName?)`        | Reads a description from the server, of the open KB or a named stored KB or demonstration.            |
+| `SetKnowledgeBaseDescription(text, kbName?)`   | Replaces the whole description of the open or a named stored KB; confirms a partial, refuses demos.   |
+| `ImportKnowledgeBase`                          | Returns a one-use `KbFileDialogRequest.Import`; the client opens the file dialog and does the import. |
+| `ExportKnowledgeBase`                          | Refuses with no open KB; otherwise a `KbFileDialogRequest.Export` carrying the open `KBInfo`.         |
 
-Actions that change what the chat is about (open, create, copy, close, delete) are refused while a rule is being built.
-Rename, describe, list and the demonstration case are not.
+`ListCapabilities` is a sibling `Action` rather than a `KbManagementAction`: it needs no service, only whether a case
+is current, and `ChatManager` answers it directly with `ChatResponse.capabilities`.
+
+Actions that change what the chat is about (open, create, copy, close, delete, import, export) are refused while a
+rule is being built. Rename, describe, list, capabilities and the demonstration case are not.
 
 ### The server holds every confirmation
 

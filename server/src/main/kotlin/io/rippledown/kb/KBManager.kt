@@ -43,6 +43,7 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
     }
 
     fun register(kb: KB) {
+        kbInfos.remove(kb.kbInfo)
         kbInfos.add(kb.kbInfo)
         openKbs[kb.kbInfo.id] = kb
     }

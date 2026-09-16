@@ -187,15 +187,16 @@ writing export bytes. Export takes the KB identity captured in the request. Fail
 destination untouched. Import validation and damaged-ZIP errors return readable HTTP 400 responses, which are shown
 in chat. Chat auto-scrolling requests the next layout pass rather than forcing layout during composition updates.
 
-The implementation sequence is Steps 11–15 in `demonstration_knowledge_bases_implementation_plan.md`. Step 11 is
-implemented: the server
-emits `ChatResponse.kbFileDialogRequest` with a fresh request id and, for export, the open `KBInfo`. Serialization,
-action dispatch, prompt wiring and refusals are tested. Steps 12 and 13 are implemented: chat launches the native
-dialog adapter and performs transfers. Step 14 removes the remaining menus and migrates their acceptance scenarios
-to chat, with scripted selections injected at the dialog boundary. These scenarios retain real HTTP transfer and
-application state changes and cover archive round-trip, import without an open KB, cancellation and refusal to
-export without an open KB. Headless tests, the focused UI regression and the Cucumber dry run pass. Live acceptance
-runs and packaged Windows/macOS native-dialog checks remain scheduled work under Step 15.
+The server emits `ChatResponse.kbFileDialogRequest` with a fresh request id and, for export, the open `KBInfo`; the
+chat launches the native dialog adapter and performs the transfer. The menus are gone and their acceptance scenarios
+live in `kb/Knowledge Base Management.feature`, tagged `@file-dialogs-are-fake` so that scripted selections are
+injected at the dialog boundary while the HTTP transfer and application state changes stay real. They cover the
+archive round-trip, import without an open KB, cancellation and refusal to export without an open KB. Packaged
+Windows and macOS native-dialog checks remain manual.
+
+An imported knowledge base is registered with `KBManager` as well as given an endpoint, so it appears in the list and
+can be renamed and deleted like one created through the application. Re-importing an archive whose id is already
+stored replaces the stored entry, including its name.
 
 ### Startup
 
@@ -211,7 +212,7 @@ the chat and the UI already never reach it without one.
 `OpenRDRServer` no longer seeds a knowledge base on start: the packaged demo instructions begin with "open Pathology"
 and suggest naming the copy "Clinic". `ensureSampleKB`, `DEMO_KB_NAME`, `DEMO_ARG` and the launchers' `Demo` argument
 are removed. `DemoZipSmokeTest` expects an empty `kbList` on both launches. The `demo` cucumber script instead opens
-an explicit default KB and supplies its own Taylor case, as specified in implementation Step 8.
+an explicit default KB and supplies its own Taylor case.
 
 ## Cukes: an explicit default knowledge base
 
@@ -257,13 +258,8 @@ name); `ChatManager` name-awaiting flow for a demonstration (confirm with name, 
 vertical list, an inactive open row, busy-state disabling, and mouse/keyboard activation through "Open <name>".
 
 Cukes, in `kb/Knowledge Base Management.feature`: the list shows both sections; opening a demonstration asks for
-a name and the copy opens with the expected case count; clicking a stored knowledge base's row opens it; clicking a
-demonstration's row asks for a name; deleting a demonstration is refused; creating with a
-demonstration title is refused; the no-knowledge-base greeting mentions demonstrations. Run with `.\gradlew.bat
-:cucumber:kb`.
-
-Implementation review corrected alphabetical ordering and separation in no-KB greetings, horizontal chip scrolling,
-outdated list expectations and UTF-8 corruption introduced by the bulk default-KB feature edit. Demonstration listing
-is covered by the existing listing and deletion scenarios; the duplicate "The list shows demonstrations" scenario
-has been removed. Compilation, mock-based helper tests and the full cucumber dry run pass. The real
-`:cucumber:kb` run still needs the live server, model and GUI and must be scheduled by the user.
+a name, a refused copy name can be corrected without restarting, and the copy opens with the expected case count;
+clicking a stored knowledge base's row opens it; clicking a demonstration's row asks for a name; deleting a
+demonstration is refused; creating with a demonstration title is refused; the no-knowledge-base greeting mentions
+demonstrations and a demonstration named in reply to it is opened. Run with `.\gradlew.bat :cucumber:kb`.
+Demonstration listing is covered by the listing and deletion scenarios rather than a scenario of its own.

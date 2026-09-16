@@ -169,7 +169,7 @@ fun confirmKbDeletionMessage(name: String) =
 
 fun confirmKbOpenMessage(name: String) = "$DID_YOU_MEAN \"$name\"?"
 fun confirmKbCreateMessage(newName: String, existingName: String) =
-    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well?."
+    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well?"
 
 fun kbNotFoundMessage(name: String, available: List<String>, demonstrations: List<String> = emptyList()): String {
     val message = if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
