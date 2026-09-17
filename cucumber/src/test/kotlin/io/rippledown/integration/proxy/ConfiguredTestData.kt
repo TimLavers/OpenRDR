@@ -15,5 +15,7 @@ object ConfiguredTestData {
 
     fun trialDataFile() = File("${resourcesRoot}trial-matching/trial-conditions.tsv")
 
+    fun roseCasesFile() = File("${resourcesRoot}rose/cases2.tsv")
+
     fun testDataFile(relativePath: String) = File("$resourcesRoot/$relativePath")
 }
