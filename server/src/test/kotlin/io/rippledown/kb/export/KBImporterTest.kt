@@ -67,6 +67,26 @@ class KBImporterTest : ExporterTestBase() {
     }
 
     @Test
+    fun `the name check sees the archive's name and can abort before persistence is created`() {
+        // Given
+        KBExporter(tempDir, KB(InMemoryKB(KBInfo("Hooked")))).export()
+        var seen: String? = null
+
+        // When
+        val error = shouldThrow<IllegalArgumentException> {
+            KBImporter(tempDir, persistenceProvider) {
+                seen = it
+                throw IllegalArgumentException("Refused by hook.")
+            }.import()
+        }
+
+        // Then
+        error.message shouldBe "Refused by hook."
+        seen shouldBe "Hooked"
+        persistenceProvider.idStore().data() shouldBe emptyMap()
+    }
+
+    @Test
     fun exportImportEmpty() {
         val kbInfo = KBInfo("Empty")
         val emptyKB = persistenceProvider.createKBPersistence(kbInfo)

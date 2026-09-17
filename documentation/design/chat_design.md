@@ -166,6 +166,7 @@ stateDiagram-v2
     Creating --> Idle: created, declined or changed subject
     Idle --> Confirming: action asks for confirmation
     Confirming --> Idle: next reply
+    Confirming --> Creating: near-duplicate name declined or replaced while naming
 ```
 
 Dispatch preserves the existing precedence: explicit cornerstone allowance, KB workflow reply, corrected assignment

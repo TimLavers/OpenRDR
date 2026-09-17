@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.chat.kbNameReservedMessage
@@ -344,16 +345,50 @@ internal class ServerApplicationTest {
     @Test
     fun `an imported KB is immediately available for management`(@TempDir directory: File) {
         // Given
-        val application = ServerApplication(InMemoryPersistenceProvider(), mockk())
         val info = KBInfo("Imported clinic")
         KBExporter(directory, KB(InMemoryKB(info))).export()
 
         // When
-        val imported = application.importKBFromZip(Zipper(directory).zip())
+        val imported = app.importKBFromZip(Zipper(directory).zip())
 
         // Then
-        application.kbForId(imported.id).kbInfo() shouldBe imported
-        application.kbList() shouldContain imported
+        app.kbForId(imported.id).kbInfo() shouldBe imported
+        app.kbList() shouldContain imported
+    }
+
+    @Test
+    fun `importing an archive named like a stored KB is refused before anything is stored`(@TempDir directory: File) {
+        // Given
+        val stored = app.createKB("Thyroids", false)
+        KBExporter(directory, KB(InMemoryKB(KBInfo("thyroids")))).export()
+
+        // When
+        val error = shouldThrow<IllegalArgumentException> { app.importKBFromZip(Zipper(directory).zip()) }
+
+        // Then
+        error.message shouldBe "A KB with name Thyroids already exists."
+        app.kbList() shouldBe listOf(stored)
+        persistenceProvider.idStore().data().keys shouldBe setOf(stored.id)
+    }
+
+    @Test
+    fun `an archive can be imported once the KB it was exported from is deleted`(@TempDir directory: File) {
+        // Given
+        val stored = app.createKB("Thyroids", false)
+        app.kbForId(stored.id).kb.addCornerstoneCase(createCase("Case1"))
+        KBExporter(directory, app.kbForId(stored.id).kb).export()
+        val zip = Zipper(directory).zip()
+        app.deleteKB(stored.id)
+
+        // When
+        val imported = app.importKBFromZip(zip)
+
+        // Then
+        imported.name shouldBe "Thyroids"
+        imported.id shouldNotBe stored.id
+        app.kbList() shouldBe listOf(imported)
+        app.kbForId(imported.id).kb.allCornerstoneCases().map { it.name } shouldBe listOf("Case1")
+        persistenceProvider.idStore().data().keys shouldBe setOf(imported.id)
     }
 
     private fun createCase(caseName: String) = CaseTestUtils.createCase(caseName)

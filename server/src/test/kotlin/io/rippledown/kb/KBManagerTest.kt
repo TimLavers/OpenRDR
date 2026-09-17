@@ -78,18 +78,24 @@ class KBManagerTest {
     }
 
     @Test
-    fun `registering a KB with a known id replaces the previous info and instance`() {
+    fun `a name held by a stored KB is not unused, ignoring case and surrounding space`() {
         // Given
-        val original = kbManager.createKB("Thyroids")
-        kbManager.renameKB(original.id, "Thyroid Function")
-        val reimported = KB(persistenceProvider.createKBPersistence(KBInfo(original.id, "Thyroids")))
+        kbManager.createKB("Thyroids")
 
         // When
-        kbManager.register(reimported)
+        val error = shouldThrow<IllegalArgumentException> { kbManager.requireNameUnused(" thyroids ") }
 
         // Then
-        kbManager.all().map { it.name } shouldBe listOf("Thyroids")
-        (kbManager.openKB(original.id) as EntityRetrieval.Success).entity shouldBe reimported
+        error.message shouldBe "A KB with name Thyroids already exists."
+    }
+
+    @Test
+    fun `a name no stored KB has is unused`() {
+        // Given
+        kbManager.createKB("Thyroids")
+
+        // When / Then
+        kbManager.requireNameUnused("Glucose")
     }
 
     @Test

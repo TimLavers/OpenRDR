@@ -179,8 +179,8 @@ retained in the new chat rather than lost when the conversation restarts. Export
 and text deduplication separate from request delivery: a new request id still opens a dialog when its prose repeats.
 Local completion and failure messages enter the transcript directly, without a model call. The application supplies
 the native dialog adapter with its window; tests inject fake selections. Import invalidates the loaded case context
-even when the archive replaces the currently open KB with identical KB and case ids. The existing context effects
-then fetch its cases and restart the conversation. The transcript persists across that restart.
+(`kbImportRevision`) rather than relying on the KB id changing. The existing context effects then fetch its cases and
+restart the conversation. The transcript persists across that restart.
 
 `Api` performs file reads and writes on `Dispatchers.IO` and checks HTTP status before accepting an import or
 writing export bytes. Export takes the KB identity captured in the request. Failed HTTP exports leave an existing
@@ -191,12 +191,13 @@ The server emits `ChatResponse.kbFileDialogRequest` with a fresh request id and,
 chat launches the native dialog adapter and performs the transfer. The menus are gone and their acceptance scenarios
 live in `kb/Knowledge Base Management.feature`, tagged `@file-dialogs-are-fake` so that scripted selections are
 injected at the dialog boundary while the HTTP transfer and application state changes stay real. They cover the
-archive round-trip, import without an open KB, cancellation and refusal to export without an open KB. Packaged
+archive round-trip (delete, then restore from the archive), refusal of an archive whose name is in use, import
+without an open KB, cancellation and refusal to export without an open KB. Packaged
 Windows and macOS native-dialog checks remain manual.
 
 An imported knowledge base is registered with `KBManager` as well as given an endpoint, so it appears in the list and
-can be renamed and deleted like one created through the application. Re-importing an archive whose id is already
-stored replaces the stored entry, including its name.
+can be renamed and deleted like one created through the application. Every import gets a fresh id; an archive whose
+name is already in use is refused before anything is stored, and the refusal is shown in chat as an import failure.
 
 ### Startup
 

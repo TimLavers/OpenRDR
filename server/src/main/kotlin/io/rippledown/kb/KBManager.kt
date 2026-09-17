@@ -43,9 +43,13 @@ class KBManager(private val persistenceProvider: PersistenceProvider) {
     }
 
     fun register(kb: KB) {
-        kbInfos.remove(kb.kbInfo)
         kbInfos.add(kb.kbInfo)
         openKbs[kb.kbInfo.id] = kb
+    }
+
+    fun requireNameUnused(name: String) {
+        val clash = kbInfos.firstOrNull { it.name.equals(name.trim(), ignoreCase = true) }
+        require(clash == null) { "A KB with name ${clash?.name} already exists." }
     }
 
     fun deleteKB(kbInfo: KBInfo): KBInfo? {

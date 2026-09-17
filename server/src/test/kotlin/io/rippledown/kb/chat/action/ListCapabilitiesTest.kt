@@ -17,12 +17,11 @@ class ListCapabilitiesTest {
 
         // Then
         response.capabilities.map { it.heading } shouldBe listOf("Knowledge bases")
-        response.text shouldContain "import a knowledge base from a ZIP archive"
+        response.text shouldContain "import a knowledge base from a ZIP archive (no knowledge base needs to be open)"
         response.text shouldContain "export the open knowledge base to a ZIP archive"
         response.text shouldContain "your own named copy of a demonstration knowledge base"
         response.text shouldContain "show or change a knowledge base description"
         response.text shouldContain "demonstration case"
-        response.text shouldContain "Import does not require an open knowledge base; export does."
         response.suggestions shouldBe emptyList()
         response.kbFileDialogRequest shouldBe null
     }

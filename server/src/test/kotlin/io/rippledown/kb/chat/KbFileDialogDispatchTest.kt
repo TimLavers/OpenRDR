@@ -87,7 +87,7 @@ class KbFileDialogDispatchTest {
         if (action == IMPORT_KNOWLEDGE_BASE) {
             response.kbFileDialogRequest.shouldBeInstanceOf<KbFileDialogRequest.Import>()
         } else {
-            response.text shouldBe NO_KB_OPEN
+            response.text shouldBe NO_KB_OPEN_MESSAGE
             response.kbFileDialogRequest shouldBe null
         }
         coVerify(exactly = 1) { model.response(match { it.contains("OFFER_CREATION") }) }

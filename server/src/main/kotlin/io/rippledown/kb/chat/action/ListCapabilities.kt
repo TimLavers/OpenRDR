@@ -10,10 +10,9 @@ class ListCapabilities : Action {
                 "list, open, create, close, delete or rename a knowledge base",
                 "show or change a knowledge base description",
                 "open your own named copy of a demonstration knowledge base",
-                "import a knowledge base from a ZIP archive",
+                "import a knowledge base from a ZIP archive (no knowledge base needs to be open)",
                 "export the open knowledge base to a ZIP archive",
-                "add a demonstration case to try rule building in an empty knowledge base",
-                "Import does not require an open knowledge base; export does."
+                "add a demonstration case to try rule building in an empty knowledge base"
             )
         )
         val sections = buildList {

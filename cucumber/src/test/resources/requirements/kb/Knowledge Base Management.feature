@@ -30,12 +30,29 @@ Feature: Knowledge Base management
       | Import a KB |
     Then the chat history contains "Imported \"Whatever\" and opened it."
     And the displayed KB name is Whatever
+    When I enter the following text into the chat panel:
+      | Delete the knowledge base Thyroids |
+    And I enter the following text into the chat panel:
+      | yes |
+    Then the chatbot response contains the following terms:
+      | Deleted | Thyroids |
     Given the file chooser will select the previously exported KB archive
     When I enter the following text into the chat panel:
       | Import a KB |
     Then the chat history contains "Imported \"Thyroids\" and opened it."
     And the displayed KB name is now Thyroids
     And I should see the case ExportedCase as the current case
+
+  @file-dialogs-are-fake
+  Scenario: Importing a Knowledge Base whose name is already in use is refused
+    Given a default KB is opened
+    And A Knowledge Base called Whatever has been created
+    And I start the client application
+    And the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Import failed: A KB with name Whatever already exists."
+    And the displayed KB name is Thyroids
 
   @file-dialogs-are-fake
   Scenario: A Knowledge Base can be imported when none is open

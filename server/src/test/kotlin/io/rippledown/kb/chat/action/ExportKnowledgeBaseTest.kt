@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.chat.NO_KB_OPEN
+import io.rippledown.constants.chat.NO_KB_OPEN_MESSAGE
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KbFileDialogRequest
 import kotlinx.coroutines.test.runTest
@@ -39,7 +39,7 @@ class ExportKnowledgeBaseTest : KbActionTestBase() {
         val response = ExportKnowledgeBase().doIt(kbService).shouldBeInstanceOf<KbManagementOutcome.Done>().response
 
         // Then
-        response shouldBe ChatResponse(NO_KB_OPEN)
+        response shouldBe ChatResponse(NO_KB_OPEN_MESSAGE)
         response.kbFileDialogRequest shouldBe null
     }
 

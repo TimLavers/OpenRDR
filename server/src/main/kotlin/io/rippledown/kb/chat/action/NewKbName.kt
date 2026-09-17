@@ -15,7 +15,8 @@ suspend fun outcomeForNewKbName(
     actionForName: (String) -> KbManagementAction,
     create: suspend (KnowledgeBaseService, String) -> ChatResponse
 ): KbManagementOutcome {
-    fun askAgain(reason: String) = KbManagementOutcome.AskForName("$reason\n\n$nameQuestion", actionForName)
+    fun askAgain(reason: String) =
+        KbManagementOutcome.AskForName("$reason\n\n$nameQuestion", nameQuestion, actionForName)
 
     val name = rawName.trim()
     if (name.isEmpty()) return askAgain(BLANK_NAME_MESSAGE)

@@ -105,7 +105,7 @@ class ServerApplication(
             "Invalid zip for KB import."
         }
         val rootDir = subDirectories[0]
-        val kb = KBImporter(rootDir, persistenceProvider).import()
+        val kb = KBImporter(rootDir, persistenceProvider, kbManager::requireNameUnused).import()
         logger.info("Imported KB with name: '${kb.kbInfo.name}' and id: '${kb.kbInfo.id}' from zip.")
         kbManager.register(kb)
         idToKBEndpoint[kb.kbInfo.id] = kbEndpoint(kb)

@@ -345,4 +345,164 @@ class KnowledgeBaseConversationTest {
         result shouldBe ChatResponse("Created")
         conversation.state shouldBe KnowledgeBaseConversation.State.Idle
     }
+
+    @Test
+    fun `declining a near-duplicate name returns to naming with the plain name question`() = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        val namingAction = mockk<KbManagementAction>()
+        val zoo2 = mockk<KbManagementAction>()
+        val zoo3 = mockk<KbManagementAction>()
+        listOf(namingAction, zoo2, zoo3).forEach { every { it.changesContext } returns false }
+        val confirmed = mockk<suspend (KnowledgeBaseService) -> ChatResponse>()
+        coEvery { namingAction.doIt(service) } returns
+                KbManagementOutcome.AskForName("Taken.\n\nName?", "Name?") { if (it == "Zoo2") zoo2 else zoo3 }
+        coEvery { zoo2.doIt(service) } returns KbManagementOutcome.Ask("Similar name. Create?", confirmed)
+        coEvery { zoo3.doIt(service) } returns done("Created Zoo3")
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Taken.\n\nName?", "Zoo2") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Zoo2")
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Similar name. Create?", "no") } returns
+                KbCreationReply(KbCreationIntent.DENY)
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Name?", "Zoo3") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Zoo3")
+        conversation.execute(namingAction)
+
+        // When
+        val question = conversation.answer("Zoo2")
+        val declined = conversation.answer("no")
+        val created = conversation.answer("Zoo3")
+
+        // Then
+        question shouldBe ChatResponse("Similar name. Create?")
+        declined shouldBe ChatResponse("Name?")
+        created shouldBe ChatResponse("Created Zoo3")
+        conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+        coVerify(exactly = 0) { confirmed(any()) }
+    }
+
+    @Test
+    fun `a new name given instead of confirming a near-duplicate is tried at once`() = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        val namingAction = mockk<KbManagementAction>()
+        val zoo2 = mockk<KbManagementAction>()
+        val zoo3 = mockk<KbManagementAction>()
+        listOf(namingAction, zoo2, zoo3).forEach { every { it.changesContext } returns false }
+        val confirmed = mockk<suspend (KnowledgeBaseService) -> ChatResponse>()
+        coEvery { namingAction.doIt(service) } returns
+                KbManagementOutcome.AskForName("Name?") { if (it == "Zoo2") zoo2 else zoo3 }
+        coEvery { zoo2.doIt(service) } returns KbManagementOutcome.Ask("Similar name. Create?", confirmed)
+        coEvery { zoo3.doIt(service) } returns done("Created Zoo3")
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Name?", "Zoo2") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Zoo2")
+        coEvery {
+            interpreter.interpret(
+                KbCreationStage.AWAITING_NAME,
+                "Similar name. Create?",
+                "call it Zoo3"
+            )
+        } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Zoo3")
+        conversation.execute(namingAction)
+
+        // When
+        conversation.answer("Zoo2")
+        val created = conversation.answer("call it Zoo3")
+
+        // Then
+        created shouldBe ChatResponse("Created Zoo3")
+        conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+        coVerify(exactly = 0) { confirmed(any()) }
+    }
+
+    @Test
+    fun `an unclear reply repeats the near-duplicate question and an interpreted agreement creates`() = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        val namingAction = mockk<KbManagementAction>()
+        val zoo2 = mockk<KbManagementAction>()
+        listOf(namingAction, zoo2).forEach { every { it.changesContext } returns false }
+        val confirmed = mockk<suspend (KnowledgeBaseService) -> ChatResponse>()
+        coEvery { confirmed(service) } returns ChatResponse("Created Zoo2")
+        coEvery { namingAction.doIt(service) } returns KbManagementOutcome.AskForName("Name?") { zoo2 }
+        coEvery { zoo2.doIt(service) } returns KbManagementOutcome.Ask("Similar name. Create?", confirmed)
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Name?", "Zoo2") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Zoo2")
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Similar name. Create?", "hmm") } returns
+                KbCreationReply(KbCreationIntent.UNCLEAR)
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Similar name. Create?", "oui") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM)
+        conversation.execute(namingAction)
+        conversation.answer("Zoo2")
+
+        // When
+        val unclear = conversation.answer("hmm")
+        val stillConfirming = conversation.state
+        val created = conversation.answer("oui")
+
+        // Then
+        unclear shouldBe ChatResponse("Similar name. Create?")
+        stillConfirming.shouldBeInstanceOf<KnowledgeBaseConversation.State.Confirming>()
+        created shouldBe ChatResponse("Created Zoo2")
+        conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+        coVerify(exactly = 1) { confirmed(service) }
+    }
+
+    @Test
+    fun `changing the subject at a near-duplicate question leaves the workflow as any other reply does`() = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        val namingAction = mockk<KbManagementAction>()
+        val zoo2 = mockk<KbManagementAction>()
+        listOf(namingAction, zoo2).forEach { every { it.changesContext } returns false }
+        coEvery { namingAction.doIt(service) } returns KbManagementOutcome.AskForName("Name?") { zoo2 }
+        coEvery { zoo2.doIt(service) } returns KbManagementOutcome.Ask("Similar name. Create?", mockk())
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, "Name?", "Zoo2") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Zoo2")
+        coEvery {
+            interpreter.interpret(
+                KbCreationStage.AWAITING_NAME,
+                "Similar name. Create?",
+                "open Thyroids"
+            )
+        } returns
+                KbCreationReply(KbCreationIntent.OTHER_REQUEST)
+        conversation.execute(namingAction)
+
+        // When
+        conversation.answer("Zoo2")
+        val other = conversation.answer("open Thyroids")
+
+        // Then
+        other shouldBe null
+        conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+    }
+
+    @Test
+    fun `declining a near-duplicate first name after the greeting asks for a name again`() = runTest {
+        // Given
+        every { rules.isRuleSessionActive() } returns false
+        every { service.knowledgeBases() } returns emptyList()
+        every { service.openKnowledgeBase() } returns null
+        every { service.isDemonstrationTitle("Thyroid") } returns false
+        every { service.resolve("Thyroid") } returns KbResolution.NotFound("Thyroid", listOf("Thyroids"))
+        every { service.nearDuplicateOf("Thyroid") } returns KBInfo("thyroids", "Thyroids")
+        val greeting = noKbGreeting(emptyList())
+        conversation.greet(null, greeting)
+        coEvery { interpreter.interpret(KbCreationStage.OFFER_CREATION, greeting, "Thyroid") } returns
+                KbCreationReply(KbCreationIntent.CONFIRM_WITH_NAME, "Thyroid")
+        coEvery { interpreter.interpret(KbCreationStage.AWAITING_NAME, any(), "no") } returns
+                KbCreationReply(KbCreationIntent.DENY)
+
+        // When
+        val question = conversation.answer("Thyroid")
+        val declined = conversation.answer("no")
+
+        // Then
+        question shouldBe ChatResponse(confirmKbCreateMessage("Thyroid", "Thyroids"))
+        declined shouldBe ChatResponse(NAME_THE_NEW_KB)
+        conversation.state.shouldBeInstanceOf<KnowledgeBaseConversation.State.Creating>().stage shouldBe
+                KbCreationStage.AWAITING_NAME
+        coVerify(exactly = 0) { service.create(any()) }
+    }
 }

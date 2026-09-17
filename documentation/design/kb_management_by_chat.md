@@ -106,8 +106,14 @@ At `AWAITING_NAME`, the supplied name names the new KB or copy, so demonstration
 A blank, reserved or already-used name returns `AskForName` with the refusal followed by the naming question and
 retains the action for creating the KB or copying the selected demonstration. The next reply is interpreted at
 `AWAITING_NAME`; a plain agreement repeats the question, and a corrected name retries without reopening the
-demonstration. Repeated refusals replace the previous refusal. Success clears naming, near-duplicates transfer to
-confirmation, and cancellation or another request leave the workflow as usual.
+demonstration. Repeated refusals replace the previous refusal. Success clears naming, and cancellation or another
+request leave the workflow as usual.
+
+A near-duplicate name asked about while naming (`State.Confirming` with `resumeNaming` set) does not drop the
+workflow: a plain "yes" creates it; a refusal returns to `AWAITING_NAME` with the bare name question (`AskForName`
+carries `nameQuestion` separately from a question that leads with a refusal); a different name is tried at once; an
+unclear reply repeats the question; another request leaves the workflow. A near-duplicate question that did not arise
+from naming (the model emitted `CreateKnowledgeBase` directly) is a one-turn confirmation as before.
 
 ### Name resolution
 
@@ -119,6 +125,12 @@ asks for a copy name when opened and is refused when deleted. An existing stored
 although new demonstration-title collisions are refused on create, copy, rename and import. `KBManager` and
 `KBImporter` enforce the reservation before persistence writes, including REST creation with `force=true`;
 the chat retains its own validation to give conversational refusals.
+
+An import always gets a fresh id (`KBInfoImporter`), so it can only clash by name: an archive whose name matches a
+stored KB (ignoring case) is refused, as create and rename refuse it. `KBImporter` applies
+`KBManager.requireNameUnused` with the reserved-title check, before any persistence is written. Restoring a backup of
+a KB that still exists therefore means deleting or renaming the stored one first; the round-trip acceptance scenario
+does exactly that.
 
 ### The GUI follows the server
 

@@ -26,10 +26,11 @@ class KnowledgeBaseConversation(
         data class Creating(
             val stage: KbCreationStage,
             val question: String,
-            val actionForName: (String) -> KbManagementAction = { CreateKnowledgeBase(it) }
+            val actionForName: (String) -> KbManagementAction = { CreateKnowledgeBase(it) },
+            val nameQuestion: String = question
         ) : State
 
-        data class Confirming(val offer: KbManagementOutcome.Ask) : State
+        data class Confirming(val offer: KbManagementOutcome.Ask, val resumeNaming: Creating? = null) : State
     }
 
     var state: State = State.Idle
@@ -42,7 +43,7 @@ class KnowledgeBaseConversation(
 
     fun greet(currentCase: ViewableCase?, greeting: String): ChatResponse {
         state = if (currentCase == null && service.knowledgeBases().isEmpty() && service.openKnowledgeBase() == null) {
-            State.Creating(KbCreationStage.OFFER_CREATION, greeting)
+            State.Creating(KbCreationStage.OFFER_CREATION, greeting, nameQuestion = NAME_THE_NEW_KB)
         } else State.Greeting
         return ChatResponse(greeting)
     }
@@ -54,27 +55,40 @@ class KnowledgeBaseConversation(
             if (isAcceptance(message) && service.openKnowledgeBase() != null) execute(AddDemonstrationCase()) else null
         }
 
-        is State.Confirming -> {
-            reset()
-            if (isAcceptance(message)) pending.offer.thenDo(service) else null
+        is State.Confirming -> when {
+            isAcceptance(message) -> {
+                reset()
+                pending.offer.thenDo(service)
+            }
+
+            pending.resumeNaming != null -> answerToNameConfirmation(pending, pending.resumeNaming, message)
+            else -> {
+                reset()
+                null
+            }
         }
 
         is State.Creating -> answerToCreation(pending, message)
     }
 
     suspend fun execute(action: KbManagementAction): ChatResponse {
+        val naming = state as? State.Creating
+        reset()
         if (action.changesContext && ruleService?.isRuleSessionActive() == true) {
             return ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
         }
         return when (val outcome = action.doIt(service)) {
             is KbManagementOutcome.Done -> outcome.response
             is KbManagementOutcome.AskForName -> {
-                state = State.Creating(KbCreationStage.AWAITING_NAME, outcome.question, outcome.actionForName)
+                state = State.Creating(
+                    KbCreationStage.AWAITING_NAME, outcome.question, outcome.actionForName, outcome.nameQuestion
+                )
                 ChatResponse(outcome.question)
             }
 
             is KbManagementOutcome.Ask -> {
-                state = State.Confirming(outcome)
+                val resume = naming?.copy(stage = KbCreationStage.AWAITING_NAME, question = naming.nameQuestion)
+                state = State.Confirming(outcome, resume)
                 ChatResponse(outcome.question)
             }
         }
@@ -82,8 +96,43 @@ class KnowledgeBaseConversation(
 
     private suspend fun answerToCreation(pending: State.Creating, message: String): ChatResponse? {
         if (isAcceptance(message)) return confirmCreation(pending)
+        return interpretThen(pending, pending.question, message) { applyReply(pending, it) }
+    }
+
+    // A near-duplicate question asked while naming: a refusal or a fresh name
+    // continues the naming workflow instead of dropping it.
+    private suspend fun answerToNameConfirmation(
+        pending: State.Confirming,
+        naming: State.Creating,
+        message: String
+    ): ChatResponse? = interpretThen(naming, pending.offer.question, message) { reply ->
+        when (reply.intent) {
+            KbCreationIntent.CONFIRM -> {
+                reset()
+                pending.offer.thenDo(service)
+            }
+
+            KbCreationIntent.DENY -> {
+                state = naming
+                ChatResponse(naming.question)
+            }
+
+            KbCreationIntent.UNCLEAR -> ChatResponse(pending.offer.question)
+            KbCreationIntent.CONFIRM_WITH_NAME, KbCreationIntent.OTHER_REQUEST -> {
+                state = naming
+                applyReply(naming, reply)
+            }
+        }
+    }
+
+    private suspend fun interpretThen(
+        pending: State.Creating,
+        question: String,
+        message: String,
+        apply: suspend (KbCreationReply) -> ChatResponse?
+    ): ChatResponse? {
         val reply = try {
-            interpreter.interpret(pending.stage, pending.question, message)
+            interpreter.interpret(pending.stage, question, message)
         } catch (e: CancellationException) {
             throw e
         } catch (e: IllegalArgumentException) {
@@ -93,7 +142,7 @@ class KnowledgeBaseConversation(
             logger.error("Failed to interpret KB creation reply", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
-        return applyReply(pending, reply)
+        return apply(reply)
     }
 
     private suspend fun applyReply(pending: State.Creating, reply: KbCreationReply): ChatResponse? =
@@ -105,7 +154,6 @@ class KnowledgeBaseConversation(
             }
 
             KbCreationIntent.CONFIRM_WITH_NAME -> {
-                reset()
                 val name = checkNotNull(reply.kbName).trim()
                 val action =
                     if (pending.stage == KbCreationStage.OFFER_CREATION && service.isDemonstrationTitle(name)) {
@@ -123,7 +171,7 @@ class KnowledgeBaseConversation(
 
     private fun confirmCreation(pending: State.Creating): ChatResponse {
         val next = if (pending.stage == KbCreationStage.OFFER_CREATION) {
-            pending.copy(stage = KbCreationStage.AWAITING_NAME, question = NAME_THE_NEW_KB)
+            pending.copy(stage = KbCreationStage.AWAITING_NAME, question = pending.nameQuestion)
         } else pending
         state = next
         return ChatResponse(next.question)
