@@ -6,6 +6,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 
 fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
     expected.forEachIndexed { idx, message ->
@@ -17,11 +18,20 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
             // descendants. SuggestionListMessage's outer row keeps the
             // original "$BOT$idx" form because it has no text of its own.
             message is SuggestionListMessage -> "$BOT$idx"
+            message is KbChoiceListMessage -> "$BOT$idx"
             // TipRow encodes its visible text as "$TIP$idx:$text", mirroring BotRow.
             message is TipMessage -> "$TIP$idx:${message.text}"
             else -> "$BOT$idx:${message.text}"
         }
-        onNodeWithContentDescription(expectedLabel).assertTextEquals(message.text)
+        waitUntilAtLeastOneExists(hasContentDescription(expectedLabel))
+        if (message is KbChoiceListMessage) {
+            onNodeWithContentDescription(expectedLabel).assertExists()
+            runOnIdle { ChatTestHook.snapshot().messageList[idx] shouldBe message }
+        } else if (message.text.isEmpty()) {
+            onNodeWithContentDescription(expectedLabel).assertExists()
+        } else {
+            onNodeWithContentDescription(expectedLabel).assertTextEquals(message.text)
+        }
     }
     //And no more messages should be showing
     val size = expected.size

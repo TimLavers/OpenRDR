@@ -1,8 +1,11 @@
-Feature: The user can undo rules via the chatbot
+﻿Feature: The user can undo rules via the chatbot
 
   Undoing the last rule is done conversationally: the user asks the chatbot to
   undo, the chatbot previews the rule that would be removed and asks for
   confirmation, and only an explicit affirmation actually performs the undo.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: When a rule is undone, the interpretation of a case changes back to what is was prior to the rule being built
     Given case Bondi is provided having data:
@@ -29,8 +32,8 @@ Feature: The user can undo rules via the chatbot
     Then the chatbot says there are no rules to undo
 
   Scenario: Undo rules from sample KB
-    Given I start the client application
-    And I create a Knowledge Base with the name ContactLenseUndo based on the "Contact Lense Prescription" sample
+    Given A Knowledge Base called ContactLensUndo has been created from the "Contact Lens Prescription" sample
+    And I start the client application
     And the count of the number of cases is 24
     And I select case Case24
     And the interpretation should be empty

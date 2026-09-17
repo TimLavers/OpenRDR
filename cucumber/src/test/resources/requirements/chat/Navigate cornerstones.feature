@@ -1,4 +1,7 @@
-Feature: Navigate cornerstones via chat
+﻿Feature: Navigate cornerstones via chat
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to see the index of the current cornerstone and the total number of cornerstones
     Given cases are set up as follows:

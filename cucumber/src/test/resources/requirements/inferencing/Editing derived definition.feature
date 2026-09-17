@@ -9,6 +9,9 @@ Feature: Editing the definition of a derived attribute
   rule and leaves the definition unchanged. An edit that would make an
   attribute depend on itself is refused.
 
+  Background:
+    Given a default KB is opened
+
   Scenario: Editing a definition corrects the value for existing and new cases without building a rule
     Given case Fermi is provided having data:
       | weight | 65   |

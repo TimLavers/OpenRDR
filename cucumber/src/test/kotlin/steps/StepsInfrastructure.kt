@@ -2,6 +2,7 @@ package steps
 
 import io.cucumber.java.Scenario
 import io.rippledown.integration.UITestBase
+import io.rippledown.integration.files.ScriptedKbFileDialogs
 import steps.StepsInfrastructure.client
 import steps.StepsInfrastructure.uiTestBase
 import java.io.File
@@ -21,6 +22,7 @@ object StepsInfrastructure {
      * free-play scenarios.
      */
     var useFakeVoice: Boolean = false
+    var fileDialogs: ScriptedKbFileDialogs? = null
 
     private fun setup() {
         uiTestBase = UITestBase()
@@ -29,7 +31,6 @@ object StepsInfrastructure {
     fun startServerWithInMemoryDatabase() {
         setup()
         uiTestBase.serverProxy.start()
-        uiTestBase.restClient.createKBWithDefaultName()
     }
 
     fun startServerWithPostgresDatabase() {
@@ -99,6 +100,7 @@ object StepsInfrastructure {
         launchedClient = null
         uiTestBase.serverProxy.shutdown()
         useFakeVoice = false
+        fileDialogs = null
     }
 }
 
@@ -112,7 +114,6 @@ fun favouriteCaseListPO() = client().favouriteCaseListPO()
 fun caseCountPO() = client().caseCountPO()
 fun cornerstoneCaseCountPO() = client().cornerstoneCaseCountPO()
 fun kbControlsPO() = client().kbControlsPO()
-fun editCurrentKbControlPO() = client().editCurrentKbControlPO()
 fun caseViewPO() = client().caseViewPO()
 fun cornerstonePO() = client().cornerstonePO()
 fun interpretationViewPO() = client().interpretationViewPO()

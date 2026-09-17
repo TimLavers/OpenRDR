@@ -23,7 +23,7 @@ class LaunchedClient {
      */
     private val fakeVoiceRecognition: FakeVoiceRecognition? =
         if (StepsInfrastructure.useFakeVoice) FakeVoiceRecognition() else null
-    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition)
+    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition, StepsInfrastructure.fileDialogs)
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
 
     fun voiceRecognition(): FakeVoiceRecognition = fakeVoiceRecognition
@@ -80,7 +80,6 @@ class LaunchedClient {
     fun caseCountPO() = rdUiOperator.caseCountPO()
     fun cornerstoneCaseCountPO() = rdUiOperator.cornerstoneCaseCountPO()
     fun kbControlsPO() = rdUiOperator.kbControlsPO()
-    fun editCurrentKbControlPO() = rdUiOperator.editCurrentKbControlPO()
     fun caseViewPO() = rdUiOperator.caseViewPO()
     fun cornerstonePO() = rdUiOperator.cornerstonePO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()

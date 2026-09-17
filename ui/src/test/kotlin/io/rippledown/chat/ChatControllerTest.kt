@@ -1,12 +1,15 @@
 package io.rippledown.chat
 
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -161,6 +164,44 @@ class ChatControllerTest {
             requireChatMessagesShowing(expected)
         }
     }
+
+    @Test
+    fun `should render a single grouped listing and send row clicks through chat`() {
+        val sent = mutableListOf<String>()
+        val h = object : ChatControllerHandler {
+            override fun sendUserMessage(message: String) {
+                sent.add(message)
+            }
+            override var onBotMessageReceived: (ChatResponse) -> Unit = {}
+        }
+
+        with(composeTestRule) {
+            // Given
+            setContent {
+                ChatController(handler = h)
+            }
+
+            // When
+            val botResponse = "Your knowledge bases:\nThyroids"
+            val listing = KnowledgeBaseListing(listOf("Thyroids", "Glucose"), listOf("Zoo Animals"), "Thyroids")
+            runOnIdle { h.onBotMessageReceived(ChatResponse(botResponse, kbListing = listing)) }
+            runOnIdle { h.onBotMessageReceived(ChatResponse(botResponse, kbListing = listing)) }
+
+            // Then
+            val expected = listOf(
+                KbChoiceListMessage(botResponse, listing)
+            )
+            runOnIdle {
+                ChatTestHook.snapshot().messageList shouldBe expected
+                ChatTestHook.snapshot().mostRecentBotText shouldBe botResponse
+            }
+            onAllNodesWithText("Glucose").assertCountEquals(1)
+            onNodeWithContentDescription("${KB_CHOICE_ITEM}Zoo Animals").performClick()
+            runOnIdle { sent shouldBe listOf("Open Zoo Animals") }
+            onNodeWithContentDescription("${KB_CHOICE_ITEM}Glucose").assertIsNotEnabled()
+            runOnIdle { sent shouldBe listOf("Open Zoo Animals") }
+        }
+    }
 }
 
 fun main() {
@@ -184,4 +225,3 @@ fun main() {
         }
     }
 }
-

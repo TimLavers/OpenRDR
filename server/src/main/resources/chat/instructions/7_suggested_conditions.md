@@ -29,6 +29,8 @@ asks to see them again.
 
 ## How to present the suggested conditions again
 
+- A request to list reasons already added to the current rule is handled by Step 7 of "Defining the reasons for report
+  change". It is not a request to show suggestions again.
 - If the user specifically asks to see the suggestions again, call {{GET_SUGGESTED_CONDITIONS}} and repeat the process
   above.
 - Indicate in your response that they are seeing the suggestions again.

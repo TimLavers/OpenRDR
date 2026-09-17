@@ -27,15 +27,15 @@ import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.BuildRuleRequest
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.sample.SampleKB
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.concurrent.atomic.AtomicReference
 
 typealias AttributeGetter = (String) -> Attribute
 
-class RESTClient {
+class RESTClient(private val api: Api = Api()) {
     private val endpoint = "http://localhost:$PORT"
-    private val api = Api()
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -70,7 +70,7 @@ class RESTClient {
     }
     fun deleteProcessedCaseWithName(name: String) {
         runBlocking {
-            Api().deleteCase(name)
+            api.deleteCase(name)
         }
     }
 
@@ -174,6 +174,17 @@ class RESTClient {
     }
 
     fun createKBWithDefaultName() = createKB(DEFAULT_PROJECT_NAME)
+
+    fun createKBFromSample(name: String, sample: SampleKB) = runBlocking {
+        currentKB.set(api.createKBFromSample(name, sample))
+    }
+
+    fun kbDescription(name: String): String = runBlocking {
+        val kb = api.kbList().single { it.name == name }
+        api.client.get(endpoint + KB_DESCRIPTION) {
+            parameter(KB_ID, kb.id)
+        }.body()
+    }
 
     fun kbNames(): List<String> = runBlocking { api.kbList().map { it.name } }
 

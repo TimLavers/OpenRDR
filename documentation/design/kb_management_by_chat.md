@@ -6,15 +6,23 @@
   opens it), and **open** one by name.
 - With a knowledge base open: **close** it, **delete** it (or another, by name) after confirmation, **rename** it, and
   **show** or **replace** its description.
-- The GUI reflects each change without the user touching the anchor menu: the name in the bar, the case list, the chat
+- The GUI reflects each chat operation: the name in the bar, the case list, the chat
   context.
 - The chat is usable when the knowledge base has no cases, and when no knowledge base is open at all. An empty knowledge
   base offers a demonstration case.
 - Everything that matters is deterministic and unit-tested on the server without a model: name resolution, ambiguity,
   confirmation, refusal during a rule session.
 
-Non-goals: creating from a sample, import and export (both need a file path), incremental editing of the description,
-and more than one client at a time.
+Non-goals: incremental editing of the description and more than one client at a time.
+
+All KB management uses chat. The menus and path-entry dialogs have been removed; the application bar retains the
+KB name as a read-only label. With no KB open, it shows "No KB selected".
+
+"Import a KB" and "Export this KB" immediately launch native Open and Save As dialogs through FileKit. The server
+validates the request and sends a structured instruction; the client handles local files and reports success,
+cancellation or failure in chat. Import works without an open KB; export is refused in chat when none is open.
+Both operations are refused during rule building. Local paths and file contents are not sent to the model.
+See [the design](demonstration_knowledge_bases.md#import-and-export-through-chat).
 
 ## How it works
 
@@ -30,7 +38,8 @@ base. Knowledge base management must work *above* a knowledge base, so the conve
 
 The context decides the system prompt sections, the functions the model may call (none without a case), the opening
 message, and which actions make sense. Without a case the greeting is fixed server text rather than a model reply: with
-no knowledge bases it offers to create one; with some it lists them and asks whether to open one or create another; with
+no knowledge bases it offers to create one or open a demonstration; with some it lists them and the demonstrations and
+asks whether to open one or create another; with
 an empty knowledge base it explains that cases normally come from an external information system and offers a
 demonstration case (Einstein, the same patient the demo and the acceptance tests use).
 
@@ -46,56 +55,92 @@ interface with two kinds: the existing `ChatAction`, which works on the open kno
 (`ApplicationKbService`, which delegates to `ServerApplication` and pushes the result over the web socket).
 `ChatManager` dispatches on the kind; a `ChatAction` with no knowledge base open is refused with a fixed message.
 
-| Action                         | Behaviour                                                                         |
-|--------------------------------|-----------------------------------------------------------------------------------|
-| `ListKnowledgeBases`           | One name per line, the open one marked.                                           |
-| `OpenKnowledgeBase(kbName)`    | Resolves the name; opens on an exact match, asks first on a partial one.          |
-| `CreateKnowledgeBase(kbName)`  | Refuses a clash; asks first when the name is a near-duplicate of an existing one. |
-| `CloseKnowledgeBase`           | Tells the client to close; nothing changes on the server.                         |
-| `DeleteKnowledgeBase(kbName?)` | Always asks first; the open knowledge base when no name is given.                 |
-| `AddDemonstrationCase`         | Adds Einstein to the open knowledge base.                                         |
-| `RenameKnowledgeBase(newName)` | Renames the open knowledge base; the id is unchanged.                             |
-| `ShowKnowledgeBaseDescription` | Reads the description from the server; the model never answers from memory.       |
-| `SetKnowledgeBaseDescription`  | Replaces the whole description with the user's words, transcribed not composed.   |
+| Action                                         | Behaviour                                                                                             |
+|------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `ListKnowledgeBases`                           | One vertical list with stored/demo headings and clickable names; the open KB is marked and inactive.  |
+| `OpenKnowledgeBase(kbName)`                    | Opens an exact stored match, confirms a partial stored match; a demonstration asks for a copy name.   |
+| `CopyDemonstrationKnowledgeBase(sample, name)` | Server-only action: validates the name, builds the sample and opens the stored copy.                  |
+| `CreateKnowledgeBase(kbName)`                  | Refuses clashes and reserved demonstration titles; confirms near-duplicates.                          |
+| `CloseKnowledgeBase`                           | Tells the client to close; nothing changes on the server.                                             |
+| `DeleteKnowledgeBase(kbName?)`                 | Refuses demonstrations; confirms deletion of a stored KB, defaulting to the open one.                 |
+| `AddDemonstrationCase`                         | Adds Einstein to the open knowledge base.                                                             |
+| `RenameKnowledgeBase(newName)`                 | Renames the open knowledge base, refusing reserved demonstration titles; keeps the id.                |
+| `ShowKnowledgeBaseDescription(kbName?)`        | Reads a description from the server, of the open KB or a named stored KB or demonstration.            |
+| `SetKnowledgeBaseDescription(text, kbName?)`   | Replaces the whole description of the open or a named stored KB; confirms a partial, refuses demos.   |
+| `ImportKnowledgeBase`                          | Returns a one-use `KbFileDialogRequest.Import`; the client opens the file dialog and does the import. |
+| `ExportKnowledgeBase`                          | Refuses with no open KB; otherwise a `KbFileDialogRequest.Export` carrying the open `KBInfo`.         |
 
-Actions that change what the chat is about (open, create, close, delete) are refused while a rule is being built.
-Rename, describe, list and the demonstration case are not.
+`ListCapabilities` is a sibling `Action` rather than a `KbManagementAction`: it needs no service, only whether a case
+is current, and `ChatManager` answers it directly with `ChatResponse.capabilities`.
+
+Actions that change what the chat is about (open, create, copy, close, delete, import, export) are refused while a
+rule is being built. Rename, describe, list, capabilities and the demonstration case are not.
 
 ### The server holds every confirmation
 
 An action that needs the user's say-so returns `KbManagementOutcome.Ask(question, thenDo)` instead of a response. The
 question goes to the user and `thenDo`, a lambda that has already captured the resolved `KBInfo`, is held by
-`ChatManager` for exactly one turn. A plain acceptance runs it without consulting the model; anything else drops it and
+`KnowledgeBaseConversation.State.Confirming` for exactly one turn. A plain acceptance runs it without consulting the
+model; anything else drops it and
 goes to the model as usual. The model is told never to ask for confirmation itself, because the server asks when it
 needs
 to, and a lambda rather than an action class means there is nothing the model could name to skip the question.
 
-### First knowledge base: server workflow, model interpretation
+### Creating a knowledge base or demonstration copy: shared naming workflow
 
 When no knowledge base exists the server owns the offer to create one and the request for its name, as explicit stages
 (`OFFER_CREATION`, `AWAITING_NAME`). A plain acceptance ("yes", "ok") is answered by the server at either stage, as
 for every other server question, and moves to or stays at naming. Any other reply is sent to the model with the pending
 question and stage, and the model returns an intent (`CONFIRM`, `DENY`, `CONFIRM_WITH_NAME`, `UNCLEAR`,
 `OTHER_REQUEST`) plus, where given, the name exactly as the user wrote it, in their language. The server chooses the
-transition, validates the name through the ordinary `CreateKnowledgeBase` checks, and executes. Malformed or
-off-contract model output executes nothing and keeps the stage. This is the pattern to extend to other workflows: the
-server decides, the model reads.
+transition, validates the name, and executes. Malformed or off-contract model output executes nothing and keeps the
+stage. `KnowledgeBaseConversation.State.Creating` holds an action factory: `CreateKnowledgeBase` for an empty KB or
+`CopyDemonstrationKnowledgeBase` for a demonstration copy. `KbManagementOutcome.AskForName` starts the latter directly
+at `AWAITING_NAME`, preserving its question on a plain confirmation. Both actions use the same blank, duplicate,
+reserved-title and near-duplicate checks. The server decides, the model reads.
+
+At `OFFER_CREATION`, a `CONFIRM_WITH_NAME` reply naming a demonstration opens its copy-naming workflow. For example,
+replying "Zoo Animals" to the empty-server greeting asks for the copy's name; replying "Zoo2" then creates that copy.
+At `AWAITING_NAME`, the supplied name names the new KB or copy, so demonstration titles remain reserved.
+
+A blank, reserved or already-used name returns `AskForName` with the refusal followed by the naming question and
+retains the action for creating the KB or copying the selected demonstration. The next reply is interpreted at
+`AWAITING_NAME`; a plain agreement repeats the question, and a corrected name retries without reopening the
+demonstration. Repeated refusals replace the previous refusal. Success clears naming, and cancellation or another
+request leave the workflow as usual.
+
+A near-duplicate name asked about while naming (`State.Confirming` with `resumeNaming` set) does not drop the
+workflow: a plain "yes" creates it; a refusal returns to `AWAITING_NAME` with the bare name question (`AskForName`
+carries `nameQuestion` separately from a question that leads with a refusal); a different name is tried at once; an
+unclear reply repeats the question; another request leaves the workflow. A near-duplicate question that did not arise
+from naming (the model emitted `CreateKnowledgeBase` directly) is a one-turn confirmation as before.
 
 ### Name resolution
 
-`resolveKbName` on the knowledge base list: exact match ignoring case → `Exact`; a unique name containing the text →
-`Partial`; several → `Ambiguous` with the candidates; none → `NotFound` with the full list. No edit distance: the list
-is
-tiny and is shown on every miss. Matching is generous, acting is careful: a partial match is accepted for open and
-delete
-but always asks first.
+`resolveKbName` searches in order: exact stored name, exact demonstration title, partial stored names, partial
+demonstration titles. Matching ignores case. Stored matches return `Exact` or `Partial`; a demonstration returns
+`Demonstration(sample)`. Multiple partial matches are `Ambiguous`; a miss returns `NotFound` with stored and
+demonstration names. No edit distance is used. Partial stored matches ask before opening or deleting; a demonstration
+asks for a copy name when opened and is refused when deleted. An existing stored name wins an exact title collision,
+although new demonstration-title collisions are refused on create, copy, rename and import. `KBManager` and
+`KBImporter` enforce the reservation before persistence writes, including REST creation with `force=true`;
+the chat retains its own validation to give conversational refusals.
+
+An import always gets a fresh id (`KBInfoImporter`), so it can only clash by name: an archive whose name matches a
+stored KB (ignoring case) is refused, as create and rename refuse it. `KBImporter` applies
+`KBManager.requireNameUnused` with the reserved-title check, before any persistence is written. Restoring a backup of
+a KB that still exists therefore means deleting or renaming the stored one first; the round-trip acceptance scenario
+does exactly that.
 
 ### The GUI follows the server
 
-`WebSocketManager` pushes `KbInfo:` (open, create, rename) and `KbClosed`, exactly as it pushes cases and cornerstones.
+`WebSocketManager` pushes `KbInfo:` (open, create, copy, rename) and `KbClosed`, exactly as it pushes cases and
+cornerstones.
 The client sets `Api.currentKB` before the UI sees the event, then its existing cascade (`kbInfo` → cases → first case →
-`startConversation`) does the rest. Chat requests carry the ids they are given and never fall back to the lazy default
-knowledge base fetch, which would silently create one.
+`startConversation`) does the rest. Chat requests carry the ids they are given. The lazy default knowledge base endpoint
+has been removed; `Api.kbInfo()` requires an open knowledge base. Clickable list rows send ordinary `Open <name>`
+messages
+through the same chat pipeline as typed text.
 
 ## Decisions
 
@@ -114,9 +159,9 @@ knowledge base fetch, which would silently create one.
   even on an exact match; create warns on a near-duplicate. One extra turn in the doubtful cases, no silent surprises.
 - **Fixed greetings without a case.** They exist to tell the user exactly what they can do next; that wording should not
   vary from run to run.
-- **A demonstration case, not a demonstration knowledge base.** The user already has a knowledge base open; the shortest
-  path to seeing it work is one case in it. A single kind of case: a choice between a full and a minimal one was offered
-  for a while and dropped as a question the user had no basis to answer.
+- **A demonstration case for an empty knowledge base.** Einstein is still offered when an empty knowledge base is open.
+  The separate demonstration list offers complete sample knowledge bases as named copies, including their cases and
+  rules.
 - **`ruleService` is nullable in `ChatManager`, not a null object.** A null object would make `AddComment` "succeed"
   with
   nothing happening; a null makes the refusal explicit and testable.
@@ -129,13 +174,17 @@ knowledge base fetch, which would silently create one.
   state
   uses `neverEqualPolicy()` to recompose.
 - **The description is replaced, not edited, by chat.** A conversation is a poor place to edit a multi-paragraph
-  document; the GUI dialog remains for anything finer. Reading it back is a server action because the description is not
-  in the prompt.
+  document. Reading it back is a server action because the description is not in the prompt.
 - **The model transcribes names; the server resolves them.** For open, create, delete and rename the model must pass the
   name exactly as the user gave it, even when it is obviously close to an existing one. If the model "corrected" it, the
   user would never be asked about a partial match.
 
 ## Acceptance tests
 
-`cucumber/src/test/resources/requirements/kb/Knowledge Base management by chat.feature`, run with
+`cucumber/src/test/resources/requirements/kb/Knowledge Base Management.feature`, run with
 `.\gradlew.bat :cucumber:kb`.
+
+`Knowledge Base Management.feature` covers import, export and all chat operations, including description formatting
+and persistence across KB switches. Setup is per scenario so empty-server scenarios remain empty. Features that need a
+sample as setup
+create it through the API before launching the client.

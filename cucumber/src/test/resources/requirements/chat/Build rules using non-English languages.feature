@@ -1,6 +1,9 @@
 @delay_after_cuke
 Feature: Build rules using non-English languages
 
+  Background:
+    Given a default KB is opened
+
   Scenario: The user should be able to use the chat to add a comment with a valid condition in French
     Given case Lindsay is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units  |

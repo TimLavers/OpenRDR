@@ -6,9 +6,13 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.startWith
+import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.model.KBInfo
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import io.rippledown.sample.SampleKB
 import io.rippledown.util.EntityRetrieval
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -23,9 +27,112 @@ class KBManagerTest {
         kbManager = KBManager(persistenceProvider)
     }
 
+    @ParameterizedTest
+    @EnumSource(SampleKB::class, names = ["TSH", "CONTACT_LENSES", "ZOO", "PATHOLOGY"])
+    fun `reserved titles cannot be created even with force`(sample: SampleKB) {
+        // Given
+        val names = listOf(sample.title(), " ${sample.title().lowercase()} ")
+        for (name in names) for (force in listOf(false, true)) {
+            // When
+            val error = shouldThrow<IllegalArgumentException> { kbManager.createKB(name, force) }
+
+            // Then
+            error.message shouldBe kbNameReservedMessage(name.trim())
+            kbManager.all() shouldBe emptySet()
+            persistenceProvider.idStore().data() shouldBe emptyMap()
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(SampleKB::class, names = ["TSH", "CONTACT_LENSES", "ZOO", "PATHOLOGY"])
+    fun `reserved rename leaves the name unchanged in memory and persistence`(sample: SampleKB) {
+        // Given
+        val original = kbManager.createKB("MyCopy")
+        val kb = (kbManager.openKB(original.id) as EntityRetrieval.Success).entity
+        for (name in listOf(sample.title(), " ${sample.title().lowercase()} ")) {
+            // When
+            val error = shouldThrow<IllegalArgumentException> { kbManager.renameKB(original.id, name) }
+
+            // Then
+            error.message shouldBe kbNameReservedMessage(name.trim())
+            kb.kbInfo.name shouldBe "MyCopy"
+            kbManager.all().map { it.name } shouldBe listOf("MyCopy")
+            persistenceProvider.kbPersistence(original.id).kbInfo().name shouldBe "MyCopy"
+        }
+    }
+
+    @Test
+    fun `a registered KB is listed and opened as the same instance`() {
+        // Given
+        val kbInfo = KBInfo("Imported")
+        val kb = KB(persistenceProvider.createKBPersistence(kbInfo))
+
+        // When
+        kbManager.register(kb)
+
+        // Then
+        kbManager.all() shouldBe setOf(kbInfo)
+        (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success).entity shouldBe kb
+        kbManager.renameKB(kbInfo.id, "Renamed").name shouldBe "Renamed"
+        kb.kbInfo.name shouldBe "Renamed"
+    }
+
+    @Test
+    fun `a name held by a stored KB is not unused, ignoring case and surrounding space`() {
+        // Given
+        kbManager.createKB("Thyroids")
+
+        // When
+        val error = shouldThrow<IllegalArgumentException> { kbManager.requireNameUnused(" thyroids ") }
+
+        // Then
+        error.message shouldBe "A KB with name Thyroids already exists."
+    }
+
+    @Test
+    fun `a name no stored KB has is unused`() {
+        // Given
+        kbManager.createKB("Thyroids")
+
+        // When / Then
+        kbManager.requireNameUnused("Glucose")
+    }
+
+    @Test
+    fun `a legacy KB with a reserved name can still be opened and renamed`() {
+        // Given
+        val legacy = KBInfo("legacy_id", "Pathology")
+        persistenceProvider.createKBPersistence(legacy)
+        kbManager = KBManager(persistenceProvider)
+
+        // When
+        val kb = (kbManager.openKB(legacy.id) as EntityRetrieval.Success).entity
+        val renamed = kbManager.renameKB(legacy.id, "My Pathology")
+
+        // Then
+        renamed.id shouldBe legacy.id
+        kb.kbInfo.name shouldBe "My Pathology"
+        persistenceProvider.kbPersistence(legacy.id).kbInfo().name shouldBe "My Pathology"
+    }
+
     @Test //KBM-1
     fun empty() {
         kbManager.all() shouldBe emptySet()
+    }
+
+    @Test
+    fun `an unreadable stored KB does not prevent other KBs from loading`() {
+        // Given
+        persistenceProvider.idStore().add("unavailable", true)
+        val readable = kbManager.createKB("MyCopy")
+
+        // When
+        val reloaded = KBManager(persistenceProvider)
+
+        // Then
+        reloaded.all() shouldBe setOf(readable)
+        val kb = (reloaded.openKB(readable.id) as EntityRetrieval.Success).entity
+        kb.kbInfo.name shouldBe "MyCopy"
     }
 
     @Test //KBM-2, KBM-3

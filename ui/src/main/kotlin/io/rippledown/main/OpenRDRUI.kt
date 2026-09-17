@@ -12,7 +12,6 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import io.rippledown.appbar.AppBarHandler
 import io.rippledown.appbar.ApplicationBar
 import io.rippledown.casecontrol.CaseControl
 import io.rippledown.casecontrol.CaseControlHandler
@@ -20,7 +19,10 @@ import io.rippledown.casecontrol.CaseSelector
 import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
+import io.rippledown.chat.ChatState
 import io.rippledown.cornerstone.CornerstoneTestHook
+import io.rippledown.files.KbFileDialogs
+import io.rippledown.files.KbFileTransferController
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
@@ -28,16 +30,11 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
-import io.rippledown.sample.SampleKB
 import io.rippledown.voice.VoiceRecognition
 import io.rippledown.voice.VoiceRecognitionService
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.jetbrains.skiko.MainUIDispatcher
 import java.awt.Cursor
-import java.io.File
 
 interface Handler {
     var api: Api
@@ -49,7 +46,8 @@ interface Handler {
 fun OpenRDRUI(
     handler: Handler,
     dispatcher: CoroutineDispatcher = MainUIDispatcher,
-    voiceRecognition: VoiceRecognition? = null
+    voiceRecognition: VoiceRecognition? = null,
+    fileDialogs: KbFileDialogs? = null
 ) {
     val api = handler.api
     // An Attribute is equal to another with the same id, whatever its name (see
@@ -74,6 +72,30 @@ fun OpenRDRUI(
     var kbListRead by remember { mutableStateOf(false) }
     var casesInfoKbId by remember { mutableStateOf<String?>(null) }
     var conversationStarted by remember { mutableStateOf(false) }
+    var kbImportRevision by remember { mutableIntStateOf(0) }
+    var kbDescription by remember(api, kbInfo?.id, kbImportRevision) { mutableStateOf<String?>(null) }
+    LaunchedEffect(api, kbInfo?.id, chatId, kbImportRevision) {
+        val open = kbInfo ?: return@LaunchedEffect
+        kbDescription = try {
+            api.kbDescription(open)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            "Description could not be loaded."
+        }
+    }
+    val chatState = remember { ChatState() }
+    val scope = rememberCoroutineScope()
+    val fileTransfers = remember(api, fileDialogs) {
+        fileDialogs?.let { dialogs ->
+            KbFileTransferController(dialogs, api, onImported = { imported ->
+                conversationStarted = false
+                casesInfoKbId = null
+                kbInfo = imported
+                ++kbImportRevision
+            }, onMessage = chatState::localMessage)
+        }
+    }
     val density = LocalDensity.current
 
     // Report panel state
@@ -113,7 +135,9 @@ fun OpenRDRUI(
                     onBotMessageReceived(response)
 
                     //refresh the case to get the latest interpretation
-                    currentCaseId?.let { currentCase = api.getCase(it) }
+                    if (response.kbFileDialogRequest == null) {
+                        currentCaseId?.let { currentCase = api.getCase(it) }
+                    }
                     ++chatId // Increment chatId to trigger recomposition in ChatController
                 } catch (_: Exception) {
                     //ignore
@@ -125,17 +149,15 @@ fun OpenRDRUI(
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
-            // Pick the first KB and explicitly select it on the server so
-            // that Api.currentKB matches what the UI displays. Just reading
-            // kbList() leaves Api.currentKB unset, which would later cause
-            // the lazy `kbInfo()` path to fetch the default KB and route
-            // subsequent requests to the wrong KB.
+            // Explicit selection sets Api.currentKB to the KB displayed by the UI.
+            // Reading kbList() alone leaves it unset, so subsequent KB-scoped
+            // requests would fail because no knowledge base is open.
             kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
             kbListRead = true
         }
     }
 
-    LaunchedEffect(kbInfo) {
+    LaunchedEffect(kbInfo, kbImportRevision) {
         withContext(dispatcher) {
             val open = kbInfo
             if (open?.id != casesInfoKbId) {
@@ -204,7 +226,7 @@ fun OpenRDRUI(
         }
     }
 
-    LaunchedEffect(chatContext) {
+    LaunchedEffect(chatContext, kbImportRevision) {
         val (kbId, caseId) = chatContext ?: return@LaunchedEffect
         conversationStarted = false
         withContext(dispatcher) {
@@ -275,42 +297,7 @@ fun OpenRDRUI(
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, object : AppBarHandler {
-                override var isRuleSessionInProgress = ruleInProgress
-                override var selectKB: (id: String) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        kbInfo = api.selectKB(it)
-                    }
-                }
-                override var createKB: (name: String) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        kbInfo = api.createKB(it)
-                    }
-                }
-                override var createKBFromSample: (name: String, sample: SampleKB) -> Unit =
-                    { name: String, sample: SampleKB ->
-                        CoroutineScope(dispatcher).launch {
-                            kbInfo = api.createKBFromSample(name, sample)
-                        }
-                    }
-                override var importKB: (data: File) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        kbInfo = api.importKBFromZip(it)
-                    }
-                }
-                override var exportKB: (data: File) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        api.exportKBToZip(it)
-                    }
-                }
-                override suspend fun kbList(): List<KBInfo> = api.kbList()
-                override var setKbDescription: (description: String) -> Unit = {
-                    CoroutineScope(dispatcher).launch {
-                        api.setKbDescription(it)
-                    }
-                }
-                override suspend fun kbDescription(): String = api.kbDescription()
-            })
+            ApplicationBar(kbInfo, kbDescription)
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
@@ -380,7 +367,14 @@ fun OpenRDRUI(
                     chatControllerHandler,
                     conversationStarted = conversationStarted,
                     voiceRecognitionService = voiceRecognitionService,
-                    modifier = Modifier.width(chatPanelWidth)
+                    modifier = Modifier.width(chatPanelWidth),
+                    state = chatState,
+                    fileTransferInProgress = fileTransfers?.state?.let { it != KbFileTransferController.State.Idle } == true,
+                    onFileDialogRequested = { request ->
+                        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                            checkNotNull(fileTransfers) { "File dialogs have not been configured." }.handle(request)
+                        }
+                    }
                 )
             }
             LaunchedEffect(pendingConversationResponse) {

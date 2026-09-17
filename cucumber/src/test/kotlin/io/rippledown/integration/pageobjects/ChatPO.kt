@@ -7,6 +7,7 @@ import io.rippledown.chat.ChatTestHook.snapshot
 import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
 import io.rippledown.integration.utils.find
+import io.rippledown.integration.utils.findExact
 import io.rippledown.integration.utils.renderedText
 import io.rippledown.voice.CHAT_MIC_BUTTON
 import org.assertj.swing.edt.GuiActionRunner.execute
@@ -179,6 +180,16 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         return !text.contains(term, ignoreCase = true)
     }
 
+    fun clickKbChoice(name: String) {
+        waitForChatReady()
+        await().atMost(ofSeconds(10)).until {
+            execute<Boolean> {
+                chatRoot()?.findExact("$KB_CHOICE_ITEM$name")
+                    ?.accessibleAction?.doAccessibleAction(0) == true
+            }
+        }
+    }
+
     fun clickSuggestion(text: String) {
         val description = "$SUGGESTION_ITEM$text"
         await().atMost(ofSeconds(10)).until {
@@ -264,5 +275,4 @@ class ChatPO(private val contextProvider: () -> AccessibleContext) {
         return if (isTerminal) text else null
     }
 }
-
 

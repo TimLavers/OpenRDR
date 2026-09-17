@@ -1,10 +1,13 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Naming comments, and renaming comments and derived attributes
   Every comment has a name, so that the user can refer to it later. The name is
   assigned by the system (C1, C2, ...) and the user is told it when the comment
   is accepted. Comments and derived attributes can be renamed at any time: a
   name is only a label, since everything refers to an attribute by its identity.
   Attributes that come with the case data cannot be renamed.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user is told the name of a comment when it is accepted, and that it can be changed
     Given case Bondi is provided having data:

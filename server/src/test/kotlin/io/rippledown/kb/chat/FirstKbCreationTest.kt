@@ -9,6 +9,8 @@ import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.KBInfo
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
+import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -29,6 +31,9 @@ class FirstKbCreationTest {
         every { kbService.openKnowledgeBase() } returns null
         every { kbService.resolve(any()) } answers { KbResolution.NotFound(firstArg(), emptyList()) }
         every { kbService.nearDuplicateOf(any()) } returns null
+        every { kbService.isDemonstrationTitle(any()) } returns false
+        every { kbService.demonstrations() } returns SampleKB.demonstrations()
+        every { kbService.description(any()) } returns ""
         coEvery { kbService.create(any()) } answers { KBInfo("new", firstArg()) }
     }
 
@@ -156,7 +161,7 @@ class FirstKbCreationTest {
         val later = manager.response("yes")
 
         // Then
-        denied shouldBe ChatResponse(ChatManager.KB_CREATION_DECLINED)
+        denied shouldBe ChatResponse(KnowledgeBaseConversation.KB_CREATION_DECLINED)
         later shouldBe ChatResponse("What would you like to do?")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
@@ -194,9 +199,9 @@ class FirstKbCreationTest {
 
         // Then
         unclear shouldBe ChatResponse(
-            if (awaitingName) ChatManager.KB_NAME_CLARIFICATION else ChatManager.KB_CREATION_CLARIFICATION
+            if (awaitingName) KnowledgeBaseConversation.KB_NAME_CLARIFICATION else KnowledgeBaseConversation.KB_CREATION_CLARIFICATION
         )
-        retry shouldBe ChatResponse(NAME_THE_NEW_KB)
+        retry shouldBe ChatResponse(if (awaitingName) KnowledgeBaseConversation.KB_NAME_CLARIFICATION else NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 
@@ -258,7 +263,7 @@ class FirstKbCreationTest {
         val retry = manager.response("oui")
 
         // Then
-        invalid shouldBe ChatResponse(ChatManager.KB_CREATION_CLARIFICATION)
+        invalid shouldBe ChatResponse(KnowledgeBaseConversation.KB_CREATION_CLARIFICATION)
         retry shouldBe ChatResponse(NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
         coVerify(exactly = 0) { kbService.delete(any()) }
@@ -310,13 +315,20 @@ class FirstKbCreationTest {
         val response = manager.response("List KBs")
 
         // Then
-        response shouldBe ChatResponse(NO_KNOWLEDGE_BASES)
+        response shouldBe ChatResponse(
+            "$NO_KNOWLEDGE_BASES_OF_YOUR_OWN\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
+                    SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
+            kbListing = KnowledgeBaseListing(
+                emptyList(), SampleKB.demonstrations().map { it.title() }.sorted(),
+                descriptions = demonstrationDescriptions()
+            )
+        )
         coVerify(exactly = 1) { conversation.response("List KBs") }
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 
     @Test
-    fun `server validation still refuses an existing name`() = runTest {
+    fun `a refused name at the initial offer can be corrected without restarting creation`() = runTest {
         // Given a KB created elsewhere after the initial greeting
         coEvery { conversation.response(any()) } returns namedReply("Thyroid")
         manager.startConversation(null, noKbGreeting(emptyList()))
@@ -326,8 +338,20 @@ class FirstKbCreationTest {
         val response = manager.response("Create Thyroid")
 
         // Then
-        response shouldBe ChatResponse(kbAlreadyExistsMessage("Thyroid"))
+        response shouldBe ChatResponse(kbAlreadyExistsMessage("Thyroid") + "\n\n" + NAME_THE_NEW_KB)
         coVerify(exactly = 0) { kbService.create(any()) }
+
+        // Given
+        val prompt = slot<String>()
+        coEvery { conversation.response(capture(prompt)) } returns namedReply("Research")
+
+        // When
+        val created = manager.response("ok, Research")
+
+        // Then
+        created shouldBe ChatResponse(kbCreatedMessage("Research"))
+        prompt.captured shouldContain "AWAITING_NAME"
+        coVerify(exactly = 1) { kbService.create("Research") }
     }
 
     @Test

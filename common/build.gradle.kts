@@ -2,6 +2,7 @@ plugins {
     id("kotlin-library-conventions")
     kotlin("plugin.serialization")
     `java-test-fixtures`
+    alias(libs.plugins.kover)
 }
 dependencies {
     implementation(libs.bundles.kotlinx)

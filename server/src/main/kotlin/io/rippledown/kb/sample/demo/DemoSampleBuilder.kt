@@ -23,7 +23,7 @@ A small demonstration KB used to show OpenRDR features:
 """
 
 /**
- * Builds the contents of the [io.rippledown.sample.SampleKB.DEMO] sample KB.
+ * Builds the contents of the [io.rippledown.sample.SampleKB.PATHOLOGY] sample KB.
  *
  * Cases are deliberately small (three attributes) so suggestion lookups
  * complete quickly and the demo stays responsive.

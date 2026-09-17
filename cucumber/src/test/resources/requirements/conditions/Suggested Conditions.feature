@@ -1,5 +1,8 @@
 Feature: When building a rule, the user is provided with candidate conditions that can either be directly added or modified and then added.
 
+  Background:
+    Given a default KB is opened
+
   Scenario: If a suggested condition is not editable, then clicking it adds it to the list of conditions for the rule.
     Given case Bondi is provided having data:
       | Sun   | hot |

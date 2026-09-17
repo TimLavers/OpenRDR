@@ -1,4 +1,7 @@
-Feature: Replace comment
+﻿Feature: Replace comment
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to use the chat to replace a comment with a valid condition
     Given case Bondi is provided having data:

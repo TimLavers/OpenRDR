@@ -113,9 +113,11 @@ object KBChatService {
         kbName: String?,
         kbNames: List<String>,
         attributeById: (Int) -> Attribute? = { null },
-        allAttributes: Set<Attribute> = emptySet()
+        allAttributes: Set<Attribute> = emptySet(),
+        demonstrationNames: List<String> = emptyList()
     ): ChatService {
-        val systemInstruction = systemPrompt(viewableCase, kbName, kbNames, attributeById, allAttributes)
+        val systemInstruction =
+            systemPrompt(viewableCase, kbName, kbNames, attributeById, allAttributes, demonstrationNames)
         val functionDeclarations =
             if (viewableCase == null) emptyList()
             else listOf(reasonTransformer, suggestedConditionsRetriever, selectSuggestionDeclaration)
@@ -177,7 +179,8 @@ object KBChatService {
         kbName: String? = null,
         kbNames: List<String> = emptyList(),
         attributeById: (Int) -> Attribute? = { null },
-        allAttributes: Set<Attribute> = emptySet()
+        allAttributes: Set<Attribute> = emptySet(),
+        demonstrationNames: List<String> = emptyList()
     ) = mapOf(
         "ADD" to ADD,
         "ADD_A_COMMENT" to ADD_A_COMMENT,
@@ -217,6 +220,7 @@ object KBChatService {
         "START_ACTION" to START_ACTION,
         "DEBUG_ACTION" to DEBUG_ACTION,
         "USER_ACTION" to USER_ACTION,
+        "LIST_CAPABILITIES" to LIST_CAPABILITIES,
         "COMMIT_RULE" to COMMIT_RULE,
         "EXEMPT_CORNERSTONE" to EXEMPT_CORNERSTONE,
         "NEXT_CORNERSTONE" to NEXT_CORNERSTONE,
@@ -240,6 +244,9 @@ object KBChatService {
         "RENAME_KNOWLEDGE_BASE" to RENAME_KNOWLEDGE_BASE,
         "SHOW_KNOWLEDGE_BASE_DESCRIPTION" to SHOW_KNOWLEDGE_BASE_DESCRIPTION,
         "SET_KNOWLEDGE_BASE_DESCRIPTION" to SET_KNOWLEDGE_BASE_DESCRIPTION,
+        "IMPORT_KNOWLEDGE_BASE" to IMPORT_KNOWLEDGE_BASE,
+        "EXPORT_KNOWLEDGE_BASE" to EXPORT_KNOWLEDGE_BASE,
+        "DEMONSTRATION_KB_NAMES" to demonstrationNames.joinToString(", "),
     )
 
     fun systemPrompt(
@@ -247,9 +254,11 @@ object KBChatService {
         kbName: String? = null,
         kbNames: List<String> = emptyList(),
         attributeById: (Int) -> Attribute? = { null },
-        allAttributes: Set<Attribute> = emptySet()
+        allAttributes: Set<Attribute> = emptySet(),
+        demonstrationNames: List<String> = emptyList()
     ): String {
-        val variables = systemPromptVariables(viewableCase, kbName, kbNames, attributeById, allAttributes)
+        val variables =
+            systemPromptVariables(viewableCase, kbName, kbNames, attributeById, allAttributes, demonstrationNames)
         val mainSection = mainSectionsFor(hasCase = viewableCase != null).map {
             readPromptResource("/chat/instructions", it).replacePlaceholders(variables)
         }

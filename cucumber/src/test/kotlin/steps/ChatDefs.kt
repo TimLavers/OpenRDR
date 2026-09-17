@@ -5,6 +5,8 @@ import io.cucumber.java.en.And
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
+import io.rippledown.chat.CapabilityListMessage
+import io.rippledown.chat.ChatTestHook
 import io.rippledown.constants.chat.*
 import io.rippledown.constants.rule.UNDERSTAND
 import org.awaitility.Awaitility.await
@@ -199,6 +201,9 @@ class ChatDefs {
         waitForSuggestionText(text)
         chatPO().clickSuggestion(text)
     }
+
+    @When("I click the knowledge base {string} in the list")
+    fun clickKbChoice(name: String) = chatPO().clickKbChoice(name)
 
     @And("I enter the suggested condition index {int}")
     fun clickTheSuggestedConditionAtIndex(index: Int) {
@@ -442,7 +447,7 @@ class ChatDefs {
 
     @And("I ask to see the reasons")
     fun askToSeeReasons() {
-        enterChatTextAndSend("What reasons are there?")
+        enterChatTextAndSend("Please list the reasons I have already added to the current rule.")
     }
 
     @When("I ask to see the suggestions again")
@@ -563,6 +568,13 @@ class ChatDefs {
     @Then("the capabilities shown include:")
     fun capabilitiesShownInclude(dataTable: DataTable) {
         waitForBotText(*dataTable.asList().toTypedArray())
+    }
+
+    @Then("the capabilities are shown in a formatted card")
+    fun capabilityCardIsShown() {
+        await().atMost(ofSeconds(90)).until {
+            ChatTestHook.snapshot().messageList.lastOrNull() is CapabilityListMessage
+        }
     }
 
     @Then("the chatbot mentions that a case value can be inserted into a comment using braces")

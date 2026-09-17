@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.util.Unzipper
@@ -18,6 +19,9 @@ import io.rippledown.model.rule.Literal
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import io.rippledown.sample.SampleKB
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
 import java.time.Instant
 import kotlin.test.BeforeTest
@@ -43,6 +47,43 @@ class KBImporterTest : ExporterTestBase() {
     @BeforeTest
     fun setup() {
         persistenceProvider = InMemoryPersistenceProvider()
+    }
+
+    @ParameterizedTest
+    @EnumSource(SampleKB::class, names = ["TSH", "CONTACT_LENSES", "ZOO", "PATHOLOGY"])
+    fun `reserved titles in exports are rejected before creating persistence`(sample: SampleKB) {
+        // Given
+        val name = " ${sample.title().lowercase()} "
+        KBExporter(tempDir, KB(InMemoryKB(KBInfo(name)))).export()
+
+        // When
+        val error = shouldThrow<IllegalArgumentException> {
+            KBImporter(tempDir, persistenceProvider).import()
+        }
+
+        // Then
+        error.message shouldBe kbNameReservedMessage(name.trim())
+        persistenceProvider.idStore().data() shouldBe emptyMap()
+    }
+
+    @Test
+    fun `the name check sees the archive's name and can abort before persistence is created`() {
+        // Given
+        KBExporter(tempDir, KB(InMemoryKB(KBInfo("Hooked")))).export()
+        var seen: String? = null
+
+        // When
+        val error = shouldThrow<IllegalArgumentException> {
+            KBImporter(tempDir, persistenceProvider) {
+                seen = it
+                throw IllegalArgumentException("Refused by hook.")
+            }.import()
+        }
+
+        // Then
+        error.message shouldBe "Refused by hook."
+        seen shouldBe "Hooked"
+        persistenceProvider.idStore().data() shouldBe emptyMap()
     }
 
     @Test
