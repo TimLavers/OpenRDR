@@ -1,5 +1,9 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Move attributes using the chat bot
+
+  Background:
+    Given a default KB is opened
+
   Scenario: The user should be able to use the chat to reorder the attributes in the case
     Given case Bondi is provided having data:
       | glucose | 4.5 |

@@ -9,9 +9,29 @@ import io.rippledown.constants.chat.kbAlreadyExistsMessage
 import io.rippledown.constants.chat.kbRenamedMessage
 import io.rippledown.model.KBInfo
 import kotlinx.coroutines.test.runTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class RenameKnowledgeBaseTest : KbActionTestBase() {
+
+    @BeforeTest
+    fun stubDemonstrationTitles() {
+        every { kbService.isDemonstrationTitle(any()) } returns false
+    }
+
+    @Test
+    fun `a demonstration title is reserved`() = runTest {
+        // Given
+        every { kbService.openKnowledgeBase() } returns thyroids
+        every { kbService.isDemonstrationTitle("Zoo Animals") } returns true
+
+        // When
+        val outcome = RenameKnowledgeBase("Zoo Animals").doIt(kbService)
+
+        // Then
+        outcome.text() shouldBe "\"Zoo Animals\" is the name of a demonstration knowledge base; please choose another."
+        coVerify(exactly = 0) { kbService.rename(any()) }
+    }
 
     @Test
     fun `renames the open knowledge base`() = runTest {

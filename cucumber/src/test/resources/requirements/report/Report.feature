@@ -1,4 +1,7 @@
-Feature: Report generation by the AI
+﻿Feature: Report generation by the AI
+
+  Background:
+    Given a default KB is opened
 
   Scenario: An AI-generated report should be displayed if the corresponding panel is visible
     Given a case with name Einstein is stored on the server

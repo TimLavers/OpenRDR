@@ -9,6 +9,9 @@ Feature: Repeat inferencing via derived attributes.
   ##############################################################################
   # Chained rules: a rule conditioned on the output of another rule
   ##############################################################################
+  Background:
+    Given a default KB is opened
+
   Scenario: A comment rule can be conditioned on a derived value assigned by another rule
     Given case Fermi is provided having data:
       | Glucose | 12.0 |

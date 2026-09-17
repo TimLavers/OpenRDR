@@ -7,6 +7,9 @@ Feature: Derived attribute
   has no derived attributes, so that users can discover the feature; the
   empty state shows "None for this case".
 
+  Background:
+    Given a default KB is opened
+
   Scenario: The user should be able to create a derived attribute using the chat
     Given case Fermi is provided with the following values, reference ranges and units:
       | Attribute | Value | Low | High | Units |
@@ -14,7 +17,9 @@ Feature: Derived attribute
       | Weight    | 65    |     | 100  | kg    |
     And I start the client application
     And the chatbot has asked if I would like to add a comment
-    When I request that the derived attribute "bmi" be added with value "weight/height^2" for reason "Weight is in case"
+    When I request that the derived attribute "bmi" be added with formula "weight/height^2"
+    And I provide only the following reason:
+      | Weight is in case |
     Then the UI should show the value for derived attribute "bmi" as "21.97"
     And the formula showing for the derived value is "Weight/Height^2"
     And the UI should show the following conditions for the derived value "bmi":

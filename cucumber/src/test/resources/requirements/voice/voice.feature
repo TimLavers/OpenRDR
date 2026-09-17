@@ -8,6 +8,9 @@ Feature: Voice recognition
   microphone and Gemini transcription, so they exercise the UI wiring
   only — not the audio pipeline or the LLM.
 
+  Background:
+    Given a default KB is opened
+
   Scenario: A dictated utterance is inserted into the chat text field
     Given case Bondi is provided having data:
       | Wave | excellent |

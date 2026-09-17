@@ -20,6 +20,47 @@ import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
+    fun `capability action is available in every context without a model written catalogue`() {
+        // Given
+        val contexts = listOf(
+            null to null,
+            null to "Thyroids",
+            createCaseWithInterpretation("Test Case") to "Thyroids"
+        )
+
+        contexts.forEach { (case, kbName) ->
+            // When
+            val summary = KBChatService.systemPrompt(case, kbName = kbName)
+                .substringAfter("# Listing your capabilities")
+                .substringBefore("\n# ")
+
+            // Then
+            summary shouldContain "\"action\": \"ListCapabilities\""
+            summary shouldContain "Do not write your own list"
+            summary shouldContain "also available during rule building"
+            summary shouldNotContain "{{"
+        }
+    }
+
+    @Test
+    fun `file operation contracts are available with and without a case`() {
+        // Given
+        val cases = listOf(null, createCaseWithInterpretation("Test Case"))
+
+        cases.forEach { case ->
+            // When
+            val prompt = KBChatService.systemPrompt(case)
+
+            // Then
+            prompt shouldContain "\"action\": \"ImportKnowledgeBase\""
+            prompt shouldContain "\"action\": \"ExportKnowledgeBase\""
+            prompt shouldContain "Do not ask for a file path"
+            prompt shouldContain "open that knowledge base first"
+            prompt shouldNotContain "{{"
+        }
+    }
+
+    @Test
     fun `system instruction should not contain placeholders`() {
         // Given
         val case = createCaseWithInterpretation("Test Case")
@@ -162,5 +203,30 @@ class KBChatServiceTest {
         KBChatService.mainSectionsFor(hasCase = false) shouldBe KBChatService.caseLessSections
         KBChatService.mainSectionsFor(hasCase = true) shouldBe KBChatService.systemPromptMainSections
         KBChatService.systemPromptMainSections shouldContainAll KBChatService.caseLessSections
+    }
+
+    @Test
+    fun `system prompt includes demonstration knowledge base names when provided`() {
+        // Given
+        val demonstrationNames =
+            listOf("Contact Lens Prescription", "Pathology", "Thyroid Stimulating Hormone", "Zoo Animals")
+
+        // When
+        val systemPrompt = KBChatService.systemPrompt(null, demonstrationNames = demonstrationNames)
+
+        // Then
+        systemPrompt shouldNotContain "{{"
+        systemPrompt shouldContain "Contact Lens Prescription"
+        systemPrompt shouldContain "Zoo Animals"
+        systemPrompt shouldContain "demonstration knowledge bases"
+    }
+
+    @Test
+    fun `system prompt with no demonstration names does not mention them`() {
+        // When
+        val systemPrompt = KBChatService.systemPrompt(null)
+
+        // Then
+        systemPrompt shouldNotContain "{{"
     }
 }

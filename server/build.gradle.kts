@@ -5,6 +5,7 @@ plugins {
     id("io.ktor.plugin") version "3.2.3"
     kotlin("plugin.serialization")
     id("org.gretty") version "4.1.0"
+    alias(libs.plugins.kover)
 }
 
 dependencies {

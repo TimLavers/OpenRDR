@@ -1,84 +1,489 @@
 Feature: Knowledge Base management
 
-  Background:
-    Given there is a knowledge base called Thyroids
-
-  Scenario: Name of current Knowledge Base should be displayed
-    Given I start the client application
-    Then the displayed KB name is now Thyroids
-
-  Scenario: A previously exported Knowledge Base can be imported
-    Given I start the client application
+  @file-dialogs-are-fake
+  Scenario: A previously exported Knowledge Base can be imported through chat
+    Given a default KB is opened
+    And I start the client application
     And the displayed KB name is Thyroids
-    When I import the configured zipped Knowledge Base Whatever
-    Then the displayed KB name is now Whatever
+    And the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
+    And the displayed KB name is now Whatever
 
-  Scenario: A Knowledge Base can be exported
-    Given I start the client application
+  @file-dialogs-are-fake
+  Scenario: A Knowledge Base can be exported and imported through chat
+    Given a default KB is opened
+    And case ExportedCase is provided having data:
+      | Sun | warm |
+    And I start the client application
     And the displayed KB name is Thyroids
-    And I export the current Knowledge Base
-    And I import the configured zipped Knowledge Base Whatever
+    And the file chooser will select an export destination
+    When I enter the following text into the chat panel:
+      | Export this KB |
+    Then the chat history contains "Exported \"Thyroids\" to"
+    And the exported archive contains a knowledge base
+    And the displayed KB name is Thyroids
+    And I should see the case ExportedCase as the current case
+    Given the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
     And the displayed KB name is Whatever
-    When I import the previously exported Knowledge Base
-    Then the displayed KB name is now Thyroids
+    When I enter the following text into the chat panel:
+      | Delete the knowledge base Thyroids |
+    And I enter the following text into the chat panel:
+      | yes |
+    Then the chatbot response contains the following terms:
+      | Deleted | Thyroids |
+    Given the file chooser will select the previously exported KB archive
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Thyroids\" and opened it."
+    And the displayed KB name is now Thyroids
+    And I should see the case ExportedCase as the current case
 
-  Scenario: A Knowledge Base can be created
-    Given I start the client application
+  @file-dialogs-are-fake
+  Scenario: Importing a Knowledge Base whose name is already in use is refused
+    Given a default KB is opened
+    And A Knowledge Base called Whatever has been created
+    And I start the client application
+    And the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Import failed: A KB with name Whatever already exists."
     And the displayed KB name is Thyroids
-    When I create a Knowledge Base with the name Glucose
-    Then the displayed KB name is now Glucose
 
-  Scenario: Available Knowledge Bases are displayed
-    Given A Knowledge Base called B has been created
-    And A Knowledge Base called C has been created
+  @file-dialogs-are-fake
+  Scenario: A Knowledge Base can be imported when none is open
+    Given I start the client application
+    And no knowledge base is shown as selected
+    And the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
+    And the displayed KB name is now Whatever
+
+  @file-dialogs-are-fake
+  Scenario: Cancelling import leaves the current KB open and allows another request
+    Given a default KB is opened
+    And I start the client application
+    And the import file chooser will be cancelled
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Import cancelled."
+    And the displayed KB name is Thyroids
+    Given the file chooser will select the configured KB archive Whatever
+    When I enter the following text into the chat panel:
+      | Import a KB |
+    Then the chat history contains "Imported \"Whatever\" and opened it."
+    And the displayed KB name is now Whatever
+
+  @file-dialogs-are-fake
+  Scenario: Cancelling export leaves the current KB and case unchanged
+    Given a default KB is opened
+    And case ExportedCase is provided having data:
+      | Sun | warm |
+    And I start the client application
+    And the export file chooser will be cancelled
+    When I enter the following text into the chat panel:
+      | Export this KB |
+    Then the chat history contains "Export cancelled."
+    And the displayed KB name is Thyroids
+    And I should see the case ExportedCase as the current case
+
+  @file-dialogs-are-fake
+  Scenario: Export without an open KB does not open a file chooser
+    Given I start the client application
+    When I enter the following text into the chat panel:
+      | Export this KB |
+    Then the chatbot response contains the following terms:
+      | No knowledge base is open |
+    And no knowledge base is shown as selected
+    And the file chooser has not been opened
+
+  Scenario: The available knowledge bases can be listed if there are any
+    Given a default KB is opened
+    Given A Knowledge Base called Lipids has been created
+    And A Knowledge Base called Haematology has been created
+    And A Knowledge Base called Biochemistry has been created
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | What knowledge bases are available? |
+    Then the chatbot response consists of the following lines:
+      | Your knowledge bases:                                          |
+      | Biochemistry (open)                                            |
+      | Haematology                                                    |
+      | Lipids                                                         |
+      | Thyroids                                                       |
+      | Demonstration knowledge bases (open one to get your own copy): |
+      | Contact Lens Prescription                                      |
+      | Pathology                                                      |
+      | Thyroid Stimulating Hormone                                    |
+      | Zoo Animals                                                    |
+
+  Scenario: The option to create a KB is given if there are none
+    Given I start the client application
+    Then the chatbot response contains the following terms:
+      | no knowledge bases yet | create |
+    And no knowledge base is shown as selected
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the chatbot response contains the following terms:
+      | What would you like to call it? |
+    When I enter the following text into the chat panel:
+      | Glucose |
+    Then the chatbot response contains the following terms:
+      | Created | Glucose |
+    And the displayed KB name is now Glucose
+    Then the chatbot response contains the following terms:
+      | has no cases | demonstration case |
+    When I enter the following text into the chat panel:
+      | ok |
+    Then the chatbot response contains the following terms:
+      | Added | Einstein |
+    And the displayed KB name is Glucose
+
+  Scenario: A knowledge base can be opened by name
+    Given a default KB is opened
     And A Knowledge Base called A has been created
+    And case CaseA1 for KB A is provided having data:
+      | Sun | hot |
+    And A Knowledge Base called B has been created
+    And case CaseB1 for KB B is provided having data:
+      | Sun | cold |
     And I start the client application
-    And I activate the KB management control
-    # The client opens the first KB by name ("A"). It acts as the dropdown
-    # trigger and is therefore excluded from the switcher list, which only
-    # offers the *other* available KBs to switch to.
-    Then I should see this list of available KBs:
-      | B |
-      | C |
-      | Thyroids |
+    And the displayed KB name is A
+    When I enter the following text into the chat panel:
+      | Please open B |
+    Then the chatbot response contains the following terms:
+      | Opened | B |
+    And the displayed KB name is now B
+    And I should see the case CaseB1 as the current case
+    When I enter the following text into the chat panel:
+      | Please open a |
+    Then the displayed KB name is now A
+    And I should see the case CaseA1 as the current case
 
-  Scenario: An existing Knowledge Base can be opened
-    Given A Knowledge Base called Stuff has been created
-    And I start the client application
-    Then I select the Knowledge Base named Stuff
-    Then the displayed KB name is now Stuff
-
-  Scenario: The description for a KB can be edited
-    Given A Knowledge Base called Irons has been created
+  Scenario: Opening an unknown knowledge base lists the ones that exist
+    Given a default KB is opened
     And A Knowledge Base called Glucose has been created
     And I start the client application
-    And I select the Knowledge Base named Glucose
-    Then the KB description is:
+    When I enter the following text into the chat panel:
+      | Open Lipids |
+    Then the chatbot response contains the following terms:
+      | no knowledge base named | Lipids | Glucose | Thyroids |
+    And the displayed KB name is Glucose
+
+  Scenario: Opening a knowledge base by part of its name asks first
+    Given a default KB is opened
+    And A Knowledge Base called Glucose has been created
+    And I start the client application
+    And the displayed KB name is Glucose
+    When I enter the following text into the chat panel:
+      | Open thyroid |
+    Then the chatbot response contains the following terms:
+      | Did you mean | Thyroids |
+    And the displayed KB name is Glucose
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the displayed KB name is now Thyroids
+
+  Scenario: A knowledge base can be created and is opened
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Create a knowledge base called Glucose |
+    Then the chatbot response contains the following terms:
+      | Created | Glucose |
+    And the displayed KB name is now Glucose
+
+  Scenario: Creating a knowledge base whose name is taken is refused
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Create a knowledge base called thyroids |
+    Then the chatbot response contains the following terms:
+      | already exists |
+    And the displayed KB name is Thyroids
+
+  Scenario: Creating a knowledge base whose name resembles an existing one asks first
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Create a knowledge base called Thyroid |
+    Then the chatbot response contains the following terms:
+      | already | Thyroids | Create | Thyroid |
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the displayed KB name is now Thyroid
+
+  Scenario: An empty knowledge base offers a demonstration case
+    Given a default KB is opened
+    And A Knowledge Base called Glucose has been created
+    And I start the client application
+    And the displayed KB name is Glucose
+    Then the chatbot response contains the following terms:
+      | has no cases | external information system | demonstration case |
+    When I enter the following text into the chat panel:
+      | Yes please |
+    Then the chatbot response contains the following terms:
+      | Added | Einstein |
+    And I should see the case Einstein as the current case
+
+  Scenario: The open knowledge base can be closed and another opened afterwards
+    Given a default KB is opened
+    And case Case1 for KB Thyroids is provided having data:
+      | Sun | hot |
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Close this knowledge base |
+    Then the chatbot response contains the following terms:
+      | Closed | Thyroids |
+    And no knowledge base is shown as selected
+    And the case list is hidden
+    When I enter the following text into the chat panel:
+      | Open Thyroids |
+    Then the displayed KB name is now Thyroids
+    And I should see the case Case1 as the current case
+
+  Scenario: No knowledge base open invites the user to open or create one
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Close this knowledge base |
+    Then the chatbot response contains the following terms:
+      | No knowledge base is open | Thyroids | open | create |
+
+  Scenario: Deleting a knowledge base requires confirmation
+    Given a default KB is opened
+    And A Knowledge Base called Unwanted has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Delete the knowledge base Unwanted |
+    Then the chatbot response contains the following terms:
+      | Delete | Unwanted | cannot be undone |
+    When I enter the following text into the chat panel:
+      | yes |
+    Then the chatbot response contains the following terms:
+      | Deleted | Unwanted |
+    When I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response consists of the following lines:
+      | Your knowledge bases:                                          |
+      | Thyroids (open)                                                |
+      | Demonstration knowledge bases (open one to get your own copy): |
+      | Contact Lens Prescription                                      |
+      | Pathology                                                      |
+      | Thyroid Stimulating Hormone                                    |
+      | Zoo Animals                                                    |
+
+  Scenario: A refused demonstration copy name can be corrected without restarting
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Open Zoo Animals |
+    Then the chatbot response contains the following terms:
+      | your own copy | Zoo Animals |
+    When I enter the following text into the chat panel:
+      | Thyroids |
+    Then the chatbot response contains the following terms:
+      | already exists | your own copy | Zoo Animals |
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Pathology |
+    Then the chatbot response contains the following terms:
+      | is the name of a demonstration knowledge base | your own copy | Zoo Animals |
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | ok, Zoo2 |
+    Then the chatbot response contains the following terms:
+      | Created | Zoo2 | demonstration and opened it |
+    And the displayed KB name is now Zoo2
+    And the count of the number of cases is 101
+
+  Scenario: Clicking a stored knowledge base in the list opens it
+    Given a default KB is opened
+    And I start the client application
+    And the displayed KB name is now Thyroids
+    And A Knowledge Base called Lipids has been created
+    When I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response contains the following terms:
+      | Lipids | Thyroids (open) |
+    When I click the knowledge base "Lipids" in the list
+    Then the displayed KB name is now Lipids
+
+  Scenario: Clicking a demonstration in the list asks for a name
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response contains the following terms:
+      | Pathology |
+    When I click the knowledge base "Pathology" in the list
+    Then the chatbot response contains the following terms:
+      | your own copy | Pathology |
+
+  Scenario: A demonstration cannot be deleted
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Delete Zoo Animals |
+    Then the chatbot response contains the following terms:
+      | cannot be deleted |
+    And the displayed KB name is Thyroids
+
+  Scenario: A demonstration title cannot be used
+    Given a default KB is opened
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Create a knowledge base called Pathology |
+    Then the chatbot response contains the following terms:
+      | is the name of a demonstration knowledge base |
+    And the displayed KB name is Thyroids
+
+  Scenario: A demonstration named in reply to the no knowledge bases greeting can be opened
+    Given I start the client application
+    Then the chatbot response contains the following terms:
+      | no knowledge bases yet | demonstration | Zoo Animals |
+    And no knowledge base is shown as selected
+    When I enter the following text into the chat panel:
+      | Zoo Animals |
+    Then the chatbot response contains the following terms:
+      | your own copy | Zoo Animals |
+    When I enter the following text into the chat panel:
+      | Zoo2 |
+    Then the chatbot response contains the following terms:
+      | Created | Zoo2 | demonstration and opened it |
+    And the displayed KB name is now Zoo2
+    And the count of the number of cases is 101
+
+  Scenario: Deleting a knowledge base is abandoned if not confirmed
+    Given a default KB is opened
+    And A Knowledge Base called Scratch has been created
+    And I start the client application
+    When I enter the following text into the chat panel:
+      | Delete Scratch |
+    Then the chatbot response contains the following terms:
+      | cannot be undone |
+    When I enter the following text into the chat panel:
+      | No, leave it |
+    And I enter the following text into the chat panel:
+      | List the knowledge bases |
+    Then the chatbot response contains the following terms:
+      | Scratch |
+
+  Scenario: Deleting the open knowledge base closes it
+    Given a default KB is opened
+    And A Knowledge Base called Scratch has been created
+    And I start the client application
+    And the displayed KB name is Scratch
+    When I enter the following text into the chat panel:
+      | Delete this knowledge base |
+    And I enter the following text into the chat panel:
+      | yes |
+    Then no knowledge base is shown as selected
+
+  Scenario: A knowledge base cannot be opened while a rule is being built
+    Given a default KB is opened
+    And A Knowledge Base called Glucose has been created
+    And case Bondi for KB Glucose is provided having data:
+      | Sun | hot |
+    And I start the client application
+    And the displayed KB name is Glucose
+    And I start to build a rule to add the comment "Go to the beach." for case Bondi
+    When I enter the following text into the chat panel:
+      | Open Thyroids |
+    Then the chatbot response contains the following terms:
+      | finish or cancel the current rule |
+    And the displayed KB name is Glucose
+
+  Scenario: The open knowledge base can be renamed
+    Given a default KB is opened
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Rename this knowledge base to Thyroid Function |
+    Then the chatbot response contains the following terms:
+      | Renamed | Thyroids | Thyroid Function |
+    And the displayed KB name is now "Thyroid Function"
+
+  Scenario: Renaming to a name that is taken is refused
+    Given a default KB is opened
+    And A Knowledge Base called Zinc has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Rename this knowledge base to zinc |
+    Then the chatbot response contains the following terms:
+      | already exists |
+    And the displayed KB name is Thyroids
+
+  Scenario: Knowledge base descriptions can be edited through chat and persist across switches
+    Given a default KB is opened
+    And A Knowledge Base called Zinc has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    And the KB description is:
     """
     """
-    Given I set the KB description to:
+    When I enter the following text into the chat panel:
+      | Set the description to: # Thyroids\nA basic thyroid management KB.\nSee: https://thyroid.rules.info/basic |
+    Then the chatbot response contains the following terms:
+      | Description | updated |
+    And the KB description is:
     """
-# Glucose
-A basic Glucose management KB
-See: https://glucose.rules.info/basic
+    # Thyroids
+    A basic thyroid management KB.
+    See: https://thyroid.rules.info/basic
     """
-    Then the KB description is:
+    When I enter the following text into the chat panel:
+      | What is the description of this knowledge base? |
+    Then the chatbot response contains the following terms:
+      | # Thyroids | A basic thyroid management KB. | https://thyroid.rules.info/basic |
+    When I enter the following text into the chat panel:
+      | Open Zinc |
+    Then the displayed KB name is now Zinc
+    And the KB description is:
     """
-# Glucose
-A basic Glucose management KB
-See: https://glucose.rules.info/basic
     """
-    And I select the Knowledge Base named Irons
-    And pause for 5 seconds
-    Then the KB description is:
+    When I enter the following text into the chat panel:
+      | Open Thyroids |
+    Then the displayed KB name is now Thyroids
+    And the KB description is:
     """
-    """
-    And I select the Knowledge Base named Glucose
-    And pause for 5 seconds
-    Then the KB description is:
-    """
-# Glucose
-A basic Glucose management KB
-See: https://glucose.rules.info/basic
+    # Thyroids
+    A basic thyroid management KB.
+    See: https://thyroid.rules.info/basic
     """
 
+  Scenario: Setting the description of a named knowledge base leaves the open one alone
+    Given a default KB is opened
+    And A Knowledge Base called Zinc has been created
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | Set the description for zinc to be "metallic kb" |
+    Then the chatbot response contains the following terms:
+      | Description of | Zinc | updated |
+    And the KB description is:
+    """
+    """
+    When I enter the following text into the chat panel:
+      | What is the description of Zinc? |
+    Then the chatbot response contains the following terms:
+      | Description of | Zinc | metallic kb |
+    And the displayed KB name is Thyroids
+
+  Scenario: The description of a knowledge base that is not open can be read
+    Given a default KB is opened
+    And I start the client application
+    And the displayed KB name is Thyroids
+    When I enter the following text into the chat panel:
+      | What is the description of Zoo Animals? |
+    Then the chatbot response contains the following terms:
+      | Description of | Zoo Animals | Compton and Kang |
+    And the displayed KB name is Thyroids

@@ -1,5 +1,9 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Add comments without conditions
+
+  Background:
+    Given a default KB is opened
+
   Scenario: The user should be able to use the chat to add a comment to a blank report, with no conditions
     Given case Bondi is provided having data:
       | Wave | excellent |

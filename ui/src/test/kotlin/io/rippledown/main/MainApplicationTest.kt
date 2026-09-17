@@ -3,7 +3,6 @@ package io.rippledown.main
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.awt.ComposeWindow
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
@@ -12,10 +11,7 @@ import androidx.compose.ui.window.rememberWindowState
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.constants.kb.KB_CONTROL_DESCRIPTION
-import io.rippledown.constants.kb.KB_CONTROL_DROPDOWN_DESCRIPTION
-import io.rippledown.constants.main.CREATE_KB_TEXT
-import io.rippledown.constants.main.KBS_DROPDOWN_DESCRIPTION
+import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
 import io.rippledown.constants.main.TITLE
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Unconfined
@@ -64,25 +60,10 @@ class MainApplicationTest {
 
         // Perform accessibility checks
         execute {
-            val accessibleContext0 = window!!.accessibleContext
-            val kbRow = accessibleContext0.find(KB_CONTROL_DESCRIPTION, AccessibleRole.UNKNOWN)
-            val expandDropdownButton = kbRow!!.find(KB_CONTROL_DROPDOWN_DESCRIPTION, AccessibleRole.PUSH_BUTTON)
-            val action = expandDropdownButton!!.accessibleAction
-            val count = action.accessibleActionCount
-            count shouldBe 1
-
-            // Simulate clicking the dropdown button
-            action.doAccessibleAction(0)
-        }
-
-        // Wait for UI updates
-        awaitIdle()
-        execute {
-            val accessibleContext1 = window.accessibleContext
-            val dropDown = accessibleContext1.find(KBS_DROPDOWN_DESCRIPTION, AccessibleRole.COMBO_BOX)
-            val createKBItem = dropDown!!.find(CREATE_KB_TEXT, AccessibleRole.PUSH_BUTTON)
-            val createKBActionCount = createKBItem!!.accessibleAction.accessibleActionCount
-            createKBActionCount shouldBe 1
+            val label = checkNotNull(window.accessibleContext.find({
+                it.accessibleDescription == KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
+            }))
+            (label.accessibleAction?.accessibleActionCount ?: 0) shouldBe 0
         }
 
         // Cleanup is handled by runApplicationTest

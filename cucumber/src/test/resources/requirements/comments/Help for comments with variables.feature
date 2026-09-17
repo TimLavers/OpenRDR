@@ -1,10 +1,13 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Help for comments with variables
 
   The UI is almost entirely chat based, so the user is told - gently and only once per session - that a
   comment can include a case attribute value by delimiting the attribute name with braces, e.g. {TSH}.
   The first time the user adds a comment in a session, the chatbot includes a short tip; it must not
   repeat that tip for subsequent comments in the same session.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The chatbot mentions the variable facility the first time a comment is added
     Given case Bondi is provided having data:

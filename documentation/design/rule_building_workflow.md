@@ -10,3 +10,15 @@ The user steps and software components involved in building a rule are as follow
 6. The user also has the opportunity to just skip a cornerstone case if they approve of the change to its interpretation that will result from the new rule
 7. Once all the required conditions have been added, the user commits the rule
 
+After a chat turn adds conditions, `RuleConversation` lists the newly added condition texts from the rule session,
+then asks "Do you want to provide any more reasons?" before processing the model's final action. The acknowledgement
+uses the canonical conditions, so the user can see how an expression such as "elevated waves" became "Waves is high".
+A model response that jumps to cornerstone review or commits in that same turn is replaced by this server question. This
+also applies to each subsequent condition, regardless of the
+cornerstone count. Failed or duplicate reasons retain their explanatory response.
+
+The server includes its question as context with the next user reply, since the model's conversation may contain a
+different question. Subsequent reply interpretation and cornerstone review continue through the existing model
+workflow. This is a guard on the transition after adding conditions, not a complete server-owned rule-building
+state machine. `ChatManager` delegates this policy to `RuleConversation`, which explicitly tracks `Ready`,
+`OfferedAssignment` and `AwaitingReasonReply`. The rule session and cornerstone state remain in `RuleService`.

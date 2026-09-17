@@ -12,6 +12,11 @@ sealed interface Action
 
 sealed class KbManagementOutcome {
     data class Done(val response: ChatResponse) : KbManagementOutcome()
+    class AskForName(
+        val question: String,
+        val nameQuestion: String = question,
+        val actionForName: (String) -> KbManagementAction
+    ) : KbManagementOutcome()
 
     /**
      * The action wants the user's say-so first. [question] goes to the user and

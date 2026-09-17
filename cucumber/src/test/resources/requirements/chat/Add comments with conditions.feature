@@ -1,5 +1,8 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Add comments with conditions
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to use the chat to add a comment with a valid condition
     Given case Bondi is provided having data:
@@ -22,4 +25,3 @@ Feature: Add comments with conditions
     When I provide the following reason:
       | wave height is more than 2 |
     Then the chatbot indicates that this reason is not true for the current case
-#    todo check that the rule is not added

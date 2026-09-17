@@ -5,23 +5,21 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.appbar.KB_INFO_ITEM
 import io.rippledown.appbar.assertKbNameIs
-import io.rippledown.appbar.clickDropdown
 import io.rippledown.casecontrol.*
-import io.rippledown.chat.BotMessage
-import io.rippledown.chat.requireChatMessagesShowing
-import io.rippledown.chat.requireChatPanelIsDisplayed
-import io.rippledown.chat.typeChatMessageAndClickSend
+import io.rippledown.chat.*
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.interpretation.DERIVED_VALUE_ROW_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_VALUE_PREFIX
 import io.rippledown.constants.main.APPLICATION_BAR_ID
+import io.rippledown.files.FileSelection
+import io.rippledown.files.KbFileDialogs
 import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KbFileDialogRequest
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
@@ -35,15 +33,83 @@ import io.rippledown.utils.applicationFor
 import io.rippledown.utils.createViewableCase
 import io.rippledown.utils.createViewableCaseWithInterpretation
 import io.rippledown.utils.defaultDate
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
+import java.io.File
 import kotlin.test.Test
 
 
 @OptIn(ExperimentalTestApi::class)
 class OpenRDRUITest {
+    @Test
+    fun `chat import opens its first case and retains completion after restarting the conversation`() = runTest {
+        // Given
+        val dialogs = mockk<KbFileDialogs>()
+        val selection = CompletableDeferred<FileSelection>()
+        val archive = File("Clinic.zip")
+        val imported = KBInfo("imported", "Clinic")
+        val caseId = CaseId(1, "First imported case")
+        coEvery { api.kbList() } returns emptyList()
+        coEvery { api.startConversation(null, null) } returns ChatResponse("Welcome")
+        coEvery { api.sendUserMessage("Import a KB") } returns ChatResponse(
+            "Choose a file", kbFileDialogRequest = KbFileDialogRequest.Import("one")
+        )
+        coEvery { dialogs.chooseImportArchive() } coAnswers { selection.await() }
+        coEvery { api.importKBFromZip(archive) } returns imported
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation(caseId.name, 1)
+        coEvery { api.startConversation(imported.id, 1) } returns ChatResponse("Imported case greeting")
+
+        with(composeTestRule) {
+            setContent { OpenRDRUI(handler, fileDialogs = dialogs) }
+            requireChatMessagesShowing(listOf(BotMessage("Welcome")))
+
+            // When
+            typeChatMessageAndClickSend("Import a KB")
+
+            // Then
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsNotEnabled()
+            onNodeWithContentDescription(CHAT_SEND).assertIsNotEnabled()
+            coVerify(exactly = 0) { api.importKBFromZip(any()) }
+            selection.complete(FileSelection.Selected(archive))
+            waitForCaseToBeShowing(caseId.name)
+            assertKbNameIs(imported.name)
+            requireChatMessagesShowing(
+                listOf(
+                    BotMessage("Welcome"), UserMessage("Import a KB"), BotMessage("Choose a file"),
+                    BotMessage("Imported \"Clinic\" and opened it."), BotMessage("Imported case greeting")
+                )
+            )
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsEnabled().performTextInput("Next request")
+            onNodeWithContentDescription(CHAT_SEND).assertIsEnabled()
+            coVerify(exactly = 1) { api.sendUserMessage("Import a KB") }
+            coVerify(exactly = 1) { api.importKBFromZip(archive) }
+            coVerify(exactly = 1) { api.startConversation(imported.id, 1) }
+
+            // Given the archive replaces the KB that is already open, with the same case id
+            coEvery { api.sendUserMessage("Import again") } returns ChatResponse(
+                "Choose a file", kbFileDialogRequest = KbFileDialogRequest.Import("two")
+            )
+            coEvery { dialogs.chooseImportArchive() } returns FileSelection.Selected(archive)
+            coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("Replacement case", 1)
+            coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(CaseId(1, "Replacement case")))
+            coEvery { api.startConversation(imported.id, 1) } returns ChatResponse("Replacement greeting")
+
+            // When
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).performTextClearance()
+            typeChatMessageAndClickSend("Import again")
+
+            // Then
+            waitForCaseToBeShowing("Replacement case")
+            onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsEnabled()
+            coVerify(exactly = 2) { api.importKBFromZip(archive) }
+            coVerify(exactly = 2) { api.startConversation(imported.id, 1) }
+        }
+    }
+
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -58,6 +124,9 @@ class OpenRDRUITest {
         coEvery { api.kbList() } returns listOf(defaultKb)
         coEvery { api.selectKB(defaultKb.id) } returns defaultKb
         coEvery { api.waitingCasesInfo() } returns CasesInfo()
+        coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
+        coEvery { api.sendUserMessage(any()) } returns ChatResponse("OK")
+        coEvery { api.kbDescription(any()) } returns ""
         coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } returns Unit
         handler = mockk<Handler>()
         coEvery { handler.api } returns api
@@ -902,7 +971,14 @@ class OpenRDRUITest {
         val caseIdB = CaseId(id = 2, name = "case B")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
-        coEvery { api.selectKB("id_b") } returns kbB
+        var kbInfoUpdated: (KBInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            kbInfoUpdated = arg(3)
+        }
+        coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
+            kbInfoUpdated(kbB)
+            ChatResponse("Opened KB_B")
+        }
         var casesForCurrentKb = CasesInfo(listOf(caseIdA))
         coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
@@ -916,14 +992,13 @@ class OpenRDRUITest {
             waitForCaseToBeShowing("case A")
             coVerify(atLeast = 1) { api.waitingCasesInfo() }
 
-            //When - user selects KB-B from the dropdown; server state now reflects KB-B's cases
+            //When - user opens KB-B through chat; server state now reflects KB-B's cases
             casesForCurrentKb = CasesInfo(listOf(caseIdB))
-            clickDropdown()
-            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+            typeChatMessageAndClickSend("Open KB_B")
 
             //Then - casesInfo was refetched and KB-B's case is shown
             waitForCaseToBeShowing("case B")
-            coVerify { api.selectKB("id_b") }
+            coVerify { api.sendUserMessage("Open KB_B") }
             coVerify(atLeast = 2) { api.waitingCasesInfo() }
         }
     }
@@ -935,7 +1010,14 @@ class OpenRDRUITest {
         val kbB = KBInfo("id_b", "KB_B")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
-        coEvery { api.selectKB("id_b") } returns kbB
+        var kbInfoUpdated: (KBInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            kbInfoUpdated = arg(3)
+        }
+        coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
+            kbInfoUpdated(kbB)
+            ChatResponse("Opened KB_B")
+        }
         var casesForCurrentKb = CasesInfo(listOf(CaseId(id = 1, name = "case A")))
         var caseForCurrentKb = createViewableCaseWithInterpretation("case A", 1)
         coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
@@ -950,8 +1032,7 @@ class OpenRDRUITest {
             //When - the user switches to KB-B, whose only case also has id 1
             casesForCurrentKb = CasesInfo(listOf(CaseId(id = 1, name = "case B")))
             caseForCurrentKb = createViewableCaseWithInterpretation("case B", 1)
-            clickDropdown()
-            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+            typeChatMessageAndClickSend("Open KB_B")
 
             //Then - the case view shows KB-B's case, not the stale KB-A one
             waitForCaseToBeShowing("case B")
@@ -968,7 +1049,14 @@ class OpenRDRUITest {
         val caseB1 = CaseId(id = 3, name = "b-1")
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
-        coEvery { api.selectKB("id_b") } returns kbB
+        var kbInfoUpdated: (KBInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            kbInfoUpdated = arg(3)
+        }
+        coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
+            kbInfoUpdated(kbB)
+            ChatResponse("Opened KB_B")
+        }
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("a-1", 1)
         coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("a-2", 2)
         coEvery { api.getCase(3) } returns createViewableCaseWithInterpretation("b-1", 3)
@@ -985,8 +1073,7 @@ class OpenRDRUITest {
 
             //When - user selects KB-B, which has different cases
             casesForCurrentKb = CasesInfo(listOf(caseB1))
-            clickDropdown()
-            onNodeWithContentDescription("${KB_INFO_ITEM}KB_B").performClick()
+            typeChatMessageAndClickSend("Open KB_B")
 
             //Then - list now shows only KB-B's case
             waitForCaseToBeShowing("b-1")

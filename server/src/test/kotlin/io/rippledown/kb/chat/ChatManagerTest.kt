@@ -7,10 +7,10 @@ import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
-import io.rippledown.kb.chat.ChatManager.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
-import io.rippledown.kb.chat.ChatManager.Companion.commentVariableTip
+import io.rippledown.kb.chat.ChatResponseEnricher.Companion.commentVariableTip
+import io.rippledown.kb.chat.RuleConversation.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.model.Attribute
@@ -18,17 +18,315 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
 import org.slf4j.Logger
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
+fun demonstrationDescriptions() = SampleKB.demonstrations().associate { it.title() to it.description() }
+
 /**
  * @author Cascade AI
  */
 class ChatManagerTest {
+    @Test
+    fun `capability action returns a structured catalogue with or without a current case`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns "Hello"
+        coEvery { conversationService.response(any()) } returns """{"action":"ListCapabilities"}"""
+        val withoutKb = ChatManager(conversationService, null, kbService)
+
+        // When
+        val noCase = withoutKb.response("What can you do?")
+        chatManager.startConversation(viewableCase)
+        val withCase = chatManager.response("What can you do?")
+
+        // Then
+        noCase.capabilities.map { it.heading } shouldBe listOf("Knowledge bases")
+        withCase.capabilities.size shouldBe 6
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+
+    @Test
+    fun `starting a new conversation drops a pending deletion confirmation`() = runTest {
+        // Given
+        val scratch = KBInfo("s1", "Scratch")
+        every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
+        chatManager.processActionComment(ActionComment(DELETE_KNOWLEDGE_BASE, kbName = "Scratch"))
+        coEvery { conversationService.startConversation() } returns "Welcome"
+        coEvery { conversationService.response("yes") } returns "What would you like to do?"
+
+        // When
+        chatManager.startConversation(viewableCase)
+        val response = chatManager.response("yes")
+
+        // Then
+        response.text shouldBe "What would you like to do?"
+        coVerify(exactly = 0) { kbService.delete(any()) }
+    }
+
+    @Test
+    fun `an invalid action in the opening response falls back to its text`() = runTest {
+        // Given
+        val malformed = "{\"action\": 123, \"message\": \"Welcome\"}"
+        coEvery { conversationService.startConversation() } returns malformed
+
+        // When
+        val response = chatManager.startConversation(viewableCase)
+
+        // Then
+        response.text shouldBe malformed
+    }
+
+    @Test
+    fun `an invalid action without a new condition gives an error rather than claiming success`() = runTest {
+        // Given
+        val malformed = "{\"action\": 123, \"message\": \"Done\"}"
+        coEvery { conversationService.response(any()) } returns malformed
+
+        // When
+        val response = chatManager.response("add a reason")
+
+        // Then
+        response.text shouldBe "$SYSTEM_ERROR_PREFIX: '$malformed'"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `the reply to the server question is sent with that question as context`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            ActionComment(action = USER_ACTION, message = "Allow the change to Case2?").toJsonString()
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.response(any()) } returns ActionComment(action = COMMIT_RULE).toJsonString()
+
+        // When
+        val response = chatManager.response("no")
+
+        // Then
+        coVerify {
+            conversationService.response(match {
+                it.contains("[The server asked the user: Do you want to provide any more reasons?]") &&
+                        it.endsWith("\nno")
+            })
+        }
+        response.text shouldBe CHAT_BOT_DONE_MESSAGE
+        coVerify(exactly = 1) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `a parsed expression retains its canonical condition in the server acknowledgement`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        every { ruleService.currentRuleSessionConditionTexts() } returns emptySet()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("Waves is high")
+            ActionComment(
+                action = USER_ACTION,
+                message = "Added your reason 'Waves is high'. Do you want to provide any more reasons?"
+            ).toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("elevated waves")
+
+        // Then
+        response.text shouldBe "Added:\nWaves is high\n\nDo you want to provide any more reasons?"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `each further condition gets another opportunity to add reasons`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            "Allow the change?"
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns
+                    setOf("age is young", "tear production is reduced")
+            ActionComment(action = COMMIT_RULE).toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("tear production is reduced")
+
+        // Then
+        response.text shouldBe "Added:\ntear production is reduced\n\nDo you want to provide any more reasons?"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `an unsuccessful reason keeps the model explanation and does not claim it was added`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+        coEvery { conversationService.response(any()) } returns
+                ActionComment(action = USER_ACTION, message = "That condition is already in the rule.").toJsonString()
+
+        // When
+        val response = chatManager.response("age is young")
+
+        // Then
+        response.text shouldBe "That condition is already in the rule."
+    }
+
+    @Test
+    fun `the server question survives an unavailable model on the next reply`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            "Allow the change?"
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.response(any()) } throws IllegalStateException("offline")
+
+        // When
+        val failed = chatManager.response("yes")
+        coEvery { conversationService.response(any()) } returns "Please provide another reason."
+        val retried = chatManager.response("yes")
+
+        // Then
+        failed.text shouldBe AI_UNAVAILABLE_MESSAGE
+        retried.text shouldBe "Please provide another reason."
+        coVerify(exactly = 2) {
+            conversationService.response(match { it.contains("[The server asked the user:") && it.endsWith("\nyes") })
+        }
+    }
+
+    @Test
+    fun `a new conversation clears the previous reason question`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            "Allow the change?"
+        }
+        chatManager.response("age is young")
+        coEvery { conversationService.startConversation() } returns "How can I help?"
+        chatManager.startConversation(viewableCase)
+        coEvery { conversationService.response(any()) } returns "Please provide another reason."
+
+        // When
+        chatManager.response("yes")
+
+        // Then
+        coVerify { conversationService.response(match { !it.contains("[The server asked the user:") && it.endsWith("\nyes") }) }
+    }
+
+    @Test
+    fun `a new condition gets a server question before cornerstone review`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        val cornerstoneCase = mockk<ViewableCase>()
+        every { cornerstoneCase.name } returns "Case2"
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus(
+            cornerstoneToReview = cornerstoneCase,
+            indexOfCornerstoneToReview = 0,
+            numberOfCornerstones = 2
+        )
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            ActionComment(action = USER_ACTION, message = "Allow the change to Case2?").toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("age is young")
+
+        // Then
+        response.text shouldBe "Added:\nage is young\n\nDo you want to provide any more reasons?"
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+    }
+
+    @Test
+    fun `the model cannot commit in the same turn that adds a condition`() = runTest {
+        // Given
+        every { ruleService.isRuleSessionActive() } returns true
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { conversationService.response(any()) } coAnswers {
+            every { ruleService.currentRuleSessionConditionTexts() } returns setOf("age is young")
+            suggestionsBuffer.suggestions = listOf("age is young", "tear production is reduced")
+            ActionComment(action = COMMIT_RULE).toJsonString()
+        }
+
+        // When
+        val response = chatManager.response("age is young")
+
+        // Then
+        response.text shouldBe "Added:\nage is young\n\nDo you want to provide any more reasons?"
+        response.suggestions shouldBe listOf("tear production is reduced")
+        coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
+        coVerify(exactly = 0) { ruleService.sendRuleSessionCompleted() }
+    }
+
+    @Test
+    fun `listing choices survive buffered suggestions`() = runTest {
+        // Given
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+        suggestionsBuffer.suggestions = listOf("Buffered condition")
+
+        // When
+        val response = chatManager.processActionComment(ActionComment(action = LIST_KNOWLEDGE_BASES))
+
+        // Then
+        response.kbListing shouldBe KnowledgeBaseListing(
+            listOf("Glucose"),
+            SampleKB.demonstrations().map { it.title() }.sorted(),
+            descriptions = demonstrationDescriptions()
+        )
+        response.suggestions shouldBe listOf("Buffered condition")
+    }
+
+    @Test
+    fun `listing choices survive model suggestions`() = runTest {
+        // Given
+        every { kbService.knowledgeBases() } returns listOf(KBInfo("g1", "Glucose"))
+        every { kbService.openKnowledgeBase() } returns null
+
+        // When
+        val response = chatManager.processActionComment(
+            ActionComment(action = LIST_KNOWLEDGE_BASES, suggestions = listOf("Model condition"))
+        )
+
+        // Then
+        response.kbListing shouldBe KnowledgeBaseListing(
+            listOf("Glucose"),
+            SampleKB.demonstrations().map { it.title() }.sorted(),
+            descriptions = demonstrationDescriptions()
+        )
+        response.suggestions shouldBe listOf("Model condition")
+    }
+
+    @Test
+    fun `opening a demonstration surfaces its naming question`() = runTest {
+        // Given
+        every { kbService.resolve("Zoo") } returns KbResolution.Demonstration(SampleKB.ZOO)
+
+        // When
+        val response = chatManager.processActionComment(ActionComment(action = OPEN_KNOWLEDGE_BASE, kbName = "Zoo"))
+
+        // Then
+        response shouldBe ChatResponse(nameForDemonstrationCopyMessage("Zoo Animals"))
+        coVerify(exactly = 0) { kbService.createFromSample(any(), any()) }
+    }
     lateinit var logger: Logger
     lateinit var conversationService: ConversationService
     lateinit var ruleService: RuleService
@@ -43,6 +341,9 @@ class ChatManagerTest {
         conversationService = mockk()
         ruleService = mockk()
         kbService = mockk()
+        every { kbService.isDemonstrationTitle(any()) } returns false
+        every { kbService.demonstrations() } returns SampleKB.demonstrations()
+        every { kbService.description(any()) } returns ""
         viewableCase = mockk()
         case = mockk()
         suggestionsBuffer = SuggestionsBuffer()
@@ -105,7 +406,7 @@ class ChatManagerTest {
     @Test
     fun `without a rule service a message for the user is passed through`() = runTest {
         // Given
-        chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
+        chatManager = ChatManager(conversationService, null, kbService)
         val fromModel = ActionComment(action = USER_ACTION, message = "Open or create a knowledge base.").toJsonString()
         coEvery { conversationService.response("Help") } returns fromModel
 
@@ -144,7 +445,14 @@ class ChatManagerTest {
         val response = chatManager.response("List")
 
         // Then
-        response shouldBe ChatResponse("Glucose")
+        response shouldBe ChatResponse(
+            "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
+                    SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
+            kbListing = KnowledgeBaseListing(
+                listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted(),
+                descriptions = demonstrationDescriptions()
+            )
+        )
     }
 
     @Test
@@ -178,7 +486,14 @@ class ChatManagerTest {
         val response = chatManager.response("List")
 
         // Then
-        response shouldBe ChatResponse("Glucose")
+        response shouldBe ChatResponse(
+            "$YOUR_KNOWLEDGE_BASES\nGlucose\n\n$DEMONSTRATION_KNOWLEDGE_BASES_HEADING\n" +
+                    SampleKB.demonstrations().map { it.title() }.sorted().joinToString("\n"),
+            kbListing = KnowledgeBaseListing(
+                listOf("Glucose"), SampleKB.demonstrations().map { it.title() }.sorted(),
+                descriptions = demonstrationDescriptions()
+            )
+        )
     }
 
     @Test
@@ -278,17 +593,18 @@ class ChatManagerTest {
         coEvery { conversationService.response(match { it.contains("[Interpret a reply") }) } returns
                 """{"intent":"OTHER_REQUEST"}"""
         coEvery { conversationService.response("What can you do?") } returns
-                ActionComment(action = USER_ACTION, message = "I can manage knowledge bases.").toJsonString()
+                ActionComment(action = LIST_CAPABILITIES).toJsonString()
         coEvery { conversationService.response("yes") } returns
                 ActionComment(action = USER_ACTION, message = "Yes to what?").toJsonString()
         chatManager.startConversation(null, greeting = noKbGreeting(emptyList()))
 
         // When
-        chatManager.response("What can you do?")
+        val help = chatManager.response("What can you do?")
         val lateYes = chatManager.response("yes")
 
         // Then
         lateYes shouldBe ChatResponse("Yes to what?")
+        help.capabilities.map { it.heading } shouldBe listOf("Knowledge bases")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

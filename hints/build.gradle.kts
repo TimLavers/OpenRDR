@@ -1,6 +1,7 @@
 plugins {
     id("kotlin-library-conventions")
     kotlin("plugin.serialization")
+    alias(libs.plugins.kover)
 }
 
 dependencies {

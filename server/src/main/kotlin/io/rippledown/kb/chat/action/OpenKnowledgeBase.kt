@@ -1,9 +1,6 @@
 package io.rippledown.kb.chat.action
 
-import io.rippledown.constants.chat.confirmKbOpenMessage
-import io.rippledown.constants.chat.kbAmbiguousMessage
-import io.rippledown.constants.chat.kbNotFoundMessage
-import io.rippledown.constants.chat.kbOpenedMessage
+import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.KnowledgeBaseService
 import io.rippledown.model.KBInfo
@@ -19,7 +16,15 @@ data class OpenKnowledgeBase(val kbName: String) : KbManagementAction {
             }
 
             is KbResolution.Ambiguous -> done(kbAmbiguousMessage(resolution.name, resolution.candidates))
-            is KbResolution.NotFound -> done(kbNotFoundMessage(resolution.name, resolution.available))
+            is KbResolution.NotFound -> done(
+                kbNotFoundMessage(resolution.name, resolution.available, resolution.demonstrations)
+            )
+
+            is KbResolution.Demonstration -> KbManagementOutcome.AskForName(
+                nameForDemonstrationCopyMessage(resolution.sample.title())
+            ) {
+                CopyDemonstrationKnowledgeBase(resolution.sample, it)
+            }
         }
 
     private suspend fun open(kbService: KnowledgeBaseService, kbInfo: KBInfo): ChatResponse {

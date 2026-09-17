@@ -7,6 +7,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import io.rippledown.constants.main.TITLE
+import io.rippledown.files.FileKitKbFileDialogs
 
 val DEFAULT_WINDOW_SIZE = DpSize(1_000.dp, 800.dp)
 val EXPANDED_WINDOW_SIZE = DpSize(1_400.dp, 800.dp)
@@ -53,6 +54,9 @@ fun main() = application {
         state = WindowState(size = windowSize)//allow for resizing
     ) {
         applyAppIcon(window)
-        OpenRDRUI(rememberMainHandler(isClosing = { closing }, resizeWindow = ::resizeWindow))
+        OpenRDRUI(
+            rememberMainHandler(isClosing = { closing }, resizeWindow = ::resizeWindow),
+            fileDialogs = remember(window) { FileKitKbFileDialogs(window) }
+        )
     }
 }

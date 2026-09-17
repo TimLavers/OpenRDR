@@ -1,6 +1,5 @@
 package io.rippledown.main
 
-import androidx.compose.runtime.InternalComposeApi
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -30,9 +29,10 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.*
 import io.rippledown.sample.SampleKB
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 class Api(
     engine: HttpClientEngine = CIO.create(),
@@ -47,11 +47,6 @@ class Api(
     @Volatile
     private var currentKB: KBInfo? = null
 
-    // Serialises the lazy "fetch default KB" path in [kbInfo] so that a
-    // concurrently-executing [createKBFromSample]/[selectKB]/[createKB] cannot
-    // have its write to [currentKB] clobbered by a late-arriving default-KB
-    // response.
-    private val kbInfoMutex = Mutex()
     val client = HttpClient(engine) {
         install(ContentNegotiation) {
             json()
@@ -131,28 +126,16 @@ class Api(
         return currentKB ?: throw IllegalStateException("Failed to select KB")
     }
 
-    @OptIn(InternalComposeApi::class)
-    suspend fun kbInfo(): KBInfo {
-        currentKB?.let { return it }
-        return kbInfoMutex.withLock {
-            // Re-check under the lock: another caller may have populated it
-            // while we were waiting, or an explicit [createKBFromSample] /
-            // [selectKB] / [createKB] may have set it to a more-specific KB.
-            currentKB?.let { return@withLock it }
-            val fetched = client.get("$API_URL$DEFAULT_KB").body<KBInfo>()
-            // Only adopt [fetched] if nothing else set [currentKB] while the
-            // GET was in flight. If something did, that value is always more
-            // authoritative than the server's "default" KB.
-            currentKB ?: fetched.also { currentKB = it }
-        }
-    }
+    suspend fun kbInfo(): KBInfo = checkNotNull(currentKB) { "No knowledge base is open." }
 
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
-    suspend fun kbDescription(): String {
+    suspend fun kbDescription(): String = kbDescription(kbInfo())
+
+    suspend fun kbDescription(kbInfo: KBInfo): String {
         return client.get("$API_URL$KB_DESCRIPTION") {
             contentType(Plain)
-            setKBParameter()
+            parameter(KB_ID, kbInfo.id)
         }.body()
     }
 
@@ -165,9 +148,8 @@ class Api(
     }
 
     suspend fun importKBFromZip(file: File): KBInfo {
-        val data = file.readBytes()
-        currentKB = client.post("$API_URL$IMPORT_KB") {
-            contentType(ContentType.Application.Zip)
+        val data = withContext(Dispatchers.IO) { file.readBytes() }
+        val response = client.post("$API_URL$IMPORT_KB") {
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -176,21 +158,32 @@ class Api(
                             data,
                             Headers.build {
                                 append(HttpHeaders.ContentType, "application/zip")
-                                append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                                append(HttpHeaders.ContentDisposition, "filename=${file.name.quote()}")
                             }
                         )
                     }
                 )
             )
-        }.body()
-        return currentKB!!
+        }
+        response.requireFileTransferSuccess()
+        val imported = checkNotNull(response.body<KBInfo?>()) { "Import did not return a knowledge base." }
+        currentKB = imported
+        return imported
     }
 
-    suspend fun exportKBToZip(destination: File) {
-        val bytes = client.get("$API_URL/api/exportKB") {
-            setKBParameter()
-        }.body<ByteArray>()
-        destination.writeBytes(bytes)
+    suspend fun exportKBToZip(destination: File, kbInfo: KBInfo) {
+        val response = client.get("$API_URL$EXPORT_KB") {
+            parameter(KB_ID, kbInfo.id)
+        }
+        response.requireFileTransferSuccess()
+        val bytes = response.body<ByteArray>()
+        withContext(Dispatchers.IO) { destination.writeBytes(bytes) }
+    }
+
+    private suspend fun HttpResponse.requireFileTransferSuccess() {
+        if (!status.isSuccess()) {
+            throw IOException(bodyAsText().ifBlank { "Server returned HTTP ${status.value}." })
+        }
     }
 
     suspend fun getCase(caseId: Long): ViewableCase? {
@@ -413,4 +406,3 @@ class Api(
         return HttpStatusCode.OK
     }
 }
-

@@ -1,6 +1,7 @@
 package io.rippledown.kb.sample
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.kb.KB
@@ -102,6 +103,20 @@ class SampleKBLoaderTest {
         caseNames[1] shouldBe "antelope"
         caseNames[2] shouldBe "bass"
         endpoint.kb.ruleTree.size() shouldBe 1
+    }
+
+    @Test
+    fun `load Pathology sample`() {
+        // Given
+        val sample = PATHOLOGY
+
+        // When
+        loadSampleKB(endpoint, sample)
+
+        // Then
+        endpoint.kb.allProcessedCases().map { it.name } shouldContainExactlyInAnyOrder listOf("Lindsay", "Taylor")
+        endpoint.kb.allCornerstoneCases().map { it.name } shouldContainExactlyInAnyOrder listOf("Jane")
+        endpoint.kb.ruleTree.size() shouldBe 1L
     }
 
     @Test

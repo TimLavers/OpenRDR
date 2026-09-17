@@ -1,6 +1,7 @@
 package io.rippledown.chat
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.chat.KnowledgeBaseListing
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
@@ -18,6 +19,39 @@ import java.util.concurrent.atomic.AtomicInteger
  * matching change in `ChatPO`.
  */
 class ChatTestHookTest {
+
+    @Test
+    fun `listing exposes its response text and available rows without a duplicate bot message`() {
+        // Given
+        val listing = KbChoiceListMessage(
+            "Your knowledge bases: Thyroids, Lipids",
+            KnowledgeBaseListing(listOf("Thyroids", "Lipids"), listOf("Zoo Animals"), "Thyroids")
+        )
+
+        // When
+        ChatTestHook.update(listOf(BotMessage("Earlier reply"), listing), sendIsEnabled = true)
+
+        // Then
+        ChatTestHook.snapshot().mostRecentBotText shouldBe listing.text
+        ChatTestHook.snapshot().mostRecentKbChoices shouldBe listOf("Lipids", "Zoo Animals")
+        ChatTestHook.snapshot().messageList.size shouldBe 2
+    }
+
+    @Test
+    fun `reply after a listing becomes the most recent bot text`() {
+        // Given
+        val listing = KbChoiceListMessage(
+            "Choose a demonstration",
+            KnowledgeBaseListing(emptyList(), listOf("Zoo Animals"))
+        )
+
+        // When
+        ChatTestHook.update(listOf(listing, UserMessage("Open Zoo Animals"), BotMessage("Name your copy")), true)
+
+        // Then
+        ChatTestHook.snapshot().mostRecentBotText shouldBe "Name your copy"
+        ChatTestHook.snapshot().mostRecentKbChoices shouldBe listOf("Zoo Animals")
+    }
 
     @Before
     fun resetHook() {

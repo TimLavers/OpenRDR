@@ -1,8 +1,7 @@
 @delay_after_cuke
 Feature: Demo script — derived attributes, repeat inferencing and the AI report
   This scenario is the step-by-step script for demo scenario 3 in
-  packaging/README-demo.txt, run against the same data as the seeded "Taylor"
-  case in the Demo KB. A passing run means the demo is solid.
+  packaging/README-demo.txt. A passing run means the demo is solid.
 
   It shows, in order:
   - the Derived attributes panel empty state (feature discoverability),
@@ -20,6 +19,9 @@ Feature: Demo script — derived attributes, repeat inferencing and the AI repor
   fragments. Re-wording them for this patient, and merging three dangling
   actions into a single plan, is work no individual rule can do, because no
   rule knows what the others concluded.
+
+  Background:
+    Given a default KB is opened
 
   Scenario: BMI and Diabetes status drive comments that the AI integrates into a report
     Given case Taylor is provided with the following values, reference ranges and units:

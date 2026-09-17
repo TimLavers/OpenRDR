@@ -1,6 +1,8 @@
 package io.rippledown.main
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.mocks.EngineConfig
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
@@ -22,10 +24,16 @@ import kotlin.test.Test
 class ApiTest {
     val case = createViewableCase("A", 1)
 
+    private suspend fun apiWithKb(config: EngineConfig): Api {
+        val api = Api(mock(config))
+        api.createKB("Test")
+        return api
+    }
+
     @Test
     fun kbDescriptionTest() = runTest {
         val config = config {}
-        Api(mock(config)).kbDescription() shouldBe config.returnedKbDescription
+        apiWithKb(config).kbDescription() shouldBe config.returnedKbDescription
     }
 
     @Test
@@ -36,7 +44,7 @@ class ApiTest {
             ["Ripple-Down Rules, the Alternative to Machine Learning"](https://www.amazon.com.au/Ripple-Down-Rules-Alternative-Machine-Learning-ebook/dp/B092KVD3HQ)
             """.trimIndent()
         val config = config {}
-        Api(mock(config)).setKbDescription(descriptionText)
+        apiWithKb(config).setKbDescription(descriptionText)
         config.returnedKbDescription shouldBe descriptionText
     }
 
@@ -46,7 +54,7 @@ class ApiTest {
             returnCase = case
             expectedCaseId = 1
         }
-        Api(mock(config)).getCase(1) shouldBe case
+        apiWithKb(config).getCase(1) shouldBe case
     }
 
     @Test
@@ -64,7 +72,7 @@ class ApiTest {
             returnCaseReport = report
             expectedCaseId = 1
         }
-        Api(mock(config)).getCaseReport(1) shouldBe report
+        apiWithKb(config).getCaseReport(1) shouldBe report
     }
 
     @Test
@@ -89,7 +97,7 @@ class ApiTest {
             expectedCaseId = 1
         }
         //When
-        val retrieved = Api(mock(config)).getCase(1)!!
+        val retrieved = apiWithKb(config).getCase(1)!!
 
         //Then
         retrieved shouldBe case
@@ -109,7 +117,7 @@ class ApiTest {
             returnCasesInfo = expected
         }
 
-        Api(mock(config)).waitingCasesInfo() shouldBe expected
+        apiWithKb(config).waitingCasesInfo() shouldBe expected
     }
 
     @Test
@@ -122,13 +130,21 @@ class ApiTest {
             expectedMovedAttributeId = moved.id
             expectedTargetAttributeId = target.id
         }
-        Api(mock(config)).moveAttribute(moved.id, target.id) shouldBe expectedResult
+        apiWithKb(config).moveAttribute(moved.id, target.id) shouldBe expectedResult
     }
 
     @Test
-    fun kbInfo() = runTest {
+    fun `kbInfo throws when no KB is open`() = runTest {
         val config = config {}
-        Api(mock(config)).kbInfo().name shouldBe config.defaultKB.name
+        shouldThrow<IllegalStateException> { Api(mock(config)).kbInfo() }
+    }
+
+    @Test
+    fun `kbInfo returns currentKB after createKB`() = runTest {
+        val config = config {}
+        val api = Api(mock(config))
+        api.createKB("Bondi")
+        api.kbInfo().name shouldBe "Bondi"
     }
 
     @Test
@@ -192,7 +208,7 @@ class ApiTest {
         val config = config {
             returnConditionList = conditionList
         }
-        Api(mock(config)).conditionHints(6) shouldBe conditionList
+        apiWithKb(config).conditionHints(6) shouldBe conditionList
     }
 
     private fun conditionList(conditions: List<Condition>) =
@@ -217,7 +233,7 @@ class ApiTest {
             expectedRuleRequest = ruleRequest
             returnCaseAfterBuildingRule = caseToReturn
         }
-        Api(mock(config)).commitSession(ruleRequest) shouldBe caseToReturn
+        apiWithKb(config).commitSession(ruleRequest) shouldBe caseToReturn
     }
 
     @Test
@@ -232,7 +248,7 @@ class ApiTest {
             expectedSessionStartRequest = sessionStartRequest
             returnCornerstoneStatus = CornerstoneStatus()
         }
-        Api(mock(config)).startRuleSession(sessionStartRequest) shouldBe config.returnCornerstoneStatus
+        apiWithKb(config).startRuleSession(sessionStartRequest) shouldBe config.returnCornerstoneStatus
     }
 
     @Test
@@ -240,7 +256,7 @@ class ApiTest {
         val config = config {
             expectedSessionCancel = true
         }
-        Api(mock(config)).cancelRuleSession()
+        apiWithKb(config).cancelRuleSession()
     }
 
     @Test
@@ -260,7 +276,7 @@ class ApiTest {
             expectedUpdateCornerstoneRequest = request
             returnCornerstoneStatus = CornerstoneStatus(newCornerstone, 0, 1)
         }
-        Api(mock(config)).updateCornerstoneStatus(request) shouldBe config.returnCornerstoneStatus
+        apiWithKb(config).updateCornerstoneStatus(request) shouldBe config.returnCornerstoneStatus
     }
 
     @Test
@@ -271,7 +287,7 @@ class ApiTest {
             expectedCornerstoneIndex = 42
             returnCornerstoneStatus = updatedCornerstoneStatus
         }
-        Api(mock(config)).exemptCornerstone(42) shouldBe config.returnCornerstoneStatus
+        apiWithKb(config).exemptCornerstone(42) shouldBe config.returnCornerstoneStatus
     }
 
     @Test
@@ -282,7 +298,7 @@ class ApiTest {
             expectedCornerstoneIndex = 42
             returnCornerstoneStatus = updatedCornerstoneStatus
         }
-        Api(mock(config)).selectCornerstone(42) shouldBe config.returnCornerstoneStatus
+        apiWithKb(config).selectCornerstone(42) shouldBe config.returnCornerstoneStatus
     }
 
     @Test
@@ -294,7 +310,7 @@ class ApiTest {
             returnConditionParsingResult = ConditionParsingResult(condition)
         }
         val returned =
-            Api(mock(config)).conditionFor(config.expectedExpression)
+            apiWithKb(config).conditionFor(config.expectedExpression)
         returned shouldBe config.returnConditionParsingResult
     }
 
@@ -306,7 +322,7 @@ class ApiTest {
             returnConditionParsingResult = ConditionParsingResult(errorMessage = "unknown expression")
         }
         val returned =
-            Api(mock(config)).conditionFor(config.expectedExpression)
+            apiWithKb(config).conditionFor(config.expectedExpression)
         returned shouldBe config.returnConditionParsingResult
     }
 
@@ -350,13 +366,12 @@ class ApiTest {
         }
         val response = Api(mock(config)).startConversation(null, null)
         response shouldBe config.returnResponse
-        config.defaultKbFetches shouldBe 0
     }
 
     @Test
     fun `should return description of most recent rule`() = runTest {
         val config = config {}
-        with(Api(mock(config)).lastRuleDescription()) {
+        with(apiWithKb(config).lastRuleDescription()) {
             this.description shouldBe "It was a great rule, but it has to go."
             this.canRemove shouldBe true
         }
@@ -366,7 +381,7 @@ class ApiTest {
     fun `undo the last rule`() = runTest {
         val config = config {}
         config.lastRuleUndoCalled shouldBe false
-        Api(mock(config)).undoLastRule()
+        apiWithKb(config).undoLastRule()
         config.lastRuleUndoCalled shouldBe true
     }
 
@@ -378,7 +393,7 @@ class ApiTest {
             returnCaseReport = expectedReport
             expectedCaseId = caseId
         }
-        val result = Api(mock(config)).getCaseReport(caseId)
+        val result = apiWithKb(config).getCaseReport(caseId)
         result shouldBe expectedReport
     }
 

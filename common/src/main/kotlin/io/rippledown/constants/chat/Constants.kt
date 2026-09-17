@@ -1,5 +1,7 @@
 package io.rippledown.constants.chat
 
+const val LIST_CAPABILITIES = "ListCapabilities"
+
 const val CONFIRM = "confirm"
 const val SUGGESTION = "suggestion"
 const val REASON = "reason"
@@ -95,10 +97,15 @@ const val ADD_DEMONSTRATION_CASE = "AddDemonstrationCase"
 const val RENAME_KNOWLEDGE_BASE = "RenameKnowledgeBase"
 const val SHOW_KNOWLEDGE_BASE_DESCRIPTION = "ShowKnowledgeBaseDescription"
 const val SET_KNOWLEDGE_BASE_DESCRIPTION = "SetKnowledgeBaseDescription"
+const val IMPORT_KNOWLEDGE_BASE = "ImportKnowledgeBase"
+const val EXPORT_KNOWLEDGE_BASE = "ExportKnowledgeBase"
+const val KB_IMPORT_FILE_DIALOG_MESSAGE = "Choose a knowledge base ZIP file to import."
+
+fun kbExportFileDialogMessage(name: String) = "Choose where to save \"$name\" as a ZIP file."
 
 const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Do you want to see the list, or open or create one."
 const val KB_ACTION_DURING_RULE_MESSAGE =
-    "Please finish or cancel the current rule before opening, creating, closing or deleting a knowledge base."
+    "Please finish or cancel the current rule before opening, creating, closing, deleting, importing or exporting a knowledge base."
 const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."
 const val OPEN_SUFFIX = " (open)"
 const val KB_OPENED = "Opened"
@@ -109,6 +116,7 @@ const val CANNOT_BE_UNDONE = "This cannot be undone."
 const val DID_YOU_MEAN = "Did you mean"
 const val NO_KB_NAMED = "There is no knowledge base named"
 const val THE_KNOWLEDGE_BASES_ARE = "The knowledge bases are:"
+const val THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE = "The demonstration knowledge bases are:"
 const val MORE_THAN_ONE_KB_MATCHES = "More than one knowledge base matches"
 const val KB_ALREADY_EXISTS = "already exists"
 const val HAS_NO_CASES = "has no cases"
@@ -119,6 +127,33 @@ const val NO_KB_OPEN = "No knowledge base is open."
 const val NO_KBS_YET = "There are no knowledge bases yet."
 const val KB_NAME_CANNOT_BE_BLANK = "A knowledge base name cannot be blank."
 const val NAME_THE_NEW_KB = "What would you like to call it?"
+const val BLANK_NAME_MESSAGE = "Please give the new knowledge base a name."
+const val KB_NAME_RESERVED = "is the name of a demonstration knowledge base"
+const val KB_COPIED_FROM_DEMONSTRATION = "demonstration and opened it"
+const val CANNOT_BE_DELETED = "cannot be deleted"
+const val YOUR_KNOWLEDGE_BASES_TITLE = "Your knowledge bases"
+const val DEMONSTRATION_KNOWLEDGE_BASES_TITLE = "Demonstration knowledge bases"
+const val YOUR_KNOWLEDGE_BASES = "$YOUR_KNOWLEDGE_BASES_TITLE:"
+const val NO_KNOWLEDGE_BASES_OF_YOUR_OWN = "You have no knowledge bases of your own."
+const val DEMONSTRATION_KNOWLEDGE_BASES_HEADING =
+    "$DEMONSTRATION_KNOWLEDGE_BASES_TITLE (open one to get your own copy):"
+const val YOUR_KNOWLEDGE_BASES_HELP = "Click a knowledge base to open it."
+const val DEMONSTRATION_KNOWLEDGE_BASES_HELP =
+    "Click a demonstration to open it. You will get your own copy and be asked to give it a name."
+const val CURRENT_KB_LABEL = "(current)"
+
+fun kbNameReservedMessage(name: String) = "\"$name\" $KB_NAME_RESERVED; please choose another."
+fun kbCopiedFromDemonstrationMessage(name: String, title: String) =
+    "Created \"$name\" from the $title $KB_COPIED_FROM_DEMONSTRATION."
+
+fun nameForDemonstrationCopyMessage(title: String) =
+    "You will get your own copy of the $title demonstration. $NAME_THE_NEW_KB"
+
+fun cannotDeleteDemonstrationMessage(title: String) =
+    "$title is a demonstration knowledge base and $CANNOT_BE_DELETED. Your own copies can be."
+
+fun cannotDescribeDemonstrationMessage(title: String) =
+    "$title is a demonstration knowledge base and its description cannot be changed. Your own copies can be."
 
 fun kbOpenedMessage(name: String) = "$KB_OPENED \"$name\"."
 fun kbCreatedMessage(name: String) = "$KB_CREATED \"$name\"."
@@ -127,33 +162,45 @@ fun kbDeletedMessage(name: String) = "$KB_DELETED \"$name\"."
 fun kbRenamedMessage(oldName: String, newName: String) = "Renamed \"$oldName\" to \"$newName\"."
 fun kbAlreadyExistsMessage(name: String) = "A knowledge base named \"$name\" $KB_ALREADY_EXISTS."
 fun kbHasNoDescriptionMessage(name: String) = "\"$name\" has no description."
+fun kbDescriptionOfMessage(name: String, description: String) = "Description of \"$name\":\n$description"
 fun kbDescriptionUpdatedMessage(name: String) = "Description of \"$name\" updated."
 fun confirmKbDeletionMessage(name: String) =
     "Delete the knowledge base \"$name\"? $CANNOT_BE_UNDONE"
 
 fun confirmKbOpenMessage(name: String) = "$DID_YOU_MEAN \"$name\"?"
 fun confirmKbCreateMessage(newName: String, existingName: String) =
-    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well?."
+    "There is already a knowledge base \"$existingName\". Create \"$newName\" as well?"
 
-fun kbNotFoundMessage(name: String, available: List<String>) =
-    if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
+fun kbNotFoundMessage(name: String, available: List<String>, demonstrations: List<String> = emptyList()): String {
+    val message = if (available.isEmpty()) "$NO_KB_NAMED \"$name\". $NO_KNOWLEDGE_BASES"
     else "$NO_KB_NAMED \"$name\". $THE_KNOWLEDGE_BASES_ARE ${available.joinToString(", ")}."
+    return if (demonstrations.isEmpty()) message
+    else "$message $THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE ${demonstrations.joinToString(", ")}."
+}
 
 fun kbAmbiguousMessage(name: String, candidates: List<String>) =
     "$MORE_THAN_ONE_KB_MATCHES \"$name\": ${candidates.joinToString(", ")}. Which one?"
 
 fun demoCaseAddedMessage(caseName: String) = "$DEMO_CASE_ADDED \"$caseName\"."
 
-fun noKbGreeting(available: List<String>) =
-    if (available.isEmpty()) "$NO_KBS_YET Do you want to create one?"
-    else "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE${
-        available.joinToString(
-            prefix = "\n",
-            separator = "\n",
-            postfix = "\n"
-        )
-    }. " +
-            "Do you want to open one or create a new one?"
+fun noKbGreeting(available: List<String>, demonstrations: List<String> = emptyList()) =
+    if (available.isEmpty()) {
+        if (demonstrations.isEmpty()) "$NO_KBS_YET Do you want to create one?"
+        else "$NO_KBS_YET Do you want to create one, or open a demonstration knowledge base? " +
+                "$THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE ${demonstrations.sorted().joinToString(", ")}."
+    } else {
+        val demoPart = if (demonstrations.isEmpty()) ". " else "$THE_DEMONSTRATION_KNOWLEDGE_BASES_ARE ${
+            demonstrations.sorted().joinToString(", ")
+        }.\n"
+        "$NO_KB_OPEN $THE_KNOWLEDGE_BASES_ARE${
+            available.joinToString(
+                prefix = "\n",
+                separator = "\n",
+                postfix = "\n"
+            )
+        }$demoPart" +
+                "Do you want to open one or create a new one?"
+    }
 
 fun emptyKbGreeting(kbName: String) =
     "The $kbName knowledge base $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +

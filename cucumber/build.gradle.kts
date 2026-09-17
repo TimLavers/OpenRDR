@@ -22,6 +22,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.mockk)
+    testImplementation(libs.filekit.dialogs)
     testImplementation("com.google.genai:google-genai:1.46.0")
 }
 

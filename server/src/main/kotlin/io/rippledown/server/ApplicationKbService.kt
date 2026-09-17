@@ -2,12 +2,14 @@ package io.rippledown.server
 
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.KnowledgeBaseService
+import io.rippledown.kb.isDemonstrationTitle
 import io.rippledown.kb.nearDuplicateOf
 import io.rippledown.kb.resolveKbName
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.external.ExternalCase
+import io.rippledown.sample.SampleKB
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.serialization.json.Json
 
@@ -28,9 +30,13 @@ class ApplicationKbService(
 
     override fun knowledgeBases(): List<KBInfo> = application.kbList()
 
+    override fun demonstrations(): List<SampleKB> = SampleKB.demonstrations()
+
+    override fun isDemonstrationTitle(name: String): Boolean = isDemonstrationTitle(name, demonstrations())
+
     override fun openKnowledgeBase(): KBInfo? = openEndpoint()?.kbInfo()
 
-    override fun resolve(name: String): KbResolution = resolveKbName(name, knowledgeBases())
+    override fun resolve(name: String): KbResolution = resolveKbName(name, knowledgeBases(), demonstrations())
 
     override fun nearDuplicateOf(newName: String): KBInfo? = nearDuplicateOf(newName, knowledgeBases())
 
@@ -45,6 +51,12 @@ class ApplicationKbService(
         return created
     }
 
+    override suspend fun createFromSample(name: String, sample: SampleKB): KBInfo {
+        val created = application.createKBFromSample(name, sample)
+        webSocketManager.sendKbInfo(created)
+        return created
+    }
+
     override suspend fun close() {
         logger.info("Closing KB '${openKnowledgeBase()?.name}' on the client.")
         onClosed()
@@ -52,8 +64,9 @@ class ApplicationKbService(
     }
 
     override suspend fun delete(kbInfo: KBInfo) {
-        if (kbInfo == openKnowledgeBase()) close()
+        val wasOpen = kbInfo == openKnowledgeBase()
         application.deleteKB(kbInfo.id)
+        if (wasOpen) close()
     }
 
     override suspend fun addDemonstrationCase(): RDRCase {
@@ -70,11 +83,10 @@ class ApplicationKbService(
         return renamed
     }
 
-    override fun description(): String =
-        checkNotNull(openEndpoint()) { "No knowledge base is open." }.description()
+    override fun description(kbInfo: KBInfo): String = application.kbFor(kbInfo).description()
 
-    override fun setDescription(text: String) {
-        checkNotNull(openEndpoint()) { "No knowledge base is open." }.setDescription(text)
+    override fun setDescription(kbInfo: KBInfo, text: String) {
+        application.kbFor(kbInfo).setDescription(text)
     }
 
     override fun isRuleSessionActive() = openEndpoint()?.session?.ruleSessionManager?.isRuleSessionActive() == true

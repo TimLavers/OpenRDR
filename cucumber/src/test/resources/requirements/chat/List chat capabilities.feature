@@ -1,4 +1,7 @@
-Feature: List chat capabilities
+﻿Feature: List chat capabilities
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to see what chat capabilities are available
     Given cases are set up as follows:
@@ -9,11 +12,21 @@ Feature: List chat capabilities
     And the chatbot has asked if I want to add, remove or replace a comment
     When I ask what capabilities are available
     Then the capabilities shown include:
-      | add       |
-      | remove    |
-      | replace   |
-      | review    |
-      | suggested |
-      | undo      |
-      | reorder   |
-      | cancel    |
+      | add           |
+      | remove        |
+      | replace       |
+      | review        |
+      | suggested     |
+      | undo          |
+      | reorder       |
+      | cancel        |
+      | import        |
+      | export        |
+      | ZIP           |
+      | demonstration |
+      | copy          |
+      | description   |
+      | definition    |
+      | favourites    |
+      | reasons       |
+    And the capabilities are shown in a formatted card

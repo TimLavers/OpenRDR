@@ -1,5 +1,8 @@
-@delay_after_cuke
+﻿@delay_after_cuke
 Feature: Navigate cases via up and down arrow keys
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The user should be able to navigate to the next case via the down arrow key
     Given a list of cases with the following names is stored on the server:

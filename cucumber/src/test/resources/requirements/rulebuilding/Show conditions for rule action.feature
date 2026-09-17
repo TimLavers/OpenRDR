@@ -1,4 +1,7 @@
-Feature: While building a rule, hovering over the rule action in the interpretation panel should show the conditions so far
+﻿Feature: While building a rule, hovering over the rule action in the interpretation panel should show the conditions so far
+
+  Background:
+    Given a default KB is opened
 
   Scenario: Should show conditions when hovering over an added comment during rule building
     Given case Bondi is provided having data:

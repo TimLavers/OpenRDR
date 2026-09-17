@@ -9,6 +9,11 @@ trigger: always_on
 - Never use `relaxed = true` on a mockk as this is set globally anyhow.
 - Stub each call the test needs.
 - Structure each test with `// Given`, `// When`, `// Then` comments.
+- Coverage is a review prompt, not a gate. After writing or changing the tests of a class in `common`, `server`, `hints`
+  or `chat`,
+  generate the Kover report (see running-tests) and read the uncovered lines of the classes you touched. Each one is
+  either a case the test missed (add it) or a line that should not exist (remove it, e.g. a guard for an impossible
+  state). Never add a test whose only purpose is to colour a line green.
 - Never weaken or delete an assertion to get a green build. Deleting a test is acceptable only when the behaviour it
   pinned has genuinely gone — say so explicitly when you do it.
 - Never reuse an attribute id across fixtures in the same test. `Attribute.equals` is id-only, so a duplicate id

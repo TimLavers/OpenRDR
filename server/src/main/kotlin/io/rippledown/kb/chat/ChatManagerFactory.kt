@@ -18,16 +18,24 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
     fun create(context: ChatContext): ChatManager {
         val kbNames = kbService.knowledgeBases().map { it.name }
         val kbName = context.kbInfoOrNull?.name
+        val demonstrationNames = kbService.demonstrations().map { it.title() }
         return when (context) {
             is ChatContext.CaseInKnowledgeBase ->
-                forCase(context.viewableCase, context.endpoint.session.ruleSessionManager, kbName, kbNames)
+                forCase(
+                    context.viewableCase,
+                    context.endpoint.session.ruleSessionManager,
+                    kbName,
+                    kbNames,
+                    demonstrationNames
+                )
 
-            else -> caseLess(kbName, kbNames)
+            else -> caseLess(kbName, kbNames, demonstrationNames)
         }
     }
 
-    private fun caseLess(kbName: String?, kbNames: List<String>): ChatManager {
-        val chatService = KBChatService.createKBChatService(null, kbName, kbNames)
+    private fun caseLess(kbName: String?, kbNames: List<String>, demonstrationNames: List<String>): ChatManager {
+        val chatService =
+            KBChatService.createKBChatService(null, kbName, kbNames, demonstrationNames = demonstrationNames)
         val conversation = Conversation(chatService, emptyMap(), openingMessage = null)
         return ChatManager(conversation, null, kbService)
     }
@@ -36,14 +44,16 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
         viewableCase: ViewableCase,
         ruleSessionManager: RuleSessionManager,
         kbName: String?,
-        kbNames: List<String>
+        kbNames: List<String>,
+        demonstrationNames: List<String>
     ): ChatManager {
         val chatService = KBChatService.createKBChatService(
             viewableCase,
             kbName,
             kbNames,
             ruleSessionManager::attributeById,
-            ruleSessionManager.allAttributes()
+            ruleSessionManager.allAttributes(),
+            demonstrationNames
         )
         // The reason transformer needs the chat manager, which is created after the conversation.
         lateinit var chatManager: ChatManager

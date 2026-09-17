@@ -21,6 +21,6 @@ fun loadSampleKB(kbEndpoint: KBEndpoint, sampleKB: SampleKB) {
         CONTACT_LENSES_CASES -> ContactLensesSampleBuilder(kbEndpoint).setupCases()
         ZOO -> ZooSampleBuilder(kbEndpoint).buildRules()
         ZOO_CASES -> ZooSampleBuilder(kbEndpoint).setupCases()
-        DEMO -> DemoSampleBuilder(kbEndpoint).setupCases()
+        PATHOLOGY -> DemoSampleBuilder(kbEndpoint).setupCases()
     }
 }

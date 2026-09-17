@@ -1,12 +1,12 @@
-Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cornerstones, and historical conditions, and capped at a usable size.
+﻿Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cornerstones, and historical conditions, and capped at a usable size.
 
   # This file specifies the *intended* behaviour after Phase 1 of the
   # targeted-suggested-conditions design (see
   # documentation/design/targeted_suggested_conditions.md).
   #
   # Three sets of scenarios:
-  #   Set A — Action targeting
-  #   Set B — Cornerstone discrimination
+  # Set A — Action targeting
+  # Set B — Cornerstone discrimination
   #   Set C — Historical conditions.
   #
   # Plus one limit scenario at the start to verify the cap on the total number of suggestions.
@@ -14,6 +14,9 @@ Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cor
   ##############################################################################
   # Hard cap on number of suggestions
   ##############################################################################
+
+  Background:
+    Given a default KB is opened
 
   Scenario: The number of suggestions presented to the user is capped at 20
     # Cap chosen so the list is comfortably scannable end-to-end. Ranking

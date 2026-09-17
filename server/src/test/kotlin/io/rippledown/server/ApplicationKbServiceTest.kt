@@ -13,6 +13,8 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
+import io.rippledown.sample.SampleKB
+import io.rippledown.sample.SampleKB.ZOO
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -72,9 +74,101 @@ class ApplicationKbServiceTest {
         // When / Then
         service.resolve("thyroids") shouldBe KbResolution.Exact(thyroids)
         service.resolve("thyroid") shouldBe KbResolution.Partial(thyroids)
-        service.resolve("Lipids") shouldBe KbResolution.NotFound("Lipids", listOf("Thyroids"))
+        service.resolve("Lipids") shouldBe KbResolution.NotFound(
+            "Lipids", listOf("Thyroids"), SampleKB.demonstrations().map { it.title() }.sorted()
+        )
         service.nearDuplicateOf("Thyroid") shouldBe thyroids
         service.nearDuplicateOf("Lipids").shouldBeNull()
+    }
+
+    @Test
+    fun `resolve finds a demonstration when no stored knowledge base has its name`() {
+        // Given
+        app.createKB("Thyroids", false)
+
+        // When
+        val resolution = service.resolve("Zoo Animals")
+
+        // Then
+        resolution shouldBe KbResolution.Demonstration(ZOO)
+    }
+
+    @Test
+    fun `demonstrations returns the sample recipes without storing knowledge bases`() {
+        // Given
+        val expected = SampleKB.demonstrations()
+
+        // When
+        val demonstrations = service.demonstrations()
+
+        // Then
+        demonstrations shouldBe expected
+        app.kbList() shouldBe emptyList()
+    }
+
+    @Test
+    fun `demonstration title check distinguishes demonstration and stored names`() {
+        // Given
+        app.createKB("Thyroids", false)
+        val names = listOf("pathology", "Thyroids", " Zoo Animals ", "Zoo", " ")
+
+        // When
+        val results = names.map { service.isDemonstrationTitle(it) }
+
+        // Then
+        results shouldBe listOf(true, false, true, false, false)
+    }
+
+    @Test
+    fun `a legacy stored exact name still takes precedence over a demonstration`() {
+        // Given
+        val persistence = InMemoryPersistenceProvider()
+        val zoo = KBInfo("legacy_zoo", "Zoo Animals")
+        persistence.createKBPersistence(zoo)
+        app = ServerApplication(persistence, webSocketManager)
+        service = ApplicationKbService(app, webSocketManager, { openEndpoint }, { closedCount++ }, { now })
+
+        // When
+        val resolution = service.resolve("Zoo Animals")
+
+        // Then
+        resolution shouldBe KbResolution.Exact(zoo)
+    }
+
+    @Test
+    fun `create from sample builds the KB before pushing its KBInfo to the client`() = runBlocking<Unit> {
+        // Given
+        var processedCountWhenPushed: Int? = null
+        coEvery { webSocketManager.sendKbInfo(any()) } answers {
+            processedCountWhenPushed = app.kbForId(firstArg<KBInfo>().id).kb.processedCaseIds().size
+        }
+
+        // When
+        val created = service.createFromSample("Zoo2", ZOO)
+
+        // Then
+        created.name shouldBe "Zoo2"
+        app.kbList() shouldBe listOf(created)
+        app.kbForId(created.id).kb.processedCaseIds() shouldHaveSize 101
+        app.kbForId(created.id).kb.ruleTree.size() shouldBe 18L
+        processedCountWhenPushed shouldBe 101
+        coVerify(exactly = 1) { webSocketManager.sendKbInfo(created) }
+    }
+
+    @Test
+    fun `create from sample refuses a name clash and pushes nothing`() = runBlocking<Unit> {
+        // Given
+        val existing = app.createKB("Zoo2", false)
+
+        // When
+        shouldThrow<IllegalArgumentException> {
+            service.createFromSample("zoo2", ZOO)
+        }
+
+        // Then
+        app.kbList() shouldBe listOf(existing)
+        app.kbForId(existing.id).kb.processedCaseIds() shouldBe emptyList()
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(any()) }
     }
 
     @Test
@@ -151,7 +245,7 @@ class ApplicationKbServiceTest {
     }
 
     @Test
-    fun `deleting the open KB closes it first`() = runBlocking<Unit> {
+    fun `deleting the open KB also closes it`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
@@ -164,6 +258,21 @@ class ApplicationKbServiceTest {
         app.kbList() shouldBe emptyList()
         coVerify(exactly = 1) { webSocketManager.sendKbClosed() }
         closedCount shouldBe 1
+    }
+
+    @Test
+    fun `deleting the open KB removes it from the list before telling the client`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        openEndpoint = app.kbForId(thyroids.id)
+        var listWhenClosed: List<KBInfo>? = null
+        coEvery { webSocketManager.sendKbClosed() } answers { listWhenClosed = app.kbList() }
+
+        // When
+        service.delete(thyroids)
+
+        // Then
+        listWhenClosed shouldBe emptyList()
     }
 
     @Test
@@ -187,16 +296,20 @@ class ApplicationKbServiceTest {
     }
 
     @Test
-    fun `description operations use the open KB`() {
+    fun `description operations address the given KB, open or not`() {
         // given
         val thyroids = app.createKB("Thyroids", false)
+        val glucose = app.createKB("Glucose", false)
         openEndpoint = app.kbForId(thyroids.id)
 
         // when
-        service.setDescription("A thyroid knowledge base.")
+        service.setDescription(thyroids, "A thyroid knowledge base.")
+        service.setDescription(glucose, "Glucose rules.")
 
         // then
-        service.description() shouldBe "A thyroid knowledge base."
+        service.description(thyroids) shouldBe "A thyroid knowledge base."
+        service.description(glucose) shouldBe "Glucose rules."
+        app.kbForId(glucose.id).description() shouldBe "Glucose rules."
     }
 
     @Test
