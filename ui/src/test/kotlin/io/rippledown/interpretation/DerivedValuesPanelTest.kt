@@ -199,7 +199,7 @@ class DerivedValuesPanelTest {
 
             // Then its tooltip details still exist in the accessibility tree
             onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}").assertExists()
-            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions.single()}").assertExists()
+            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions.single().formal}").assertExists()
         }
     }
 

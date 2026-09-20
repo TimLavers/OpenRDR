@@ -52,6 +52,7 @@ const val CANCEL_BUTTON_FOR_REPLACE_COMMENT = "$REPLACEMENT_COMMENT_PREFIX$CANCE
 const val CANCEL_BUTTON_FOR_REMOVE_COMMENT = "$REMOVE_COMMENT_PREFIX$CANCEL"
 
 const val CONDITION_PREFIX = "CONDITION_PREFIX"
+const val CONDITION_PHRASE_PREFIX = "CONDITION_PHRASE_PREFIX"
 
 // Comments panel table constants. Each comment is a row of the two column
 // table, identified by the name of the comment attribute that gave it.

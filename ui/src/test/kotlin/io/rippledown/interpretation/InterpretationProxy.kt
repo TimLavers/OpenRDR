@@ -518,3 +518,22 @@ fun ComposeTestRule.requireConditionsToBeShowing(conditions: List<String>) {
 fun ComposeTestRule.requireNoConditionsToBeShowing() {
     onAllNodesWithContentDescription(label = CONDITION_PREFIX, substring = true).assertCountEquals(0)
 }
+
+fun ComposeTestRule.requireConditionPhrasesToBeShowing(vararg phrases: String) {
+    phrases.forEach { phrase ->
+        waitUntilAsserted {
+            onNodeWithContentDescription("$CONDITION_PHRASE_PREFIX$phrase")
+                .assertIsDisplayed()
+                .assertTextEquals(phrase)
+        }
+    }
+}
+
+fun ComposeTestRule.requireNoConditionPhraseFor(formal: String) {
+    onNodeWithContentDescription("$CONDITION_PREFIX$formal")
+        .assertIsDisplayed()
+        .onParent()
+        .onChildren()
+        .filter(hasContentDescription(CONDITION_PHRASE_PREFIX, substring = true))
+        .assertCountEquals(0)
+}

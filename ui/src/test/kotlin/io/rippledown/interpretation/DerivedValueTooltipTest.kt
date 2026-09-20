@@ -14,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DERIVED_VALUE_CONDITIONS_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.utils.asConditionTexts
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -26,22 +27,26 @@ class DerivedValueTooltipTest {
 
     @Test
     fun `shows formula and conditions for a non-literal formula`() = runTest {
+        // Given a derived value with a distinct phrase and a condition with no phrase
         val info = DerivedValueInfo(
             name = "BMI",
             value = "25.3",
             formula = "Weight / (Height * Height)",
-            conditions = listOf("Weight is high", "Height is high").asConditionTexts()
+            conditions = listOf(ConditionText("Weight is high", "heavy"), ConditionText("Height is high"))
         )
 
         with(composeTestRule) {
+            // When
             setContent { DerivedValueTooltip(info) }
 
+            // Then the formula, phrase and formal conditions are displayed
             onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}")
                 .assertIsDisplayed()
             info.conditions.forEach { condition ->
-                onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX$condition")
+                onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${condition.formal}")
                     .assertIsDisplayed()
             }
+            requireConditionPhrasesToBeShowing("heavy")
         }
     }
 
@@ -61,7 +66,7 @@ class DerivedValueTooltipTest {
                 label = DERIVED_VALUE_FORMULA_PREFIX,
                 substring = true
             ).assertCountEquals(0)
-            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions[0]}")
+            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions[0].formal}")
                 .assertIsDisplayed()
         }
     }

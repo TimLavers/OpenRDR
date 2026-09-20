@@ -5,12 +5,17 @@ package io.rippledown.interpretation
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.sp
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.interpretation.CONDITION_PHRASE_PREFIX
+import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.model.IntRangeData
 import io.rippledown.model.RenderedComment
@@ -164,8 +169,13 @@ class CommentPartTest {
 
     @Test
     fun `should show the conditions of the rule that gave the comment when hovered over`() = runTest {
-        // Given a condition with a phrase carried to the client
-        val conditions = listOf(ConditionText("Sex is F", "female"), ConditionText("Age is high"))
+        // Given distinct, absent, whitespace-only and identical phrases in one tooltip
+        val conditions = listOf(
+            ConditionText("Sex is F", "female"),
+            ConditionText("Age is high"),
+            ConditionText("Glucose is high", " \t"),
+            ConditionText("Weight is high", "Weight is high")
+        )
         val comment = RenderedComment(text = "Go to Bondi.", conditions = conditions, name = "C1")
         with(composeTestRule) {
             showPart(comment)
@@ -173,9 +183,23 @@ class CommentPartTest {
             //When
             hoverOverTheComment()
 
-            //Then
+            // Then every formal condition remains visible, with only the distinct phrase added
             requireConditionsToBeShowing(conditions.map { it.formal })
-            onNodeWithText("female").assertDoesNotExist()
+            requireConditionPhrasesToBeShowing("female")
+            conditions.forEach { condition ->
+                onAllNodesWithText(condition.formal).assertCountEquals(1)
+            }
+            conditions.drop(1).forEach { requireNoConditionPhraseFor(it.formal) }
+            onNodeWithText(" \t").assertDoesNotExist()
+
+            // And the formal text sits beneath the phrase in a smaller, grey style
+            val phrase = onNodeWithContentDescription("${CONDITION_PHRASE_PREFIX}female")
+            val formal = onNodeWithContentDescription("${CONDITION_PREFIX}Sex is F")
+            (phrase.fetchSemanticsNode().boundsInRoot.bottom <= formal.fetchSemanticsNode().boundsInRoot.top) shouldBe true
+            val layouts = mutableListOf<TextLayoutResult>()
+            formal.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            layouts.single().layoutInput.style.fontSize shouldBe 12.sp
+            layouts.single().layoutInput.style.color shouldBe Color.Gray
         }
     }
 

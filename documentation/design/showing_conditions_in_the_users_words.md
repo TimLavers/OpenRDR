@@ -1,13 +1,12 @@
 # Showing conditions in the user's own words
 
-Status: stage 1 implemented. Both texts reach the client; phrase display and renaming are still pending.
+Status: stages 1 and 2 implemented. Tooltips show both texts; the previous-phrase note and renaming are still pending.
 
 ## The idea
 
 When a user gives the reason for a rule action (add, remove or replace a comment, assign a derived value), they type
 a phrase in their own words, e.g. `elevated glucose`, and the system translates it to a formal condition,
-`Glucose is high`. Today only the formal text is ever shown again: in the comment tooltip, in the cornerstone view
-and in the rule summary.
+`Glucose is high`. Previously only the formal text was shown again in tooltips and rule summaries.
 
 The proposal is to remember the user's phrase and show it wherever the condition is displayed, with the formal text
 alongside it as the authoritative form.
@@ -33,13 +32,13 @@ Most of the storage side is already built:
 - `ConditionGenerator.conditionFor` fills it with the phrase the user typed.
 - `Condition.sameAs` ignores it, and `ConditionManager.getOrCreate` dedupes on `sameAs`, so a phrase is attached to a
   condition only when that condition is first created.
-- Its only consumer is `ReasonTransformation`, which compares it with `asText()` to decide whether to tell the user
+- `ReasonTransformation` compares it with `asText()` to decide whether to tell the user
   "I interpreted that as ...".
 
 Conditions created from suggestions, or by editing a suggestion's value, have a blank `userExpression` or one equal
 to `asText()`.
 
-What is missing is display, and a way to change the phrase.
+Display is implemented. The previous-phrase note and a way to change the phrase remain to be built.
 
 ## Design
 
@@ -61,8 +60,12 @@ edited conditions.
 
 `ConditionText(formal, phrase)` now carries both texts through `Rule.conditionsFromRoot()`,
 `RuleSummary.conditionsFromRoot`, interpretation assignments, rendered comments, derived values and cornerstone
-status to the client. Conditions retain their existing case-insensitive ordering by formal text. In stage 1,
-tooltips and their accessibility descriptions still render formal text only; phrase display is the next stage.
+status to the client. Conditions retain their existing case-insensitive ordering by formal text. Comment,
+cornerstone and derived-value tooltips share the same renderer: a distinct non-blank phrase appears above the
+formal text, which is smaller and grey. Otherwise only the formal text appears.
+
+Formal-text accessibility identifiers remain unchanged. Phrase nodes use `CONDITION_PHRASE_PREFIX` followed by
+the phrase, and each condition groups its phrase and formal text without merging their individual nodes.
 
 ### Text supplied to the language model
 
