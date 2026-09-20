@@ -917,7 +917,8 @@ class RuleSessionManager(
     /**
      * The stored form of [condition], or the reason it cannot be used as a
      * condition of the rule being built. [expression] is what the user gave, so
-     * that a condition that does not hold can be reported in their own words.
+     * that a condition that does not hold can be reported in their own words,
+     * and a different phrase on a reused condition can be explained.
      */
     private fun validated(
         condition: Condition?,
@@ -930,23 +931,23 @@ class RuleSessionManager(
         //Only return the condition if non-null and holds for the case
         val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {
-            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION, expression = expression)
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
-            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION, expression = expression)
         } else if (!condition.holds(materialisedCase)) {
             val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
                 INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
             } else {
                 CONDITION_IS_NOT_TRUE
             }
-            ConditionParsingResult(errorMessage = message)
+            ConditionParsingResult(errorMessage = message, expression = expression)
         } else {
             val cycleError = cycleMessageFor(condition)
             if (cycleError != null) {
-                ConditionParsingResult(errorMessage = cycleError)
+                ConditionParsingResult(errorMessage = cycleError, expression = expression)
             } else {
                 //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-                ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
+                ConditionParsingResult(kb.conditionManager.getOrCreate(condition), expression = expression)
             }
         }
     }

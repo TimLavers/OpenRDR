@@ -485,6 +485,7 @@ class RuleSessionManagerAssignmentTest {
 
         // Then the result carries the cycle message
         result.condition.shouldBeNull()
+        result.expression shouldBe "Diabetes status is in case"
         result.errorMessage shouldBe "This condition cannot be used: it would make \"Risk level\" depend on itself " +
                 "(Risk level → Diabetes status → Risk level)."
     }

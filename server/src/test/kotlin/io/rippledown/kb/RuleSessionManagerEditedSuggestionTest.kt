@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import io.rippledown.chat.toExpressionTransformation
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
 import io.rippledown.constants.rule.NOT_A_VALID_VALUE
 import io.rippledown.model.Attribute
@@ -10,9 +11,10 @@ import io.rippledown.model.condition.edit.EditableLessThanEqualsCondition
 import io.rippledown.model.condition.edit.EditableValue
 import io.rippledown.model.condition.edit.Type
 import io.rippledown.model.condition.episodic.signature.Current
+import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.server.websocket.WebSocketManager
+import org.junit.jupiter.api.Test
 import kotlin.test.BeforeTest
-import kotlin.test.Test
 
 /**
  * The value of an editable suggestion is substituted by the server, so that
@@ -41,6 +43,7 @@ class RuleSessionManagerEditedSuggestionTest : KBTestBase() {
         // Then the condition is the suggestion with that value, and it is usable
         result.isFailure shouldBe false
         result.condition?.asText() shouldBe "Waves ≤ 1.7"
+        result.expression shouldBe "Waves ≤ 1.7"
     }
 
     @Test
@@ -55,6 +58,7 @@ class RuleSessionManagerEditedSuggestionTest : KBTestBase() {
         // Then the condition is refused, in terms of the case rather than of the user's wording
         result.condition shouldBe null
         result.errorMessage shouldBe CONDITION_IS_NOT_TRUE
+        result.expression shouldBe "Waves ≥ 1.7"
     }
 
     @Test
@@ -69,5 +73,24 @@ class RuleSessionManagerEditedSuggestionTest : KBTestBase() {
         // Then the value is refused, naming the suggestion as it stands
         result.condition shouldBe null
         result.errorMessage shouldBe NOT_A_VALID_VALUE.format("high", "Waves ≤ 1.5")
+    }
+
+    @Test
+    fun `reusing a phrased condition from an edited suggestion does not report a different phrase`() {
+        // Given an existing condition with a phrase, also reachable by editing a suggestion
+        val case = createCase("Bondi", attribute = waves, value = "1.5")
+        val stored = kb.conditionManager.getOrCreate(
+            lessThanOrEqualTo(null, waves, 1.7).copy(userExpression = "small waves")
+        )
+        val suggestion = EditableLessThanEqualsCondition(waves, EditableValue("1.5", Type.Real), Current)
+
+        // When
+        val result = rsm.conditionForEditedSuggestion(case.case, suggestion, "1.7")
+
+        // Then the incoming expression is formal, leaving the phrase and existing response intact
+        result.condition shouldBe stored
+        result.expression shouldBe "Waves ≤ 1.7"
+        result.condition?.userExpression() shouldBe "small waves"
+        result.toExpressionTransformation().message shouldBe "Added your reason 'Waves ≤ 1.7'."
     }
 }

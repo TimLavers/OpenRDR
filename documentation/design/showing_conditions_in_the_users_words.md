@@ -1,6 +1,7 @@
 # Showing conditions in the user's own words
 
-Status: stages 1 and 2 implemented. Tooltips show both texts; the previous-phrase note and renaming are still pending.
+Status: stages 1–3 implemented. Tooltips show both texts and chat reports a different stored phrase; renaming is
+pending.
 
 ## The idea
 
@@ -38,7 +39,7 @@ Most of the storage side is already built:
 Conditions created from suggestions, or by editing a suggestion's value, have a blank `userExpression` or one equal
 to `asText()`.
 
-Display is implemented. The previous-phrase note and a way to change the phrase remain to be built.
+Display and the previous-phrase note are implemented. A way to change the phrase remains to be built.
 
 ## Design
 
@@ -97,7 +98,15 @@ This is also what the code does now, by accident of `getOrCreate` returning the 
 When a reason resolves to an existing condition whose stored phrase differs from what was typed, the "interpreted
 as" message says so:
 
-> `raised glucose` → `Glucose is high` (you previously called this `elevated glucose`).
+> Added your reason 'Glucose is high' (you previously called this 'elevated glucose').
+
+`ConditionParsingResult.expression` carries the incoming wording separately from the stored condition. The note
+appears when that wording is non-blank, differs from both formal text and stored phrase, and the stored phrase is
+non-blank. Comparisons are exact. Otherwise the existing transformation response is retained. Edited suggestions
+use the edited condition's formal text as the incoming expression, so they do not trigger the note.
+
+The function handler preserves the message in its JSON response, and the chat instructions require the model to
+relay it verbatim before the usual follow-up question. Validation failures retain their existing error message.
 
 This is deterministic (the server compares the incoming phrase with the stored one), asks nothing, and gives the
 user the information they need to decide whether to rename. It fits the chat guidelines: no question, no control,
