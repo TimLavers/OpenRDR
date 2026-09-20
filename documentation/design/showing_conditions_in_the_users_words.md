@@ -1,7 +1,7 @@
 # Showing conditions in the user's own words
 
-Status: stages 1–4 implemented. Phrase display, the previous-phrase note and renaming are implemented;
-cucumber verification and close-out remain.
+Status: stages 1–4 implemented; stage 5 cucumber scenarios and steps added and dry-run verified.
+Live cucumber verification and close-out remain.
 
 ## The idea
 
@@ -141,3 +141,15 @@ updates. Showing both texts is the mitigation; no attempt is made to rewrite phr
 3. The rename action and its chat instruction.
 
 Each step is independently useful and can land on its own.
+
+## Acceptance coverage
+
+`cucumber/src/test/resources/requirements/rulebuilding/Conditions in the users words.feature` contains three
+independent scenarios covering phrase/formal display, reuse of the first phrase with the chat note, and renaming
+a shared condition across both comment tooltips. The phrase step reads rendered text from
+`CONDITION_PHRASE_PREFIX` nodes and checks the complete list, including the absence of the old phrase after renaming.
+
+The seven mocked accessibility page-object tests pass, all 210 cucumber scenarios resolve in dry-run mode, and
+UI test sources compile. Live desktop/model scenarios have not been run. On the first live run, confirm that
+`elevated glucose` is captured as the phrase for `Glucose is high` in `temp/logs/server.log` before relying on the
+reuse and rename scenarios.

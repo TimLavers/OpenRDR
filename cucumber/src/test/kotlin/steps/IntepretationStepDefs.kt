@@ -14,6 +14,11 @@ class IntepretationStepDefs {
         interpretationViewPO().waitForConditionsForComment(comment, conditions.asList())
     }
 
+    @And("the condition phrases shown should be:")
+    fun requireConditionPhrasesToBeShowing(phrases: DataTable) {
+        interpretationViewPO().waitForConditionPhrasesToBeShowing(phrases.asList())
+    }
+
     @And("no conditions should be showing for the comment {string}")
     fun requireNoConditionsForComment(comment: String) {
         interpretationViewPO().movePointerToComment(comment)
