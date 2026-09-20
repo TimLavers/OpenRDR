@@ -3,6 +3,7 @@ package io.rippledown.kb
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.rule.*
 import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
@@ -128,9 +129,9 @@ class InterpretationViewManagerTest {
     fun `a rendered comment from an assignment carries the conditions of the rule that gave it`() {
         //Given a comment assignment given by a rule with conditions
         val assignment = AssignValue(c1, CommentTemplate("Diabetic diet advice given."))
-        val conditions = listOf("Glucose is high", "Age > 40")
+        val conditions = listOf(ConditionText("Glucose is high", "elevated glucose"), ConditionText("Age > 40"))
         val interpretation = interpretation(
-            RuleSummary(id = 1, assignment = assignment, conditionTextsFromRoot = conditions)
+            RuleSummary(id = 1, assignment = assignment, conditionsFromRoot = conditions)
         )
 
         //When

@@ -27,6 +27,7 @@ import io.rippledown.interpretation.InterpretationView
 import io.rippledown.interpretation.InterpretationViewHandler
 import io.rippledown.interpretation.ReportView
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.DerivedValueChange
 import io.rippledown.model.diff.Diff
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,7 +38,7 @@ interface CaseInspectionHandler : CaseViewHandler, InterpretationViewHandler
 fun CaseInspection(
     case: ViewableCase,
     diff: Diff? = null,
-    ruleConditions: List<String> = emptyList(),
+    ruleConditions: List<ConditionText> = emptyList(),
     handler: CaseInspectionHandler,
     modifier: Modifier = Modifier,
     filter: String = "",

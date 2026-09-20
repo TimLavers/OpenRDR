@@ -5,6 +5,7 @@ import io.rippledown.model.caseview.DerivedValueInfo
 import io.rippledown.model.diff.DerivedValueAddition
 import io.rippledown.model.diff.DerivedValueRemoval
 import io.rippledown.model.diff.DerivedValueReplacement
+import io.rippledown.utils.asConditionTexts
 import kotlin.test.Test
 
 class DerivedValueRowsTest {
@@ -13,7 +14,7 @@ class DerivedValueRowsTest {
         name = "BMI",
         value = "30.93",
         formula = "weight / height ^ 2",
-        conditions = listOf("Weight is high")
+        conditions = listOf("Weight is high").asConditionTexts()
     )
     private val risk = DerivedValueInfo(
         name = "Risk",
@@ -42,7 +43,7 @@ class DerivedValueRowsTest {
         val rows = rowsToDisplay(
             listOf(alpha, zeta),
             DerivedValueAddition("Mu", "\"2\""),
-            ruleConditions = listOf("Sex is F")
+            ruleConditions = listOf("Sex is F").asConditionTexts()
         )
 
         // Then the new row is in name order and marked as added
@@ -61,7 +62,7 @@ class DerivedValueRowsTest {
         val rows = rowsToDisplay(
             emptyList(),
             DerivedValueAddition("BMI", "weight / height ^ 2"),
-            ruleConditions = listOf("Weight is high")
+            ruleConditions = listOf("Weight is high").asConditionTexts()
         )
 
         // Then the row shows the formula the rule will give the attribute rather
@@ -70,7 +71,7 @@ class DerivedValueRowsTest {
             name = "BMI",
             value = "{weight / height ^ 2}",
             formula = "weight / height ^ 2",
-            conditions = listOf("Weight is high")
+            conditions = listOf("Weight is high").asConditionTexts()
         )
     }
 
@@ -124,7 +125,7 @@ class DerivedValueRowsTest {
         val rows = rowsToDisplay(
             listOf(bmi),
             DerivedValueReplacement("BMI", "weight / height ^ 3"),
-            ruleConditions = listOf("Height is high")
+            ruleConditions = listOf("Height is high").asConditionTexts()
         )
 
         // Then a single row shows the current value plus the definition replacing it
@@ -134,7 +135,7 @@ class DerivedValueRowsTest {
             info.value shouldBe "30.93"
             newFormula shouldBe "{weight / height ^ 3}"
             info.formula shouldBe "weight / height ^ 3"
-            info.conditions shouldBe listOf("Height is high")
+            info.conditions shouldBe listOf("Height is high").asConditionTexts()
         }
     }
 

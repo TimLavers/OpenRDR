@@ -30,9 +30,9 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo, showFormula: Boolean = 
         }
         info.conditions.forEach { condition ->
             Text(
-                text = condition,
+                text = condition.formal,
                 modifier = Modifier.padding(4.dp)
-                    .semantics { contentDescription = "$DERIVED_VALUE_CONDITIONS_PREFIX$condition" }
+                    .semantics { contentDescription = "$DERIVED_VALUE_CONDITIONS_PREFIX${condition.formal}" }
             )
         }
     }

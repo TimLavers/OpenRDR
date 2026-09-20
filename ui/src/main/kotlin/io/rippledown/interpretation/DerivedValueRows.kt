@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import io.rippledown.model.caseview.DerivedValueInfo
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.DerivedValueAddition
 import io.rippledown.model.diff.DerivedValueChange
 import io.rippledown.model.diff.DerivedValueRemoval
@@ -50,7 +51,7 @@ data class DerivedValueRowState(
 fun rowsToDisplay(
     derivedValues: List<DerivedValueInfo>,
     change: DerivedValueChange? = null,
-    ruleConditions: List<String> = emptyList()
+    ruleConditions: List<ConditionText> = emptyList()
 ): List<DerivedValueRowState> {
     if (change == null) return derivedValues.map { DerivedValueRowState(it) }
 

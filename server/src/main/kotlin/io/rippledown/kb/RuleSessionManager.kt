@@ -20,6 +20,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
@@ -868,7 +869,7 @@ class RuleSessionManager(
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
         val session = activeRuleSession()
         val cornerstones: List<RDRCase> = session.cornerstoneCases()
-        val conditionTexts = session.conditions.map { it.asText() }
+        val conditionTexts = session.conditions.map { ConditionText.of(it) }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
             pendingChange = pendingChange,
             ruleConditions = conditionTexts

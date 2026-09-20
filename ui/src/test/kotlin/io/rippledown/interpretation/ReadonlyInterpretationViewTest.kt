@@ -320,7 +320,7 @@ class ReadonlyInterpretationViewTest {
                 ReadonlyInterpretationView(
                     createViewableInterpretation(),
                     diff = Addition(addedComment, "C99"),
-                    ruleConditions = ruleConditions,
+                    ruleConditions = ruleConditions.asConditionTexts(),
                     modifier = modifier,
                     handler = handler
                 )
@@ -343,7 +343,7 @@ class ReadonlyInterpretationViewTest {
                 ReadonlyInterpretationView(
                     createViewableInterpretation(mapOf(bondiComment to emptyList())),
                     diff = Removal(bondiComment, firstName),
-                    ruleConditions = ruleConditions,
+                    ruleConditions = ruleConditions.asConditionTexts(),
                     modifier = modifier,
                     handler = handler
                 )
@@ -368,7 +368,7 @@ class ReadonlyInterpretationViewTest {
                 ReadonlyInterpretationView(
                     createViewableInterpretation(mapOf(bondiComment to emptyList())),
                     diff = Replacement(bondiComment, replacementComment, "C99"),
-                    ruleConditions = ruleConditions,
+                    ruleConditions = ruleConditions.asConditionTexts(),
                     modifier = modifier,
                     handler = handler
                 )
@@ -392,7 +392,7 @@ class ReadonlyInterpretationViewTest {
                 ReadonlyInterpretationView(
                     createViewableInterpretation(mapOf(bondiComment to emptyList())),
                     diff = Addition(addedComment, "C99"),
-                    ruleConditions = ruleConditions,
+                    ruleConditions = ruleConditions.asConditionTexts(),
                     modifier = modifier,
                     handler = handler
                 )

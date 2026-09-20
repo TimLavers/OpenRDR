@@ -6,18 +6,19 @@ import io.rippledown.model.RenderedComment
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
+import io.rippledown.utils.asConditionTexts
 import kotlin.test.Test
 
 class CommentRowsTest {
 
     private val bondi = RenderedComment(
         text = "Go to Bondi.",
-        conditions = listOf("Sun is in case"),
+        conditions = listOf("Sun is in case").asConditionTexts(),
         name = "C1"
     )
     private val flippers = RenderedComment(
         text = "Bring your flippers.",
-        conditions = listOf("Wave is in case"),
+        conditions = listOf("Wave is in case").asConditionTexts(),
         name = "C2"
     )
 
@@ -42,7 +43,7 @@ class CommentRowsTest {
         val rows = commentRowsToDisplay(
             listOf(bondi, flippers),
             Addition("Wear a hat.", "C3"),
-            ruleConditions = listOf("Sex is F")
+            ruleConditions = listOf("Sex is F").asConditionTexts()
         )
 
         // Then the new row is last and marked as added
@@ -85,14 +86,14 @@ class CommentRowsTest {
         val rows = commentRowsToDisplay(
             emptyList(),
             Addition("Wear a hat.", "C3"),
-            ruleConditions = listOf("Sex is F")
+            ruleConditions = listOf("Sex is F").asConditionTexts()
         )
 
         // Then the row shows the pending comment, and its tooltip shows the
         // conditions of the rule being built, since it has no rule of its own yet
         rows.single().comment shouldBe RenderedComment(
             text = "Wear a hat.",
-            conditions = listOf("Sex is F"),
+            conditions = listOf("Sex is F").asConditionTexts(),
             name = "C3"
         )
     }
@@ -147,12 +148,12 @@ class CommentRowsTest {
         val rows = commentRowsToDisplay(
             listOf(bondi, flippers),
             Removal(bondi.text, bondi.name),
-            ruleConditions = listOf("Sex is F")
+            ruleConditions = listOf("Sex is F").asConditionTexts()
         )
 
         // Then the row being removed carries them, in place of those of the rule
         // that gave it, since it is the removal the user is reviewing
-        rows.first().comment.conditions shouldBe listOf("Sex is F")
+        rows.first().comment.conditions shouldBe listOf("Sex is F").asConditionTexts()
         // And a row that is not being removed keeps its own
         rows.last().comment.conditions shouldBe flippers.conditions
     }
@@ -256,7 +257,7 @@ class CommentRowsTest {
         val rows = commentRowsToDisplay(
             listOf(bondi, flippers),
             Replacement(bondi.text, "Go to Maroubra.", "C3"),
-            ruleConditions = listOf("Sex is F")
+            ruleConditions = listOf("Sex is F").asConditionTexts()
         )
 
         // Then that row is marked as replaced, and carries the replacing comment
@@ -265,7 +266,7 @@ class CommentRowsTest {
         rows.first().comment shouldBe bondi
         rows.first().replacement shouldBe RenderedComment(
             text = "Go to Maroubra.",
-            conditions = listOf("Sex is F"),
+            conditions = listOf("Sex is F").asConditionTexts(),
             name = "C3"
         )
     }

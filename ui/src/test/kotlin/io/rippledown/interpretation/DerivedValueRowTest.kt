@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import io.rippledown.constants.interpretation.DERIVED_VALUE_NAME_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_ROW_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
+import io.rippledown.utils.asConditionTexts
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -23,7 +24,7 @@ class DerivedValueRowTest {
             name = "BMI",
             value = "25.3",
             formula = "Weight / (Height * Height)",
-            conditions = listOf("Weight is high")
+            conditions = listOf("Weight is high").asConditionTexts()
         )
 
         with(composeTestRule) {

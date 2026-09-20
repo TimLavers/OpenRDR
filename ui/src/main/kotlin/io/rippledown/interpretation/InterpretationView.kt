@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.*
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
@@ -42,7 +43,7 @@ interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 fun InterpretationView(
     interpretation: ViewableInterpretation,
     diff: Diff? = null,
-    ruleConditions: List<String> = emptyList(),
+    ruleConditions: List<ConditionText> = emptyList(),
     columnWidths: ColumnWidths = ColumnWidths(1),
     handler: InterpretationViewHandler
 ) {
@@ -133,15 +134,15 @@ fun InterpretationView(
 
 @Composable
 fun ConditionTooltip(
-    conditions: List<String>,
+    conditions: List<ConditionText>,
 ) {
     Column {
         conditions.forEach { condition ->
             Text(
-                text = condition,
+                text = condition.formal,
                 modifier = Modifier.padding(4.dp)
                     .semantics {
-                        contentDescription = "$CONDITION_PREFIX$condition"
+                        contentDescription = "$CONDITION_PREFIX${condition.formal}"
                     }
             )
         }

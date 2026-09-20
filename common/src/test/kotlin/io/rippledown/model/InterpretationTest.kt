@@ -3,6 +3,7 @@ package io.rippledown.model
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.*
@@ -256,7 +257,7 @@ class InterpretationTest {
         val result = interpretation.conditionsForAssignment(assignment)
 
         // Then the condition texts from root are returned
-        result shouldContain "Glucose contains \"12.0\""
+        result.map { it.formal } shouldContain "Glucose contains \"12.0\""
     }
 
     @Test
@@ -282,7 +283,7 @@ class InterpretationTest {
         val weight = Attribute(attributeId++, "weight", AttributeKind.EXTERNAL)
         val alpha = Attribute(attributeId++, "Alpha", AttributeKind.DERIVED)
         val beta = Attribute(attributeId++, "Beta", AttributeKind.DERIVED)
-        val parentConditions = setOf(containsText(glucose, "12.0"))
+        val parentConditions = setOf(containsText(glucose, "12.0").copy(userExpression = "elevated glucose"))
         val parentAssignment = AssignValue(alpha, Literal("yes"))
         val parentRule = Rule(0, null, parentConditions, mutableSetOf(), parentAssignment)
 
@@ -296,26 +297,34 @@ class InterpretationTest {
         val result = interpretation.conditionsForAssignment(childAssignment)
 
         // Then parent conditions come first, then child conditions
-        result shouldBe listOf("Glucose contains \"12.0\"", "weight is \"80\"")
+        result shouldBe listOf(
+            ConditionText("Glucose contains \"12.0\"", "elevated glucose"),
+            ConditionText("weight is \"80\"")
+        )
     }
 
     @Test
     fun `conditionsForAssignment lists the conditions of the leaf rule in alphabetical order`() {
+        // Given phrases whose ordering differs from the formal texts
         val interpretation = Interpretation(caseId)
         val assignment = comment(c1, "First comment")
         val conditions = setOf(
-            containsText(Attribute(26, "z"), "text z"),
-            containsText(Attribute(1, "A"), "text A"),
+            containsText(Attribute(26, "z"), "text z").copy(userExpression = "first phrase"),
+            containsText(Attribute(1, "A"), "text A").copy(userExpression = "last phrase"),
             containsText(Attribute(25, "Y"), "text Y"),
             containsText(Attribute(2, "b"), "text b"),
         )
         interpretation.add(Rule(0, null, conditions, mutableSetOf(), assignment))
 
-        interpretation.conditionsForAssignment(assignment) shouldBe listOf(
-            "A contains \"text A\"",
-            "b contains \"text b\"",
-            "Y contains \"text Y\"",
-            "z contains \"text z\""
+        // When
+        val conditionsFromRoot = interpretation.conditionsForAssignment(assignment)
+
+        // Then the ordering is case-insensitive and uses formal text
+        conditionsFromRoot shouldBe listOf(
+            ConditionText("A contains \"text A\"", "last phrase"),
+            ConditionText("b contains \"text b\""),
+            ConditionText("Y contains \"text Y\""),
+            ConditionText("z contains \"text z\"", "first phrase")
         )
     }
 

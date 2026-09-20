@@ -10,6 +10,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
+import io.rippledown.utils.asConditionTexts
 import io.rippledown.utils.checkSerializationIsThreadSafe
 import io.rippledown.utils.defaultDate
 import io.rippledown.utils.serializeDeserialize
@@ -155,7 +156,7 @@ class CornerstoneStatusTest {
     fun `should serialize and deserialize with a single rule condition`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            ruleConditions = listOf("Sun is in case")
+            ruleConditions = listOf("Sun is in case").asConditionTexts()
         )
 
         //When
@@ -163,14 +164,14 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.ruleConditions shouldBe listOf("Sun is in case")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case").asConditionTexts()
     }
 
     @Test
     fun `should serialize and deserialize with multiple rule conditions`() {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
-            ruleConditions = listOf("Sun is in case", "Wave is in case", "UV > 5.0")
+            ruleConditions = listOf("Sun is in case", "Wave is in case", "UV > 5.0").asConditionTexts()
         )
 
         //When
@@ -178,7 +179,7 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case", "UV > 5.0")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case", "UV > 5.0").asConditionTexts()
     }
 
     @Test
@@ -186,7 +187,7 @@ class CornerstoneStatusTest {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
             pendingChange = Addition("Go to Bondi."),
-            ruleConditions = listOf("Sun is in case", "Wave is in case")
+            ruleConditions = listOf("Sun is in case", "Wave is in case").asConditionTexts()
         )
 
         //When
@@ -195,7 +196,7 @@ class CornerstoneStatusTest {
         //Then
         deserialized shouldBe cornerstoneStatus
         deserialized.commentDiff shouldBe Addition("Go to Bondi.")
-        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case").asConditionTexts()
     }
 
     @Test
@@ -203,7 +204,7 @@ class CornerstoneStatusTest {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
             pendingChange = Removal("Go to Bondi."),
-            ruleConditions = listOf("UV > 5.0")
+            ruleConditions = listOf("UV > 5.0").asConditionTexts()
         )
 
         //When
@@ -212,7 +213,7 @@ class CornerstoneStatusTest {
         //Then
         deserialized shouldBe cornerstoneStatus
         deserialized.commentDiff shouldBe Removal("Go to Bondi.")
-        deserialized.ruleConditions shouldBe listOf("UV > 5.0")
+        deserialized.ruleConditions shouldBe listOf("UV > 5.0").asConditionTexts()
     }
 
     @Test
@@ -220,7 +221,7 @@ class CornerstoneStatusTest {
         //Given
         val cornerstoneStatus = CornerstoneStatus(
             pendingChange = Replacement("Go to Bondi.", "Go to Maroubra."),
-            ruleConditions = listOf("Sun is in case", "Wave is in case")
+            ruleConditions = listOf("Sun is in case", "Wave is in case").asConditionTexts()
         )
 
         //When
@@ -229,7 +230,7 @@ class CornerstoneStatusTest {
         //Then
         deserialized shouldBe cornerstoneStatus
         deserialized.commentDiff shouldBe Replacement("Go to Bondi.", "Go to Maroubra.")
-        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case").asConditionTexts()
     }
 
     @Test
@@ -242,7 +243,7 @@ class CornerstoneStatusTest {
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
             pendingChange = Addition("Go to Bondi."),
-            ruleConditions = listOf("Sun is in case", "Wave is in case")
+            ruleConditions = listOf("Sun is in case", "Wave is in case").asConditionTexts()
         )
 
         //When
@@ -250,14 +251,14 @@ class CornerstoneStatusTest {
 
         //Then
         deserialized shouldBe cornerstoneStatus
-        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case")
+        deserialized.ruleConditions shouldBe listOf("Sun is in case", "Wave is in case").asConditionTexts()
     }
 
     @Test
     fun checkJsonWithRuleConditions() {
         val cornerstoneStatus = CornerstoneStatus(
             pendingChange = Addition("Go to Bondi.", "C1"),
-            ruleConditions = listOf("Sun is in case", "Wave is in case")
+            ruleConditions = listOf("Sun is in case", "Wave is in case").asConditionTexts()
         )
 
         cornerstoneStatus.toJsonString() shouldBe """
@@ -272,8 +273,14 @@ class CornerstoneStatusTest {
                     "attributeId": null
                 },
                 "ruleConditions": [
-                    "Sun is in case",
-                    "Wave is in case"
+                    {
+                        "formal": "Sun is in case",
+                        "phrase": ""
+                    },
+                    {
+                        "formal": "Wave is in case",
+                        "phrase": ""
+                    }
                 ]
             }
         """.trimIndent()
@@ -283,7 +290,7 @@ class CornerstoneStatusTest {
     fun `should be thread safe with rule conditions`() {
         val cornerstoneStatus = CornerstoneStatus(
             pendingChange = Addition("Go to Bondi."),
-            ruleConditions = listOf("Sun is in case", "Wave is in case")
+            ruleConditions = listOf("Sun is in case", "Wave is in case").asConditionTexts()
         )
         checkSerializationIsThreadSafe(cornerstoneStatus)
     }
@@ -347,7 +354,7 @@ class CornerstoneStatusTest {
             cornerstoneToReview = viewableCase,
             indexOfCornerstoneToReview = 0,
             numberOfCornerstones = 1,
-            ruleConditions = listOf("Weight is high"),
+            ruleConditions = listOf("Weight is high").asConditionTexts(),
             pendingChange = DerivedValueAddition("BMI", "weight / height ^ 2")
         )
 

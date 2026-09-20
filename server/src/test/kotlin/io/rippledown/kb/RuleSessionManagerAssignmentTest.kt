@@ -10,6 +10,7 @@ import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
 import io.rippledown.model.*
 import io.rippledown.model.condition.CaseStructureCondition
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.structural.IsPresentInCase
 import io.rippledown.model.diff.Addition
@@ -771,11 +772,15 @@ class RuleSessionManagerAssignmentTest {
     fun `the cornerstone status carries the rule conditions for the pending row tooltip`() {
         // Given an assign-value session with a condition added
         rsm.startRuleSessionToAssignValue(createCase("A"), "Diabetes status", "\"diabetic\"")
-        rsm.addConditionToCurrentRuleSession(highGlucose())
+        val condition = highGlucose().copy(userExpression = "elevated glucose")
+        rsm.addConditionToCurrentRuleSession(condition)
 
-        // Then the status carries both, which is what the pending row's tooltip needs
+        // When
         val status = rsm.cornerstoneStatus()
+
+        // Then the pending row carries both texts, while the chat receives formal text
         status.derivedValueDiff shouldNotBe null
-        status.ruleConditions shouldBe listOf(highGlucose().asText())
+        status.ruleConditions shouldBe listOf(ConditionText(condition.asText(), "elevated glucose"))
+        rsm.currentRuleSessionConditionTexts() shouldBe setOf(condition.asText())
     }
 }

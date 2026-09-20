@@ -7,6 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.RenderedComment
+import io.rippledown.utils.asConditionTexts
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -23,7 +24,7 @@ class CommentRowTest {
 
     private val bondi = RenderedComment(
         text = "Go to Bondi.",
-        conditions = listOf("Sex is F"),
+        conditions = listOf("Sex is F").asConditionTexts(),
         name = "C1"
     )
     private val malabar = RenderedComment(text = "Go to Malabar.", name = "C2")

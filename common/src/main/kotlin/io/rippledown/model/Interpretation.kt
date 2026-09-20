@@ -1,5 +1,6 @@
 package io.rippledown.model
 
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.rule.*
 import io.rippledown.toJsonString
 import kotlinx.serialization.Serializable
@@ -88,10 +89,10 @@ data class Interpretation(val caseId: CaseId = CaseId()) {
      * The condition texts from root for the rule that assigned the given
      * [AssignValue] to its attribute, or an empty list if no such rule fired.
      */
-    fun conditionsForAssignment(assignment: AssignValue): List<String> {
+    fun conditionsForAssignment(assignment: AssignValue): List<ConditionText> {
         return ruleSummaries
             .firstOrNull { ruleSummary -> assignment == ruleSummary.assignment }
-            ?.conditionTextsFromRoot
+            ?.conditionsFromRoot
             ?: emptyList()
     }
 }

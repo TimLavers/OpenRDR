@@ -1,6 +1,6 @@
 # Showing conditions in the user's own words
 
-Status: design note, not yet implemented.
+Status: stage 1 implemented. Both texts reach the client; phrase display and renaming are still pending.
 
 ## The idea
 
@@ -59,8 +59,16 @@ rename or may have been mistranslated.
 When `userExpression` is blank or equal to `asText()`, show `asText()` only. This is the case for suggested and
 edited conditions.
 
-`RenderedComment.conditions` and `RuleSummary.conditionTextsFromRoot` currently carry `List<String>`; they will
-need to carry both texts.
+`ConditionText(formal, phrase)` now carries both texts through `Rule.conditionsFromRoot()`,
+`RuleSummary.conditionsFromRoot`, interpretation assignments, rendered comments, derived values and cornerstone
+status to the client. Conditions retain their existing case-insensitive ordering by formal text. In stage 1,
+tooltips and their accessibility descriptions still render formal text only; phrase display is the next stage.
+
+### Text supplied to the language model
+
+Condition lists supplied to chat and system prompts continue to use `Condition.asText()`, including
+`RuleSessionManager.currentRuleSessionConditionTexts()`. Stored phrases are display metadata; the model translates
+the user's wording to formal conditions and should not receive those aliases back as rule predicates.
 
 ### Two phrases for one condition: first phrase wins
 

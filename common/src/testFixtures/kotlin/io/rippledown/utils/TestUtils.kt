@@ -6,6 +6,7 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.CommentTemplate
@@ -112,11 +113,11 @@ fun createViewableCaseWithInterpretation(
             add(
                 RuleSummary(
                     assignment = commentAssignment(attributeId++, text),
-                    conditionTextsFromRoot = listOf(
+                    conditionsFromRoot = listOf(
                         "Condition 1 for $text",
                         "Condition 2 for $text",
                         "Condition 3 for $text"
-                    )
+                    ).asConditionTexts()
                 )
             )
         }
@@ -149,7 +150,7 @@ fun createLargeViewableCaseWithInterpretation(
             add(
                 RuleSummary(
                     assignment = assignment,
-                    conditionTextsFromRoot = listOf("Condition for $text")
+                    conditionsFromRoot = listOf("Condition for $text").asConditionTexts()
                 )
             )
         }
@@ -191,7 +192,7 @@ fun createInterpretation(
             add(
                 RuleSummary(
                     assignment = commentAssignment(attributeId++, comment),
-                    conditionTextsFromRoot = conditions
+                    conditionsFromRoot = conditions.asConditionTexts()
                 )
             )
         }
@@ -207,12 +208,18 @@ fun createViewableInterpretation(
         RenderedComment(
             text = comment,
             unresolvedRanges = emptyList(),
-            conditions = conditions,
+            conditions = conditions.asConditionTexts(),
             name = commentAttributeName(FIRST_COMMENT_ATTRIBUTE_ID + index)
         )
     }
     return ViewableInterpretation(interpretation = interp, textGivenByRules = text, renderedComments = renderedComments)
 }
+
+/**
+ * Formal condition texts with no user phrase, as the fixtures here take the
+ * texts of the conditions as plain strings.
+ */
+fun List<String>.asConditionTexts() = map { ConditionText(it) }
 
 fun beSameAs(other: Condition) = Matcher<Condition> { value ->
     MatcherResult(

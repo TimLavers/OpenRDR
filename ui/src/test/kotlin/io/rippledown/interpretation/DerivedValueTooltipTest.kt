@@ -14,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.DERIVED_VALUE_CONDITIONS_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
+import io.rippledown.utils.asConditionTexts
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -29,7 +30,7 @@ class DerivedValueTooltipTest {
             name = "BMI",
             value = "25.3",
             formula = "Weight / (Height * Height)",
-            conditions = listOf("Weight is high", "Height is high")
+            conditions = listOf("Weight is high", "Height is high").asConditionTexts()
         )
 
         with(composeTestRule) {
@@ -50,7 +51,7 @@ class DerivedValueTooltipTest {
             name = "Status",
             value = "high",
             formula = "\"high\"",
-            conditions = listOf("Glucose > 10")
+            conditions = listOf("Glucose > 10").asConditionTexts()
         )
 
         with(composeTestRule) {
@@ -92,7 +93,7 @@ class DerivedValueTooltipTest {
             name = "BMI",
             value = "25.3",
             formula = "Weight / Height ^ 2",
-            conditions = listOf("Height is high")
+            conditions = listOf("Height is high").asConditionTexts()
         )
 
         with(composeTestRule) {
@@ -116,7 +117,7 @@ class DerivedValueTooltipTest {
             name = "BMI",
             value = "25.3",
             formula = "Weight / Height ^ 2",
-            conditions = listOf("Height is high")
+            conditions = listOf("Height is high").asConditionTexts()
         )
 
         with(composeTestRule) {
@@ -140,7 +141,7 @@ class DerivedValueTooltipTest {
             name = "BMI",
             value = "25.3",
             formula = "Weight / (Height * Height)",
-            conditions = listOf("Weight is high")
+            conditions = listOf("Weight is high").asConditionTexts()
         )
 
         with(composeTestRule) {

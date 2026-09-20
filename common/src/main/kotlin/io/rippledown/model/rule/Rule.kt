@@ -4,6 +4,7 @@ import io.rippledown.model.AttributeKind
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionText
 
 const val RULE_TO_ADD_COMMENT = "Add comment:"
 const val RULE_TO_REMOVE_COMMENT = "Remove comment:"
@@ -33,7 +34,7 @@ open class Rule(
         get() = assignment
 
     fun summary(): RuleSummary {
-        return RuleSummary(id, conditions, conditionTextsFromRoot(), assignment)
+        return RuleSummary(id, conditions, conditionsFromRoot(), assignment)
     }
 
     /**
@@ -67,13 +68,13 @@ open class Rule(
     private fun replacePrefix(assignment: AssignValue) =
         if (assignment.isComment()) RULE_TO_REPLACE_COMMENT else RULE_TO_REPLACE_ASSIGNMENT
 
-    fun conditionTextsFromRoot(): List<String> {
-        val result = mutableListOf<String>()
+    fun conditionsFromRoot(): List<ConditionText> {
+        val result = mutableListOf<ConditionText>()
         var rule: Rule? = this
         while (rule != null) {
             val sortedConditions = rule.conditions.map {
-                it.asText()
-            }.sortedWith(String.CASE_INSENSITIVE_ORDER)
+                ConditionText.of(it)
+            }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.formal })
                 .asReversed()//conditions for each rule are sorted for testing only
             result.addAll(sortedConditions)
             rule = rule.parent

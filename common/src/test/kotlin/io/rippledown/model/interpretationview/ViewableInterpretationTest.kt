@@ -9,6 +9,7 @@ import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.CommentTemplate
 import io.rippledown.model.rule.Literal
 import io.rippledown.model.rule.Rule
+import io.rippledown.utils.asConditionTexts
 import io.rippledown.utils.checkSerializationIsThreadSafe
 import io.rippledown.utils.serializeDeserialize
 import kotlin.test.BeforeTest
@@ -132,7 +133,7 @@ class ViewableInterpretationTest {
         val result = view.conditionsForAssignment(assignment)
 
         // Then the condition texts are returned
-        result shouldBe listOf("Glucose contains \"12.0\"")
+        result shouldBe listOf("Glucose contains \"12.0\"").asConditionTexts()
     }
 
     @Test
@@ -166,7 +167,7 @@ class ViewableInterpretationTest {
             "q contains \"text q\"",
             "r contains \"text r\"",
             "s contains \"text s\""
-        )
+        ).asConditionTexts()
     }
 
     @Test

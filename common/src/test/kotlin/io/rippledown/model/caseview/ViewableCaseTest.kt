@@ -3,6 +3,7 @@ package io.rippledown.model.caseview
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.model.*
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Literal
@@ -102,7 +103,7 @@ class ViewableCaseTest {
         val glucose = Attribute(10, "Glucose", AttributeKind.EXTERNAL)
         val diabetesStatus = Attribute(20, "Diabetes status", AttributeKind.DERIVED)
         val assignment = AssignValue(diabetesStatus, Literal("diabetic"))
-        val conditions = listOf("Glucose is \"12.0\"")
+        val conditions = listOf(ConditionText("Glucose is \"12.0\"", "elevated glucose"))
 
         val builder = RDRCaseBuilder()
         builder.addValue(glucose, defaultDate, "12.0")
@@ -114,7 +115,7 @@ class ViewableCaseTest {
                 RuleSummary(
                     id = 1,
                     assignment = assignment,
-                    conditionTextsFromRoot = conditions
+                    conditionsFromRoot = conditions
                 )
             )
         }
@@ -157,8 +158,20 @@ class ViewableCaseTest {
         val rdrCase = builder.build("Case1")
 
         val interp = Interpretation(rdrCase.caseId).apply {
-            add(RuleSummary(id = 1, assignment = derivedAssignment, conditionTextsFromRoot = listOf("Glucose is high")))
-            add(RuleSummary(id = 2, assignment = commentAssignment, conditionTextsFromRoot = listOf("Glucose is low")))
+            add(
+                RuleSummary(
+                    id = 1,
+                    assignment = derivedAssignment,
+                    conditionsFromRoot = listOf("Glucose is high").asConditionTexts()
+                )
+            )
+            add(
+                RuleSummary(
+                    id = 2,
+                    assignment = commentAssignment,
+                    conditionsFromRoot = listOf("Glucose is low").asConditionTexts()
+                )
+            )
         }
         val viewableInterp = ViewableInterpretation(
             interpretation = interp,
@@ -197,14 +210,14 @@ class ViewableCaseTest {
                 RuleSummary(
                     id = 1,
                     assignment = AssignValue(zebra, Literal("42")),
-                    conditionTextsFromRoot = listOf("c1")
+                    conditionsFromRoot = listOf("c1").asConditionTexts()
                 )
             )
             add(
                 RuleSummary(
                     id = 2,
                     assignment = AssignValue(alpha, Literal("1")),
-                    conditionTextsFromRoot = listOf("c2")
+                    conditionsFromRoot = listOf("c2").asConditionTexts()
                 )
             )
         }

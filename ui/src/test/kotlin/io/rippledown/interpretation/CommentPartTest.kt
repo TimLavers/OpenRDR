@@ -14,6 +14,8 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.model.IntRangeData
 import io.rippledown.model.RenderedComment
+import io.rippledown.model.condition.ConditionText
+import io.rippledown.utils.asConditionTexts
 import io.rippledown.utils.waitUntilAsserted
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -162,7 +164,8 @@ class CommentPartTest {
 
     @Test
     fun `should show the conditions of the rule that gave the comment when hovered over`() = runTest {
-        val conditions = listOf("Sex is F", "Age is high")
+        // Given a condition with a phrase carried to the client
+        val conditions = listOf(ConditionText("Sex is F", "female"), ConditionText("Age is high"))
         val comment = RenderedComment(text = "Go to Bondi.", conditions = conditions, name = "C1")
         with(composeTestRule) {
             showPart(comment)
@@ -171,7 +174,8 @@ class CommentPartTest {
             hoverOverTheComment()
 
             //Then
-            requireConditionsToBeShowing(conditions)
+            requireConditionsToBeShowing(conditions.map { it.formal })
+            onNodeWithText("female").assertDoesNotExist()
         }
     }
 
@@ -221,7 +225,7 @@ class CommentPartTest {
         val text = "The glucose reading for this case was a long way from $marker"
         val comment = RenderedComment(
             text = text,
-            conditions = conditions,
+            conditions = conditions.asConditionTexts(),
             unresolvedRanges = listOf(IntRangeData(text.indexOf(marker), text.length - 1)),
             name = "C1"
         )
