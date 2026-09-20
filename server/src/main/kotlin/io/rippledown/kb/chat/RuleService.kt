@@ -39,6 +39,7 @@ interface RuleService {
      * id. Returns a summary of the change.
      */
     fun renameAttribute(currentName: String, newName: String): String
+    fun renameCondition(conditionText: String, newPhrase: String): String
     fun startRuleSessionToAssignValue(
         viewableCase: ViewableCase,
         attributeName: String,

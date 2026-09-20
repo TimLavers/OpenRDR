@@ -17,10 +17,18 @@ const val WITH = "with:"
 open class Rule(
     val id: Int,
     var parent: Rule? = null,
-    val conditions: Set<Condition> = mutableSetOf(),
+    conditions: Set<Condition> = mutableSetOf(),
     private val childRules: MutableSet<Rule> = mutableSetOf(),
     val assignment: AssignValue? = null
 ) {
+    var conditions: Set<Condition> = conditions
+        private set
+
+    /** Refresh a stored condition's display metadata without rebuilding the rule. */
+    fun replaceCondition(condition: Condition) {
+        val id = requireNotNull(condition.id) { "A replacement condition must have an id." }
+        conditions = conditions.map { if (it.id == id) condition else it }.toSet()
+    }
 
     init {
         childRules.forEach { it.parent = this }

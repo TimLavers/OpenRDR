@@ -45,6 +45,7 @@ class ListCapabilitiesTest {
         )
         response.text shouldContain "edit a derived attribute's definition everywhere it is used (without building a rule)"
         response.text shouldContain "add, list or remove reasons in the current rule"
+        response.text shouldContain "rename a condition's phrase everywhere it is used"
         response.text shouldContain "copy the current case to favourites, optionally with a new name"
         response.text shouldContain "delete the current case from favourites"
         response.capabilities.forEach { section ->

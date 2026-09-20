@@ -38,6 +38,31 @@ class PostgresConditionStoreTest: PostgresStoreTest() {
     }
 
     @Test
+    fun `updated phrase survives reload with the same id and predicate`() {
+        // Given
+        val original = store.create(isHigh(null, glucose, "elevated glucose"))
+        val other = store.create(isHigh(null, tsh))
+        val renamed = original.withUserExpression("raised glucose")
+
+        // When
+        store.update(renamed)
+        reload()
+
+        // Then
+        store.all() shouldBe setOf(renamed, other)
+        store.all().single { it.id == original.id }.asText() shouldBe original.asText()
+    }
+
+    @Test
+    fun `update rejects missing and unknown ids`() {
+        // Given an empty store
+        // When / Then
+        shouldThrow<IllegalArgumentException> { store.update(isHigh(null, glucose)) }
+        shouldThrow<IllegalArgumentException> { store.update(isHigh(999, glucose)) }
+        store.all() shouldBe emptySet()
+    }
+
+    @Test
     fun create() {
         val inputGlucoseHigh = isHigh(null, glucose)
         val createdGlucoseHigh = createAndCheck(inputGlucoseHigh)

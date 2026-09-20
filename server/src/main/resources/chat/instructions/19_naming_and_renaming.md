@@ -40,3 +40,27 @@ The user may ask to rename a comment or a derived attribute, for example
 - Words the user has chosen settle it, so do not ask then: "rename the kb", "the knowledge base" or "the project" mean
   the knowledge base, and "the comment", "the attribute" or a name given as `C1` means the attribute.
 - The system's response states the outcome, so simply pass it on.
+
+## Renaming a condition
+
+The user may rename the phrase used to display a condition, for example
+`call the condition "Glucose is high" "raised glucose"` or
+`the reason 'elevated glucose' should read 'raised glucose'`. Emit:
+
+```json
+{
+  "action": "{{RENAME_CONDITION}}",
+  "conditionText": "<the formal condition text or its current phrase>",
+  "newPhrase": "<the new phrase>"
+}
+```
+
+- This changes the phrase everywhere the condition is used. It does not change the formal predicate or rename an
+  attribute. Use `{{RENAME_ATTRIBUTE}}` when the user asks to rename an attribute or comment name.
+- The condition can be identified by its formal text or current phrase; pass on the user's wording. The server
+  matches without regard to case or surrounding whitespace and explains missing or ambiguous matches.
+- The phrase must not be blank. If the condition or new phrase was not supplied, ask for the missing information
+  with `{{USER_ACTION}}`.
+- Renaming a condition is allowed during rule building. Do not start, cancel or commit a rule for it, and do not
+  treat the rename request as a new reason to transform.
+- Pass on the server's response; no confirmation is needed.

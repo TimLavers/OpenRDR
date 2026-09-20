@@ -49,7 +49,9 @@ class ListCapabilities : Action {
                 add(
                     CapabilitySection(
                         "Names and layout", listOf(
-                            "rename a comment or a derived attribute", "reorder the attributes"
+                            "rename a comment or a derived attribute",
+                            "rename a condition's phrase everywhere it is used",
+                            "reorder the attributes"
                         )
                     )
                 )

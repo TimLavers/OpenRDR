@@ -1,7 +1,7 @@
 # Showing conditions in the user's own words
 
-Status: stages 1–3 implemented. Tooltips show both texts and chat reports a different stored phrase; renaming is
-pending.
+Status: stages 1–4 implemented. Phrase display, the previous-phrase note and renaming are implemented;
+cucumber verification and close-out remain.
 
 ## The idea
 
@@ -39,7 +39,7 @@ Most of the storage side is already built:
 Conditions created from suggestions, or by editing a suggestion's value, have a blank `userExpression` or one equal
 to `asText()`.
 
-Display and the previous-phrase note are implemented. A way to change the phrase remains to be built.
+Display, the previous-phrase note and renaming are implemented.
 
 ## Design
 
@@ -114,9 +114,19 @@ an ordinary follow-up message renames if wanted.
 
 ### Renaming the phrase
 
-A chat action, `RenameCondition` or similar, taking the condition (by formal text or current phrase) and the new
-phrase. Refuse a blank phrase. The formal text is not editable this way; changing the condition itself is a different
-operation.
+The `RenameCondition(conditionText, newPhrase)` chat action identifies a stored condition by its formal text or
+current phrase, ignoring case and surrounding whitespace. A blank new phrase, a missing match or multiple matches
+are refused. Ambiguous matches list the formal conditions. The new phrase is preserved as supplied; the formal
+predicate and condition id remain unchanged.
+
+Conditions remain immutable. `ConditionManager.renamePhrase` persists a copy before replacing its cache entry.
+`RuleTree.replaceCondition` replaces references by id in each rule, and `RuleSessionManager` also refreshes the
+active session's conditions. This keeps current summaries, comments, derived values and cornerstone tooltips in
+sync without rebuilding rules or changing inference. Reloading the KB reconstructs rules from the updated store.
+
+The action can run during rule building and pushes cornerstone status when a session is active. The ordinary case
+refresh after chat reinterprets the current case. In-memory updates replace the entry with the same id; PostgreSQL
+updates the existing condition JSON without a schema change. The PostgreSQL tests are supplied for the user to run.
 
 ### Attribute renames
 

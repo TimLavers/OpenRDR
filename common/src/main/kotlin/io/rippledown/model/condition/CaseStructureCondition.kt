@@ -30,6 +30,7 @@ data class CaseStructureCondition(
     override fun asText() = predicate.description()
 
     override fun userExpression() = userExpression
+    override fun withUserExpression(phrase: String) = copy(userExpression = phrase)
 
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = CaseStructureCondition(
         id,

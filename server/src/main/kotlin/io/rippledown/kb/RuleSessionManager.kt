@@ -489,6 +489,32 @@ class RuleSessionManager(
         return renamedMessage(oldName, renamed.name)
     }
 
+    override fun renameCondition(conditionText: String, newPhrase: String): String {
+        require(newPhrase.isNotBlank()) { "A condition phrase cannot be blank." }
+        val text = conditionText.trim()
+        val matches = kb.conditionManager.all().filter {
+            text.isNotBlank() && (it.asText().trim().equals(text, ignoreCase = true) ||
+                    it.userExpression().trim().equals(text, ignoreCase = true))
+        }
+        check(matches.isNotEmpty()) { "No condition \"$text\" exists." }
+        check(matches.size == 1) {
+            val descriptions = matches.map { it.asText() }.sorted().joinToString(", ") { "\"$it\"" }
+            "More than one condition matches \"$text\": $descriptions."
+        }
+        val original = matches.single()
+        val id = requireNotNull(original.id) { "A stored condition must have an id." }
+        val renamed = kb.conditionManager.renamePhrase(id, newPhrase)
+        kb.ruleTree.replaceCondition(renamed)
+        ruleSession?.let { session ->
+            session.conditions = session.conditions.map { if (it.id == id) renamed else it }.toMutableSet()
+        }
+        return if (original.userExpression().isBlank()) {
+            "Called condition \"${original.asText()}\" \"$newPhrase\"."
+        } else {
+            "Renamed condition \"${original.asText()}\" from \"${original.userExpression()}\" to \"$newPhrase\"."
+        }
+    }
+
     /**
      * Refuses a definition edit that would make the attribute depend on
      * itself. The graph is built as if the edit had been made, so cycles

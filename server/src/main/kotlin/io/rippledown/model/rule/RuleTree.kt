@@ -30,6 +30,10 @@ fun ValueExpression.resolvedFor(attribute: Attribute, resolver: DefinitionResolv
 
 open class RuleTree(val root: Rule = rootRule()) {
 
+    fun replaceCondition(condition: Condition) {
+        root.visit { it.replaceCondition(condition) }
+    }
+
     /**
      * Interpret the case by fixpoint iteration: strip derived values, then
      * repeatedly evaluate the tree and materialise the derived-attribute
