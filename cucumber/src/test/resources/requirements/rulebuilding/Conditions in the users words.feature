@@ -40,7 +40,8 @@ Feature: Conditions are shown in the user's own words
     And the report should be "Review glucose."
     And I request that the comment "Repeat glucose measurement." be added
     And I provide only the following reason:
-      | elevated glucose |
+      | raised glucose |
+    And the chat history contains "previously called this 'elevated glucose'"
     And the condition showing for the comment "Review glucose." is:
       | Glucose is high |
     And the condition phrases shown should be:

@@ -2,7 +2,9 @@
 
 package io.rippledown.interpretation
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.SemanticsActions
@@ -177,8 +179,31 @@ class CommentPartTest {
             ConditionText("Weight is high", "Weight is high")
         )
         val comment = RenderedComment(text = "Go to Bondi.", conditions = conditions, name = "C1")
+        val displayedComments = mutableStateOf(
+            listOf(
+                comment, RenderedComment(
+                    text = "Review glucose.", name = "C2",
+                    conditions = listOf(ConditionText("Glucose is high", "elevated glucose"))
+                )
+            )
+        )
         with(composeTestRule) {
-            showPart(comment)
+            setContent {
+                Column {
+                    displayedComments.value.forEachIndexed { index, displayed ->
+                        Row {
+                            CommentPart(
+                                displayed, Color.Transparent,
+                                if (index == 0) textId else "second comment", "$nameId$index",
+                                0.2f, 1f, {})
+                        }
+                    }
+                }
+            }
+
+            // Then name and text remain independently accessible through the merged tree
+            onNodeWithContentDescription(textId).assertTextEquals(comment.text)
+            onNodeWithContentDescription("${nameId}0").assertTextEquals("C1")
 
             //When
             hoverOverTheComment()
@@ -200,6 +225,26 @@ class CommentPartTest {
             formal.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
             layouts.single().layoutInput.style.fontSize shouldBe 12.sp
             layouts.single().layoutInput.style.color shouldBe Color.Gray
+
+            // When another row is hovered and the shared phrase changes while its tooltip is visible
+            onNodeWithContentDescription("second comment", useUnmergedTree = true)
+                .performMouseInput { moveTo(center) }
+            requireConditionPhrasesToBeShowing("elevated glucose")
+            runOnIdle {
+                displayedComments.value = displayedComments.value.map {
+                    it.copy(conditions = listOf(ConditionText("Glucose is high", "raised glucose")))
+                }
+            }
+            requireConditionPhrasesToBeShowing("raised glucose")
+            hoverOverTheComment()
+
+            // Then switching rows leaves exactly one tooltip with the renamed phrase and formal text
+            waitUntilAsserted {
+                onAllNodesWithContentDescription("${CONDITION_PHRASE_PREFIX}raised glucose").assertCountEquals(1)
+                onAllNodesWithContentDescription("${CONDITION_PREFIX}Glucose is high").assertCountEquals(1)
+                onNodeWithContentDescription("${CONDITION_PHRASE_PREFIX}elevated glucose").assertDoesNotExist()
+                onNodeWithContentDescription("${CONDITION_PHRASE_PREFIX}female").assertDoesNotExist()
+            }
         }
     }
 

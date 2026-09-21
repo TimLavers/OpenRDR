@@ -1,15 +1,13 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 
 package io.rippledown.interpretation
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -54,7 +52,11 @@ internal fun RowScope.CommentPart(
     onHoverChanged: (Boolean) -> Unit
 ) {
     var isOverUnresolved by remember { mutableStateOf(false) }
-    TooltipArea(
+    // Material tooltips share a mutex: entering a new row dismisses the previous tooltip,
+    // including when rapid native pointer moves or recomposition miss an exit event.
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+        state = rememberTooltipState(),
         tooltip = {
             if (isOverUnresolved) {
                 UnresolvedVariableTooltip()
@@ -73,7 +75,9 @@ internal fun RowScope.CommentPart(
             AnnotatedTextView(
                 text = comment.annotatedText(),
                 description = textDescription,
-                modifier = Modifier.weight(1f - nameWeight).padding(vertical = 2.dp),
+                // Keep both cells separate from TooltipBox's merging anchor semantics.
+                modifier = Modifier.weight(1f - nameWeight).padding(vertical = 2.dp)
+                    .semantics(mergeDescendants = true) {},
                 style = TextStyle(fontSize = 13.sp, color = Color.Black),
                 handler = object : AnnotatedTextViewHandler {
                     override fun onTextLayoutResult(layoutResult: TextLayoutResult) {}
@@ -105,7 +109,7 @@ private fun CommentName(name: String, description: String, modifier: Modifier = 
         fontWeight = FontWeight.Bold,
         fontSize = 12.sp,
         color = Color.DarkGray,
-        modifier = modifier.semantics { contentDescription = description }
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description }
     )
 }
 

@@ -16,6 +16,26 @@ class RuleConversationTest {
     private val conversation = RuleConversation(service)
 
     @Test
+    fun `acknowledgements include transformed and suggested conditions but exclude conditions not added`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.currentRuleSessionConditionTexts() } returns linkedSetOf(
+            "Age is high",
+            "Glucose is high",
+            "UV is high"
+        )
+        val turn = RuleConversation.Turn("raised glucose and high UV", setOf("Age is high"))
+        val note = "Added your reason 'Glucose is high' (you previously called this 'elevated glucose')."
+
+        // When
+        val action = conversation.completeTurn(turn, mapOf("Age is high" to "Old note", "Glucose is high" to note))
+
+        // Then
+        action?.message shouldBe "$note\nAdded your reason 'UV is high'.\n\n${RuleConversation.MORE_REASONS_QUESTION}"
+        conversation.state shouldBe RuleConversation.State.AwaitingReasonReply
+    }
+
+    @Test
     fun `a case less conversation needs neither rule context nor rule actions`() {
         // Given
         val caseLess = RuleConversation(null)

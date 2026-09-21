@@ -48,6 +48,9 @@ formal text, which is smaller and grey. Otherwise only the formal text appears.
 Formal-text accessibility identifiers remain unchanged. Phrase nodes use `CONDITION_PHRASE_PREFIX` followed by
 the phrase, and each condition groups its phrase and formal text without merging their individual nodes.
 
+Comment rows use Material tooltips with shared dismissal so moving between comments leaves only one tooltip
+visible. The comment name and text retain separate accessibility nodes within the tooltip's anchor.
+
 ### Text supplied to the language model
 
 Condition lists supplied to chat and system prompts continue to use `Condition.asText()`, including
@@ -85,8 +88,11 @@ appears when that wording is non-blank, differs from both formal text and stored
 non-blank. Comparisons are exact. Otherwise the existing transformation response is retained. Edited suggestions
 use the edited condition's formal text as the incoming expression, so they do not trigger the note.
 
-The function handler preserves the message in its JSON response, and the chat instructions require the model to
-relay it verbatim before the usual follow-up question. Validation failures retain their existing error message.
+The function handler preserves the message in its JSON response. `KBReasonTransformer` also records successful
+transformation messages in `ReasonAcknowledgements` for the current model turn. When `RuleConversation` generates
+its acknowledgement and follow-up question, it includes those messages for newly added conditions. This preserves
+the previous-phrase note independently of the model's reply. The messages are cleared before the next model turn
+and when a new conversation starts. Validation failures retain their existing error message.
 
 This is deterministic (the server compares the incoming phrase with the stored one), asks nothing, and gives the
 user the information they need to decide whether to rename. It fits the chat guidelines: no question, no control,
