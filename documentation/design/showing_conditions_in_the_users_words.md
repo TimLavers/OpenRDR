@@ -1,15 +1,12 @@
 # Showing conditions in the user's own words
 
-Status: stages 1–4 implemented; stage 5 cucumber scenarios and steps added and dry-run verified.
-Live cucumber verification and close-out remain.
-
 ## The idea
 
 When a user gives the reason for a rule action (add, remove or replace a comment, assign a derived value), they type
 a phrase in their own words, e.g. `elevated glucose`, and the system translates it to a formal condition,
 `Glucose is high`. Previously only the formal text was shown again in tooltips and rule summaries.
 
-The proposal is to remember the user's phrase and show it wherever the condition is displayed, with the formal text
+The system remembers the user's phrase and shows it wherever the condition is displayed, with the formal text
 alongside it as the authoritative form.
 
 ## Rationale
@@ -23,23 +20,6 @@ alongside it as the authoritative form.
   `ConditionGenerator`.
 - **Auditability.** Keeping the user's phrase next to the formal text lets a later reader check that the translation
   was what the author meant, which is the one thing the formal text alone cannot show.
-
-## What already exists
-
-Most of the storage side is already built:
-
-- Every condition class (`EpisodicCondition`, `SeriesCondition`, `CaseStructureCondition`) has a `userExpression`
-  field, serialised and persisted with the condition.
-- `ConditionGenerator.conditionFor` fills it with the phrase the user typed.
-- `Condition.sameAs` ignores it, and `ConditionManager.getOrCreate` dedupes on `sameAs`, so a phrase is attached to a
-  condition only when that condition is first created.
-- `ReasonTransformation` compares it with `asText()` to decide whether to tell the user
-  "I interpreted that as ...".
-
-Conditions created from suggestions, or by editing a suggestion's value, have a blank `userExpression` or one equal
-to `asText()`.
-
-Display, the previous-phrase note and renaming are implemented.
 
 ## Design
 
@@ -91,7 +71,7 @@ The first one. Reasons:
 - **Do not accumulate synonyms.** A list of phrases per condition has nothing sensible to display. One phrase per
   condition.
 
-This is also what the code does now, by accident of `getOrCreate` returning the existing condition.
+`ConditionManager.getOrCreate` preserves this behaviour by returning the existing condition, including its phrase.
 
 ### Telling the user when the phrases differ
 
@@ -132,24 +112,3 @@ updates the existing condition JSON without a schema change. The PostgreSQL test
 
 The phrase is free text, so renaming `Glucose` to `Glucosa` leaves `elevated glucose` unchanged while `asText()`
 updates. Showing both texts is the mitigation; no attempt is made to rewrite phrases.
-
-## Implementation steps
-
-1. Display: carry both texts to the client and render phrase-with-formal-text in the comment tooltip, cornerstone
-   tooltip and rule summary, falling back to `asText()` when the phrase is blank or identical.
-2. The "you previously called this" note in `ReasonTransformation`.
-3. The rename action and its chat instruction.
-
-Each step is independently useful and can land on its own.
-
-## Acceptance coverage
-
-`cucumber/src/test/resources/requirements/rulebuilding/Conditions in the users words.feature` contains three
-independent scenarios covering phrase/formal display, reuse of the first phrase with the chat note, and renaming
-a shared condition across both comment tooltips. The phrase step reads rendered text from
-`CONDITION_PHRASE_PREFIX` nodes and checks the complete list, including the absence of the old phrase after renaming.
-
-The seven mocked accessibility page-object tests pass, all 210 cucumber scenarios resolve in dry-run mode, and
-UI test sources compile. Live desktop/model scenarios have not been run. On the first live run, confirm that
-`elevated glucose` is captured as the phrase for `Glucose is high` in `temp/logs/server.log` before relying on the
-reuse and rename scenarios.
