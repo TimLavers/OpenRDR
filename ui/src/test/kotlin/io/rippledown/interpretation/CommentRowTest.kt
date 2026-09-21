@@ -2,9 +2,15 @@
 
 package io.rippledown.interpretation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.RenderedComment
 import io.rippledown.utils.asConditionTexts
@@ -72,9 +78,13 @@ class CommentRowTest {
 
     @Test
     fun `should show a replacement as both comments in the one row, each with its own name`() = runTest {
+        // Given a replacement preview constrained to the width of the Comments panel
+        val replacement = malabar.copy(conditions = listOf("Sun is in case").asConditionTexts())
         with(composeTestRule) {
             setContent {
-                CommentRow(CommentRowState(bondi, CommentHighlight.REPLACED, replacement = malabar))
+                Box(Modifier.width(500.dp)) {
+                    CommentRow(CommentRowState(bondi, CommentHighlight.REPLACED, replacement = replacement))
+                }
             }
 
             //The comment going, marked as being replaced
@@ -88,6 +98,26 @@ class CommentRowTest {
                 .assertTextEquals(malabar.text)
             onNodeWithContentDescription("$COMMENT_REPLACEMENT_NAME_PREFIX${malabar.name}", useUnmergedTree = true)
                 .assertTextEquals(malabar.name)
+
+            // Then both text cells have usable width inside their own half of the row
+            val rowBounds = onNodeWithContentDescription("$COMMENT_ROW_PREFIX${bondi.name}")
+                .fetchSemanticsNode().boundsInRoot
+            val oldText = onNodeWithContentDescription("$COMMENT_PENDING_REPLACE_PREFIX${bondi.name}")
+            val newText = onNodeWithContentDescription("$COMMENT_REPLACEMENT_TEXT_PREFIX${malabar.name}")
+            val oldBounds = oldText.fetchSemanticsNode().boundsInRoot
+            val newBounds = newText.fetchSemanticsNode().boundsInRoot
+            withClue("Both replacement cells must fit side by side: row=$rowBounds, old=$oldBounds, new=$newBounds") {
+                (oldBounds.width > rowBounds.width * 0.3f && oldBounds.width < rowBounds.width * 0.5f) shouldBe true
+                (newBounds.width > rowBounds.width * 0.3f && newBounds.width < rowBounds.width * 0.5f) shouldBe true
+                (oldBounds.right <= newBounds.left && newBounds.right <= rowBounds.right) shouldBe true
+            }
+
+            // When hovering the comment coming in place of the original
+            newText.performMouseInput { moveTo(center) }
+
+            // Then the rule being built supplies its conditions
+            requireConditionsToBeShowing(listOf("Sun is in case"))
+            onNodeWithContentDescription("${CONDITION_PREFIX}Sex is F").assertDoesNotExist()
         }
     }
 
