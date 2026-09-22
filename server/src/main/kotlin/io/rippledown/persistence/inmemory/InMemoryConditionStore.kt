@@ -11,6 +11,13 @@ class InMemoryConditionStore: ConditionStore {
 
     override fun all() = conditionSet
 
+    override fun update(condition: Condition) {
+        val id = requireNotNull(condition.id) { "Cannot update a condition without an id." }
+        require(conditionSet.any { it.id == id }) { "No condition with id $id exists." }
+        conditionSet.removeAll { it.id == id }
+        conditionSet.add(condition)
+    }
+
     override fun create(condition: Condition): Condition {
         require(condition.id == null) {
             "Cannot create from a condition with a non-null id."

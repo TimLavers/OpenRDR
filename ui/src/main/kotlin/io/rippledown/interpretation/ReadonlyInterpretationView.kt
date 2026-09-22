@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
@@ -35,7 +36,7 @@ interface ReadonlyInterpretationViewHandler {
 fun ReadonlyInterpretationView(
     interpretation: ViewableInterpretation,
     diff: Diff? = null,
-    ruleConditions: List<String> = emptyList(),
+    ruleConditions: List<ConditionText> = emptyList(),
     contentDescription: String = INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE,
     columnWidths: ColumnWidths = ColumnWidths(1),
     idPrefix: String = "",

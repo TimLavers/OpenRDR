@@ -1,6 +1,7 @@
 package io.rippledown.interpretation
 
 import io.rippledown.model.RenderedComment
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
@@ -46,7 +47,7 @@ data class CommentRowState(
 fun commentRowsToDisplay(
     comments: List<RenderedComment>,
     diff: Diff? = null,
-    ruleConditions: List<String> = emptyList()
+    ruleConditions: List<ConditionText> = emptyList()
 ): List<CommentRowState> {
     if (diff == null) return comments.map { CommentRowState(it) }
 

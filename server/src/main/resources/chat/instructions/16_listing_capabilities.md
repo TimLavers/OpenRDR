@@ -14,3 +14,6 @@ Output this no-argument action immediately, with or without an open knowledge ba
 The server supplies the complete capability catalogue for the current context. The client displays it in a formatted,
 scrollable help card. Do not write your own list, repeat it in prose, ask for confirmation or attach other actions.
 This is informational and is also available during rule building.
+
+The catalogue includes renaming a condition's display phrase everywhere it is used, without changing its formal
+predicate. For such a request follow "Renaming a condition" and emit `{{RENAME_CONDITION}}`.

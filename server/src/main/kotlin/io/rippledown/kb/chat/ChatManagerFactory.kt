@@ -60,7 +60,9 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
         val modelResponder = object : ModelResponder {
             override suspend fun response(message: String) = chatManager.response(message)
         }
-        val reasonTransformer = createReasonTransformer(viewableCase, ruleSessionManager, modelResponder)
+        val acknowledgements = ReasonAcknowledgements()
+        val reasonTransformer =
+            createReasonTransformer(viewableCase, ruleSessionManager, modelResponder, acknowledgements)
         val suggestionsBuffer = SuggestionsBuffer()
         val suggestedConditionsHandler =
             SuggestedConditionsHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
@@ -72,8 +74,9 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
             SELECT_SUGGESTED_CONDITION to selectSuggestionHandler
         )
         val conversation = Conversation(chatService, functionCallHandlers)
-        chatManager =
-            ChatManager(conversation, ruleSessionManager, kbService, suggestionsBuffer, suggestedConditionsHandler)
+        chatManager = ChatManager(
+            conversation, ruleSessionManager, kbService, suggestionsBuffer, suggestedConditionsHandler, acknowledgements
+        )
         return chatManager
     }
 
@@ -81,7 +84,8 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
         fun createReasonTransformer(
             viewableCase: ViewableCase,
             ruleService: RuleService,
-            modelResponder: ModelResponder
-        ) = KBReasonTransformer(viewableCase.case, ruleService, modelResponder)
+            modelResponder: ModelResponder,
+            acknowledgements: ReasonAcknowledgements = ReasonAcknowledgements()
+        ) = KBReasonTransformer(viewableCase.case, ruleService, modelResponder, acknowledgements)
     }
 }

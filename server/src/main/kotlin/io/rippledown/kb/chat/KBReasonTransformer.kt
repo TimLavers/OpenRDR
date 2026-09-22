@@ -9,7 +9,8 @@ import io.rippledown.toJsonString
 class KBReasonTransformer(
     private val case: RDRCase,
     private val ruleService: RuleService,
-    private val modelResponder: ModelResponder
+    private val modelResponder: ModelResponder,
+    private val acknowledgements: ReasonAcknowledgements = ReasonAcknowledgements()
 ) : ReasonTransformer {
 
     override suspend fun transform(reason: String): ReasonTransformation {
@@ -19,6 +20,7 @@ class KBReasonTransformer(
             ruleService.addConditionToCurrentRuleSession(condition)
             val cornerstoneStatus = ruleService.cornerstoneStatus()
             ruleService.sendCornerstoneStatus()
+            acknowledgements.record(result)
             return result.toExpressionTransformation()
                 .copy(cornerstoneStatusJson = cornerstoneStatus.toJsonString())
         }

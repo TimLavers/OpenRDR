@@ -35,6 +35,7 @@ data class EpisodicCondition(
     )
 
     override fun userExpression() = userExpression
+    override fun withUserExpression(phrase: String) = copy(userExpression = phrase)
 
     override fun holds(case: RDRCase): Boolean {
         val values = case.values(attribute) ?: return false

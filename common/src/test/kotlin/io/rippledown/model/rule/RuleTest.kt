@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
+import io.rippledown.model.condition.ConditionText
 import kotlin.test.Test
 
 internal class RuleTest : RuleTestBase() {
@@ -246,20 +247,20 @@ internal class RuleTest : RuleTestBase() {
     fun `summary should contain conditions from root`() {
         val conditions1 = setOf(createCondition("a"), createCondition("b"))
         val rule1 = Rule(1, null, conditions1)
-        rule1.summary().conditionTextsFromRoot shouldBe listOf(
+        rule1.summary().conditionsFromRoot shouldBe listOf(
             createCondition("a"),
             createCondition("b")
-        ).map { it.asText() }
+        ).map { ConditionText.of(it) }
 
         val conditions2 = setOf(createCondition("x"), createCondition("y"))
         val rule2 = Rule(2, rule1, conditions2, mutableSetOf(), comment2)
-        rule2.summary().conditionTextsFromRoot shouldBe listOf(
+        rule2.summary().conditionsFromRoot shouldBe listOf(
             createCondition("a"),
             createCondition("b"),
             createCondition("x"),
             createCondition("y")
         ).map {
-            it.asText()
+            ConditionText.of(it)
         }
     }
 
@@ -463,7 +464,10 @@ internal class RuleTest : RuleTestBase() {
     @Test
     fun `should list conditions for rule with null parent`() {
         val child = Rule(99, null, setOf(createCondition("a"), createCondition("b")), mutableSetOf(), comment1)
-        child.conditionTextsFromRoot() shouldBe listOf(createCondition("a"), createCondition("b")).map { it.asText() }
+        child.conditionsFromRoot() shouldBe listOf(
+            createCondition("a"),
+            createCondition("b")
+        ).map { ConditionText.of(it) }
     }
 
     @Test
@@ -484,14 +488,14 @@ internal class RuleTest : RuleTestBase() {
                 mutableSetOf(),
                 comment2
             )
-        child.conditionTextsFromRoot() shouldBe listOf(
+        child.conditionsFromRoot() shouldBe listOf(
             createCondition("x"),
             createCondition("y"),
             createCondition("z"),
             createCondition("a"),
             createCondition("b"),
             createCondition("c")
-        ).map { it.asText() }
+        ).map { ConditionText.of(it) }
 
     }
 

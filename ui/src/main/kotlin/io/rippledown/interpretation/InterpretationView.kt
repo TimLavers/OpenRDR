@@ -12,10 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.*
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.interpretationview.ViewableInterpretation
 
@@ -42,7 +40,7 @@ interface InterpretationViewHandler : ReadonlyInterpretationViewHandler
 fun InterpretationView(
     interpretation: ViewableInterpretation,
     diff: Diff? = null,
-    ruleConditions: List<String> = emptyList(),
+    ruleConditions: List<ConditionText> = emptyList(),
     columnWidths: ColumnWidths = ColumnWidths(1),
     handler: InterpretationViewHandler
 ) {
@@ -133,17 +131,34 @@ fun InterpretationView(
 
 @Composable
 fun ConditionTooltip(
-    conditions: List<String>,
+    conditions: List<ConditionText>,
+    formalDescriptionPrefix: String = CONDITION_PREFIX,
 ) {
     Column {
         conditions.forEach { condition ->
-            Text(
-                text = condition,
-                modifier = Modifier.padding(4.dp)
-                    .semantics {
-                        contentDescription = "$CONDITION_PREFIX$condition"
+            val hasPhrase = condition.hasPhrase()
+            // Keep the phrase and its formal text in one accessibility group.
+            Column(modifier = Modifier.padding(4.dp).semantics(mergeDescendants = false) {}) {
+                if (hasPhrase) {
+                    Text(
+                        text = condition.phrase,
+                        modifier = Modifier.semantics {
+                            contentDescription = "$CONDITION_PHRASE_PREFIX${condition.phrase}"
+                        }
+                    )
+                }
+                Text(
+                    text = condition.formal,
+                    style = if (hasPhrase) {
+                        LocalTextStyle.current.copy(fontSize = 12.sp, color = Color.Gray)
+                    } else {
+                        LocalTextStyle.current
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "$formalDescriptionPrefix${condition.formal}"
                     }
-            )
+                )
+            }
         }
     }
 }

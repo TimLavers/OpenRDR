@@ -15,6 +15,7 @@ import io.rippledown.model.interpretationview.ViewableInterpretation
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.Literal
 import io.rippledown.model.rule.RuleSummary
+import io.rippledown.utils.asConditionTexts
 import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -53,13 +54,19 @@ class CaseInspectionDerivedValueTest {
         val rdrCase = builder.build("Case1", 1L)
 
         val interpretation = Interpretation(rdrCase.caseId).apply {
-            add(RuleSummary(id = 1, assignment = assignment, conditionTextsFromRoot = listOf("Glucose is high")))
+            add(
+                RuleSummary(
+                    id = 1,
+                    assignment = assignment,
+                    conditionsFromRoot = listOf("Glucose is high").asConditionTexts()
+                )
+            )
             if (commentText != null) {
                 add(
                     RuleSummary(
                         id = 2,
                         assignment = AssignValue(comment, Literal(commentText)),
-                        conditionTextsFromRoot = listOf("Glucose is high")
+                        conditionsFromRoot = listOf("Glucose is high").asConditionTexts()
                     )
                 )
             }
@@ -249,7 +256,7 @@ class CaseInspectionDerivedValueTest {
             setContent {
                 CaseInspection(
                     case = caseWithNothing(),
-                    ruleConditions = listOf("Glucose is high"),
+                    ruleConditions = listOf("Glucose is high").asConditionTexts(),
                     handler = handler,
                     derivedValueChange = DerivedValueAddition("BMI", "weight / height ^ 2")
                 )

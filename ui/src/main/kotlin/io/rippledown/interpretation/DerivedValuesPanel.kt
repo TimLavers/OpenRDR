@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import io.rippledown.caseview.ColumnWidths
 import io.rippledown.constants.interpretation.*
 import io.rippledown.model.caseview.DerivedValueInfo
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.DerivedValueChange
 
 /**
@@ -59,7 +60,7 @@ fun DerivedValuesPanel(
     derivedValues: List<DerivedValueInfo>,
     columnWidths: ColumnWidths = ColumnWidths(1),
     change: DerivedValueChange? = null,
-    ruleConditions: List<String> = emptyList()
+    ruleConditions: List<ConditionText> = emptyList()
 ) {
     val rows = rowsToDisplay(derivedValues, change, ruleConditions)
     var expanded by remember { mutableStateOf(true) }

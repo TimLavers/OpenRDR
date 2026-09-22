@@ -13,7 +13,7 @@ sealed class Condition {
     abstract fun alignAttributes(idToAttribute: (Int) -> Attribute): Condition
     abstract fun sameAs(other: Condition): Boolean
     abstract fun userExpression(): String
+    abstract fun withUserExpression(phrase: String): Condition
     open fun attributeNames(): Collection<String> = setOf()
     open fun id(): Int? = id
 }
-

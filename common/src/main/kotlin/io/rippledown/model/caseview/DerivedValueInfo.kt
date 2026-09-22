@@ -1,5 +1,6 @@
 package io.rippledown.model.caseview
 
+import io.rippledown.model.condition.ConditionText
 import kotlinx.serialization.Serializable
 
 /**
@@ -16,5 +17,5 @@ data class DerivedValueInfo(
     val name: String,
     val value: String,
     val formula: String,
-    val conditions: List<String>
+    val conditions: List<ConditionText>
 )

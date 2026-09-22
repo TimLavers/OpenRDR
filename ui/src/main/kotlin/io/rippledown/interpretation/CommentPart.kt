@@ -1,15 +1,10 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 
 package io.rippledown.interpretation
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -54,41 +49,50 @@ internal fun RowScope.CommentPart(
     onHoverChanged: (Boolean) -> Unit
 ) {
     var isOverUnresolved by remember { mutableStateOf(false) }
-    TooltipArea(
-        tooltip = {
-            if (isOverUnresolved) {
-                UnresolvedVariableTooltip()
-            } else {
-                ConditionTooltip(comment.conditions)
-            }
-        },
-        modifier = Modifier.weight(partWeight).background(partBackground)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            CommentName(
-                name = comment.name,
-                description = nameDescription,
-                modifier = Modifier.weight(nameWeight).padding(end = 12.dp)
-            )
-            AnnotatedTextView(
-                text = comment.annotatedText(),
-                description = textDescription,
-                modifier = Modifier.weight(1f - nameWeight).padding(vertical = 2.dp),
-                style = TextStyle(fontSize = 13.sp, color = Color.Black),
-                handler = object : AnnotatedTextViewHandler {
-                    override fun onTextLayoutResult(layoutResult: TextLayoutResult) {}
-
-                    override fun onPointerEnter(characterOffset: Int) {
-                        onHoverChanged(true)
-                        isOverUnresolved = comment.unresolvedRanges.any { characterOffset in it.toIntRange() }
-                    }
-
-                    override fun onPointerExit() {
-                        onHoverChanged(false)
-                        isOverUnresolved = false
-                    }
+    // Weight must belong to the Row's direct child. TooltipBox applies its modifier
+    // to an internal anchor, where RowScope.weight would not size the replacement halves.
+    Box(Modifier.weight(partWeight).background(partBackground)) {
+        // Material tooltips share a mutex: entering a new row dismisses the previous tooltip,
+        // including when rapid native pointer moves or recomposition miss an exit event.
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+            state = rememberTooltipState(),
+            tooltip = {
+                if (isOverUnresolved) {
+                    UnresolvedVariableTooltip()
+                } else {
+                    ConditionTooltip(comment.conditions)
                 }
-            )
+            }
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                CommentName(
+                    name = comment.name,
+                    description = nameDescription,
+                    modifier = Modifier.weight(nameWeight).padding(end = 12.dp)
+                )
+                AnnotatedTextView(
+                    text = comment.annotatedText(),
+                    description = textDescription,
+                    // Keep both cells separate from TooltipBox's merging anchor semantics.
+                    modifier = Modifier.weight(1f - nameWeight).padding(vertical = 2.dp)
+                        .semantics(mergeDescendants = true) {},
+                    style = TextStyle(fontSize = 13.sp, color = Color.Black),
+                    handler = object : AnnotatedTextViewHandler {
+                        override fun onTextLayoutResult(layoutResult: TextLayoutResult) {}
+
+                        override fun onPointerEnter(characterOffset: Int) {
+                            onHoverChanged(true)
+                            isOverUnresolved = comment.unresolvedRanges.any { characterOffset in it.toIntRange() }
+                        }
+
+                        override fun onPointerExit() {
+                            onHoverChanged(false)
+                            isOverUnresolved = false
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -105,7 +109,7 @@ private fun CommentName(name: String, description: String, modifier: Modifier = 
         fontWeight = FontWeight.Bold,
         fontSize = 12.sp,
         color = Color.DarkGray,
-        modifier = modifier.semantics { contentDescription = description }
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description }
     )
 }
 

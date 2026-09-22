@@ -7,6 +7,7 @@ import io.rippledown.model.caseview.DerivedValueInfo
 import io.rippledown.model.diff.DerivedValueAddition
 import io.rippledown.model.diff.DerivedValueRemoval
 import io.rippledown.model.diff.DerivedValueReplacement
+import io.rippledown.utils.asConditionTexts
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import kotlin.test.Test
@@ -83,7 +84,7 @@ class DerivedValuesPanelTest {
                 name = "BMI",
                 value = "25.3",
                 formula = "Weight / (Height * Height)",
-                conditions = listOf("Weight is high")
+                conditions = listOf("Weight is high").asConditionTexts()
             ),
             DerivedValueInfo(name = "Risk score", value = "high", formula = "\"high\"", conditions = emptyList())
         )
@@ -148,9 +149,24 @@ class DerivedValuesPanelTest {
     fun `should display multiple derived values as name-value pairs`() = runTest {
         // Given multiple derived values
         val values = listOf(
-            DerivedValueInfo(name = "Alpha", value = "1", formula = "\"1\"", conditions = listOf("c1")),
-            DerivedValueInfo(name = "Beta", value = "2", formula = "\"2\"", conditions = listOf("c2")),
-            DerivedValueInfo(name = "Gamma", value = "3", formula = "\"3\"", conditions = listOf("c3"))
+            DerivedValueInfo(
+                name = "Alpha",
+                value = "1",
+                formula = "\"1\"",
+                conditions = listOf("c1").asConditionTexts()
+            ),
+            DerivedValueInfo(
+                name = "Beta",
+                value = "2",
+                formula = "\"2\"",
+                conditions = listOf("c2").asConditionTexts()
+            ),
+            DerivedValueInfo(
+                name = "Gamma",
+                value = "3",
+                formula = "\"3\"",
+                conditions = listOf("c3").asConditionTexts()
+            )
         )
         with(composeTestRule) {
             setContent {
@@ -172,7 +188,7 @@ class DerivedValuesPanelTest {
             name = "BMI",
             value = "25.3",
             formula = "Weight / Height ^ 2",
-            conditions = listOf("Height is in case")
+            conditions = listOf("Height is in case").asConditionTexts()
         )
         with(composeTestRule) {
             setContent {
@@ -183,7 +199,7 @@ class DerivedValuesPanelTest {
 
             // Then its tooltip details still exist in the accessibility tree
             onNodeWithContentDescription("$DERIVED_VALUE_FORMULA_PREFIX${info.formula}").assertExists()
-            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions.single()}").assertExists()
+            onNodeWithContentDescription("$DERIVED_VALUE_CONDITIONS_PREFIX${info.conditions.single().formal}").assertExists()
         }
     }
 

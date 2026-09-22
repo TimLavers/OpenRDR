@@ -1,6 +1,7 @@
 package io.rippledown.chat
 
 import io.rippledown.chat.ReasonTransformation.Companion.OK
+import io.rippledown.chat.ReasonTransformation.Companion.PREVIOUSLY_CALLED_MESSAGE
 import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.model.condition.ConditionParsingResult
 import kotlinx.serialization.Serializable
@@ -20,6 +21,7 @@ data class ReasonTransformation(
     companion object {
         const val OK = "Ok"
         const val TRANSFORMATION_MESSAGE = "Added your reason '%s'."
+        const val PREVIOUSLY_CALLED_MESSAGE = "Added your reason '%s' (you previously called this '%s')."
     }
 }
 
@@ -37,9 +39,13 @@ fun ConditionParsingResult.toExpressionTransformation() = when {
 
     else -> {
         val cond = requireNotNull(condition)
+        val formal = cond.asText()
+        val storedPhrase = cond.userExpression()
         val message = when {
-            cond.userExpression() != cond.asText() ->
-                TRANSFORMATION_MESSAGE.format(cond.asText())
+            expression.isNotBlank() && expression != formal && expression != storedPhrase && storedPhrase.isNotBlank() ->
+                PREVIOUSLY_CALLED_MESSAGE.format(formal, storedPhrase)
+
+            storedPhrase != formal -> TRANSFORMATION_MESSAGE.format(formal)
 
             else -> OK
         }

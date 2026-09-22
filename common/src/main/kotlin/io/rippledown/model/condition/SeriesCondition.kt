@@ -30,6 +30,7 @@ data class SeriesCondition(
     override fun asText() = seriesPredicate.description(attribute.name)
 
     override fun userExpression() = userExpression
+    override fun withUserExpression(phrase: String) = copy(userExpression = phrase)
 
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = SeriesCondition(
         id,

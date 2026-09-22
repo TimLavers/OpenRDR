@@ -17,7 +17,7 @@
 
 ## Step 3. Show the transformed reason to the user:
 
-- The value of "message" should be included in your response to the user.
+- Include the value of "message" verbatim in your response, including any "you previously called this" note.
 
 ```json
 {
@@ -93,4 +93,3 @@ Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, To
   "message": "1. <first reason>\\n2. <second reason>\\n3. <third reason>"
 }
 ```
-

@@ -19,10 +19,7 @@ import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.interpretationview.ViewableInterpretation
-import io.rippledown.utils.FIRST_COMMENT_ATTRIBUTE_ID
-import io.rippledown.utils.commentAttributeName
-import io.rippledown.utils.createViewableInterpretation
-import io.rippledown.utils.waitUntilAsserted
+import io.rippledown.utils.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -308,7 +305,7 @@ class DiffClearedAfterRuleBuildingTest {
         ReadonlyInterpretationView(
             interpretation = interpretation,
             diff = diff,
-            ruleConditions = ruleConditions,
+            ruleConditions = ruleConditions.asConditionTexts(),
             modifier = modifier,
             handler = handler
         )
@@ -330,7 +327,7 @@ class DiffClearedAfterRuleBuildingTest {
         ReadonlyInterpretationView(
             interpretation = interpretation,
             diff = diffState.value,
-            ruleConditions = ruleConditions,
+            ruleConditions = ruleConditions.asConditionTexts(),
             modifier = modifier,
             handler = handler
         )

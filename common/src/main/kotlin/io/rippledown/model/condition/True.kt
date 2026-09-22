@@ -17,6 +17,7 @@ data object True: Condition() {
     override fun asText() = "TRUE"
 
     override fun userExpression() = ""
+    override fun withUserExpression(phrase: String) = this
 
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) = this
 

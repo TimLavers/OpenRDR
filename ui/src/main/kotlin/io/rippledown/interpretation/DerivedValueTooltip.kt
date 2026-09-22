@@ -28,13 +28,7 @@ internal fun DerivedValueTooltip(info: DerivedValueInfo, showFormula: Boolean = 
                     .semantics { contentDescription = "$DERIVED_VALUE_FORMULA_PREFIX${info.formula}" }
             )
         }
-        info.conditions.forEach { condition ->
-            Text(
-                text = condition,
-                modifier = Modifier.padding(4.dp)
-                    .semantics { contentDescription = "$DERIVED_VALUE_CONDITIONS_PREFIX$condition" }
-            )
-        }
+        ConditionTooltip(info.conditions, formalDescriptionPrefix = DERIVED_VALUE_CONDITIONS_PREFIX)
     }
 }
 
@@ -61,4 +55,3 @@ internal fun formulaAnnotatedString(formula: String) = buildAnnotatedString {
 }
 
 private fun String.isLiteralValue(value: String) = this == "\"$value\""
-

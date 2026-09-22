@@ -20,6 +20,21 @@ import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
+    fun `condition rename instructions include the action and its parameters`() {
+        // Given
+        val case = createCaseWithInterpretation("Test Case")
+
+        // When
+        val prompt = KBChatService.systemPrompt(case)
+
+        // Then
+        prompt shouldContain "\"action\": \"RenameCondition\""
+        prompt shouldContain "\"conditionText\""
+        prompt shouldContain "\"newPhrase\""
+        prompt shouldNotContain "{{RENAME_CONDITION}}"
+    }
+
+    @Test
     fun `capability action is available in every context without a model written catalogue`() {
         // Given
         val contexts = listOf(

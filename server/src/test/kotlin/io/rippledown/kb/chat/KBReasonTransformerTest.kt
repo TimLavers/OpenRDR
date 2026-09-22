@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.ReasonTransformation
 import io.rippledown.model.Attribute
 import io.rippledown.model.CaseId
@@ -13,7 +14,8 @@ import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Test
 
 class KBReasonTransformerTest {
 
@@ -21,6 +23,35 @@ class KBReasonTransformerTest {
     private val ruleService = mockk<RuleService>()
     private val modelResponder = mockk<ModelResponder>()
     private val transformer = KBReasonTransformer(case, ruleService, modelResponder)
+
+    @Test
+    fun `relays the previous phrase note unchanged through the function handler`() = runTest {
+        // Given a new phrase resolved to an existing condition by the rule service
+        val reason = "raised glucose"
+        val condition = greaterThanOrEqualTo(7, Attribute(1, "Glucose"), 11.0)
+            .copy(userExpression = "elevated glucose")
+        every { ruleService.conditionForExpression(case, reason) } returns
+                ConditionParsingResult(condition, expression = reason)
+        val status = CornerstoneStatus(numberOfCornerstones = 2)
+        every { ruleService.cornerstoneStatus() } returns status
+        val handler = ReasonTransformHandler(transformer, ruleService)
+
+        // When
+        val response = handler.handle(mapOf(REASON_PARAMETER to reason))
+        val transformation = Json.decodeFromString<ReasonTransformation>(
+            response.substringAfter("'$reason' evaluation: ").substringBefore("\nCornerstone status:")
+        )
+
+        // Then the function result preserves the exact message, condition id and cornerstone status
+        transformation shouldBe ReasonTransformation(
+            7,
+            "Added your reason 'Glucose ≥ 11.0' (you previously called this 'elevated glucose').",
+            status.toJsonString()
+        )
+        verify(exactly = 1) { ruleService.addConditionToCurrentRuleSession(condition) }
+        verify(exactly = 1) { ruleService.sendCornerstoneStatus() }
+        condition.userExpression() shouldBe "elevated glucose"
+    }
 
     @Test
     fun `should add condition to rule session when a valid condition is parsed`() = runTest {

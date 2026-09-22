@@ -2,18 +2,27 @@
 
 package io.rippledown.interpretation
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.sp
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.interpretation.CONDITION_PHRASE_PREFIX
+import io.rippledown.constants.interpretation.CONDITION_PREFIX
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.model.IntRangeData
 import io.rippledown.model.RenderedComment
+import io.rippledown.model.condition.ConditionText
+import io.rippledown.utils.asConditionTexts
 import io.rippledown.utils.waitUntilAsserted
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -162,16 +171,80 @@ class CommentPartTest {
 
     @Test
     fun `should show the conditions of the rule that gave the comment when hovered over`() = runTest {
-        val conditions = listOf("Sex is F", "Age is high")
+        // Given distinct, absent, whitespace-only and identical phrases in one tooltip
+        val conditions = listOf(
+            ConditionText("Sex is F", "female"),
+            ConditionText("Age is high"),
+            ConditionText("Glucose is high", " \t"),
+            ConditionText("Weight is high", "Weight is high")
+        )
         val comment = RenderedComment(text = "Go to Bondi.", conditions = conditions, name = "C1")
+        val displayedComments = mutableStateOf(
+            listOf(
+                comment, RenderedComment(
+                    text = "Review glucose.", name = "C2",
+                    conditions = listOf(ConditionText("Glucose is high", "elevated glucose"))
+                )
+            )
+        )
         with(composeTestRule) {
-            showPart(comment)
+            setContent {
+                Column {
+                    displayedComments.value.forEachIndexed { index, displayed ->
+                        Row {
+                            CommentPart(
+                                displayed, Color.Transparent,
+                                if (index == 0) textId else "second comment", "$nameId$index",
+                                0.2f, 1f, {})
+                        }
+                    }
+                }
+            }
+
+            // Then name and text remain independently accessible through the merged tree
+            onNodeWithContentDescription(textId).assertTextEquals(comment.text)
+            onNodeWithContentDescription("${nameId}0").assertTextEquals("C1")
 
             //When
             hoverOverTheComment()
 
-            //Then
-            requireConditionsToBeShowing(conditions)
+            // Then every formal condition remains visible, with only the distinct phrase added
+            requireConditionsToBeShowing(conditions.map { it.formal })
+            requireConditionPhrasesToBeShowing("female")
+            conditions.forEach { condition ->
+                onAllNodesWithText(condition.formal).assertCountEquals(1)
+            }
+            conditions.drop(1).forEach { requireNoConditionPhraseFor(it.formal) }
+            onNodeWithText(" \t").assertDoesNotExist()
+
+            // And the formal text sits beneath the phrase in a smaller, grey style
+            val phrase = onNodeWithContentDescription("${CONDITION_PHRASE_PREFIX}female")
+            val formal = onNodeWithContentDescription("${CONDITION_PREFIX}Sex is F")
+            (phrase.fetchSemanticsNode().boundsInRoot.bottom <= formal.fetchSemanticsNode().boundsInRoot.top) shouldBe true
+            val layouts = mutableListOf<TextLayoutResult>()
+            formal.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            layouts.single().layoutInput.style.fontSize shouldBe 12.sp
+            layouts.single().layoutInput.style.color shouldBe Color.Gray
+
+            // When another row is hovered and the shared phrase changes while its tooltip is visible
+            onNodeWithContentDescription("second comment", useUnmergedTree = true)
+                .performMouseInput { moveTo(center) }
+            requireConditionPhrasesToBeShowing("elevated glucose")
+            runOnIdle {
+                displayedComments.value = displayedComments.value.map {
+                    it.copy(conditions = listOf(ConditionText("Glucose is high", "raised glucose")))
+                }
+            }
+            requireConditionPhrasesToBeShowing("raised glucose")
+            hoverOverTheComment()
+
+            // Then switching rows leaves exactly one tooltip with the renamed phrase and formal text
+            waitUntilAsserted {
+                onAllNodesWithContentDescription("${CONDITION_PHRASE_PREFIX}raised glucose").assertCountEquals(1)
+                onAllNodesWithContentDescription("${CONDITION_PREFIX}Glucose is high").assertCountEquals(1)
+                onNodeWithContentDescription("${CONDITION_PHRASE_PREFIX}elevated glucose").assertDoesNotExist()
+                onNodeWithContentDescription("${CONDITION_PHRASE_PREFIX}female").assertDoesNotExist()
+            }
         }
     }
 
@@ -221,7 +294,7 @@ class CommentPartTest {
         val text = "The glucose reading for this case was a long way from $marker"
         val comment = RenderedComment(
             text = text,
-            conditions = conditions,
+            conditions = conditions.asConditionTexts(),
             unresolvedRanges = listOf(IntRangeData(text.indexOf(marker), text.length - 1)),
             name = "C1"
         )

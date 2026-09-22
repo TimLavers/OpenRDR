@@ -1,6 +1,7 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.diff.DerivedValueChange
 import io.rippledown.model.diff.Diff
 import io.rippledown.model.diff.PendingChange
@@ -20,7 +21,7 @@ data class CornerstoneStatus(
     val indexOfCornerstoneToReview: Int = -1,
     val numberOfCornerstones: Int = 0,
     val pendingChange: PendingChange? = null,
-    val ruleConditions: List<String> = emptyList()
+    val ruleConditions: List<ConditionText> = emptyList()
 ) {
     /**
      * The pending change to the case's comments, or null if the session in

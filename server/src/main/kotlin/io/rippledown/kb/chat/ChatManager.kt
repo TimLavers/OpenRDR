@@ -25,6 +25,7 @@ class ChatManager(
     kbService: KnowledgeBaseService,
     suggestionsBuffer: SuggestionsBuffer = SuggestionsBuffer(),
     suggestedConditionsHandler: FunctionCallHandler? = null,
+    private val reasonAcknowledgements: ReasonAcknowledgements = ReasonAcknowledgements(),
 ) : ModelResponder {
     private val logger = lazyLogger
     private var currentCase: ViewableCase? = null
@@ -38,6 +39,7 @@ class ChatManager(
         currentCase = viewableCase
         knowledgeBases.reset()
         rules.reset()
+        reasonAcknowledgements.clear()
         responses.reset()
         val response = try {
             conversationService.startConversation()
@@ -55,6 +57,7 @@ class ChatManager(
         rules.cornerstoneAction(message)?.let { return executeAction(it) }
         knowledgeBases.answer(message)?.let { return it }
         rules.assignmentAction(message)?.let { return processActionComment(it) }
+        reasonAcknowledgements.clear()
         val turn = rules.prepareTurn(message)
         val response = try {
             conversationService.response(turn.message)
@@ -63,7 +66,7 @@ class ChatManager(
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
         logger.info("$LOG_PREFIX_FOR_CONVERSATION_RESPONSE $response")
-        rules.completeTurn(turn)?.let { return processActionComment(it) }
+        rules.completeTurn(turn, reasonAcknowledgements.snapshot())?.let { return processActionComment(it) }
         return dispatchModelResponse(response)
     }
 

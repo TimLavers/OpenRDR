@@ -20,6 +20,7 @@ import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
@@ -488,6 +489,32 @@ class RuleSessionManager(
         return renamedMessage(oldName, renamed.name)
     }
 
+    override fun renameCondition(conditionText: String, newPhrase: String): String {
+        require(newPhrase.isNotBlank()) { "A condition phrase cannot be blank." }
+        val text = conditionText.trim()
+        val matches = kb.conditionManager.all().filter {
+            text.isNotBlank() && (it.asText().trim().equals(text, ignoreCase = true) ||
+                    it.userExpression().trim().equals(text, ignoreCase = true))
+        }
+        check(matches.isNotEmpty()) { "No condition \"$text\" exists." }
+        check(matches.size == 1) {
+            val descriptions = matches.map { it.asText() }.sorted().joinToString(", ") { "\"$it\"" }
+            "More than one condition matches \"$text\": $descriptions."
+        }
+        val original = matches.single()
+        val id = requireNotNull(original.id) { "A stored condition must have an id." }
+        val renamed = kb.conditionManager.renamePhrase(id, newPhrase)
+        kb.ruleTree.replaceCondition(renamed)
+        ruleSession?.let { session ->
+            session.conditions = session.conditions.map { if (it.id == id) renamed else it }.toMutableSet()
+        }
+        return if (original.userExpression().isBlank()) {
+            "Called condition \"${original.asText()}\" \"$newPhrase\"."
+        } else {
+            "Renamed condition \"${original.asText()}\" from \"${original.userExpression()}\" to \"$newPhrase\"."
+        }
+    }
+
     /**
      * Refuses a definition edit that would make the attribute depend on
      * itself. The graph is built as if the edit had been made, so cycles
@@ -868,7 +895,7 @@ class RuleSessionManager(
     internal fun cornerstoneStatus(currentCornerstone: ViewableCase?): CornerstoneStatus {
         val session = activeRuleSession()
         val cornerstones: List<RDRCase> = session.cornerstoneCases()
-        val conditionTexts = session.conditions.map { it.asText() }
+        val conditionTexts = session.conditions.map { ConditionText.of(it) }
         if (cornerstones.isEmpty()) return CornerstoneStatus(
             pendingChange = pendingChange,
             ruleConditions = conditionTexts
@@ -916,7 +943,8 @@ class RuleSessionManager(
     /**
      * The stored form of [condition], or the reason it cannot be used as a
      * condition of the rule being built. [expression] is what the user gave, so
-     * that a condition that does not hold can be reported in their own words.
+     * that a condition that does not hold can be reported in their own words,
+     * and a different phrase on a reused condition can be explained.
      */
     private fun validated(
         condition: Condition?,
@@ -929,23 +957,23 @@ class RuleSessionManager(
         //Only return the condition if non-null and holds for the case
         val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {
-            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION, expression = expression)
         } else if (condition.attributeNames().any { it !in caseAttributeNames }) {
-            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION)
+            ConditionParsingResult(errorMessage = DOES_NOT_CORRESPOND_TO_A_CONDITION, expression = expression)
         } else if (!condition.holds(materialisedCase)) {
             val message = if (expression.normalizeForComparison() != condition.asText().normalizeForComparison()) {
                 INTERPRETED_CONDITION_IS_NOT_TRUE.format(expression, condition.asText())
             } else {
                 CONDITION_IS_NOT_TRUE
             }
-            ConditionParsingResult(errorMessage = message)
+            ConditionParsingResult(errorMessage = message, expression = expression)
         } else {
             val cycleError = cycleMessageFor(condition)
             if (cycleError != null) {
-                ConditionParsingResult(errorMessage = cycleError)
+                ConditionParsingResult(errorMessage = cycleError, expression = expression)
             } else {
                 //if this a new condition, the following will store it with its user expression, else the existing condition will be returned
-                ConditionParsingResult(kb.conditionManager.getOrCreate(condition))
+                ConditionParsingResult(kb.conditionManager.getOrCreate(condition), expression = expression)
             }
         }
     }

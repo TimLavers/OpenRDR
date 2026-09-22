@@ -56,6 +56,14 @@ class PostgresConditionStore(private val db: Database): ConditionStore {
         }
     }
 
+    override fun update(condition: Condition) {
+        val id = requireNotNull(condition.id) { "Cannot update a condition without an id." }
+        transaction(db) {
+            val stored = requireNotNull(PGCondition.findById(id)) { "No condition with id $id exists." }
+            stored.conditionJSON = Json.encodeToString(condition)
+        }
+    }
+
     private fun convertJSONToConditionAndInsertId(json: String, id: Int): Condition {
         val resuscitated: Condition = Json.decodeFromString(json)
         return createCopyWithGivenId(resuscitated, id)

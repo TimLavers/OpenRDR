@@ -31,6 +31,14 @@ class ConditionManager(private val attributeManager: AttributeManager,
 
     fun getById(id: Int): Condition = idToCondition.getValue(id)
 
+    fun renamePhrase(id: Int, phrase: String): Condition {
+        require(phrase.isNotBlank()) { "A condition phrase cannot be blank." }
+        val renamed = getById(id).withUserExpression(phrase)
+        conditionStore.update(renamed)
+        idToCondition[id] = renamed
+        return renamed
+    }
+
     fun all() = idToCondition.values.toSet()
 
     private fun attributeForId(id: Int) = attributeManager.getById(id)

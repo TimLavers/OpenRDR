@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.constants.chat.ASSIGN_DERIVED_VALUE
 import io.rippledown.constants.chat.EXEMPT_CORNERSTONE
 import io.rippledown.constants.chat.USER_ACTION
@@ -49,15 +50,20 @@ class RuleConversation(private val service: RuleService?) {
         return Turn(contextualised, service?.currentRuleSessionConditionTexts().orEmpty().toSet())
     }
 
-    fun completeTurn(turn: Turn): ActionComment? {
+    fun completeTurn(turn: Turn, acknowledgements: Map<String, String> = emptyMap()): ActionComment? {
         reset()
         if (service == null || !service.isRuleSessionActive()) return null
         val addedConditions = service.currentRuleSessionConditionTexts().filterNot { it in turn.conditionsBefore }
         if (addedConditions.isEmpty()) return null
+        val acknowledgement = if (addedConditions.any { it in acknowledgements }) {
+            addedConditions.joinToString("\n") { acknowledgements[it] ?: TRANSFORMATION_MESSAGE.format(it) }
+        } else {
+            "Added:\n${addedConditions.joinToString("\n")}"
+        }
         state = State.AwaitingReasonReply
         return ActionComment(
             USER_ACTION,
-            message = "Added:\n${addedConditions.joinToString("\n")}\n\n$MORE_REASONS_QUESTION"
+            message = "$acknowledgement\n\n$MORE_REASONS_QUESTION"
         )
     }
 

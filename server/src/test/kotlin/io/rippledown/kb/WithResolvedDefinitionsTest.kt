@@ -7,6 +7,7 @@ import io.rippledown.model.AttributeKind
 import io.rippledown.model.CaseId
 import io.rippledown.model.Interpretation
 import io.rippledown.model.rule.*
+import io.rippledown.utils.asConditionTexts
 import kotlin.test.Test
 
 internal class WithResolvedDefinitionsTest {
@@ -81,7 +82,7 @@ internal class WithResolvedDefinitionsTest {
         val original = interpretation(
             RuleSummary(
                 id = 7,
-                conditionTextsFromRoot = listOf("Glucose ≥ 11.0"),
+                conditionsFromRoot = listOf("Glucose ≥ 11.0").asConditionTexts(),
                 assignment = AssignValue(bmi, ByDefinition)
             )
         )
@@ -91,12 +92,17 @@ internal class WithResolvedDefinitionsTest {
 
         // Then only the assignment expression has changed
         resolvedSummary.id shouldBe 7
-        resolvedSummary.conditionTextsFromRoot shouldBe listOf("Glucose ≥ 11.0")
+        resolvedSummary.conditionsFromRoot shouldBe listOf("Glucose ≥ 11.0").asConditionTexts()
         resolvedSummary.assignment shouldBe AssignValue(bmi, bmiDefinition)
 
         // And the conditions for the resolved assignment can be looked up
         original.withResolvedDefinitions(resolver)
-            .conditionsForAssignment(AssignValue(bmi, bmiDefinition)) shouldBe listOf("Glucose ≥ 11.0")
+            .conditionsForAssignment(
+                AssignValue(
+                    bmi,
+                    bmiDefinition
+                )
+            ) shouldBe listOf("Glucose ≥ 11.0").asConditionTexts()
     }
 
     @Test

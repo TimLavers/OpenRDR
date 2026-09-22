@@ -228,6 +228,16 @@ class InterpretationPO(private val contextProvider: () -> AccessibleContext) {
         execute { dialog.accessibleContext.find(CANCEL_BUTTON_FOR_ADD_COMMENT)!!.accessibleAction.doAccessibleAction(0) }
     }
 
+    fun conditionPhrasesShown(): List<String> = execute<List<String>> {
+        contextProvider().findAllByDescriptionPrefixesInOrder(CONDITION_PHRASE_PREFIX).map(::renderedText)
+    }
+
+    fun waitForConditionPhrasesToBeShowing(phrases: List<String>) {
+        waitUntilAsserted {
+            conditionPhrasesShown() shouldBe phrases
+        }
+    }
+
     fun waitForConditionsToBeShowing(conditions: List<String>) {
         waitUntilAsserted {
             conditions.forEach { condition ->
