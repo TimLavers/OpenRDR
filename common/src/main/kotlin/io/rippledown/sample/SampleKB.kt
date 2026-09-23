@@ -32,7 +32,17 @@ enum class SampleKB {
         override fun title() = "Pathology"
         override fun description() =
             "Three small pathology cases for trying out rule building, cornerstone review, derived attributes and the AI report. No rules are built yet."
+    },
+    CANCER_GENES {
+        override fun title() = "Cancer Genes"
+        override fun description() =
+            "Simple classifier for genetic mutations that may drive cancer."
+    },
+    CANCER_GENES_CASES {
+        override fun title() = "Cancer Genes - cases only"
+        override fun description() = "The Cancer Genes test cases only, with no rules."
     };
+
 
     abstract fun title(): String
     abstract fun description(): String

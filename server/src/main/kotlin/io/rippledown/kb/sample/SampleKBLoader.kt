@@ -1,5 +1,6 @@
 package io.rippledown.kb.sample
 
+import io.rippledown.kb.sample.cancergenes.CancerGenesSampleBuilder
 import io.rippledown.kb.sample.contactlenses.ContactLensesSampleBuilder
 import io.rippledown.kb.sample.demo.DemoSampleBuilder
 import io.rippledown.kb.sample.vltsh.TSHSampleBuilder
@@ -17,6 +18,8 @@ fun loadSampleKB(kbEndpoint: KBEndpoint, sampleKB: SampleKB) {
     when (sampleKB) {
         TSH -> TSHSampleBuilder(kbEndpoint).buildTSHRules()
         TSH_CASES -> TSHSampleBuilder(kbEndpoint).setupTSHSampleCases()
+        CANCER_GENES -> CancerGenesSampleBuilder(kbEndpoint).buildKb()
+        CANCER_GENES_CASES -> CancerGenesSampleBuilder(kbEndpoint).buildCasesOnlyKb()
         CONTACT_LENSES -> ContactLensesSampleBuilder(kbEndpoint).buildRules()
         CONTACT_LENSES_CASES -> ContactLensesSampleBuilder(kbEndpoint).setupCases()
         ZOO -> ZooSampleBuilder(kbEndpoint).buildRules()
