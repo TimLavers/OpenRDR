@@ -28,24 +28,54 @@ class ActionCommentTest {
     }
 
     @Test
-    fun `parser CopyCaseToFavouritesWithNewName from JSON`() {
-        // Given
-        val name = "Great case!"
+    fun `should create CopyCaseToList with the list name from JSON`() {
+        // Given json in which only the list name is given
         val json = """
             {
-                "action": "$COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME",
-                "message": "$name",
+                "action": "$COPY_CASE_TO_LIST",
+                "listName": "good"
             }
         """
 
-        // When
-        val actionComment = json.fromJsonString<ActionComment>()
+        // When the action instance is created
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
 
-        // Then
-        with(actionComment) {
-            action shouldBe COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME
-            message shouldBe name
-        }
+        // Then it is a CopyCaseToList with that list name and no new case name
+        val copyAction = action.shouldBeInstanceOf<CopyCaseToList>()
+        copyAction.listName shouldBe "good"
+        copyAction.newName shouldBe null
+    }
+
+    @Test
+    fun `should create CopyCaseToList with the list name and new case name from JSON`() {
+        // Given json in which the list name and a new case name are given
+        val json = """
+            {
+                "action": "$COPY_CASE_TO_LIST",
+                "listName": "good",
+                "newName": "Great case!"
+            }
+        """
+
+        // When the action instance is created
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
+
+        // Then it is a CopyCaseToList with that list name and new case name
+        val copyAction = action.shouldBeInstanceOf<CopyCaseToList>()
+        copyAction.listName shouldBe "good"
+        copyAction.newName shouldBe "Great case!"
+    }
+
+    @Test
+    fun `should create DeleteCaseFromList without arguments from JSON`() {
+        // Given json naming the delete action alone
+        val json = """{"action": "$DELETE_CASE_FROM_LIST"}"""
+
+        // When the action instance is created
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
+
+        // Then it is a DeleteCaseFromList
+        action.shouldBeInstanceOf<DeleteCaseFromList>()
     }
 
     @Test

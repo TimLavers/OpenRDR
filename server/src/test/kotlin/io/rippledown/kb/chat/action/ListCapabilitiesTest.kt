@@ -41,13 +41,13 @@ class ListCapabilitiesTest {
             "Derived attributes",
             "Building a rule",
             "Names and layout",
-            "Favourite cases"
+            "User-defined case lists"
         )
         response.text shouldContain "edit a derived attribute's definition everywhere it is used (without building a rule)"
         response.text shouldContain "add, list or remove reasons in the current rule"
         response.text shouldContain "rename a condition's phrase everywhere it is used"
-        response.text shouldContain "copy the current case to favourites, optionally with a new name"
-        response.text shouldContain "delete the current case from favourites"
+        response.text shouldContain "copy the current case to a named case list, optionally with a new case name"
+        response.text shouldContain "delete the current case from its case list"
         response.capabilities.forEach { section ->
             response.text shouldContain section.heading
             section.items.forEach { response.text shouldContain it }

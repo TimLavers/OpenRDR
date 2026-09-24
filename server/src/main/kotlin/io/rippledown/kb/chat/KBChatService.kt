@@ -161,7 +161,7 @@ object KBChatService {
         "18_editing_derived_definition.md",
         "19_naming_and_renaming.md",
         "20_knowledge_base_management.md",
-        "25_favourite_cases.md",
+        "25_user_defined_case_lists.md",
     )
 
     fun mainSectionsFor(hasCase: Boolean) = if (hasCase) systemPromptMainSections else caseLessSections
@@ -233,9 +233,8 @@ object KBChatService {
         "REMOVE_REASON" to REMOVE_REASON,
         "CANCEL_RULE" to CANCEL_RULE,
         "SELECT_SUGGESTION" to SELECT_SUGGESTED_CONDITION,
-        "COPY_CASE_TO_FAVOURITES" to COPY_CASE_TO_FAVOURITES,
-        "DELETE_CASE_FROM_FAVOURITES" to DELETE_CASE_FROM_FAVOURITES,
-        "COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME" to COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME,
+        "COPY_CASE_TO_LIST" to COPY_CASE_TO_LIST,
+        "DELETE_CASE_FROM_LIST" to DELETE_CASE_FROM_LIST,
         "LIST_KNOWLEDGE_BASES" to LIST_KNOWLEDGE_BASES,
         "OPEN_KNOWLEDGE_BASE" to OPEN_KNOWLEDGE_BASE,
         "CREATE_KNOWLEDGE_BASE" to CREATE_KNOWLEDGE_BASE,

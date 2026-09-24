@@ -23,6 +23,7 @@ data class ActionComment(
     val destination: String? = null,
     val attributeName: String? = null,
     val newName: String? = null,
+    val listName: String? = null,
     val valueExpression: String? = null,
     val suggestions: List<String>? = null,
     val variables: List<ChatCommentVariable>? = null,
@@ -60,6 +61,7 @@ data class ActionComment(
         if (destination != null) asMap["destination"] = destination
         if (attributeName != null) asMap["attributeName"] = attributeName
         if (newName != null) asMap["newName"] = newName
+        if (listName != null) asMap["listName"] = listName
         if (valueExpression != null) asMap["valueExpression"] = valueExpression
         if (variables != null) asMap["variables"] = variables
         if (kbName != null) asMap["kbName"] = kbName
