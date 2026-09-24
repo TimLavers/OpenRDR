@@ -5,13 +5,15 @@ import io.rippledown.kb.chat.RuleService
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
+// Temporary bridge until user-defined list actions replace the favourites
+// actions: copies go to a user-defined list named "Favourites".
 class CopyCaseToFavourites() : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
         currentCase: ViewableCase?,
         modelResponder: ModelResponder
     ): ChatResponse {
-        ruleService.copyCaseToFavourites(currentCase!!, null)
+        ruleService.copyCaseToList(currentCase!!, "Favourites", null)
         return ChatResponse("case copied")
     }
 }

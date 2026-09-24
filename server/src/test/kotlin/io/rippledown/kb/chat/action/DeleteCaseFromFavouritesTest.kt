@@ -9,11 +9,16 @@ import kotlin.test.Test
 
 class DeleteCaseFromFavouritesTest : ActionTestBase() {
     @Test
-    fun `copies case with null name`() = runTest {
+    fun `deletes the case from its user-defined list`() = runTest {
+        // Given the current case
         val caseId = 1000L
         val case = mockk<ViewableCase>()
         every { case.id } returns caseId
-        CopyCaseToFavourites().doIt(ruleService, case, modelResponder)
-        coVerify { ruleService.copyCaseToFavourites(case, null) }
+
+        // When the action is performed
+        DeleteCaseFromFavourites().doIt(ruleService, case, modelResponder)
+
+        // Then the case is deleted from its list
+        coVerify { ruleService.deleteCaseFromUserList(case) }
     }
 }

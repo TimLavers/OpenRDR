@@ -978,22 +978,22 @@ class RuleSessionManager(
         }
     }
 
-    override fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase {
+    override fun copyCaseToList(case: ViewableCase, listName: String, newName: String?): RDRCase {
         val caseId = requireNotNull(case.id) { "Cannot copy a case that has no persisted id." }
-        val copied = kb.copyCaseAsFavourite(caseId, newName)
+        val copied = kb.copyCaseToList(caseId, listName, newName)
         sendCasesInfo()
         return copied
     }
 
-    override fun deleteCaseFromFavourites(case: ViewableCase) {
-        kb.deleteCaseFromFavourites(case.case)
+    override fun deleteCaseFromUserList(case: ViewableCase) {
+        kb.deleteCaseFromUserList(case.case)
         sendCasesInfo()
     }
 
     private fun casesInfo() = CasesInfo(
         caseIds = kb.processedCaseIds(),
         cornerstoneCaseIds = kb.cornerstoneCaseIds(),
-        favouriteCaseIds = kb.favouriteCaseIds(),
+        userDefinedCaseLists = kb.userDefinedCaseLists(),
         kbName = kb.kbInfo.name
     )
 

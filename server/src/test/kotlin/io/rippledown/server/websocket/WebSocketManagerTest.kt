@@ -9,7 +9,8 @@ import io.rippledown.constants.chat.KB_CLOSED
 import io.rippledown.constants.chat.KB_INFO_PREFIX
 import io.rippledown.fromJsonString
 import io.rippledown.model.CaseId
-import io.rippledown.model.CaseType
+import io.rippledown.model.CaseListInfo
+import io.rippledown.model.CaseListType
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.toJsonString
@@ -32,7 +33,10 @@ class WebSocketManagerTest {
         //Given
         val casesInfo = CasesInfo(
             caseIds = listOf(CaseId(id = 1, name = "Case1"), CaseId(id = 2, name = "Case2")),
-            cornerstoneCaseIds = listOf(CaseId(id = 3, name = "CS1", type = CaseType.Cornerstone)),
+            cornerstoneCaseIds = listOf(CaseId(id = 3, name = "CS1", type = CaseListType.Cornerstone)),
+            userDefinedCaseLists = listOf(
+                CaseListInfo("Good", listOf(CaseId(id = 4, name = "U1", type = CaseListType("Good"))))
+            ),
             kbName = "TestKB"
         )
 
@@ -46,6 +50,8 @@ class WebSocketManagerTest {
         parsed shouldBe casesInfo
         parsed.caseIds.size shouldBe 2
         parsed.cornerstoneCaseIds.size shouldBe 1
+        parsed.userDefinedCaseLists.size shouldBe 1
+        parsed.userDefinedCaseLists[0].name shouldBe "Good"
         parsed.kbName shouldBe "TestKB"
     }
 

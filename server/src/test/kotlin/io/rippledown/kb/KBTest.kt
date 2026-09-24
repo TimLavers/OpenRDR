@@ -750,10 +750,10 @@ class KBTest {
 
     @Test
     fun `add cornerstone case resets type`() {
-        val case1 = createCase("Case1", value = "1.2").copy(caseId = CaseId(123, "Case1_CC", CaseType.Processed))
+        val case1 = createCase("Case1", value = "1.2").copy(caseId = CaseId(123, "Case1_CC", CaseListType.Processed))
         val added = kb.addCornerstoneCase(case1)
-        added.caseId.type shouldBe CaseType.Cornerstone
-        kb.getCase(added.id!!)!!.caseId.type shouldBe CaseType.Cornerstone
+        added.caseId.type shouldBe CaseListType.Cornerstone
+        kb.getCase(added.id!!)!!.caseId.type shouldBe CaseListType.Cornerstone
     }
 
     @Test
@@ -824,89 +824,210 @@ class KBTest {
     }
 
     @Test
-    fun `can retrieve favourite case ids`() {
-        kb.favouriteCaseIds().size shouldBe 0
+    fun `can retrieve the user-defined case lists`() {
+        // Given no case has been copied to a user-defined list
+        kb.userDefinedCaseLists() shouldBe emptyList()
 
-        val favouritesAdded = mutableListOf<RDRCase>()
+        // When ten cases are copied to the "Good" list
+        val copiesAdded = mutableListOf<RDRCase>()
         for (i in 1..10) {
             val ccAdded = kb.addCornerstoneCase(createCase("Case$i"))
-            val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, null)
-            favouriteAdded shouldNotBeSameInstanceAs ccAdded
-            favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
-            favouriteAdded.name shouldBe ccAdded.name
-            favouriteAdded.data shouldBe ccAdded.data
-            favouriteAdded.id shouldNotBe ccAdded.id
-            favouritesAdded.add(favouriteAdded)
+            val copyAdded = kb.copyCaseToList(ccAdded.id!!, "Good", null)
+            copyAdded shouldNotBeSameInstanceAs ccAdded
+            copyAdded.caseId.name shouldBe ccAdded.caseId.name
+            copyAdded.name shouldBe ccAdded.name
+            copyAdded.data shouldBe ccAdded.data
+            copyAdded.id shouldNotBe ccAdded.id
+            copiesAdded.add(copyAdded)
         }
 
-        val favouriteCaseIds = favouritesAdded.map { it.caseId }
-        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+        // Then there is one user-defined list holding the copies in the order they were added
+        val copiedCaseIds = copiesAdded.map { it.caseId }
+        kb.userDefinedCaseLists() shouldBe listOf(CaseListInfo("Good", copiedCaseIds))
 
+        // And the list survives a KB reload
         kb = KB(persistentKB)
-        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+        kb.userDefinedCaseLists() shouldBe listOf(CaseListInfo("Good", copiedCaseIds))
     }
 
     @Test
-    fun `can copy case as favourite with new name`() {
-        val favouritesAdded = mutableListOf<RDRCase>()
-        for (i in 1..10) {
-            val ccAdded = kb.addCornerstoneCase(createCase("Case$i"))
-            val newName = "New Case $i"
-            val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, newName)
-            favouriteAdded shouldNotBeSameInstanceAs ccAdded
-            favouriteAdded.caseId.name shouldBe newName
-            favouriteAdded.name shouldBe newName
-            favouriteAdded.data shouldBe ccAdded.data
-            favouriteAdded.id shouldNotBe ccAdded.id
-            favouritesAdded.add(favouriteAdded)
-        }
+    fun `user-defined lists are ordered by creation, and their cases in the order they were added`() {
+        // Given two processed cases
+        val source1 = kb.addProcessedCase(createCase("Case1"))
+        val source2 = kb.addProcessedCase(createCase("Case2"))
 
-        val favouriteCaseIds = favouritesAdded.map { it.caseId }
-        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+        // When they are copied to two lists, "Bad" first, with a second copy to "Bad" last
+        val bad1 = kb.copyCaseToList(source1.id!!, "Bad", null)
+        val good1 = kb.copyCaseToList(source2.id!!, "Good", null)
+        val bad2 = kb.copyCaseToList(source2.id!!, "Bad", null)
 
-        kb = KB(persistentKB)
-        favouriteCaseIds shouldBe kb.favouriteCaseIds()
+        // Then the lists are in creation order and their cases in copy order
+        kb.userDefinedCaseLists() shouldBe listOf(
+            CaseListInfo("Bad", listOf(bad1.caseId, bad2.caseId)),
+            CaseListInfo("Good", listOf(good1.caseId))
+        )
     }
 
     @Test
-    fun `copy a case to favourites with null new name`() {
+    fun `copying to a list whose name matches an existing list ignoring case adds to that list`() {
+        // Given a case has been copied to the "Good" list
+        val source = kb.addProcessedCase(createCase("Case1"))
+        val first = kb.copyCaseToList(source.id!!, "Good", null)
+
+        // When the case is copied to "GOOD"
+        val second = kb.copyCaseToList(source.id!!, "GOOD", "Another")
+
+        // Then there is a single list, with the spelling of the first copy
+        kb.userDefinedCaseLists() shouldBe listOf(CaseListInfo("Good", listOf(first.caseId, second.caseId)))
+        second.caseId.type.name shouldBe "Good"
+    }
+
+    @Test
+    fun `copy a case to a list with null new name`() {
         val caseName = "What a great case name!"
         val ccAdded = kb.addCornerstoneCase(createCase(caseName))
-        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, null)
-        favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
-        favouriteAdded.name shouldBe ccAdded.name
-        favouriteAdded.id shouldNotBe ccAdded.id
+        val copyAdded = kb.copyCaseToList(ccAdded.id!!, "Good", null)
+        copyAdded.caseId.name shouldBe ccAdded.caseId.name
+        copyAdded.name shouldBe ccAdded.name
+        copyAdded.id shouldNotBe ccAdded.id
     }
 
     @Test
-    fun `copy a case to favourites with blank new name`() {
+    fun `copy a case to a list with blank new name`() {
         val caseName = "What a great case name!"
         val ccAdded = kb.addCornerstoneCase(createCase(caseName))
-        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, "")
-        favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
-        favouriteAdded.name shouldBe ccAdded.name
-        favouriteAdded.id shouldNotBe ccAdded.id
+        val copyAdded = kb.copyCaseToList(ccAdded.id!!, "Good", "")
+        copyAdded.caseId.name shouldBe ccAdded.caseId.name
+        copyAdded.name shouldBe ccAdded.name
+        copyAdded.id shouldNotBe ccAdded.id
     }
 
     @Test
-    fun `copy a case to favourites with whitespace new name`() {
+    fun `copy a case to a list with whitespace new name`() {
         val caseName = "What a great case name!"
         val ccAdded = kb.addCornerstoneCase(createCase(caseName))
-        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, " \t\n\r ")
-        favouriteAdded.caseId.name shouldBe ccAdded.caseId.name
-        favouriteAdded.name shouldBe ccAdded.name
-        favouriteAdded.id shouldNotBe ccAdded.id
+        val copyAdded = kb.copyCaseToList(ccAdded.id!!, "Good", " \t\n\r ")
+        copyAdded.caseId.name shouldBe ccAdded.caseId.name
+        copyAdded.name shouldBe ccAdded.name
+        copyAdded.id shouldNotBe ccAdded.id
     }
 
     @Test
-    fun `copy a case to favourites with valid new name`() {
+    fun `copy a case to a list with valid new name`() {
         val caseName = "What a great case name!"
         val caseNameNew = "What a great modern case name!"
         val ccAdded = kb.addCornerstoneCase(createCase(caseName))
-        val favouriteAdded = kb.copyCaseAsFavourite(ccAdded.id!!, caseNameNew)
-        favouriteAdded.caseId.name shouldBe caseNameNew
-        favouriteAdded.name shouldBe caseNameNew
-        favouriteAdded.id shouldNotBe ccAdded.id
+        val copyAdded = kb.copyCaseToList(ccAdded.id!!, "Good", caseNameNew)
+        copyAdded.caseId.name shouldBe caseNameNew
+        copyAdded.name shouldBe caseNameNew
+        copyAdded.id shouldNotBe ccAdded.id
+    }
+
+    @Test
+    fun `cannot copy a case to a list with a reserved name`() {
+        // Given a processed case
+        val source = kb.addProcessedCase(createCase("Case1"))
+
+        // When it is copied to a list denoting a built-in list, in any spelling
+        // Then the copy is refused
+        listOf("Processed", "processed", " Processed Cases ", "Cornerstone", "cornerstones", "Cornerstone Cases")
+            .forEach { reserved ->
+                shouldThrow<IllegalArgumentException> {
+                    kb.copyCaseToList(source.id!!, reserved, null)
+                }.message shouldBe "Cannot copy the case to \"${reserved.trim()}\" as that is the name of a built-in list."
+            }
+
+        // And no user-defined list has been created
+        kb.userDefinedCaseLists() shouldBe emptyList()
+    }
+
+    @Test
+    fun `cannot copy a case to a list with a blank name`() {
+        // Given a processed case
+        val source = kb.addProcessedCase(createCase("Case1"))
+
+        // When it is copied to a list with a blank name
+        // Then the copy is refused
+        listOf("", " ", " \t ").forEach { blank ->
+            shouldThrow<IllegalArgumentException> {
+                kb.copyCaseToList(source.id!!, blank, null)
+            }.message shouldBe "Cannot copy the case to a list with a blank name."
+        }
+    }
+
+    @Test
+    fun `copying an unknown case to a list fails`() {
+        // Given no case with id 9099999
+        // When it is copied to a list
+        // Then there is an error
+        shouldThrow<NoSuchElementException> {
+            kb.copyCaseToList(9099999, "Good", null)
+        }.message shouldBe "No case with id 9099999"
+    }
+
+    @Test
+    fun `can delete a case from a user-defined list`() {
+        // Given a case copied to a user-defined list
+        val source = kb.addProcessedCase(createCase("Case1"))
+        val copy = kb.copyCaseToList(source.id!!, "Good", null)
+
+        // When the copy is deleted
+        kb.deleteCaseFromUserList(copy)
+
+        // Then the list is gone and the original case remains
+        kb.userDefinedCaseLists() shouldBe emptyList()
+        kb.processedCaseIds().map { it.id } shouldBe listOf(source.id)
+    }
+
+    @Test
+    fun `deleting a case from one list leaves other user-defined cases untouched`() {
+        // Given cases in two user-defined lists
+        val source = kb.addProcessedCase(createCase("Case1"))
+        val toDelete = kb.copyCaseToList(source.id!!, "Good", "To delete")
+        val toKeep = kb.copyCaseToList(source.id!!, "Good", "To keep")
+        val other = kb.copyCaseToList(source.id!!, "Bad", null)
+
+        // When one is deleted
+        kb.deleteCaseFromUserList(toDelete)
+
+        // Then the other cases are untouched
+        kb.userDefinedCaseLists() shouldBe listOf(
+            CaseListInfo("Good", listOf(toKeep.caseId)),
+            CaseListInfo("Bad", listOf(other.caseId))
+        )
+    }
+
+    @Test
+    fun `cannot delete a case that is in a built-in list`() {
+        // Given a processed case and a cornerstone case
+        val processed = kb.addProcessedCase(createCase("Case1"))
+        val cornerstone = kb.addCornerstoneCase(createCase("Case2"))
+
+        // When either is deleted as if from a user-defined list
+        // Then the deletion is refused
+        shouldThrow<IllegalArgumentException> {
+            kb.deleteCaseFromUserList(processed)
+        }.message shouldBe "Cannot delete the case as the \"Processed\" list is built in."
+        shouldThrow<IllegalArgumentException> {
+            kb.deleteCaseFromUserList(cornerstone)
+        }.message shouldBe "Cannot delete the case as the \"Cornerstone\" list is built in."
+    }
+
+    @Test
+    fun `all user-defined cases`() {
+        // Given cases in built-in lists and copies in two user-defined lists
+        kb.allUserDefinedCases() shouldBe emptyList()
+        val source = kb.addProcessedCase(createCase("Case1"))
+        kb.addCornerstoneCase(createCase("Case2"))
+        val good = kb.copyCaseToList(source.id!!, "Good", null)
+        val bad = kb.copyCaseToList(source.id!!, "Bad", "Bad copy")
+
+        // When all user-defined cases are retrieved
+        val allUserDefined = kb.allUserDefinedCases()
+
+        // Then they are the copies in the user-defined lists, with their data
+        allUserDefined.map { it.caseId } shouldBe listOf(good.caseId, bad.caseId)
+        allUserDefined.forEach { it.data shouldBe source.data }
     }
 
     @Test
@@ -994,7 +1115,7 @@ class KBTest {
     fun `should remove condition from rule session`() {
         //Given
         val sessionCase = createCase("Case1", value = "1.0")
-        val cornerstoneCase = createViewableCase("Case2", caseId = 1, CaseType.Cornerstone)
+        val cornerstoneCase = createViewableCase("Case2", caseId = 1, CaseListType.Cornerstone)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(cornerstoneCase.case)
         kb.commentsFor(sessionCase) shouldBe emptySet()
         rsm.startRuleSessionToAssignComment(kb, sessionCase, "Whatever.")

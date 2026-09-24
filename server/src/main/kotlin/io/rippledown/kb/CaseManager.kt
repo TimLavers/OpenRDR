@@ -1,6 +1,7 @@
 package io.rippledown.kb
 
-import io.rippledown.model.CaseType
+import io.rippledown.model.CaseListInfo
+import io.rippledown.model.CaseListType
 import io.rippledown.model.RDRCase
 import io.rippledown.persistence.CaseStore
 
@@ -10,11 +11,19 @@ class CaseManager(private val caseStore: CaseStore, private val attributeManager
 
     fun ids() = caseStore.allCaseIds()
 
-    fun ids(type: CaseType) = ids().filter { it.type == type }
+    fun ids(type: CaseListType) = ids().filter { it.type == type }
 
     fun all() = caseStore.all(attributeManager)
 
-    fun all(type: CaseType) = all().filter { it.caseId.type == type }
+    fun all(type: CaseListType) = all().filter { it.caseId.type == type }
+
+    fun userDefinedCaseLists(): List<CaseListInfo> = ids()
+        .filter { !it.type.isBuiltIn }
+        .groupBy { it.type }
+        .values
+        .map { idsForList -> idsForList.sortedBy { it.id ?: Long.MAX_VALUE } }
+        .map { ordered -> CaseListInfo(ordered.first().type.name, ordered) }
+        .sortedBy { it.caseIds.first().id ?: Long.MAX_VALUE }
 
     fun delete(id: Long) {
         caseStore.delete(id)
