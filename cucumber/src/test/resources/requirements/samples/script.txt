@@ -1,0 +1,34 @@
+GNAS Arg544del,GNAS,ONCOGENIC,HIGH,NON_HOTSPOT,false,INFRAME_DELETION,MISSENSE,p.Arg544del,c.1631_1633delGGC,543,null,false
+GNAS Arg544del
+Please add derived attribute "activating" with value "true"
+reasons "driverRole is ONCOGENIC" and "driverInterp is HIGH".
+
+add comment {gene} ({protein impact})
+reason "activating is true"
+add comment "activating mutation."
+reason "activating is true"
+
+ALK Lys1525del,ALK,ONCOGENIC,HIGH,NON_HOTSPOT,true,INFRAME_DELETION,MISSENSE,p.Lys1525del,c.4573_4575delAAG,1524,null,false
+ALK Lys1525del
+replace comment "activating mutation." with comment "activating mutation, possible indication for ALK inhibitors."
+with reason "gene is ALK"
+
+BRAF Val600Arg,BRAF,ONCOGENIC,HIGH,HOTSPOT,false,MISSENSE,MISSENSE,p.Val600Arg,c.1798_1799delGTinsAG,600,null,false
+BRAF Val600Arg
+replace comment "activating mutation." with comment "activating mutation, possible indication for BRAF and/or MEK inhibitors."
+with reason "gene is BRAF"
+
+ERBB2 Gly292Arg,ERBB2,ONCOGENIC,HIGH,HOTSPOT,false,MISSENSE,MISSENSE,p.Gly292Arg,c.874G>C,292,null,false
+ERBB2 Gly292Arg
+replace comment "activating mutation." with comment "activating mutation, possible indication for ERBB2 targeted therapy."
+with reason "gene is ERBB2"
+
+ESR1 Tyr537Asn,ESR1,ONCOGENIC,HIGH,HOTSPOT,false,MISSENSE,MISSENSE,p.Tyr537Asn,c.1609T>A,537,null,false
+ESR1 Tyr537Asn
+replace... "activating mutation, associated with resistance to hormone therapy."
+"gene is ESR1"
+
+FGFR2 Asn550Lys,FGFR2,ONCOGENIC,HIGH,HOTSPOT,false,MISSENSE,MISSENSE,p.Asn550Lys,c.1650T>A,550,null,false
+FGFR2 Asn550Lys
+replace..."activating mutation, possible indication for FGFR inhibitors."
+"gene is FGFR2"
