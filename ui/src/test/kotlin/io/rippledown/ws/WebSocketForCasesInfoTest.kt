@@ -3,7 +3,7 @@ package io.rippledown.ws
 import io.kotest.matchers.shouldBe
 import io.rippledown.main.Api
 import io.rippledown.model.CaseId
-import io.rippledown.model.CaseType
+import io.rippledown.model.CaseListType
 import io.rippledown.model.CasesInfo
 import kotlinx.coroutines.*
 import org.junit.Test
@@ -49,7 +49,7 @@ class WebSocketForCasesInfoTest {
         // Given
         val expectedCasesInfo = CasesInfo(
             caseIds = listOf(CaseId(id = 1, name = "Processed1")),
-            cornerstoneCaseIds = listOf(CaseId(id = 2, name = "CS1", type = CaseType.Cornerstone)),
+            cornerstoneCaseIds = listOf(CaseId(id = 2, name = "CS1", type = CaseListType.Cornerstone)),
             kbName = "TestKB"
         )
         val serverInfo = startServerAndSendCasesInfo(expectedCasesInfo)

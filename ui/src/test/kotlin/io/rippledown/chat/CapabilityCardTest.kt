@@ -30,7 +30,7 @@ class CapabilityCardTest {
         val sections = listOf(
             CapabilitySection("Knowledge bases", listOf("Import a KB", "Export a KB")),
             CapabilitySection("Report comments", (1..20).map { "Report operation $it" }),
-            CapabilitySection("Favourite cases", listOf("Copy the current case to favourites"))
+            CapabilitySection("User-defined case lists", listOf("Copy the current case to a named list"))
         )
         compose.setContent {
             Box(Modifier.size(360.dp, 500.dp)) {
@@ -60,10 +60,10 @@ class CapabilityCardTest {
             .writeBytes(checkNotNull(topScreenshot.encodeToData()).bytes)
 
         // When
-        compose.onNodeWithText("Copy the current case to favourites", useUnmergedTree = true).performScrollTo()
+        compose.onNodeWithText("Copy the current case to a named list", useUnmergedTree = true).performScrollTo()
 
         // Then
-        compose.onNodeWithText("Copy the current case to favourites", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Copy the current case to a named list", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithContentDescription(CHAT_TEXT_FIELD).assertIsDisplayed()
         val screenshot = Image.makeFromBitmap(compose.onRoot().captureToImage().asSkiaBitmap())
         File("build/reports/capability-card.png").apply { parentFile.mkdirs() }
