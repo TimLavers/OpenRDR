@@ -12,7 +12,7 @@ import kotlinx.serialization.encoding.*
 
 class RDRCaseBuilder {
     private val caseData: MutableMap<Event, Result> = mutableMapOf()
-    private var caseType = CaseType.Processed
+    private var caseType = CaseListType.Processed
 
     fun addValue(attribute: Attribute, date: Long, value: String) {
         val result = Result(value)
@@ -23,7 +23,7 @@ class RDRCaseBuilder {
         val Event = Event(attribute, date)
         caseData[Event] = result
     }
-    fun setCaseType(caseType: CaseType) {
+    fun setCaseType(caseType: CaseListType) {
         this.caseType = caseType
     }
 
@@ -173,9 +173,9 @@ data class RDRCase(
         return RDRCase(caseId, externalData, interpretation)
     }
 
-    fun copyWithoutId(type: CaseType = CaseType.Processed): RDRCase = RDRCase(caseId.copy(id = null, name = name, type = type), data, interpretation.copy())
+    fun copyWithoutId(type: CaseListType = CaseListType.Processed): RDRCase = RDRCase(caseId.copy(id = null, name = name, type = type), data, interpretation.copy())
 
-    fun copyWithNewNameAndNoId(type: CaseType, newName: String): RDRCase =
+    fun copyWithNewNameAndNoId(type: CaseListType, newName: String): RDRCase =
         RDRCase(caseId.copy(id = null, name = newName, type = type), data, interpretation.copy())
 
     fun copyWithNewInterpretation() = this.copy(caseId, data, Interpretation(caseId))

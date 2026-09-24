@@ -98,8 +98,8 @@ class RDRCaseDataTest {
     @Test
     fun `cases with the same data but different types are identical`() {
         val dataMap = mapOf(e1 to r1, e2 to r2, e3 to r3, e4 to r4)
-        val case1 = RDRCase(CaseId(1,"Case 1", CaseType.Processed), dataMap)
-        val case2 = RDRCase(CaseId(2,"Case 1", CaseType.Cornerstone), dataMap)
+        val case1 = RDRCase(CaseId(1,"Case 1", CaseListType.Processed), dataMap)
+        val case2 = RDRCase(CaseId(2,"Case 1", CaseListType.Cornerstone), dataMap)
         case1.hasSameDataAs(case2) shouldBe true
     }
 

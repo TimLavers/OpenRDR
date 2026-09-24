@@ -6,6 +6,9 @@ case to a "Gestational Diabetes" list.
 
 The user will create these lists "on demand": a list will be created when a case is copied to it.
 
+List names are case-insensitive: "good" and "Good" refer to the same list. The spelling used
+when the list was created is retained for display.
+
 Copying the currently selected case will be done via the chat interface. The user will need to
 provide the name of the case list and, optionally, a new case name for the copy.
 Only the currently selected case can be copied.

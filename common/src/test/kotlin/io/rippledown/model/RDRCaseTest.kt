@@ -30,27 +30,38 @@ class RDRCaseTest {
 
     @Test
     fun copyWithoutId() {
+        // Given a case with an id
         val case = RDRCase(CaseId(1234, "Tea"))
+
+        // When it is copied without an id
+        // Then the name is kept, the id is null, and the type defaults to Processed
         with(case.copyWithoutId()) {
             name shouldBe "Tea"
             id shouldBe null
-            caseId.type shouldBe CaseType.Processed
+            caseId.type shouldBe CaseListType.Processed
         }
-        with(case.copyWithoutId(CaseType.Cornerstone)) {
+
+        // And a copy with a given list type has that type
+        with(case.copyWithoutId(CaseListType.Cornerstone)) {
             name shouldBe "Tea"
             id shouldBe null
-            caseId.type shouldBe CaseType.Cornerstone
+            caseId.type shouldBe CaseListType.Cornerstone
         }
     }
 
 
     @Test
     fun copyWithNewNameAndWithoutId() {
+        // Given a case with an id
         val case = RDRCase(CaseId(1234, "Tea"))
-        with(case.copyWithNewNameAndNoId(CaseType.Favourite, "Coffee")) {
+
+        // When it is copied to a user-defined list with a new name
+        with(case.copyWithNewNameAndNoId(CaseListType("Good"), "Coffee")) {
+            // Then the copy has the new name, no id, and the user-defined list type
             name shouldBe "Coffee"
             id shouldBe null
-            caseId.type shouldBe CaseType.Favourite
+            caseId.type shouldBe CaseListType("Good")
+            caseId.type.name shouldBe "Good"
         }
     }
 
