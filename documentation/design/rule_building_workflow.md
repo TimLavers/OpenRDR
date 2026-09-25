@@ -22,3 +22,8 @@ different question. Subsequent reply interpretation and cornerstone review conti
 workflow. This is a guard on the transition after adding conditions, not a complete server-owned rule-building
 state machine. `ChatManager` delegates this policy to `RuleConversation`, which explicitly tracks `Ready`,
 `OfferedAssignment` and `AwaitingReasonReply`. The rule session and cornerstone state remain in `RuleService`.
+
+The user may also give the reasons in the same message as the report change (`Add the comment "X" reason "Y"`). The
+model passes them verbatim in a `reasons` array on the action; the action applies them as the session starts
+(`respondAfterSessionStart` in `ReasonsAtSessionStart.kt`) and returns the same acknowledgement and question, and
+`RuleConversation.reasonsAppliedAtStart` moves to `AwaitingReasonReply`. See `rule_action_with_reasons.md`.

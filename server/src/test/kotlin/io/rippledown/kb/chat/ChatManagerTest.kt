@@ -5,6 +5,7 @@ import io.kotest.matchers.string.beBlank
 import io.mockk.*
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
+import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
@@ -19,6 +20,8 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KnowledgeBaseListing
+import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.sample.SampleKB
 import io.rippledown.toJsonString
@@ -122,6 +125,51 @@ class ChatManagerTest {
         response.text shouldBe CHAT_BOT_DONE_MESSAGE
         coVerify(exactly = 1) { ruleService.commitCurrentRuleSession() }
     }
+
+    @Test
+    fun `reasons given with the action are applied and the server's question is pending for the next reply`() =
+        runTest {
+            // Given the model splits the instruction into an action and its reasons
+            val condition = greaterThanOrEqualTo(3, Attribute(2, "TSH"), 4.0)
+            val withReasons = ActionComment(ADD_COMMENT, comment = "Elevated TSH.", reasons = listOf("TSH is high"))
+            var sessionActive = false
+            every { ruleService.isRuleSessionActive() } answers { sessionActive }
+            every { ruleService.startRuleSessionToAddComment(viewableCase, "Elevated TSH.", emptyList()) } answers {
+                sessionActive = true
+                CornerstoneStatus()
+            }
+            every { ruleService.sendCornerstoneStatus() } returns Unit
+            every { ruleService.conditionForExpression(case, "TSH is high") } returns
+                    ConditionParsingResult(condition, expression = "TSH is high")
+            every { ruleService.addConditionToCurrentRuleSession(condition) } answers {
+                every { ruleService.currentRuleSessionConditionTexts() } returns setOf(condition.asText())
+            }
+            every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+            every { ruleService.nameOfCommentAttributeInSession() } returns null
+            coEvery { conversationService.response(match { it.startsWith("Add the comment") }) } returns
+                    withReasons.toJsonString()
+            coEvery { conversationService.response(match { it.contains(AppliedReasons.REASONS_APPLIED_PREAMBLE) }) } returns
+                    ActionComment(USER_ACTION, message = "Any more?").toJsonString()
+
+            coEvery { conversationService.startConversation() } returns "Hello"
+            chatManager.startConversation(viewableCase)
+
+            // When
+            val response = chatManager.response("Add the comment \"Elevated TSH.\" reason \"TSH is high\"")
+            coEvery { conversationService.response(match { it.endsWith("\nno") }) } returns
+                    ActionComment(action = COMMIT_RULE).toJsonString()
+            chatManager.response("no")
+
+            // Then the user saw the server's acknowledgement and question, and the reply is sent with that question
+            response.text shouldBe
+                    "${TRANSFORMATION_MESSAGE.format(condition.asText())}\n\n${RuleConversation.MORE_REASONS_QUESTION}"
+            coVerify {
+                conversationService.response(match {
+                    it.contains("[The server asked the user: ${RuleConversation.MORE_REASONS_QUESTION}]") &&
+                            it.endsWith("\nno")
+                })
+            }
+        }
 
     @Test
     fun `a parsed expression retains its canonical condition in the server acknowledgement`() = runTest {

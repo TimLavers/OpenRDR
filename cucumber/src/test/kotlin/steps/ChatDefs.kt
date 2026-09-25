@@ -15,6 +15,8 @@ import java.time.Duration.ofSeconds
 
 
 class ChatDefs {
+    // The start of ReasonTransformation.TRANSFORMATION_MESSAGE, with which the server acknowledges each added reason.
+    private val REASON_ADDED = "Added your reason"
 
     @Then("I enter the following text into the chat panel:")
     fun enterChatTextAndSend(text: String) {
@@ -192,8 +194,39 @@ class ChatDefs {
         }
     }
 
+    @Then("the chatbot indicates that a reason could not be understood")
     fun waitForBotResponseIndicatingInvalidReason() {
         waitForBotTextToContainAnyOf(UNDERSTAND, "means")
+    }
+
+    @When("I request that the comment {string} be added for the reason(s):")
+    fun requestCommentBeAddedForReasons(comment: String, reasons: DataTable) {
+        waitForBotQuestionOrCompletedAction()
+        sendActionWithReasons("Add the comment \"$comment\"", reasons)
+    }
+
+    @When("I request that the comment {string} be replaced by {string} for the reason(s):")
+    fun requestCommentBeReplacedForReasons(comment: String, replacement: String, reasons: DataTable) {
+        waitForBotQuestion()
+        sendActionWithReasons("Replace the comment \"$comment\" by \"$replacement\"", reasons)
+    }
+
+    @When("I request that the derived attribute {string} be added with (formula )(value ){string} for the reason(s):")
+    fun requestDerivedAttributeBeAddedForReasons(attributeName: String, formula: String, reasons: DataTable) {
+        waitForBotQuestionOrCompletedAction()
+        sendActionWithReasons("Add derived attribute $attributeName with formula $formula", reasons)
+    }
+
+    /**
+     * The instruction and its reasons in one message, in the form the demonstration script uses:
+     * `<action> reasons "a" and "b"`. The server acknowledges each reason it added, so that is what
+     * is waited for; the next step then answers the server's question about further reasons.
+     */
+    private fun sendActionWithReasons(action: String, reasons: DataTable) {
+        val quoted = reasons.asLists().map { "\"${it[0].trim()}\"" }
+        val marker = if (quoted.size == 1) "reason" else "reasons"
+        enterChatTextAndSend("$action $marker ${quoted.joinToString(" and ")}")
+        waitForBotText(REASON_ADDED)
     }
 
     @And("I click the non-editable suggested condition {string}")

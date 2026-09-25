@@ -103,8 +103,25 @@ For a formula, where the user asked to calculate pulse pressure as `systolic - d
 }
 ```
 
+Each of these three actions also accepts a `reasons` array holding, verbatim, any reasons the user gave in the same
+message, under the rules in "Defining the report change", Step 0a. For
+`Please add derived attribute "activating" with value "true" reasons "driverRole is ONCOGENIC" and "driverInterp is HIGH"`:
+
+```json
+{
+  "action": "{{ASSIGN_DERIVED_VALUE}}",
+  "attributeName": "activating",
+  "valueExpression": "\"true\"",
+  "reasons": [
+    "driverRole is ONCOGENIC",
+    "driverInterp is HIGH"
+  ]
+}
+```
+
 These actions start a rule session. After starting, present suggested conditions and follow the normal rule-building
-flow ("Defining the reasons for report change" and cornerstone handling).
+flow ("Defining the reasons for report change" and cornerstone handling). If the action carried `reasons`, the system
+applies them itself and tells you so; follow "Starting the rule session", Step 2.
 
 ## Step 5: Handle server refusals
 

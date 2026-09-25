@@ -30,6 +30,7 @@ data class ActionComment(
     val description: String? = null,
     val conditionText: String? = null,
     val newPhrase: String? = null,
+    val reasons: List<String>? = null,
 ) {
     companion object {
         val logger = lazyLogger
@@ -66,6 +67,7 @@ data class ActionComment(
         if (description != null) asMap["description"] = description
         if (conditionText != null) asMap["conditionText"] = conditionText
         if (newPhrase != null) asMap["newPhrase"] = newPhrase
+        if (reasons != null) asMap["reasons"] = reasons
 
         val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {

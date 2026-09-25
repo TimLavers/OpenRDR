@@ -4,10 +4,11 @@ import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.kb.chat.resolveCommentVariables
+import io.rippledown.kb.chat.respondAfterSessionStart
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
-class RemoveComment(val comment: String) : ChatAction {
+class RemoveComment(val comment: String, val reasons: List<String> = emptyList()) : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
         currentCase: ViewableCase?,
@@ -24,8 +25,7 @@ class RemoveComment(val comment: String) : ChatAction {
         // the case's interpretation and so could not be removed.
         val (internalComment, _) = resolveCommentVariables(comment, emptyList(), ruleService)
         val cornerstoneStatus = ruleService.startRuleSessionToRemoveComment(sessionCase, internalComment)
-        ruleService.sendCornerstoneStatus()
-        return modelResponder.response(cornerstoneStatus.summary())
+        return respondAfterSessionStart(ruleService, sessionCase, cornerstoneStatus, reasons, modelResponder)
     }
 
 }
