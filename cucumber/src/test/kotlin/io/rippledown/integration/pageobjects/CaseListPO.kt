@@ -17,7 +17,7 @@ import javax.accessibility.AccessibleRole.SCROLL_PANE
  * legitimately appear in more than one section (a cornerstone is normally also
  * a processed case), so a case is never addressed from here: use the
  * section-scoped [ProcessedCaseListPO], [CornerstoneCaseListPO] or
- * [FavouriteCaseListPO] for that. This page object covers only the concerns of
+ * [UserDefinedCaseListPO] for that. This page object covers only the concerns of
  * the whole panel.
  */
 class CaseListPO(private val contextProvider: () -> AccessibleContext) {

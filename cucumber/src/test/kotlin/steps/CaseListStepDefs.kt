@@ -36,9 +36,10 @@ class CaseListStepDefs {
         caseCountPO().requireCaseCountToBeHidden()
     }
 
-    @Then("I should see no cases in the favourites case list")
-    fun IShouldSeeNoCasesInTheFavouritesCaseList() {
-        caseCountPO().requireCaseCountToBeHidden()
+    @Then("I should no longer see the {word} case list")
+    fun IShouldSeeNoCasesInTheUserDefinedCaseList(listName: String) {
+        userDefinedCaseListCaseCountPO(listName).requireCaseCountToBeHidden()
+        userDefinedCaseListCaseCountPO(listName).requireCasesLabelToBeHidden()
     }
 
     @Then("the cornerstone case list should contain:")
@@ -51,9 +52,9 @@ class CaseListStepDefs {
         processedCaseListPO().requireCaseNamesToBe(dataTable.asList())
     }
 
-    @Then("the favourites case list should contain:")
-    fun theFavouritesCaseListShouldContain(dataTable: DataTable) {
-        favouriteCaseListPO().requireCaseNamesToBe(dataTable.asList())
+    @Then("the user-defined {word} case list should contain:")
+    fun theFavouritesCaseListShouldContain(caseList: String, dataTable: DataTable) {
+        userDefinedCaseListPO(caseList).requireCaseNamesToBe(dataTable.asList())
     }
 
     @And("the case list (is )(should be )hidden")
@@ -97,6 +98,13 @@ class CaseListStepDefs {
         cornerstoneCaseListPO().select(caseName)
         caseViewPO().waitForNameToShow(caseName)
         refocusLastSelectedCase = { cornerstoneCaseListPO().mouseClick(caseName) }
+    }
+
+    @And("I select the case {word} on the user-defined {word} case list")
+    fun ISelectTheCopiedCase(caseName: String, listName: String) {
+        userDefinedCaseListPO(listName).select(caseName)
+        caseViewPO().waitForNameToShow(caseName)
+        refocusLastSelectedCase = { userDefinedCaseListPO(listName).mouseClick(caseName) }
     }
 
     @Then("the selected case should (still )be {word}")

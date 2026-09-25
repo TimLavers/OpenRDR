@@ -3,7 +3,7 @@
   Background:
     Given a default KB is opened
 
-  Scenario: A case can be copied to a favourites case list
+  Scenario: A case can be copied to a user-defined case list
     Given a list of cases with the following names is stored on the server:
       | Case1 |
       | Case2 |
@@ -12,8 +12,8 @@
     And I see the case Case1 as the current case
     And I select case Case3
     And I see the case Case3 as the current case
-    And I copy the current case to the "favourites" case list
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list
+    Then the user-defined Favourites case list should contain:
       | Case3 |
     And the processed case list should contain:
       | Case1 |
@@ -28,7 +28,7 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case3
-    And I copy the current case to the "favourites" case list
+    And I copy the current case to the Favourites case list
     Then I see the case Case3 as the current case
     When I press the up arrow key
     And I see the case Case2 as the current case
@@ -38,8 +38,8 @@
       | Case1 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the "favourites" case list with name "An amazing case"
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list with name "An amazing case"
+    Then the user-defined Favourites case list should contain:
       | An amazing case |
     And the processed case list should contain:
       | Case1 |
@@ -48,10 +48,10 @@
     Given the configured case Case4 is stored on the server
     And I start the client application
     And I select case Case4
-    And I copy the current case to the "favourites" case list
-    Then the favourites case list should contain:
+    And I copy the current case to the Favourites case list
+    Then the user-defined Favourites case list should contain:
       | Case4 |
-    And I select case Case4 on the "favourites" case list
+    And I select the case Case4 on the user-defined Favourites case list
     Then I should see these episode dates:
       | 2022-08-05 12:31 |
       | 2022-08-06 02:25 |
@@ -72,12 +72,12 @@
       | Case1 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the "favourites" case list with name "CopiedCase"
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list with name "CopiedCase"
+    Then the user-defined Favourites case list should contain:
       | CopiedCase |
-    And I select case CopiedCase on the "favourites" case list
-    And I delete the current case from the "favourites" case list
-    Then I should no longer see the "favourites" case list
+    And I select the case CopiedCase on the user-defined Favourites case list
+    And I delete the current case from the Favourites case list
+    Then I should no longer see the Favourites case list
     And I see the case Case1 as the current case
 
   Scenario: Copied cases are listed in the order in which they were added.
@@ -88,17 +88,17 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case3
-    And I copy the current case to the "favourites" case list
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list
+    Then the user-defined Favourites case list should contain:
       | Case3 |
     And I select case Case1
-    And I copy the current case to the "favourites" case list
-    Then the favourites case list should contain:
+    And I copy the current case to the Favourites case list
+    Then the user-defined Favourites case list should contain:
       | Case3 |
       | Case1 |
     And I select case Case2
-    And I copy the current case to the "favourites" case list
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list
+    Then the user-defined Favourites case list should contain:
       | Case3 |
       | Case1 |
       | Case2 |
@@ -110,12 +110,12 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case2
-    And I copy the current case to the "favourites" case list with name "CopiedCase"
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list with name "CopiedCase"
+    Then the user-defined Favourites case list should contain:
       | CopiedCase |
-    And I select case CopiedCase
-    And I copy the current case to the "favourites" case list with name "CopiedCopiedCase"
-    Then the "favourites" case list should contain:
+    And I select the case CopiedCase on the user-defined Favourites case list
+    And I copy the current case to the Favourites case list with name "CopiedCopiedCase"
+    Then the user-defined Favourites case list should contain:
       | CopiedCase |
       | CopiedCopiedCase |
 
@@ -128,11 +128,10 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select the case CCase1 on the cornerstone case list
-    And I copy the current case to the "favourites" case list with name "CopiedCase"
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list with name "CopiedCase"
+    Then the user-defined Favourites case list should contain:
       | CopiedCase |
 
-#  Copy same case to multiple lists
   Scenario: The user can define more than one case list.
     Given a list of cases with the following names is stored on the server:
       | Case1 |
@@ -140,16 +139,16 @@
       | Case3 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the "good" case list
-    Then the "good" case list should contain:
+    And I copy the current case to the Good case list
+    Then the user-defined Good case list should contain:
       | Case1 |
     And I select case Case2
-    And I copy the current case to the "bad" case list
-    Then the "bad" case list should contain:
+    And I copy the current case to the Bad case list
+    Then the user-defined Bad case list should contain:
       | Case2 |
     And I select case Case3
-    And I copy the current case to the "ugly" case list
-    Then the "ugly" case list should contain:
+    And I copy the current case to the Ugly case list
+    Then the user-defined Ugly case list should contain:
       | Case3 |
 
   Scenario: The user can copy the same case to more than one list.
@@ -158,14 +157,14 @@
       | Case2 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the "good" case list
-    Then the "good" case list should contain:
+    And I copy the current case to the Good case list
+    Then the user-defined Good case list should contain:
       | Case1 |
-    And I copy the current case to the "bad" case list
-    Then the "bad" case list should contain:
+    And I copy the current case to the Bad case list
+    Then the user-defined Bad case list should contain:
       | Case1 |
-    And I copy the current case to the "ugly" case list
-    Then the "ugly" case list should contain:
+    And I copy the current case to the Ugly case list
+    Then the user-defined Ugly case list should contain:
       | Case1 |
 
   Scenario: Cases cannot be copied to the cornerstone cases list.
@@ -175,7 +174,7 @@
       | CCase1 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the "Cornerstone Cases" case list with name "CopiedCase"
+    And I copy the current case to the Cornerstone case list
     Then the chatbot response contains the following terms:
       | Cannot | Cornerstone |
     And the cornerstone case count should be 1
@@ -187,11 +186,11 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case2
-    And I copy the current case to the "favourites" case list with name "CopiedCase"
-    Then the "favourites" case list should contain:
+    And I copy the current case to the Favourites case list with name "CopiedCase"
+    Then the user-defined Favourites case list should contain:
       | CopiedCase |
-    And I select case CopiedCase
-    And I copy the current case to the "favourites" case list with name "CopiedCopiedCase"
-    Then the "favourites" case list should contain:
+    And I select the case CopiedCase on the user-defined Favourites case list
+    And I copy the current case to the Favourites case list with name "CopiedCopiedCase"
+    Then the user-defined Favourites case list should contain:
       | CopiedCase |
       | CopiedCopiedCase |

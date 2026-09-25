@@ -26,7 +26,10 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
-    fun favouriteCaseListPO() = FavouriteCaseListPO {
+    fun favouriteCaseListPO() = UserDefinedCaseListPO("Favourites") {
+        context()
+    }
+    fun userDefinedCaseListPO(name: String) = UserDefinedCaseListPO(name) {
         context()
     }
 
@@ -38,7 +41,7 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
-    fun favouriteCaseCountPO() = FavouriteCaseCountPO {
+    fun userDefinedCaseListCaseCountPO(name: String) = UserDefinedCaseCountPO(name) {
         context()
     }
 
