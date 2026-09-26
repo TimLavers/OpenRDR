@@ -26,3 +26,8 @@ any case in a user-defined case list through.
 
 When a Knowledge Base is exported to a zip file, the user-defined case lists are included.
 
+## Allowed names for case lists
+When we export a KB to a zip, we put each list of cases into its own directory.
+A user could have a good reason for creating a list name that is not a valid
+directory name. To work around this, we will encode the list names
+
