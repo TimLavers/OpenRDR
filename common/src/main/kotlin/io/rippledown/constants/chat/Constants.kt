@@ -85,7 +85,7 @@ const val COPY_CASE_TO_FAVOURITES = "CopyCaseToFavourites"
 const val DELETE_CASE_FROM_FAVOURITES = "DeleteCaseFromFavourites"
 const val COPY_CASE_TO_FAVOURITES_WITH_NEW_NAME = "CopyCaseToFavouritesWithNewName"
 
-// Knowledge base management by chat. See documentation/design/kb_management_by_chat.md.
+// Knowledge base management by chat. See documentation/design/kb_management.md.
 const val KB_INFO_PREFIX = "KbInfo:"
 const val KB_CLOSED = "KbClosed"
 

@@ -67,7 +67,7 @@ interface RuleService {
      * Edit the stored definition of a derived attribute in place, so that
      * the change applies everywhere the attribute is given by its
      * definition, with no rule change. Returns a summary of the change.
-     * See documentation/design/editing_derived_attribute_definitions.md.
+     * See documentation/design/derived_attribute_definitions.md.
      */
     fun editDerivedAttributeDefinition(attributeName: String, valueExpression: String): String
 

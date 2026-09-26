@@ -16,7 +16,7 @@ import kotlin.test.Test
  * Externally supplied attribute names that collide with KB-assigned
  * attributes are deterministically mangled at case ingestion, so that
  * case processing never fails and external data is never silently
- * dropped. See documentation/design/repeat_inferencing.md.
+ * dropped. See documentation/design/rule_tree_and_inference.md.
  */
 class KBExternalCollisionTest {
     private lateinit var kb: KB

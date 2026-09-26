@@ -67,6 +67,18 @@ class RuleConversation(private val service: RuleService?) {
         )
     }
 
+    /**
+     * The reasons given with a session-starting action were applied by the action itself, which
+     * also asked the server's question. The nested model turn inside the action saw those
+     * conditions as already present, so [completeTurn] cannot register the question; this does.
+     */
+    fun reasonsAppliedAtStart(action: ActionComment) {
+        if (action.reasons.isNullOrEmpty()) return
+        if (action.action !in ChatResponseEnricher.SESSION_STARTING_ACTIONS) return
+        if (service?.isRuleSessionActive() != true) return
+        state = State.AwaitingReasonReply
+    }
+
     fun rememberOffer(action: ActionComment) {
         if (action.action != ASSIGN_DERIVED_VALUE) return
         val name = action.attributeName ?: return

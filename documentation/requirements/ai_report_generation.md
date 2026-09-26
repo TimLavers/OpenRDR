@@ -1,43 +1,25 @@
-# AI Report Generation
+# AI report generation
 
-When reviewing a case, the expert sees the comments the rules in the knowledge base gave it, each with its name, in the
-**Comments** panel. These comments are concise, rule-authored sentences. The AI report generation facility produces a
-longer, well-worded prose **report** for the case, written by the application's large language model (LLM) from those
-comments together with the case's data.
+The comments the rules give a case are terse, rule-authored sentences. The **Report** panel shows a prose report for the
+case, written by the language model from those comments and the case data, in the register a clinician would use. It is
+a readable summary for review, not a replacement for the comments, which remain the expert's unit of correction.
 
-The report is presented in a collapsible **Report** panel shown beneath the Comments panel in the case view. It is
-intended as a readable, narrative summary of the case that a clinician could use directly, distinct from the terse rule
-comments.
+| Requirement               | Description                                                                                                                                                              | Validation                                                    |
+|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| Panel                     | A collapsible Report panel beneath the Comments panel, toggled from its header.                                                                                          | `report/Report.feature`                                       |
+| Content                   | Prose derived only from the comments given for the case, made concrete with the case's values, in Australian medical terminology and spelling.                           | `report/Report.feature` (grounding cannot be tested reliably) |
+| Formatting                | Rendered as Markdown; out-of-range values in bold red as in the case view; `10^12` and `umol/L` rendered as `10¹²` and `μmol/L`.                                         | unit tests                                                    |
+| No comments               | With no comments the panel says there is nothing to report on, and no model call is made.                                                                                | unit tests                                                    |
+| Progress                  | The chat's typing indicator is shown while the report is generated.                                                                                                      | unit tests                                                    |
+| Copy                      | A copy icon puts the report text on the clipboard and briefly confirms.                                                                                                  | unit tests                                                    |
+| Disclaimer                | An information icon beside the heading says on hover that the report is AI-generated, may be wrong, and must be reviewed before release.                                 | unit tests                                                    |
+| Long reports              | The panel is bounded in height and scrolls internally, so the case data is never pushed off screen.                                                                      | unit tests                                                    |
+| Only when visible         | A report is generated only while the panel is open, so browsing cases with it closed costs nothing.                                                                      | unit tests                                                    |
+| Only when comments change | Re-selecting a case whose comments are unchanged reuses the report; a rule that changes a comment regenerates it.                                                        | `report/Report.feature`                                       |
+| Not during a rule         | The panel is hidden while a rule is being built, since the interpretation is in flux and a stale report would mislead; it reappears, regenerated, when the session ends. | unit tests                                                    |
+| Failure                   | If generation fails the panel shows the empty state and the cause goes to the server log; the report is never critical.                                                  | unit tests                                                    |
 
-## Functionality
+**Not implemented:** choosing which attributes are sent to the model; sending the comments' names as well as their
+texts; showing or hiding the panel from the chat.
 
-| Requirement            | Description                                                                                                                                                                                                                                              | Validation                     |
-|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
-| Report panel           | A collapsible **Report** panel is shown beneath the Comments panel for the current case.                                                                                                                                                                 | `Report.feature`               |
-| Toggle visibility      | The user can show or hide the report by clicking the panel's header (a chevron and the label "Report").                                                                                                                                                  | `Report.feature`               |
-| Report content         | When shown, the report is a well-worded prose narrative derived from the comments given by rules for the case, and may refer to the case's attribute values to make the wording concrete. It uses Australian medical terminology, phrasing and spelling. | `Report.feature`               |
-| Grounded in comments   | The report is based only on the comments given for the case; it does not introduce findings that are not implied by those comments.                                                                                                                      | not able to be reliably tested |
-| No comments            | If the case has no comments, the panel indicates there is nothing to report on rather than generating a report.                                                                                                                                          | unit test only                 |
-| Long reports           | The panel is bounded in height and scrolls internally so that a long report never pushes the case data off-screen.                                                                                                                                       |                                |
-| Progress indicator     | While the report is being generated, the panel shows an animated "typing" indicator (the same three-dot indicator used by the chat) between the "Report" header and the panel, and removes it once the report arrives.                                   | unit test only                 |
-| Out-of-range highlight | Attribute values that fall outside their reference range are shown in bold red, consistent with how out-of-range values are marked in the case view.                                                                                                     | unit test only                 |
-| Readable units         | Powers of ten and the micro prefix are rendered for readability: `10^12` is shown with a superscript exponent (`10¹²`) and the SI micro prefix `u` is shown as the Greek letter mu (`umol/L` -> `μmol/L`), matching the case view.                       | unit test only                 |
-| Copy report            | When a report is shown, a copy icon lets the user copy the report text to the clipboard, briefly confirming with a checkmark.                                                                                                                            | unit test only                 |
-| AI disclaimer          | An information icon beside the "Report" label shows, on hover, a disclaimer noting the report is AI-generated, may be incorrect, and should be reviewed before release to any third party.                                                               | unit test only                 |
-
-## When the report is generated
-
-To keep cost and latency down, report generation is deliberately limited:
-
-| Requirement               | Description                                                                                                                                                  | Validation       |
-|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|
-| Only when visible         | The report is generated only when the Report panel is visible. Selecting cases while the panel is collapsed generates no reports.                            | unit test only   |
-| Only when comments change | A report is regenerated only when the comments for the case change. Re-selecting a case whose comments are unchanged reuses the previously generated report. | unit test only   |
-| Not during rule building  | No report is generated while a rule-building session is in progress.                                                                                         | unit test only   |
-| Reflects comment changes  | After the user builds, removes or replaces a comment via a rule, the report for the case updates to reflect the new comments.                                | `Report.feature` |
-
-## Failure behaviour
-
-| Requirement      | Description                                                                                                                                                                                                                            | Validation     |
-|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| Graceful failure | If report generation fails (for example, the LLM call errors or times out), the failure is non-critical: the panel shows an empty-report state rather than surfacing an error, and the underlying cause is recorded in the server log. | unit test only |
+Design: [design/ai_report_generation.md](../design/ai_report_generation.md).

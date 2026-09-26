@@ -14,7 +14,7 @@ fun rootRule(): Rule {
  * Resolves a derived attribute to its stored value-expression definition,
  * used to substitute [ByDefinition] rule actions with the concrete
  * expression before evaluation. See
- * documentation/design/editing_derived_attribute_definitions.md.
+ * documentation/design/derived_attribute_definitions.md.
  */
 typealias DefinitionResolver = (Attribute) -> ValueExpression?
 

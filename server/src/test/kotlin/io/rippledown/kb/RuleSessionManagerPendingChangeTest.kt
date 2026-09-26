@@ -22,7 +22,7 @@ import kotlin.test.Test
  * a diff concerns is read from the attribute rather than snapshotted when the
  * session started, because the user can rename a comment while its rule is
  * being built. See
- * documentation/design/previewing_pending_changes_when_a_rule_is_being_built.md.
+ * documentation/design/previewing_pending_changes.md.
  */
 class RuleSessionManagerPendingChangeTest {
     private lateinit var kb: KB

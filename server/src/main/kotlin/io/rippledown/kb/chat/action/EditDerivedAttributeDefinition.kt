@@ -11,7 +11,7 @@ import io.rippledown.model.chat.ChatResponse
  * change everywhere the attribute is given by its definition. Unlike
  * [AssignDerivedValue] and [ReplaceDerivedValue], this does not open a rule
  * session — no rule is built and there is no cornerstone review. See
- * documentation/design/editing_derived_attribute_definitions.md.
+ * documentation/design/derived_attribute_definitions.md.
  */
 class EditDerivedAttributeDefinition(
     val attributeName: String,

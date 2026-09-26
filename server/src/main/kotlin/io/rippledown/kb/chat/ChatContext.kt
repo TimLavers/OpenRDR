@@ -7,7 +7,7 @@ import io.rippledown.server.KBEndpoint
 /**
  * What the chat is about. The context decides the system prompt, the
  * functions the model may call, the actions it may emit and the greeting.
- * See documentation/design/kb_management_by_chat.md.
+ * See documentation/design/kb_management.md.
  */
 sealed class ChatContext {
     object NoKnowledgeBase : ChatContext()
