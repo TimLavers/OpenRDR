@@ -1,5 +1,5 @@
 # This file specifies the repeat-inferencing behaviour described in
-# documentation/design/repeat_inferencing.md.
+# documentation/design/rule_tree_and_inference.md.
 Feature: Repeat inferencing via derived attributes.
   A rule can assign a value to a derived attribute, and other rules can use
   that value in their conditions. Inference repeats until the interpretation

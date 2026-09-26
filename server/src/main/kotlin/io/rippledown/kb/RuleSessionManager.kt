@@ -287,7 +287,7 @@ class RuleSessionManager(
      * the expression is stored as the attribute's definition, and the rule
      * simply points at the attribute, so that a later edit of the definition
      * applies without any rule change. See
-     * documentation/design/editing_derived_attribute_definitions.md.
+     * documentation/design/derived_attribute_definitions.md.
      */
     fun startRuleSessionToAssignValue(
         case: RDRCase,
@@ -428,7 +428,7 @@ class RuleSessionManager(
      * The message explaining why the given condition cannot be added to the
      * current rule session, or null if it can: a condition that would make
      * a derived attribute depend on itself is refused. See "Stratification"
-     * in documentation/design/repeat_inferencing.md.
+     * in documentation/design/rule_tree_and_inference.md.
      */
     private fun cycleMessageFor(condition: Condition): String? {
         val session = ruleSession ?: return null
@@ -450,7 +450,7 @@ class RuleSessionManager(
      * comment-editing pattern applied to data attributes. Every ByDefinition
      * rule picks up the change on the next interpretation; no rule is
      * mutated and no cornerstone review is run. See
-     * documentation/design/editing_derived_attribute_definitions.md.
+     * documentation/design/derived_attribute_definitions.md.
      */
     override fun editDerivedAttributeDefinition(attributeName: String, valueExpression: String): String {
         check(ruleSession == null) { "Session already in progress." }

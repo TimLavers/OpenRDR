@@ -44,7 +44,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      * Drops candidates that would make a derived attribute depend on
      * itself, so that the user is never offered a condition that would be
      * refused. See "Stratification" in
-     * documentation/design/repeat_inferencing.md.
+     * documentation/design/rule_tree_and_inference.md.
      */
     private fun pruneCycleCreating(candidates: Collection<SuggestedCondition>): Collection<SuggestedCondition> {
         if (ctx.action?.assignedAttribute() == null) return candidates
@@ -57,7 +57,7 @@ class ConditionSuggester(private val ctx: SuggestionContext) {
      * rule in [SuggestionContext.ruleTree] that assigns the action's target
      * attribute, restricted to those that hold on the session
      * case. See "Historical-condition injection" in
-     * `documentation/design/targeted_suggested_conditions.md` for the
+     * `documentation/design/suggested_conditions.md` for the
      * rationale: pathology cutoffs in existing rules are usually the clinically
      * defensible ones (evidence-based guideline thresholds, departmental
      * conventions), so surfacing the literal `eGFR ≥ 70` alongside the

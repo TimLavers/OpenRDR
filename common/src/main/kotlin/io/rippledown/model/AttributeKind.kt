@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * information system (e.g. a LIS) from those whose values are assigned
  * by the knowledge base.
  *
- * See documentation/design/repeat_inferencing.md.
+ * See documentation/design/rule_tree_and_inference.md.
  */
 @Serializable
 enum class AttributeKind {

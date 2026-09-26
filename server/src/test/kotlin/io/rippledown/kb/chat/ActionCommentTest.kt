@@ -225,6 +225,50 @@ class ActionCommentTest {
     }
 
     @Test
+    fun `reasons given with the action reach every session-starting action`() {
+        // Given
+        val reasons = listOf("Glucose is high", "Age > 50")
+
+        // When / Then
+        (ActionComment(ADD_COMMENT, comment = "x", reasons = reasons)
+            .createActionInstance() as AddComment).reasons shouldBe reasons
+        (ActionComment(REMOVE_COMMENT, comment = "x", reasons = reasons)
+            .createActionInstance() as RemoveComment).reasons shouldBe reasons
+        (ActionComment(REPLACE_COMMENT, comment = "x", replacementComment = "y", reasons = reasons)
+            .createActionInstance() as ReplaceComment).reasons shouldBe reasons
+        (ActionComment(ASSIGN_DERIVED_VALUE, attributeName = "a", valueExpression = "1", reasons = reasons)
+            .createActionInstance() as AssignDerivedValue).reasons shouldBe reasons
+        (ActionComment(REMOVE_DERIVED_VALUE, attributeName = "a", reasons = reasons)
+            .createActionInstance() as RemoveDerivedValue).reasons shouldBe reasons
+        (ActionComment(REPLACE_DERIVED_VALUE, attributeName = "a", valueExpression = "1", reasons = reasons)
+            .createActionInstance() as ReplaceDerivedValue).reasons shouldBe reasons
+    }
+
+    @Test
+    fun `an action without reasons has none`() {
+        // Given
+        val json = """{"action": "$ADD_COMMENT", "comment": "x"}"""
+
+        // When
+        val action = json.fromJsonString<ActionComment>().createActionInstance() as AddComment
+
+        // Then
+        action.reasons shouldBe emptyList()
+    }
+
+    @Test
+    fun `reasons are parsed from JSON`() {
+        // Given
+        val json = """{"action": "$ADD_COMMENT", "comment": "x", "reasons": ["a is 1", "b is 2"]}"""
+
+        // When
+        val actionComment = json.fromJsonString<ActionComment>()
+
+        // Then
+        actionComment.reasons shouldBe listOf("a is 1", "b is 2")
+    }
+
+    @Test
     fun removeComment() {
         val commentToRemove = "Beach time!"
         val actionComment = ActionComment(REMOVE_COMMENT, comment = commentToRemove)

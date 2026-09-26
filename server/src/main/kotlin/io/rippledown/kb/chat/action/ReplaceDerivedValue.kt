@@ -3,12 +3,14 @@ package io.rippledown.kb.chat.action
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
+import io.rippledown.kb.chat.respondAfterSessionStart
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
 class ReplaceDerivedValue(
     val attributeName: String,
     val valueExpression: String,
+    val reasons: List<String> = emptyList(),
 ) : ChatAction {
     override suspend fun doIt(
         ruleService: RuleService,
@@ -26,8 +28,7 @@ class ReplaceDerivedValue(
                 attributeName,
                 valueExpression
             )
-            ruleService.sendCornerstoneStatus()
-            modelResponder.response(cornerstoneStatus.summary())
+            respondAfterSessionStart(ruleService, sessionCase, cornerstoneStatus, reasons, modelResponder)
         } catch (e: IllegalStateException) {
             ChatResponse(e.message ?: "Could not replace derived value.")
         }

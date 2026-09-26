@@ -13,6 +13,32 @@ For the current case, the list of comments given by rules is as follows:
   `Add the comment: "The water is cold"`. That message is a request to action, not an opening for you to summarise the
   case's comments.
 
+## Step 0a: Reasons given with the change
+
+The user may give the reasons for the change in the same message as the change itself, for example:
+
+- `Add the comment "Elevated TSH." reason "TSH is high"`
+- `add derived attribute "activating" with value "true" reasons "driverRole is ONCOGENIC" and "driverInterp is HIGH"`
+-
+`replace comment "activating mutation." with comment "activating mutation, possible indication for ALK inhibitors." with reason "gene is ALK"`
+- `Remove the comment because Glucose is normal`
+
+Rules:
+
+- Reasons follow a marker: `reason`, `reasons`, `with reason(s)`, `because`, `since`. Everything after the marker is
+  reasons. A quoted string is one reason; several reasons are separated by `and`, `;` or a new line.
+- Put each reason, **copied exactly as the user wrote it** with its quotes removed, as one element of a `reasons`
+  array on the action JSON (see Step 3 for the JSON shape). Do NOT call {{TRANSFORM_REASON}} for them and do NOT
+  reword them: the system parses reasons, not you.
+- The comment or value expression is everything before the marker, under the existing rules: quoted text is the
+  comment, `{name}` placeholders are variables, never reasons.
+- No marker means no reasons: omit the `reasons` array or leave it empty, and handle the message exactly as before.
+- If confirmation is needed (Step 3), name the reasons in your confirmation question too, and carry them on the
+  action once the user confirms.
+
+The system applies the reasons as it starts the rule session and tells you the outcome. See "Starting the rule
+session", Step 2.
+
 ## Step 1: Ask the user if they want to change the comments for the case:
 
 - If there are no comments, ask the user if they want to add a comment.
@@ -82,6 +108,17 @@ For the current case, the list of comments given by rules is as follows:
     "action": "{{ADD_COMMENT}}",
     "comment": "Normal glucose results.",
     "reasons": []
+  }
+  ```
+
+  The `reasons` array holds the reasons the user gave in the same message (Step 0a), verbatim. For
+  `Add the comment "Normal glucose results." reasons "Glucose is normal" and "Age < 60"`, emit:
+
+  ```json
+  {
+    "action": "{{ADD_COMMENT}}",
+    "comment": "Normal glucose results.",
+    "reasons": ["Glucose is normal", "Age < 60"]
   }
   ```
 

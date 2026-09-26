@@ -3,6 +3,7 @@ package io.rippledown.kb.chat
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.constants.chat.ADD_COMMENT
 import io.rippledown.constants.chat.ASSIGN_DERIVED_VALUE
 import io.rippledown.constants.chat.EXEMPT_CORNERSTONE
 import io.rippledown.constants.chat.USER_ACTION
@@ -33,6 +34,55 @@ class RuleConversationTest {
         // Then
         action?.message shouldBe "$note\nAdded your reason 'UV is high'.\n\n${RuleConversation.MORE_REASONS_QUESTION}"
         conversation.state shouldBe RuleConversation.State.AwaitingReasonReply
+    }
+
+    @Test
+    fun `reasons applied as a session starts leave the server's question pending`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+
+        // When
+        conversation.reasonsAppliedAtStart(ActionComment(ADD_COMMENT, comment = "x", reasons = listOf("a is 1")))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.AwaitingReasonReply
+    }
+
+    @Test
+    fun `a session-starting action without reasons leaves the conversation ready`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+
+        // When
+        conversation.reasonsAppliedAtStart(ActionComment(ADD_COMMENT, comment = "x"))
+        conversation.reasonsAppliedAtStart(ActionComment(ADD_COMMENT, comment = "x", reasons = emptyList()))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.Ready
+    }
+
+    @Test
+    fun `reasons on an action that does not start a session are ignored`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+
+        // When
+        conversation.reasonsAppliedAtStart(ActionComment(USER_ACTION, message = "hi", reasons = listOf("a is 1")))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.Ready
+    }
+
+    @Test
+    fun `reasons on an action whose session did not start are ignored`() {
+        // Given
+        every { service.isRuleSessionActive() } returns false
+
+        // When
+        conversation.reasonsAppliedAtStart(ActionComment(ADD_COMMENT, comment = "x", reasons = listOf("a is 1")))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.Ready
     }
 
     @Test

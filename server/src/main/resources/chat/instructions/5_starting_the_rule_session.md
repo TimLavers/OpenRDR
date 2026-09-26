@@ -14,7 +14,10 @@ MUST be the appropriate action JSON object (no prose, no apology, no question).
 ```json
 {
   "action": "{{ADD_COMMENT}}",
-  "comment": "<user entered comment text or identifier for the comment to add>>"
+  "comment": "<user entered comment text or identifier for the comment to add>",
+  "reasons": [
+    "<each reason the user gave in the same message, verbatim; omit or leave empty if none>"
+  ]
 }
 ```
 
@@ -23,7 +26,10 @@ MUST be the appropriate action JSON object (no prose, no apology, no question).
 ```json
 {
   "action": "{{REMOVE_COMMENT}}",
-  "comment": "<user entered comment text or identifier for the comment to remove>"
+  "comment": "<user entered comment text or identifier for the comment to remove>",
+  "reasons": [
+    "<each reason the user gave in the same message, verbatim; omit or leave empty if none>"
+  ]
 }
 ```
 
@@ -33,7 +39,10 @@ MUST be the appropriate action JSON object (no prose, no apology, no question).
 {
   "action": "{{REPLACE_COMMENT}}",
   "comment": "<user entered comment text or identifier for the comment to replace>",
-  "replacementComment": "<user entered comment text or identifier for the replacement comment>"
+  "replacementComment": "<user entered comment text or identifier for the replacement comment>",
+  "reasons": [
+    "<each reason the user gave in the same message, verbatim; omit or leave empty if none>"
+  ]
 }
 ```
 
@@ -45,6 +54,15 @@ the rule session has been started:
 ```
 Cornerstone: <name of the current cornerstone case, or null>, Index: <index>, Total: <number of cornerstone cases>
 ```
+
+If the action carried `reasons`, the same message goes on to say that the system has already applied them, listing
+the conditions added and any reason it could not understand. In that case:
+
+- Do NOT call {{TRANSFORM_REASON}} for those reasons and do NOT ask the user for a first reason. The system has
+  already acknowledged the reasons to the user and asked whether they want to provide more.
+- Still call {{GET_SUGGESTED_CONDITIONS}} in Step 3, then reply with a brief message only. Your message is not
+  shown to the user, but the suggestions are.
+- Treat the conditions listed as added when the user later asks to list the reasons of the rule.
 
 ## Step 3 Present suggested conditions to the user:
 

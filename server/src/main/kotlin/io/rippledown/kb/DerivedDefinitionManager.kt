@@ -8,7 +8,7 @@ import io.rippledown.persistence.DerivedDefinitionStore
  * attribute id, mirroring ConclusionManager. Editing a definition is an
  * in-place [store]: every rule whose action assigns the attribute by
  * definition picks up the change, with no rule mutation. See
- * documentation/design/editing_derived_attribute_definitions.md.
+ * documentation/design/derived_attribute_definitions.md.
  */
 class DerivedDefinitionManager(
     private val definitionStore: DerivedDefinitionStore,

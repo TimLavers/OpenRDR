@@ -5,15 +5,21 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.constants.chat.commentNamedMessage
 import io.rippledown.kb.chat.ChatCommentVariable
 import io.rippledown.kb.chat.ModelResponder
+import io.rippledown.kb.chat.RuleConversation.Companion.MORE_REASONS_QUESTION
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.model.Attribute
+import io.rippledown.model.CaseId
 import io.rippledown.model.CommentVariable
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -182,6 +188,45 @@ class AddCommentTest {
         //Then the name, and that it can be changed, precede the model's question
         response.text shouldBe
                 "${commentNamedMessage("C1")}\n\nWhy should this comment be given?"
+    }
+
+    @Test
+    fun `reasons given with the comment are added as the session starts`() = runTest {
+        //Given
+        val action = AddComment("Elevated TSH.", reasons = listOf("TSH is high"))
+        val ccStatus = CornerstoneStatus(indexOfCornerstoneToReview = 0, numberOfCornerstones = 1)
+        val case = RDRCase(CaseId(1L, "Bondi"))
+        val condition = greaterThanOrEqualTo(3, Attribute(1, "TSH"), 4.0)
+        every { currentCase.case } returns case
+        coEvery { ruleService.isRuleSessionActive() } returns false
+        coEvery { ruleService.startRuleSessionToAddComment(any(), any(), any()) } returns ccStatus
+        every { ruleService.conditionForExpression(case, "TSH is high") } returns
+                ConditionParsingResult(condition, expression = "TSH is high")
+        every { ruleService.addConditionToCurrentRuleSession(condition) } returns Unit
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        every { ruleService.nameOfCommentAttributeInSession() } returns "C1"
+        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("Any more reasons?")
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify { ruleService.addConditionToCurrentRuleSession(condition) }
+        response.text shouldBe "${commentNamedMessage("C1")}\n\n" +
+                "${TRANSFORMATION_MESSAGE.format(condition.asText())}\n\n$MORE_REASONS_QUESTION"
+    }
+
+    @Test
+    fun `reasons are not applied when the session cannot start`() = runTest {
+        //Given
+        val action = AddComment("Elevated TSH.", reasons = listOf("TSH is high"))
+        coEvery { ruleService.isRuleSessionActive() } returns true
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify(exactly = 0) { ruleService.conditionForExpression(any(), any()) }
     }
 
     @Test
