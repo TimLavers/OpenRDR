@@ -12,7 +12,7 @@ import io.rippledown.model.rule.CornerstoneStatus
 
 /**
  * The outcome of applying the reasons the user gave in the same instruction as
- * the rule action. See documentation/design/rule_action_with_reasons.md.
+ * the rule action. See documentation/design/chat_architecture.md.
  */
 class AppliedReasons(val results: List<ConditionParsingResult>) {
     fun isEmpty() = results.isEmpty()

@@ -8,7 +8,7 @@ import java.math.MathContext
 /**
  * The value assigned to a derived attribute by an [AssignValue] rule action.
  * Either a literal, or an arithmetic formula over the latest values of
- * other attributes. See documentation/design/repeat_inferencing.md.
+ * other attributes. See documentation/design/rule_tree_and_inference.md.
  */
 @Serializable
 sealed class ValueExpression {
@@ -57,7 +57,7 @@ data class Formula(val expression: Expr) : ValueExpression() {
  * an expression embedded in the rule action. It is never evaluated
  * directly: before evaluation it is resolved to the concrete expression
  * held in the definition store. See
- * documentation/design/editing_derived_attribute_definitions.md.
+ * documentation/design/derived_attribute_definitions.md.
  */
 @Serializable
 @SerialName("ByDefinition")

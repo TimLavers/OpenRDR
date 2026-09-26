@@ -1,5 +1,5 @@
 # This file specifies the behaviour described in
-# documentation/design/editing_derived_attribute_definitions.md.
+# documentation/design/derived_attribute_definitions.md.
 Feature: Editing the definition of a derived attribute
   A derived attribute has a stored definition (its formula or value). The
   user can edit that definition in place via the chat, so that the correction

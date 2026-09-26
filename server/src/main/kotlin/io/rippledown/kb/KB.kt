@@ -23,7 +23,7 @@ class KB(private val persistentKB: PersistentKB) {
     /**
      * Resolves a derived attribute to its stored definition, so that
      * ByDefinition rule actions evaluate against the definition store. See
-     * documentation/design/editing_derived_attribute_definitions.md.
+     * documentation/design/derived_attribute_definitions.md.
      */
     val definitionResolver: DefinitionResolver = { attribute -> derivedDefinitionManager.definitionFor(attribute.id) }
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())

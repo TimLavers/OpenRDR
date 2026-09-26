@@ -3,7 +3,7 @@ Feature: Rule action with reasons
   The user can give the report change and its reasons in one instruction, for example
   'Add the comment "Let's surf." reason "wave height is more than 0.5"'. The rule session starts, the reasons are
   added as conditions, and the chat asks whether there are more reasons, exactly as if the reasons had been typed one
-  by one. See documentation/design/rule_action_with_reasons.md.
+  by one. See documentation/design/chat_architecture.md.
 
   Background:
     Given a default KB is opened

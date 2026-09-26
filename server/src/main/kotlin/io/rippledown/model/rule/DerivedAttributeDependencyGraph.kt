@@ -7,7 +7,7 @@ import io.rippledown.model.condition.Condition
  * The dependency graph of the derived attributes in a rule tree, used to
  * keep dependencies acyclic so that fixpoint inference terminates. See
  * "Stratification: keeping dependencies acyclic" in
- * documentation/design/repeat_inferencing.md.
+ * documentation/design/rule_tree_and_inference.md.
  *
  * Nodes are the attributes assigned by the knowledge base: derived
  * attributes and comment attributes, since a comment is assigned by a rule
@@ -21,7 +21,7 @@ import io.rippledown.model.condition.Condition
  * The [resolver] supplies the stored definitions of derived attributes, so
  * that rules and actions whose value is given [ByDefinition] contribute the
  * references of the definition. See
- * documentation/design/editing_derived_attribute_definitions.md.
+ * documentation/design/derived_attribute_definitions.md.
  */
 class DerivedAttributeDependencyGraph(
     ruleTree: RuleTree,

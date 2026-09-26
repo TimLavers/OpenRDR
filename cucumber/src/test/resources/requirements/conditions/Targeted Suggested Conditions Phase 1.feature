@@ -1,8 +1,8 @@
-﻿Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cornerstones, and historical conditions, and capped at a usable size.
+Feature: Phase 1 — Suggested conditions are ranked by the rule action, the cornerstones, and historical conditions, and capped at a usable size.
 
   # This file specifies the *intended* behaviour after Phase 1 of the
   # targeted-suggested-conditions design (see
-  # documentation/design/targeted_suggested_conditions.md).
+  # documentation/design/suggested_conditions.md).
   #
   # Three sets of scenarios:
   # Set A — Action targeting

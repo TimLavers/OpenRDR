@@ -10,7 +10,7 @@ import io.rippledown.model.rule.RuleTreeChange
 /**
  * Hard cap on the number of suggestions returned by [ConditionSuggester].
  *
- * Rationale (see `documentation/design/targeted_suggested_conditions.md`,
+ * Rationale (see `documentation/design/suggested_conditions.md`,
  * "Suggestion cap"):
  *  - The chat UI shows ~5 suggestions by default, expandable to ~10. Twenty is
  *    roughly four pages of expansion — the realistic scrollable maximum.

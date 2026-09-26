@@ -8,7 +8,7 @@ import io.rippledown.sample.SampleKB
 /**
  * What a knowledge base management chat action is allowed to do. These
  * operations are about the set of knowledge bases, not the contents of one, so
- * they sit above [RuleService]. See documentation/design/kb_management_by_chat.md.
+ * they sit above [RuleService]. See documentation/design/kb_management.md.
  */
 interface KnowledgeBaseService {
     fun knowledgeBases(): List<KBInfo>

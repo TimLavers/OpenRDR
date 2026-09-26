@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * What a rule does when it fires: [AssignValue] assigns the result of a
  * [ValueExpression] to a KB-assigned attribute, which is how both comments
  * and derived values are given. See
- * documentation/design/repeat_inferencing.md.
+ * documentation/design/rule_tree_and_inference.md.
  */
 @Serializable
 sealed class RuleAction
