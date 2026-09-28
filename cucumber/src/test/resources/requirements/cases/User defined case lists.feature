@@ -38,7 +38,7 @@
       | Case1 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the Favourites case list with name "An amazing case"
+    And I copy the current case to the "Favourites" case list with name "An amazing case"
     Then the user-defined Favourites case list should contain:
       | An amazing case |
     And the processed case list should contain:
@@ -72,7 +72,7 @@
       | Case1 |
     And I start the client application
     And I see the case Case1 as the current case
-    And I copy the current case to the Favourites case list with name "CopiedCase"
+    And I copy the current case to the "Favourites" case list with name "CopiedCase"
     Then the user-defined Favourites case list should contain:
       | CopiedCase |
     And I select the case CopiedCase on the user-defined Favourites case list
@@ -110,11 +110,11 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case2
-    And I copy the current case to the Favourites case list with name "CopiedCase"
+    And I copy the current case to the "Favourites" case list with name "CopiedCase"
     Then the user-defined Favourites case list should contain:
       | CopiedCase |
     And I select the case CopiedCase on the user-defined Favourites case list
-    And I copy the current case to the Favourites case list with name "CopiedCopiedCase"
+    And I copy the current case to the "Favourites" case list with name "CopiedCopiedCase"
     Then the user-defined Favourites case list should contain:
       | CopiedCase |
       | CopiedCopiedCase |
@@ -128,7 +128,7 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select the case CCase1 on the cornerstone case list
-    And I copy the current case to the Favourites case list with name "CopiedCase"
+    And I copy the current case to the "Favourites" case list with name "CopiedCase"
     Then the user-defined Favourites case list should contain:
       | CopiedCase |
 
@@ -186,11 +186,58 @@
     And I start the client application
     And I see the case Case1 as the current case
     And I select case Case2
-    And I copy the current case to the Favourites case list with name "CopiedCase"
+    And I copy the current case to the "Favourites" case list with name "CopiedCase"
     Then the user-defined Favourites case list should contain:
       | CopiedCase |
     And I select the case CopiedCase on the user-defined Favourites case list
-    And I copy the current case to the Favourites case list with name "CopiedCopiedCase"
+    And I copy the current case to the "Favourites" case list with name "CopiedCopiedCase"
     Then the user-defined Favourites case list should contain:
       | CopiedCase |
       | CopiedCopiedCase |
+
+    @file-dialogs-are-fake
+    Scenario: User-defined case lists are exported
+      Given a list of cases with the following names is stored on the server:
+        | Case1 |
+        | Case2 |
+        | Case3 |
+      And I start the client application
+      And I see the case Case1 as the current case
+      And I copy the current case to the "Good:Class\1" case list with name "CopiedCase1"
+      And I select case Case2
+      And I copy the current case to the "Good:Class/2" case list with name "CopiedCase2"
+      And I select case Case3
+      And I copy the current case to the "Good:👍" case list with name "CopiedCase3"
+      Then the user-defined Good:Class\1 case list should contain:
+        | CopiedCase1 |
+      Then the user-defined Good:Class/2 case list should contain:
+        | CopiedCase2 |
+      Then the user-defined Good:👍 case list should contain:
+        | CopiedCase3 |
+      And the file chooser will select an export destination
+      When I enter the following text into the chat panel:
+        | Export this KB |
+      Then the chat history contains "Exported"
+      When I enter the following text into the chat panel:
+        | Close this knowledge base |
+      Then the chatbot response contains the following terms:
+        | No knowledge base is open | Thyroids | open | create |
+      When I enter the following text into the chat panel:
+        | Delete the knowledge base Thyroids |
+      Then the chatbot response contains the following terms:
+        | Delete | Thyroids | cannot be undone |
+      When I enter the following text into the chat panel:
+        | yes |
+      Then the chatbot response contains the following terms:
+        | Deleted | Thyroids |
+      When I enter the following text into the chat panel:
+        | Import a KB |
+      Given the file chooser will select the previously exported KB archive
+      Then the chat history contains "Imported \"Thyroids\" and opened it."
+      And the displayed KB name is now Thyroids
+      Then the user-defined Good:Class\1 case list should contain:
+        | CopiedCase1 |
+      And the user-defined Good:Class/2 case list should contain:
+        | CopiedCase2 |
+      And the user-defined Good:👍 case list should contain:
+        | CopiedCase3 |

@@ -137,6 +137,9 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.getProcessedCaseByName(case2) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case2)
         rebuilt.getProcessedCaseByName(case3) shouldBeEqualToComparingFields kb.getProcessedCaseByName(case3)
 
+        rebuilt.allUserDefinedCases().size shouldBe 1
+        rebuilt.allUserDefinedCases().first() shouldBeEqualToComparingFields kb.allUserDefinedCases().first()
+
         rebuilt.caseViewManager.allInOrder() shouldBe kb.caseViewManager.allInOrder()
 
         rebuilt.ruleTree.size() shouldBe 2
@@ -176,8 +179,12 @@ class KBImporterTest : ExporterTestBase() {
         val case1 = buildCase(case1, "4.0", "2.5", "1.8")
         val case2 = buildCase(case2, "4.1", "2.4", "1.6")
         val case3 = buildCase(case3, "4.2", "2.3", "1.4")
-        kb.addProcessedCase(case2)
+        val addedCase2 = kb.addProcessedCase(case2)
         kb.addProcessedCase(case3)
+
+        // Copy case2 to user-defined cases.
+        val userDefinedCaseListName = "Excellent cases"
+        kb.copyCaseToList(addedCase2.id!!, userDefinedCaseListName, "CopiedCase2")
 
         // Add a rule.
         val rsm = KBSession(kb).ruleSessionManager

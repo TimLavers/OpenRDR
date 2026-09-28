@@ -25,7 +25,7 @@ Feature: Knowledge Base management
     And the exported archive contains a knowledge base
     And the displayed KB name is Thyroids
     And I should see the case ExportedCase as the current case
-    Given the file chooser will select the configured KB archive Whatever
+      Given the file chooser will select the configured KB archive Whatever
     When I enter the following text into the chat panel:
       | Import a KB |
     Then the chat history contains "Imported \"Whatever\" and opened it."

@@ -10,7 +10,7 @@ class ChatCaseDefs {
         sendAndWaitForBotResponse("please copy the current case to $name")
     }
 
-    @And("I copy the current case to the {word} case list with name {string}")
+    @And("I copy the current case to the {string} case list with name {string}")
     fun copyCaseToFavouritesWithName(listName: String, newName: String) {
         sendAndWaitForBotResponse("please copy the current case to $listName with new name \"$newName\"")
     }

@@ -9,6 +9,7 @@ import kotlin.io.path.createTempDirectory
 
 open class ExporterTestBase: RuleTestBase() {
     var tempDir: File = createTempDirectory().toFile()
+//    var tempDir: File = File("/Users/timlavers/tgl/junk/rubbish")
 
     @BeforeEach
     open fun init() {
