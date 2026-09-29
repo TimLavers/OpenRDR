@@ -5,14 +5,20 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.kb.chat.ModelResponder
+import io.rippledown.kb.chat.RuleConversation.Companion.MORE_REASONS_QUESTION
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.action.ChatAction.Companion.RULE_SESSION_ALREADY_ACTIVE_ERROR
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
+import io.rippledown.model.CaseId
+import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.DerivedValueInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -153,6 +159,51 @@ class AssignDerivedValueTest {
         //Then the question names the attribute as the case has it
         response.text shouldBe alreadyAssignedForCaseMessage("BMI", "30.93", "weight / height ^ 3")
         coVerify(exactly = 0) { ruleService.startRuleSessionToAssignValue(any(), any(), any()) }
+    }
+
+    @Test
+    fun `reasons given with the assignment are added as the session starts`() = runTest {
+        //Given
+        val action = AssignDerivedValue("activating", "true", listOf("driverRole is ONCOGENIC", "driverInterp is HIGH"))
+        val case = RDRCase(CaseId(1L, "GNAS Arg544del"))
+        val oncogenic = greaterThanOrEqualTo(3, Attribute(1, "driverRole"), 1.0)
+        val high = greaterThanOrEqualTo(4, Attribute(2, "driverInterp"), 1.0)
+        every { currentCase.case } returns case
+        every { ruleService.isRuleSessionActive() } returns false
+        every { ruleService.attributeForName("activating") } returns null
+        coEvery { ruleService.startRuleSessionToAssignValue(any(), "activating", "true") } returns CornerstoneStatus()
+        every { ruleService.conditionForExpression(case, "driverRole is ONCOGENIC") } returns
+                ConditionParsingResult(oncogenic, expression = "driverRole is ONCOGENIC")
+        every { ruleService.conditionForExpression(case, "driverInterp is HIGH") } returns
+                ConditionParsingResult(high, expression = "driverInterp is HIGH")
+        every { ruleService.addConditionToCurrentRuleSession(any()) } returns Unit
+        every { ruleService.cornerstoneStatus() } returns CornerstoneStatus()
+        coEvery { modelResponder.response(any<String>()) } returns ChatResponse("More?")
+
+        //When
+        val response = action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify { ruleService.addConditionToCurrentRuleSession(oncogenic) }
+        coVerify { ruleService.addConditionToCurrentRuleSession(high) }
+        response.text shouldBe "${TRANSFORMATION_MESSAGE.format(oncogenic.asText())}\n" +
+                "${TRANSFORMATION_MESSAGE.format(high.asText())}\n\n$MORE_REASONS_QUESTION"
+    }
+
+    @Test
+    fun `reasons are not applied when a question is asked instead of starting`() = runTest {
+        //Given the attribute already has a value, so the user is asked whether to replace it
+        val action = AssignDerivedValue("BMI", "weight / height ^ 3", listOf("Height is in case"))
+        every { ruleService.isRuleSessionActive() } returns false
+        every { currentCase.derivedValues() } returns listOf(
+            DerivedValueInfo("BMI", "30.93", "weight / height ^ 2", emptyList())
+        )
+
+        //When
+        action.doIt(ruleService, currentCase, modelResponder)
+
+        //Then
+        coVerify(exactly = 0) { ruleService.conditionForExpression(any(), any()) }
     }
 
     @Test

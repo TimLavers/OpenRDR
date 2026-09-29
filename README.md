@@ -14,7 +14,7 @@ Paul Compton and Byeong Ho Kang, 2021. CRC Press.
 
 The background, requirements, design principles, and so on to the project are documented in the
 `documentation` directory that is a sibling to this file. The starting point for the
-documentation is [OpenRDR](./documentation/openrdr.md).
+documentation is [documentation/README.md](./documentation/README.md).
 
 ## Setup
 

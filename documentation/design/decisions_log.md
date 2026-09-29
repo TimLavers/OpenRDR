@@ -1,0 +1,45 @@
+# Decisions log
+
+One line per decision, with where the reasoning lives. Add to the end.
+
+| Decision                                                                                              | Where                                                                                                         |
+|-------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `Double`, not `BigDecimal`, for values; near-equal comparison                                         | [conditions.md](conditions.md#real-numbers)                                                                   |
+| Every object in a loaded KB is a single instance; references by id                                    | [architecture.md](architecture.md#consequences)                                                               |
+| Web-socket push, not polling, from server to client                                                   | [architecture.md](architecture.md#how-the-client-learns-of-server-changes)                                    |
+| Three fixed condition classes, not a general boolean algebra                                          | [conditions.md](conditions.md#three-classes)                                                                  |
+| Reasons translated by a language model, not a GUI or a grammar                                        | [condition_translation.md](condition_translation.md)                                                          |
+| Translator is a separate conversation from the operator                                               | [condition_translation.md](condition_translation.md#how)                                                      |
+| A translated condition must hold for the case before it is added                                      | [condition_translation.md](condition_translation.md#validation-before-anything-is-added)                      |
+| The rule action is stated by the user, not diffed from an edited report                               | [../requirements/rule_building.md](../requirements/rule_building.md#rule-actions)                             |
+| Suggestions are generated and ranked deterministically; the model only selects                        | [suggested_conditions.md](suggested_conditions.md)                                                            |
+| Suggestion list capped at 20 after ranking                                                            | [suggested_conditions.md](suggested_conditions.md#ranking)                                                    |
+| The chat replaces GUI controls; inline affordances only for closed, one-shot choices                  | [chat_ui_guidelines.md](chat_ui_guidelines.md)                                                                |
+| Model on the server, never the client                                                                 | [architecture.md](architecture.md#server-and-client)                                                          |
+| One operator model and prompt, not a router model                                                     | [kb_management.md](kb_management.md#actions)                                                                  |
+| Server holds every confirmation; model interprets non-trivial replies as intents                      | [chat_architecture.md](chat_architecture.md#server-held-state)                                                |
+| Client starts conversations; server never does                                                        | [chat_architecture.md](chat_architecture.md#context)                                                          |
+| Server-composed acknowledgement and "more reasons?" after each reason                                 | [chat_architecture.md](chat_architecture.md#the-rule-building-workflow)                                       |
+| Reasons may be given with the action; applied at session start                                        | [chat_architecture.md](chat_architecture.md#the-rule-building-workflow)                                       |
+| Guards on observed transitions, not a full state machine in code (yet)                                | [chat_architecture.md](chat_architecture.md#why-not-a-state-machine-in-code)                                  |
+| The KB's output is modelled as attributes added to the case; one rule action, `AssignValue`           | [rule_tree_and_inference.md](rule_tree_and_inference.md)                                                      |
+| Comments are attributes; one attribute per comment text; text is fixed                                | [rule_tree_and_inference.md](rule_tree_and_inference.md)                                                      |
+| Fixpoint inference with no iteration cap; cycles prevented at every entry point                       | [rule_tree_and_inference.md](rule_tree_and_inference.md#inference-a-fixpoint)                                 |
+| Comments are nodes of the dependency graph                                                            | [rule_tree_and_inference.md](rule_tree_and_inference.md#keeping-dependencies-acyclic)                         |
+| Rule-driven derived attributes, not a pre-processing step                                             | [rule_tree_and_inference.md](rule_tree_and_inference.md#one-rule-action-assign-a-value-to-an-attribute)       |
+| Formula names resolve exactly; the model transcribes expressions                                      | [rule_tree_and_inference.md](rule_tree_and_inference.md#telling-a-formula-from-a-literal)                     |
+| Comment names are `C1`, `C2`, …, assigned by the server                                               | [rule_tree_and_inference.md](rule_tree_and_inference.md#naming)                                               |
+| External name clashing with a derived attribute is mangled, never dropped                             | [rule_tree_and_inference.md](rule_tree_and_inference.md#ownership-of-kb-assigned-attributes)                  |
+| Definitions live on the attribute; rules point at them with `ByDefinition`                            | [derived_attribute_definitions.md](derived_attribute_definitions.md)                                          |
+| Edit a definition globally vs replace under a condition                                               | [derived_attribute_definitions.md](derived_attribute_definitions.md#two-operations-two-representations)       |
+| The user's phrase lives on the condition; first phrase wins; formal text always shown                 | [comments.md](comments.md#showing-conditions-in-the-users-words)                                              |
+| Pending change is one nullable field on the cornerstone status                                        | [previewing_pending_changes.md](previewing_pending_changes.md)                                                |
+| Ask before assigning to a derived attribute the case already has                                      | [previewing_pending_changes.md](previewing_pending_changes.md#assigning-to-an-attribute-the-case-already-has) |
+| Demonstrations are recipes, not stored KBs; their titles are reserved                                 | [kb_management.md](kb_management.md#demonstrations-are-recipes)                                               |
+| No implicit default KB                                                                                | [kb_management.md](kb_management.md#demonstrations-are-recipes)                                               |
+| Import/export through native dialogs launched from the chat                                           | [kb_management.md](kb_management.md#import-and-export)                                                        |
+| Report generated server-side by a one-shot call, cached on the comment text, only when visible        | [ai_report_generation.md](ai_report_generation.md)                                                            |
+| Out-of-range highlighting in the report left to the model (trial)                                     | [ai_report_generation.md](ai_report_generation.md#decisions)                                                  |
+| Voice input transcribed by Gemini, one-shot                                                           | [voice_input.md](voice_input.md)                                                                              |
+| Acceptance tests drive the real client through the accessibility API; OCR via Gemini as a last resort | [testing.md](testing.md)                                                                                      |
+| No in-code schema migrations                                                                          | [../requirements/persistence.md](../requirements/persistence.md)                                              |

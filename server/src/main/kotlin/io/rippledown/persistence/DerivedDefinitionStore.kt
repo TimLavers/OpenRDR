@@ -9,7 +9,7 @@ import kotlinx.serialization.json.Json
  * against these definitions, so an in-place [store] applies everywhere the
  * attribute is given by its definition — the editing primitive, mirroring
  * ConclusionStore.store. See
- * documentation/design/editing_derived_attribute_definitions.md.
+ * documentation/design/derived_attribute_definitions.md.
  *
  * The interface is deliberately kind-agnostic: any attribute id maps to a
  * definition, so derived and comment definitions share the same store.

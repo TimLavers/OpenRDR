@@ -6,7 +6,7 @@ import io.rippledown.model.chat.ChatResponse
 /**
  * Anything the model can ask the server to do. [ChatAction] works on the open
  * knowledge base and its current case; [KbManagementAction] works on the set of
- * knowledge bases. See documentation/design/kb_management_by_chat.md.
+ * knowledge bases. See documentation/design/kb_management.md.
  */
 sealed interface Action
 

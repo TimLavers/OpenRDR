@@ -84,7 +84,7 @@ const val CANCEL_RULE = "CancelRule"
 const val COPY_CASE_TO_LIST = "CopyCaseToList"
 const val DELETE_CASE_FROM_LIST = "DeleteCaseFromList"
 
-// Knowledge base management by chat. See documentation/design/kb_management_by_chat.md.
+// Knowledge base management by chat. See documentation/design/kb_management.md.
 const val KB_INFO_PREFIX = "KbInfo:"
 const val KB_CLOSED = "KbClosed"
 

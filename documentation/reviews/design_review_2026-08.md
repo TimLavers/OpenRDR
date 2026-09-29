@@ -36,7 +36,7 @@ ui/ChatPanel + ChatController → server/routes/ChatManagement.kt
 `RuleSessionManager` whose only job is natural-language expression →
 `ConditionSpecification` JSON, turned into a real `Condition` by
 `ConditionGenerator` via reflective instantiation of predicate/signature classes. The split is a documented, deliberate
-design decision (`documentation/design/chat_design.md`).
+design decision (`documentation/design/chat_design.md`, now `chat_architecture.md`).
 
 The operator model communicates through a **mixed protocol**:
 
