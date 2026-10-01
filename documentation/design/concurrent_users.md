@@ -22,6 +22,8 @@ the work is almost entirely in the server's in-memory session state and the push
 
 ## Common groundwork (needed for every option)
 
+Implementation plan: [concurrent_users_groundwork.md](concurrent_users_groundwork.md).
+
 1. **User identity.** The third-party system authenticates; OpenRDR consumes an identity. Simplest contract: the server
    sits behind a reverse proxy / gateway that validates the token and forwards a `userId` header (or the server
    validates a JWT signature itself — validation only, no user management). Every REST call and the web-socket
