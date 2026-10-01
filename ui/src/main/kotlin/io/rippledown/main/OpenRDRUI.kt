@@ -173,15 +173,16 @@ fun OpenRDRUI(
     }
 
     // Tracks the ordering of all known case ids (Processed + Cornerstone +
-    // Favourite), as last reported by the server, so that if the currently
-    // selected case is later removed from that combined list (e.g. it was
-    // deleted), we can work out which case was showing immediately before it
+    // the user-defined lists), as last reported by the server, so that if the
+    // currently selected case is later removed from that combined list (e.g. it
+    // was deleted), we can work out which case was showing immediately before it
     // and re-select that one instead of always falling back to the first case.
     var lastKnownCaseOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
 
     LaunchedEffect(casesInfo, currentCaseId) {
         withContext(dispatcher) {
-            val allCaseIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds + casesInfo.favouriteCaseIds
+            val allCaseIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds +
+                    casesInfo.userDefinedCaseLists.flatMap { it.caseIds }
             val allIdValues = allCaseIds.mapNotNull { it.id }
             if (allIdValues.isNotEmpty()) {
                 if (currentCaseId == null) {
@@ -221,7 +222,8 @@ fun OpenRDRUI(
             casesInfoKbId != open.id -> null
             casesInfo.count == 0 -> Pair(open.id, null)
             caseId == null -> null
-            (casesInfo.caseIds + casesInfo.cornerstoneCaseIds + casesInfo.favouriteCaseIds).none { it.id == caseId } -> null
+            (casesInfo.caseIds + casesInfo.cornerstoneCaseIds +
+                    casesInfo.userDefinedCaseLists.flatMap { it.caseIds }).none { it.id == caseId } -> null
             else -> Pair(open.id, caseId)
         }
     }
@@ -308,7 +310,7 @@ fun OpenRDRUI(
                             casesInfo.caseIds,
                             casesInfo.cornerstoneCaseIds,
                             caseSelectorHandler,
-                            casesInfo.favouriteCaseIds,
+                            casesInfo.userDefinedCaseLists,
                             currentCaseId
                         )
                     }

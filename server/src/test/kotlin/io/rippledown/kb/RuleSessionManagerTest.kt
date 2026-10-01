@@ -1119,197 +1119,209 @@ class RuleSessionManagerTest {
         }.message shouldContain "depend on itself"
     }
 
-    // --- copyCaseToFavourites ---
+    // --- copyCaseToList ---
 
     @Test
-    fun `should copy a processed case to favourites`() {
+    fun `should copy a processed case to a user-defined list`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
         val viewableCase = kb.viewableCase(stored)
 
         // When
-        val copy = rsm.copyCaseToFavourites(viewableCase, null)
+        val copy = rsm.copyCaseToList(viewableCase, "Good", null)
 
         // Then
         copy.name shouldBe "Case1"
-        copy.caseId.type shouldBe CaseType.Favourite
+        copy.caseId.type shouldBe CaseListType("Good")
         copy.id shouldNotBe stored.id
         copy.data shouldBe stored.data
     }
 
     @Test
-    fun `should copy a case to favourites with a new name`() {
+    fun `should copy a case to a user-defined list with a new name`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
         val viewableCase = kb.viewableCase(stored)
 
         // When
-        val copy = rsm.copyCaseToFavourites(viewableCase, "My favourite")
+        val copy = rsm.copyCaseToList(viewableCase, "Good", "My copy")
 
         // Then
-        copy.name shouldBe "My favourite"
-        copy.caseId.type shouldBe CaseType.Favourite
+        copy.name shouldBe "My copy"
+        copy.caseId.type shouldBe CaseListType("Good")
         copy.id shouldNotBe stored.id
         copy.data shouldBe stored.data
     }
 
     @Test
-    fun `should copy a cornerstone case to favourites`() {
+    fun `should copy a cornerstone case to a user-defined list`() {
         // Given - the current case can be copied whether it is from the
-        // Processed list, the Cornerstone list, or the Favourites list itself
+        // Processed list, the Cornerstone list, or a user-defined list itself
         val stored = kb.addCornerstoneCase(createCase("Case1", value = "1.0"))
         val viewableCase = kb.viewableCase(stored)
 
         // When
-        val copy = rsm.copyCaseToFavourites(viewableCase, null)
+        val copy = rsm.copyCaseToList(viewableCase, "Good", null)
 
         // Then
-        copy.caseId.type shouldBe CaseType.Favourite
+        copy.caseId.type shouldBe CaseListType("Good")
         copy.data shouldBe stored.data
     }
 
     @Test
-    fun `should copy a favourite case to favourites again`() {
+    fun `should copy a user-defined list case to its own list again`() {
         // Given
         val original = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val favourite = kb.copyCaseAsFavourite(original.id!!, null)
-        val viewableFavourite = kb.viewableCase(favourite)
+        val listCase = kb.copyCaseToList(original.id!!, "Good", null)
+        val viewableListCase = kb.viewableCase(listCase)
 
         // When
-        val copyOfCopy = rsm.copyCaseToFavourites(viewableFavourite, null)
+        val copyOfCopy = rsm.copyCaseToList(viewableListCase, "Good", null)
 
         // Then
-        copyOfCopy.caseId.type shouldBe CaseType.Favourite
-        copyOfCopy.id shouldNotBe favourite.id
-        copyOfCopy.data shouldBe favourite.data
+        copyOfCopy.caseId.type shouldBe CaseListType("Good")
+        copyOfCopy.id shouldNotBe listCase.id
+        copyOfCopy.data shouldBe listCase.data
     }
 
     @Test
-    fun `should add the copy to the favourites list`() {
+    fun `should add the copy to the named list`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
         val viewableCase = kb.viewableCase(stored)
 
         // When
-        val copy = rsm.copyCaseToFavourites(viewableCase, null)
+        val copy = rsm.copyCaseToList(viewableCase, "Good", null)
 
         // Then
-        kb.favouriteCaseIds().map { it.id } shouldBe listOf(copy.id)
+        kb.userDefinedCaseLists() shouldBe listOf(CaseListInfo("Good", listOf(copy.caseId)))
     }
 
     @Test
-    fun `should not remove the original case from its own list when copying it to favourites`() {
+    fun `should not remove the original case from its own list when copying it to a user-defined list`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
         val viewableCase = kb.viewableCase(stored)
 
         // When
-        rsm.copyCaseToFavourites(viewableCase, null)
+        rsm.copyCaseToList(viewableCase, "Good", null)
 
         // Then
         kb.processedCaseIds().map { it.id } shouldBe listOf(stored.id)
     }
 
     @Test
-    fun `should send updated CasesInfo via websocket when a case is copied to favourites`() {
-        // Given
-        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val viewableCase = kb.viewableCase(stored)
-        val capturedCasesInfo = slot<CasesInfo>()
-
-        // When
-        val copy = rsm.copyCaseToFavourites(viewableCase, null)
-
-        // Then
-        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
-        capturedCasesInfo.captured.favouriteCaseIds.map { it.id } shouldBe listOf(copy.id)
-    }
-
-    // --- deleteCaseFromFavourites ---
-
-    @Test
-    fun `should delete a case from favourites`() {
-        // Given
-        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val favourite = kb.copyCaseAsFavourite(stored.id!!, null)
-        val viewableFavourite = kb.viewableCase(favourite)
-
-        // When
-        rsm.deleteCaseFromFavourites(viewableFavourite)
-
-        // Then
-        kb.favouriteCaseIds() shouldBe emptyList()
-    }
-
-    @Test
-    fun `should not delete the original case when deleting its favourite copy`() {
-        // Given
-        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val favourite = kb.copyCaseAsFavourite(stored.id!!, null)
-        val viewableFavourite = kb.viewableCase(favourite)
-
-        // When
-        rsm.deleteCaseFromFavourites(viewableFavourite)
-
-        // Then
-        kb.processedCaseIds().map { it.id } shouldBe listOf(stored.id)
-    }
-
-    @Test
-    fun `should leave other favourites untouched when deleting one favourite`() {
-        // Given
-        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val toDelete = kb.copyCaseAsFavourite(stored.id!!, "To delete")
-        val toKeep = kb.copyCaseAsFavourite(stored.id!!, "To keep")
-        val viewableToDelete = kb.viewableCase(toDelete)
-
-        // When
-        rsm.deleteCaseFromFavourites(viewableToDelete)
-
-        // Then
-        kb.favouriteCaseIds().map { it.id } shouldBe listOf(toKeep.id)
-    }
-
-    @Test
-    fun `should throw when deleting a case that is not a favourite`() {
+    fun `should refuse to copy a case to a list with a reserved name`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
         val viewableCase = kb.viewableCase(stored)
 
         // When/Then
         shouldThrow<IllegalArgumentException> {
-            rsm.deleteCaseFromFavourites(viewableCase)
-        }.message shouldBe "Case is not a favourite"
+            rsm.copyCaseToList(viewableCase, "Cornerstone Cases", null)
+        }.message shouldContain "Cannot"
     }
 
     @Test
-    fun `should send updated CasesInfo via websocket when a case is deleted from favourites`() {
+    fun `should send updated CasesInfo via websocket when a case is copied to a user-defined list`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val favourite = kb.copyCaseAsFavourite(stored.id!!, null)
-        val viewableFavourite = kb.viewableCase(favourite)
+        val viewableCase = kb.viewableCase(stored)
+        val capturedCasesInfo = slot<CasesInfo>()
 
         // When
-        rsm.deleteCaseFromFavourites(viewableFavourite)
+        val copy = rsm.copyCaseToList(viewableCase, "Good", null)
+
+        // Then
+        coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
+        capturedCasesInfo.captured.userDefinedCaseLists shouldBe listOf(CaseListInfo("Good", listOf(copy.caseId)))
+    }
+
+    // --- deleteCaseFromUserList ---
+
+    @Test
+    fun `should delete a case from a user-defined list`() {
+        // Given
+        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val listCase = kb.copyCaseToList(stored.id!!, "Good", null)
+        val viewableListCase = kb.viewableCase(listCase)
+
+        // When
+        rsm.deleteCaseFromUserList(viewableListCase)
+
+        // Then
+        kb.userDefinedCaseLists() shouldBe emptyList()
+    }
+
+    @Test
+    fun `should not delete the original case when deleting its copy in a user-defined list`() {
+        // Given
+        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val listCase = kb.copyCaseToList(stored.id!!, "Good", null)
+        val viewableListCase = kb.viewableCase(listCase)
+
+        // When
+        rsm.deleteCaseFromUserList(viewableListCase)
+
+        // Then
+        kb.processedCaseIds().map { it.id } shouldBe listOf(stored.id)
+    }
+
+    @Test
+    fun `should leave other list cases untouched when deleting one case`() {
+        // Given
+        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val toDelete = kb.copyCaseToList(stored.id!!, "Good", "To delete")
+        val toKeep = kb.copyCaseToList(stored.id!!, "Good", "To keep")
+        val viewableToDelete = kb.viewableCase(toDelete)
+
+        // When
+        rsm.deleteCaseFromUserList(viewableToDelete)
+
+        // Then
+        kb.userDefinedCaseLists() shouldBe listOf(CaseListInfo("Good", listOf(toKeep.caseId)))
+    }
+
+    @Test
+    fun `should throw when deleting a case that is not in a user-defined list`() {
+        // Given
+        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val viewableCase = kb.viewableCase(stored)
+
+        // When/Then
+        shouldThrow<IllegalArgumentException> {
+            rsm.deleteCaseFromUserList(viewableCase)
+        }.message shouldContain "Cannot"
+    }
+
+    @Test
+    fun `should send updated CasesInfo via websocket when a case is deleted from a user-defined list`() {
+        // Given
+        val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
+        val listCase = kb.copyCaseToList(stored.id!!, "Good", null)
+        val viewableListCase = kb.viewableCase(listCase)
+
+        // When
+        rsm.deleteCaseFromUserList(viewableListCase)
 
         // Then
         coVerify { webSocketManager.sendCasesInfo(any()) }
     }
 
     @Test
-    fun `sent CasesInfo should no longer include the deleted favourite`() {
+    fun `sent CasesInfo should no longer include the deleted case`() {
         // Given
         val stored = kb.addProcessedCase(createCase("Case1", value = "1.0"))
-        val deleted = kb.copyCaseAsFavourite(stored.id!!, "Deleted")
-        val kept = kb.copyCaseAsFavourite(stored.id!!, "Kept")
+        val deleted = kb.copyCaseToList(stored.id!!, "Good", "Deleted")
+        val kept = kb.copyCaseToList(stored.id!!, "Good", "Kept")
         val viewableDeleted = kb.viewableCase(deleted)
         val capturedCasesInfo = slot<CasesInfo>()
 
         // When
-        rsm.deleteCaseFromFavourites(viewableDeleted)
+        rsm.deleteCaseFromUserList(viewableDeleted)
 
         // Then
         coVerify { webSocketManager.sendCasesInfo(capture(capturedCasesInfo)) }
-        capturedCasesInfo.captured.favouriteCaseIds.map { it.id } shouldBe listOf(kept.id)
+        capturedCasesInfo.captured.userDefinedCaseLists shouldBe listOf(CaseListInfo("Good", listOf(kept.caseId)))
     }
 }

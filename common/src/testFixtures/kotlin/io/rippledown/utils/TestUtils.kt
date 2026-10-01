@@ -54,14 +54,14 @@ fun createViewableCase(caseId: CaseId, attributesWithValues: List<AttributeWithV
     createViewableCase(
         caseId.name,
         caseId.id,
-        CaseType.Processed,
+        CaseListType.Processed,
         attributesWithValues
     )
 
 fun createViewableCase(
     name: String = "",
     caseId: Long? = null,
-    caseType: CaseType = CaseType.Processed,
+    caseType: CaseListType = CaseListType.Processed,
     attributesWithResults: List<AttributeWithValue> = listOf(AttributeWithValue())
 ): ViewableCase {
     val case = createCase(name, caseId, caseType, attributesWithResults)
@@ -72,7 +72,7 @@ fun createViewableCase(
 fun createCase(
     name: String = "",
     caseId: Long? = null,
-    caseType: CaseType,
+    caseType: CaseListType,
     attributesWithResults: List<AttributeWithValue> = listOf(AttributeWithValue())
 ) = with(RDRCaseBuilder()) {
     attributesWithResults.forEach {
@@ -178,7 +178,7 @@ fun createCaseWithInterpretation(
     val interp = createInterpretation(commentToConditions)
     val viewableInterp = ViewableInterpretation(interpretation = interp, textGivenByRules = name)
     val attributesWithResults = listOf(AttributeWithValue())
-    val case = createCase(name, caseId, CaseType.Processed, attributesWithResults).apply { interpretation = interp }
+    val case = createCase(name, caseId, CaseListType.Processed, attributesWithResults).apply { interpretation = interp }
     val properties = CaseViewProperties(attributesWithResults.map { it.attribute })
     return ViewableCase(case, properties, viewableInterp)
 }

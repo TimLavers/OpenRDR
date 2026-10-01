@@ -13,10 +13,15 @@ const val CASE_VIEW_SCROLL_BAR = "Case view scroll bar"
 const val CASE_NAME_PREFIX = "case_list_item_"
 const val PROCESSED_SECTION_HEADER_ID = "processed_section_header"
 const val CORNERSTONE_SECTION_HEADER_ID = "cornerstone_section_header"
-const val FAVOURITES_SECTION_HEADER_ID = "favourites_section_header"
 const val PROCESSED_SECTION_ID = "processed_section"
 const val CORNERSTONE_SECTION_ID = "cornerstone_section"
-const val FAVOURITES_SECTION_ID = "favourites_section"
+
+/**
+ * The accessibility ids of a user-defined case list's section and its header.
+ * Shared by the UI and the cucumber page objects so that they cannot drift.
+ */
+fun userListSectionId(name: String) = "user_list_section_$name"
+fun userListSectionHeaderId(name: String) = "user_list_section_header_$name"
 const val CASE_TABLE_ROW_PREFIX = "case_table_row_"
 const val DATE_CELL_DESCRIPTION_PREFIX = "Date for episode"
 const val REFERENCE_RANGE_CELL_DESCRIPTION_PREFIX = "Reference range for row"

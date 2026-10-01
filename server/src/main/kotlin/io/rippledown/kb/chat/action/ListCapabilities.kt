@@ -57,9 +57,9 @@ class ListCapabilities : Action {
                 )
                 add(
                     CapabilitySection(
-                        "Favourite cases", listOf(
-                            "copy the current case to favourites, optionally with a new name",
-                            "delete the current case from favourites"
+                        "User-defined case lists", listOf(
+                            "copy the current case to a named case list, optionally with a new case name",
+                            "delete the current case from its case list"
                         )
                     )
                 )

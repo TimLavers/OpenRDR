@@ -66,7 +66,7 @@ class KBImporter(
         val result = KB(persistentKB)
 
         // Add the cases.
-        result.loadCases(CaseImporter(casesDirectory).import() +  CaseImporter(processedCasesDirectory).import())
+        result.loadCases(listOf(casesDirectory, processedCasesDirectory, userDefinedCasesDirectory).flatMap { CaseImporter(it).import() })
 
         return result
     }

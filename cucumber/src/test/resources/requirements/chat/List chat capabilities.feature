@@ -27,6 +27,7 @@
       | copy          |
       | description   |
       | definition    |
-      | favourites    |
+      | user          |
+      | defined       |
       | reasons       |
     And the capabilities are shown in a formatted card

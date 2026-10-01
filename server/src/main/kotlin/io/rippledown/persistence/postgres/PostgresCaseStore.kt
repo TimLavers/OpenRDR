@@ -24,7 +24,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
 
     override fun allCaseIds() = transaction(db) {
         return@transaction PGCaseId.all()
-            .map { CaseId(it.id.value, it.name!!, CaseType.entries[it.type!!]) }
+            .map { CaseId(it.id.value, it.name!!, CaseListType(it.type)) }
             .sortedBy { it.id!! }
     }
 
@@ -98,7 +98,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
 
     private fun storeCaseId(case: RDRCase) = PGCaseId.new(case.id) {
         name = case.caseId.name
-        type = case.caseId.type.ordinal
+        type = case.caseId.type.name
     }
 
     private fun storeCaseData(case: RDRCase, id: Long?) {
@@ -116,7 +116,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
     }
 
     private fun caseId(pgCaseId: PGCaseId): CaseId {
-        val type = CaseType.entries[pgCaseId.type!!]
+        val type = CaseListType(pgCaseId.type)
         return CaseId(pgCaseId.id.value, pgCaseId.name!!, type)
     }
 
@@ -127,7 +127,7 @@ class PostgresCaseStore(private val db: Database): CaseStore {
 }
 object PGCaseIds: LongIdTable(name = "case_ids") {
     val name = varchar("name", 256).nullable() // todo limit this in CaseId
-    val type = integer("type").nullable()
+    val type = varchar("type", 256)
 }
 class PGCaseId(id: EntityID<Long>): LongEntity(id) {
     companion object: LongEntityClass<PGCaseId>(PGCaseIds)

@@ -1166,19 +1166,19 @@ class OpenRDRUITest {
     }
 
     @Test
-    fun `should keep a favourite case selected once it is chosen`() = runTest {
+    fun `should keep a user list case selected once it is chosen`() = runTest {
         // Regression test: the reconciliation effect used to only recognise ids
-        // from the Processed and Cornerstone lists, so selecting a favourite case
-        // (whose id only appears in favouriteCaseIds) was immediately undone.
+        // from the Processed and Cornerstone lists, so selecting a case in a
+        // user-defined list (whose id only appears there) was immediately undone.
         //Given
         val processed = CaseId(id = 1, name = "processed 1")
-        val favourite = CaseId(id = 2, name = "favourite 1")
+        val goodCase = CaseId(id = 2, name = "good 1")
         coEvery { api.waitingCasesInfo() } returns CasesInfo(
             caseIds = listOf(processed),
-            favouriteCaseIds = listOf(favourite)
+            userDefinedCaseLists = listOf(CaseListInfo("Good", listOf(goodCase)))
         )
         coEvery { api.getCase(1) } returns createViewableCase(processed)
-        coEvery { api.getCase(2) } returns createViewableCase(favourite)
+        coEvery { api.getCase(2) } returns createViewableCase(goodCase)
 
         with(composeTestRule) {
             setContent {
@@ -1187,26 +1187,26 @@ class OpenRDRUITest {
             waitForCaseToBeShowing("processed 1")
 
             //When
-            selectCaseByName("favourite 1")
+            selectCaseByName("good 1")
 
             //Then
-            waitForCaseToBeShowing("favourite 1")
+            waitForCaseToBeShowing("good 1")
         }
     }
 
     @Test
-    fun `should select the previous favourite case when the current favourite case is deleted`() = runTest {
+    fun `should select the previous user list case when the current user list case is deleted`() = runTest {
         //Given
         val processed = CaseId(id = 1, name = "processed 1")
-        val favouriteA = CaseId(id = 2, name = "favourite A")
-        val favouriteB = CaseId(id = 3, name = "favourite B")
+        val goodA = CaseId(id = 2, name = "good A")
+        val goodB = CaseId(id = 3, name = "good B")
         coEvery { api.waitingCasesInfo() } returns CasesInfo(
             caseIds = listOf(processed),
-            favouriteCaseIds = listOf(favouriteA, favouriteB)
+            userDefinedCaseLists = listOf(CaseListInfo("Good", listOf(goodA, goodB)))
         )
         coEvery { api.getCase(1) } returns createViewableCase(processed)
-        coEvery { api.getCase(2) } returns createViewableCase(favouriteA)
-        coEvery { api.getCase(3) } returns createViewableCase(favouriteB)
+        coEvery { api.getCase(2) } returns createViewableCase(goodA)
+        coEvery { api.getCase(3) } returns createViewableCase(goodB)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
@@ -1217,32 +1217,35 @@ class OpenRDRUITest {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing("processed 1")
-            selectCaseByName("favourite B")
-            waitForCaseToBeShowing("favourite B")
+            selectCaseByName("good B")
+            waitForCaseToBeShowing("good B")
 
-            //When - the currently selected favourite (favourite B) is deleted
+            //When - the currently selected user list case (good B) is deleted
             runOnIdle {
                 updateCasesInfo?.invoke(
-                    CasesInfo(caseIds = listOf(processed), favouriteCaseIds = listOf(favouriteA))
+                    CasesInfo(
+                        caseIds = listOf(processed),
+                        userDefinedCaseLists = listOf(CaseListInfo("Good", listOf(goodA)))
+                    )
                 )
             }
 
-            //Then - the previous favourite (favourite A) is selected
-            waitForCaseToBeShowing("favourite A")
+            //Then - the previous case in the list (good A) is selected
+            waitForCaseToBeShowing("good A")
         }
     }
 
     @Test
-    fun `should select the first Processed case when the only favourite case is deleted`() = runTest {
+    fun `should select the first Processed case when the only user list case is deleted`() = runTest {
         //Given
         val processed = CaseId(id = 1, name = "processed 1")
-        val favourite = CaseId(id = 2, name = "favourite 1")
+        val goodCase = CaseId(id = 2, name = "good 1")
         coEvery { api.waitingCasesInfo() } returns CasesInfo(
             caseIds = listOf(processed),
-            favouriteCaseIds = listOf(favourite)
+            userDefinedCaseLists = listOf(CaseListInfo("Good", listOf(goodCase)))
         )
         coEvery { api.getCase(1) } returns createViewableCase(processed)
-        coEvery { api.getCase(2) } returns createViewableCase(favourite)
+        coEvery { api.getCase(2) } returns createViewableCase(goodCase)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
         coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
@@ -1253,10 +1256,10 @@ class OpenRDRUITest {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             waitForCaseToBeShowing("processed 1")
-            selectCaseByName("favourite 1")
-            waitForCaseToBeShowing("favourite 1")
+            selectCaseByName("good 1")
+            waitForCaseToBeShowing("good 1")
 
-            //When - the only favourite (with no previous case) is deleted
+            //When - the only case in the list (with no previous case) is deleted
             runOnIdle {
                 updateCasesInfo?.invoke(CasesInfo(caseIds = listOf(processed)))
             }

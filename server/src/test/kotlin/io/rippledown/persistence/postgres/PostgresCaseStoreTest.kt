@@ -55,19 +55,21 @@ class PostgresCaseStoreTest : PostgresStoreTest() {
 
     @Test
     fun caseTypes() {
-        val caseId0 = store.put(case0.copyWithoutId(CaseType.Cornerstone)).caseId
+        val caseId0 = store.put(case0.copyWithoutId(CaseListType.Cornerstone)).caseId
         val caseId1 = store.put(case1).caseId
-        val caseId2 = store.put(case2.copyWithoutId(CaseType.Cornerstone)).caseId
-        val caseId3 = store.put(case2.copyWithoutId(CaseType.Favourite)).caseId
+        val caseId2 = store.put(case2.copyWithoutId(CaseListType.Cornerstone)).caseId
+        val caseId3 = store.put(case2.copyWithoutId(CaseListType("GoOd"))).caseId
 
         store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2, caseId3)
-        caseId0.type shouldBe CaseType.Cornerstone
-        caseId1.type shouldBe CaseType.Processed
-        caseId2.type shouldBe CaseType.Cornerstone
-        caseId3.type shouldBe CaseType.Favourite
+        caseId0.type shouldBe CaseListType.Cornerstone
+        caseId1.type shouldBe CaseListType.Processed
+        caseId2.type shouldBe CaseListType.Cornerstone
+        caseId3.type shouldBe CaseListType("GoOd")
 
         reload()
         store.allCaseIds() shouldBe listOf(caseId0, caseId1, caseId2, caseId3)
+        // The spelling of a user-defined list name survives storage.
+        store.allCaseIds()[3].type.name shouldBe "GoOd"
     }
 
     @Test

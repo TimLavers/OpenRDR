@@ -12,10 +12,11 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_HEADER_ID
-import io.rippledown.constants.caseview.FAVOURITES_SECTION_HEADER_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
+import io.rippledown.constants.caseview.userListSectionHeaderId
 import io.rippledown.model.CaseId
-import io.rippledown.model.CaseType
+import io.rippledown.model.CaseListInfo
+import io.rippledown.model.CaseListType
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -214,7 +215,7 @@ class CaseSelectorTest {
     @Test
     fun `should show cornerstone section header when cornerstone cases exist`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -237,7 +238,7 @@ class CaseSelectorTest {
     @Test
     fun `should show both processed and cornerstone cases`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"), CaseId(id = 2, name = "p2"))
-        val cornerstones = listOf(CaseId(id = 3, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 3, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -263,7 +264,7 @@ class CaseSelectorTest {
     @Test
     fun `should select cornerstone case`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -277,8 +278,8 @@ class CaseSelectorTest {
     fun `should navigate to the next cornerstone case using the down arrow key`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
         val cornerstones = listOf(
-            CaseId(id = 2, name = "c1", type = CaseType.Cornerstone),
-            CaseId(id = 3, name = "c2", type = CaseType.Cornerstone)
+            CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone),
+            CaseId(id = 3, name = "c2", type = CaseListType.Cornerstone)
         )
         with(composeTestRule) {
             setContent {
@@ -300,8 +301,8 @@ class CaseSelectorTest {
     fun `should navigate to the previous cornerstone case using the up arrow key`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
         val cornerstones = listOf(
-            CaseId(id = 2, name = "c1", type = CaseType.Cornerstone),
-            CaseId(id = 3, name = "c2", type = CaseType.Cornerstone)
+            CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone),
+            CaseId(id = 3, name = "c2", type = CaseListType.Cornerstone)
         )
         with(composeTestRule) {
             setContent {
@@ -322,7 +323,7 @@ class CaseSelectorTest {
     @Test
     fun `should navigate from last processed case to first cornerstone case using down arrow`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"), CaseId(id = 2, name = "p2"))
-        val cornerstones = listOf(CaseId(id = 3, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 3, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -342,7 +343,7 @@ class CaseSelectorTest {
     @Test
     fun `should navigate from first cornerstone case to last processed case using up arrow`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"), CaseId(id = 2, name = "p2"))
-        val cornerstones = listOf(CaseId(id = 3, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 3, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -362,7 +363,7 @@ class CaseSelectorTest {
     @Test
     fun `should not be able to down arrow past the last cornerstone case`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -426,7 +427,7 @@ class CaseSelectorTest {
     fun `should navigate through multiple cornerstone cases using successive down arrows`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
         val cornerstones = (2..4).map { i ->
-            CaseId(id = i.toLong(), name = "c$i", type = CaseType.Cornerstone)
+            CaseId(id = i.toLong(), name = "c$i", type = CaseListType.Cornerstone)
         }
         with(composeTestRule) {
             setContent {
@@ -448,7 +449,7 @@ class CaseSelectorTest {
     @Test
     fun `should navigate across processed and cornerstone sections using down then up arrows`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler)
@@ -466,49 +467,80 @@ class CaseSelectorTest {
         }
     }
 
+    private fun goodList(vararg caseIds: CaseId) = CaseListInfo("Good", caseIds.toList())
+
+    private fun goodCase(id: Long, name: String) = CaseId(id = id, name = name, type = CaseListType("Good"))
+
     @Test
-    fun `should show favourites section header when favourite cases exist`() = runTest {
+    fun `should show a section header for a user-defined case list`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        val userLists = listOf(goodList(goodCase(2, "f1")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
-            onNodeWithContentDescription(FAVOURITES_SECTION_HEADER_ID).assertIsDisplayed()
+            onNodeWithContentDescription(userListSectionHeaderId("Good")).assertIsDisplayed()
         }
     }
 
     @Test
-    fun `should not show favourites section header when no favourite cases`() = runTest {
+    fun `should not show a user list section header when there are no user-defined lists`() = runTest {
         val caseIds = listOf(CaseId(id = 1, name = "case a"))
         with(composeTestRule) {
             setContent {
                 CaseSelector(caseIds, handler = handler)
             }
-            onAllNodesWithContentDescription(FAVOURITES_SECTION_HEADER_ID).assertCountEquals(0)
+            onAllNodesWithContentDescription(userListSectionHeaderId("Good")).assertCountEquals(0)
         }
     }
 
     @Test
-    fun `should show processed, cornerstone and favourite cases together`() = runTest {
+    fun `should show a section for each user-defined case list`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
-        val favourites = listOf(CaseId(id = 3, name = "f1", type = CaseType.Favourite))
+        val good = CaseListInfo("Good", listOf(goodCase(2, "g1")))
+        val bad = CaseListInfo("Bad", listOf(CaseId(id = 3, name = "b1", type = CaseListType("Bad"))))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, cornerstones, handler, favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = listOf(good, bad))
+            }
+            onNodeWithContentDescription(userListSectionHeaderId("Good")).assertIsDisplayed()
+            onNodeWithContentDescription(userListSectionHeaderId("Bad")).assertIsDisplayed()
+            requireNamesToBeShowingOnCaseList("p1", "g1", "b1")
+        }
+    }
+
+    @Test
+    fun `a user list section header shows the list name and its case count`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val userLists = listOf(goodList(goodCase(2, "f1"), goodCase(3, "f2")))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
+            }
+            onNodeWithText("Good (2)").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `should show processed, cornerstone and user list cases together`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
+        val userLists = listOf(goodList(goodCase(3, "f1")))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, cornerstones, handler, userLists)
             }
             requireNamesToBeShowingOnCaseList("p1", "c1", "f1")
         }
     }
 
     @Test
-    fun `should select favourite case`() = runTest {
+    fun `should select a user list case`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        val userLists = listOf(goodList(goodCase(2, "f1")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
             selectCaseByName("f1")
             verify { handler.selectCase(2) }
@@ -516,15 +548,12 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should navigate to the next favourite case using the down arrow key`() = runTest {
+    fun `should navigate to the next user list case using the down arrow key`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(
-            CaseId(id = 2, name = "f1", type = CaseType.Favourite),
-            CaseId(id = 3, name = "f2", type = CaseType.Favourite)
-        )
+        val userLists = listOf(goodList(goodCase(2, "f1"), goodCase(3, "f2")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
             //Given
             selectCaseByName("f1")
@@ -539,15 +568,12 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should navigate to the previous favourite case using the up arrow key`() = runTest {
+    fun `should navigate to the previous user list case using the up arrow key`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(
-            CaseId(id = 2, name = "f1", type = CaseType.Favourite),
-            CaseId(id = 3, name = "f2", type = CaseType.Favourite)
-        )
+        val userLists = listOf(goodList(goodCase(2, "f1"), goodCase(3, "f2")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
             //Given
             selectCaseByName("f2")
@@ -562,13 +588,13 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should navigate from last cornerstone case to first favourite case using down arrow`() = runTest {
+    fun `should navigate from last cornerstone case to first user list case using down arrow`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
-        val favourites = listOf(CaseId(id = 3, name = "f1", type = CaseType.Favourite))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
+        val userLists = listOf(goodList(goodCase(3, "f1")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, cornerstones, handler, favourites)
+                CaseSelector(processed, cornerstones, handler, userLists)
             }
             //Given
             selectCaseByName("c1")
@@ -583,13 +609,13 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should navigate from first favourite case to last cornerstone case using up arrow`() = runTest {
+    fun `should navigate from first user list case to last cornerstone case using up arrow`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
-        val favourites = listOf(CaseId(id = 3, name = "f1", type = CaseType.Favourite))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
+        val userLists = listOf(goodList(goodCase(3, "f1")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, cornerstones, handler, favourites)
+                CaseSelector(processed, cornerstones, handler, userLists)
             }
             //Given
             selectCaseByName("f1")
@@ -604,12 +630,33 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should not be able to down arrow past the last favourite case`() = runTest {
+    fun `should navigate from the last case of one user list to the first case of the next`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        val good = CaseListInfo("Good", listOf(goodCase(2, "g1")))
+        val bad = CaseListInfo("Bad", listOf(CaseId(id = 3, name = "b1", type = CaseListType("Bad"))))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = listOf(good, bad))
+            }
+            //Given
+            selectCaseByName("g1")
+
+            //When
+            downArrowOnCase("g1")
+
+            //Then
+            requireCaseToBeFocused("b1")
+            verify { handler.selectCase(3) }
+        }
+    }
+
+    @Test
+    fun `should not be able to down arrow past the last user list case`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val userLists = listOf(goodList(goodCase(2, "f1")))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
             //Given
             selectCaseByName("f1")
@@ -623,37 +670,56 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should hide favourite cases when section is collapsed`() = runTest {
+    fun `should hide a user list's cases when its section is collapsed`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        val userLists = listOf(goodList(goodCase(2, "f1")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
             requireNamesToBeShowingOnCaseList("f1")
-            onNodeWithContentDescription(FAVOURITES_SECTION_HEADER_ID).performClick()
+            onNodeWithContentDescription(userListSectionHeaderId("Good")).performClick()
             waitForIdle()
             onNode(caseMatcher("f1")).assertDoesNotExist()
         }
     }
 
     @Test
-    fun `should preserve favourite case focus after recomposition with equivalent case data`() = runTest {
+    fun `collapsing one user list leaves the other lists' cases showing`() = runTest {
+        val processed = listOf(CaseId(id = 1, name = "p1"))
+        val good = CaseListInfo("Good", listOf(goodCase(2, "g1")))
+        val bad = CaseListInfo("Bad", listOf(CaseId(id = 3, name = "b1", type = CaseListType("Bad"))))
+        with(composeTestRule) {
+            setContent {
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = listOf(good, bad))
+            }
+            requireNamesToBeShowingOnCaseList("g1", "b1")
+
+            onNodeWithContentDescription(userListSectionHeaderId("Good")).performClick()
+            waitForIdle()
+
+            onNode(caseMatcher("g1")).assertDoesNotExist()
+            requireNamesToBeShowingOnCaseList("b1")
+        }
+    }
+
+    @Test
+    fun `should preserve user list case focus after recomposition with equivalent case data`() = runTest {
         //Given
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val f1 = CaseId(id = 2, name = "f1", type = CaseType.Favourite)
-        val f2 = CaseId(id = 3, name = "f2", type = CaseType.Favourite)
-        var favourites by mutableStateOf(listOf(f1, f2))
+        val f1 = goodCase(2, "f1")
+        val f2 = goodCase(3, "f2")
+        var userLists by mutableStateOf(listOf(goodList(f1, f2)))
 
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists)
             }
             selectCaseByName("f1")
             requireCaseToBeFocused("f1")
 
             //When - trigger recomposition with new list reference but same content
-            favourites = listOf(f1.copy(), f2.copy())
+            userLists = listOf(goodList(f1.copy(), f2.copy()))
             waitForIdle()
 
             //Then - focus should be preserved and navigation should still work
@@ -692,8 +758,8 @@ class CaseSelectorTest {
     fun `should preserve cornerstone case focus after recomposition with equivalent case data`() = runTest {
         //Given
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cs1 = CaseId(id = 2, name = "c1", type = CaseType.Cornerstone)
-        val cs2 = CaseId(id = 3, name = "c2", type = CaseType.Cornerstone)
+        val cs1 = CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone)
+        val cs2 = CaseId(id = 3, name = "c2", type = CaseListType.Cornerstone)
         var cornerstones by mutableStateOf(listOf(cs1, cs2))
 
         with(composeTestRule) {
@@ -718,7 +784,7 @@ class CaseSelectorTest {
     fun `should preserve cross-section focus after recomposition with equivalent case data`() = runTest {
         //Given
         val p1 = CaseId(id = 1, name = "p1")
-        val c1 = CaseId(id = 2, name = "c1", type = CaseType.Cornerstone)
+        val c1 = CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone)
         var processed by mutableStateOf(listOf(p1))
         var cornerstones by mutableStateOf(listOf(c1))
 
@@ -801,7 +867,7 @@ class CaseSelectorTest {
     fun `should not show scrollbar when cornerstone cases fit within view height`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
         val cornerstones = (2..6).map { i ->
-            CaseId(id = i.toLong(), name = "c$i", type = CaseType.Cornerstone)
+            CaseId(id = i.toLong(), name = "c$i", type = CaseListType.Cornerstone)
         }
 
         with(composeTestRule) {
@@ -823,7 +889,7 @@ class CaseSelectorTest {
     fun `should show scrollbar when cornerstone cases exceed view height`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
         val cornerstones = (2..30).map { i ->
-            CaseId(id = i.toLong(), name = "c$i", type = CaseType.Cornerstone)
+            CaseId(id = i.toLong(), name = "c$i", type = CaseListType.Cornerstone)
         }
 
         with(composeTestRule) {
@@ -855,7 +921,7 @@ class CaseSelectorTest {
             CaseId(id = i.toLong(), name = "p$i")
         }
         val cornerstones = (31..40).map { i ->
-            CaseId(id = i.toLong(), name = "c$i", type = CaseType.Cornerstone)
+            CaseId(id = i.toLong(), name = "c$i", type = CaseListType.Cornerstone)
         }
 
         with(composeTestRule) {
@@ -926,7 +992,7 @@ class CaseSelectorTest {
     fun `should scroll correctly through large number of cornerstone cases`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
         val cornerstones = (2..50).map { i ->
-            CaseId(id = i.toLong(), name = "c$i", type = CaseType.Cornerstone)
+            CaseId(id = i.toLong(), name = "c$i", type = CaseListType.Cornerstone)
         }
 
         with(composeTestRule) {
@@ -955,7 +1021,7 @@ class CaseSelectorTest {
             CaseId(id = i.toLong(), name = "p$i")
         }
         val cornerstones = (31..60).map { i ->
-            CaseId(id = i.toLong(), name = "c$i", type = CaseType.Cornerstone)
+            CaseId(id = i.toLong(), name = "c$i", type = CaseListType.Cornerstone)
         }
 
         with(composeTestRule) {
@@ -1072,7 +1138,7 @@ class CaseSelectorTest {
     @Test
     fun `should highlight a cornerstone case when selectedCaseId matches it`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseType.Cornerstone))
+        val cornerstones = listOf(CaseId(id = 2, name = "c1", type = CaseListType.Cornerstone))
         with(composeTestRule) {
             setContent {
                 CaseSelector(processed, cornerstones, handler, selectedCaseId = 2L)
@@ -1083,12 +1149,12 @@ class CaseSelectorTest {
     }
 
     @Test
-    fun `should highlight a favourite case when selectedCaseId matches it`() = runTest {
+    fun `should highlight a user list case when selectedCaseId matches it`() = runTest {
         val processed = listOf(CaseId(id = 1, name = "p1"))
-        val favourites = listOf(CaseId(id = 2, name = "f1", type = CaseType.Favourite))
+        val userLists = listOf(goodList(goodCase(2, "f1")))
         with(composeTestRule) {
             setContent {
-                CaseSelector(processed, handler = handler, favouriteCaseIds = favourites, selectedCaseId = 2L)
+                CaseSelector(processed, handler = handler, userDefinedCaseLists = userLists, selectedCaseId = 2L)
             }
             onNode(caseMatcher("f1") and selectedMatcher).assertExists()
             onNode(caseMatcher("p1") and unselectedMatcher).assertExists()
@@ -1196,8 +1262,8 @@ class CaseSelectorTest {
             CaseId(id = 2, name = "p2")
         )
         val cornerstones = listOf(
-            CaseId(id = 3, name = "c1", type = CaseType.Cornerstone),
-            CaseId(id = 4, name = "c2", type = CaseType.Cornerstone)
+            CaseId(id = 3, name = "c1", type = CaseListType.Cornerstone),
+            CaseId(id = 4, name = "c2", type = CaseListType.Cornerstone)
         )
         with(composeTestRule) {
             setContent {

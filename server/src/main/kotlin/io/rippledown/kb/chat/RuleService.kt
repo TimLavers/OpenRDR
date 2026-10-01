@@ -120,6 +120,7 @@ interface RuleService {
      */
     fun allAttributes(): Set<Attribute>
 
-    fun copyCaseToFavourites(case: ViewableCase, newName: String?): RDRCase
-    fun deleteCaseFromFavourites(case: ViewableCase)
+    fun copyCaseToList(case: ViewableCase, listName: String, newName: String? = null): RDRCase
+
+    fun deleteCaseFromUserList(case: ViewableCase)
 }

@@ -51,25 +51,25 @@ class KB(private val persistentKB: PersistentKB) {
     }
 
     fun containsCornerstoneCaseWithName(caseName: String): Boolean {
-        return caseManager.ids(CaseType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
+        return caseManager.ids(CaseListType.Cornerstone).find { rdrCase -> rdrCase.name == caseName } != null
     }
 
     fun loadCases(data: List<RDRCase>) = caseManager.load(data)
 
     fun addCornerstoneCase(case: RDRCase): RDRCase {
-        return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
+        return caseManager.add(case.copyWithoutId(CaseListType.Cornerstone))
     }
 
     fun addCornerstoneCaseIfNoEquivalentAlreadyPresent(case: RDRCase): RDRCase {
-        val existing = caseManager.all(CaseType.Cornerstone).any { it.hasSameDataAs(case) }
+        val existing = caseManager.all(CaseListType.Cornerstone).any { it.hasSameDataAs(case) }
         if (!existing) {
-            return caseManager.add(case.copyWithoutId(CaseType.Cornerstone))
+            return caseManager.add(case.copyWithoutId(CaseListType.Cornerstone))
         }
         return case
     }
 
     fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
-        val builder = RDRCaseBuilder().apply { setCaseType(CaseType.Cornerstone) }
+        val builder = RDRCaseBuilder().apply { setCaseType(CaseListType.Cornerstone) }
         externalCase.data.forEach {
             val attribute = externalAttributeFor(it.key.name)
             builder.addResult(attribute, it.key.time, it.value)
@@ -89,29 +89,44 @@ class KB(private val persistentKB: PersistentKB) {
 
     fun getProcessedCaseByName(caseName: String) = allProcessedCases().first { caseName == it.name }
 
-    fun allCornerstoneCases() = caseManager.all(CaseType.Cornerstone)
+    fun allCornerstoneCases() = caseManager.all(CaseListType.Cornerstone)
 
-    fun cornerstoneCaseIds() = caseManager.ids(CaseType.Cornerstone)
+    fun cornerstoneCaseIds() = caseManager.ids(CaseListType.Cornerstone)
 
-    fun processedCaseIds() = caseManager.ids(CaseType.Processed)
+    fun processedCaseIds() = caseManager.ids(CaseListType.Processed)
 
-    fun favouriteCaseIds() = caseManager.ids(CaseType.Favourite)
+    fun userDefinedCaseLists() = caseManager.userDefinedCaseLists()
 
-    fun copyCaseAsFavourite(id: Long, newName: String?): RDRCase {
+    fun copyCaseToList(id: Long, listName: String, newName: String? = null): RDRCase {
+        val requestedName = listName.trim()
+        require(requestedName.isNotEmpty()) { "Cannot copy the case to a list with a blank name." }
+        require(!CaseListType.isReservedListName(requestedName)) {
+            "Cannot copy the case to \"$requestedName\" as that is the name of a built-in list."
+        }
         val case = caseManager.getCase(id) ?: throw NoSuchElementException("No case with id $id")
-        if (newName == null || newName.trim().isEmpty()) {
-            return caseManager.add(case.copyWithoutId(CaseType.Favourite))
+        val type = resolvedListType(requestedName)
+        return if (newName == null || newName.isBlank()) {
+            caseManager.add(case.copyWithoutId(type))
         } else {
-            return caseManager.add(case.copyWithNewNameAndNoId(CaseType.Favourite, newName))
+            caseManager.add(case.copyWithNewNameAndNoId(type, newName))
         }
     }
 
-    fun deleteCaseFromFavourites(case: RDRCase) {
-        if (case.caseId.type != CaseType.Favourite) throw IllegalArgumentException("Case is not a favourite")
-        caseManager.delete(case.id!!)
+    fun deleteCaseFromUserList(case: RDRCase) {
+        val type = case.caseId.type
+        require(!type.isBuiltIn) { "Cannot delete the case as the \"${type.name}\" list is built in." }
+        val id = requireNotNull(case.id) { "Cannot delete a case that has no persisted id." }
+        caseManager.delete(id)
     }
 
-    fun allProcessedCases() = caseManager.all(CaseType.Processed)
+    fun allUserDefinedCases() = caseManager.all().filter { !it.caseId.type.isBuiltIn }
+
+    private fun resolvedListType(listName: String): CaseListType {
+        val requested = CaseListType(listName)
+        return caseManager.ids().map { it.type }.firstOrNull { it == requested } ?: requested
+    }
+
+    fun allProcessedCases() = caseManager.all(CaseListType.Processed)
 
     fun deletedProcessedCaseWithName(name: String) {
         val toGo = processedCaseIds().firstOrNull { it.name == name }

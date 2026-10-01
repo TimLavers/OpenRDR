@@ -13,9 +13,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
 import io.rippledown.constants.caseview.CORNERSTONE_SECTION_HEADER_ID
-import io.rippledown.constants.caseview.FAVOURITES_SECTION_HEADER_ID
 import io.rippledown.constants.caseview.PROCESSED_SECTION_HEADER_ID
+import io.rippledown.constants.caseview.userListSectionHeaderId
 import io.rippledown.model.CaseId
+import io.rippledown.model.CaseListInfo
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -37,7 +38,8 @@ class CaseSelectorLayoutTest {
 
     private val processed = listOf(CaseId(id = 1, name = "p1"))
     private val cornerstones = listOf(CaseId(id = 2, name = "cs1"))
-    private val favourites = listOf(CaseId(id = 3, name = "f1"))
+    private val goodList = CaseListInfo("Good", listOf(CaseId(id = 3, name = "f1")))
+    private val goodHeaderId = userListSectionHeaderId("Good")
 
     /** A header's own vertical padding, the most that may separate sections. */
     private val maximumGap = 16.dp
@@ -50,7 +52,7 @@ class CaseSelectorLayoutTest {
     private fun caseDescription(name: String) = "$CASE_NAME_PREFIX$name"
 
     private fun showAllThreeSections() = composeTestRule.setContent {
-        CaseSelector(processed, cornerstones, handler, favourites)
+        CaseSelector(processed, cornerstones, handler, listOf(goodList))
     }
 
     private fun topOf(description: String): Dp =
@@ -73,7 +75,7 @@ class CaseSelectorLayoutTest {
         // than being spaced out down the panel
         with(composeTestRule) {
             topOf(CORNERSTONE_SECTION_HEADER_ID) shouldSitDirectlyBelow bottomOf(caseDescription("p1"))
-            topOf(FAVOURITES_SECTION_HEADER_ID) shouldSitDirectlyBelow bottomOf(caseDescription("cs1"))
+            topOf(goodHeaderId) shouldSitDirectlyBelow bottomOf(caseDescription("cs1"))
         }
     }
 
@@ -89,18 +91,18 @@ class CaseSelectorLayoutTest {
         // Given all three sections expanded
         showAllThreeSections()
         val cornerstoneHeaderTop = topOf(CORNERSTONE_SECTION_HEADER_ID)
-        val favouritesHeaderTop = topOf(FAVOURITES_SECTION_HEADER_ID)
+        val goodHeaderTop = topOf(goodHeaderId)
 
         // When the last section is collapsed
         with(composeTestRule) {
-            onNodeWithContentDescription(FAVOURITES_SECTION_HEADER_ID).performClick()
+            onNodeWithContentDescription(goodHeaderId).performClick()
             waitForIdle()
         }
 
         // Then the headers above its cases have not moved: only the cases it was
         // showing have gone
         topOf(CORNERSTONE_SECTION_HEADER_ID) shouldBe cornerstoneHeaderTop
-        topOf(FAVOURITES_SECTION_HEADER_ID) shouldBe favouritesHeaderTop
+        topOf(goodHeaderId) shouldBe goodHeaderTop
     }
 
     @Test
@@ -117,7 +119,7 @@ class CaseSelectorLayoutTest {
         // Then the section below it moves up to meet it, rather than staying put
         // or dropping to the bottom of the panel
         with(composeTestRule) {
-            topOf(FAVOURITES_SECTION_HEADER_ID) shouldSitDirectlyBelow bottomOf(CORNERSTONE_SECTION_HEADER_ID)
+            topOf(goodHeaderId) shouldSitDirectlyBelow bottomOf(CORNERSTONE_SECTION_HEADER_ID)
         }
     }
 
@@ -130,14 +132,14 @@ class CaseSelectorLayoutTest {
         with(composeTestRule) {
             onNodeWithContentDescription(PROCESSED_SECTION_HEADER_ID).performClick()
             onNodeWithContentDescription(CORNERSTONE_SECTION_HEADER_ID).performClick()
-            onNodeWithContentDescription(FAVOURITES_SECTION_HEADER_ID).performClick()
+            onNodeWithContentDescription(goodHeaderId).performClick()
             waitForIdle()
         }
 
         // Then the three headers are stacked, none of them pushed to the bottom
         with(composeTestRule) {
             topOf(CORNERSTONE_SECTION_HEADER_ID) shouldSitDirectlyBelow bottomOf(PROCESSED_SECTION_HEADER_ID)
-            topOf(FAVOURITES_SECTION_HEADER_ID) shouldSitDirectlyBelow bottomOf(CORNERSTONE_SECTION_HEADER_ID)
+            topOf(goodHeaderId) shouldSitDirectlyBelow bottomOf(CORNERSTONE_SECTION_HEADER_ID)
         }
     }
 }

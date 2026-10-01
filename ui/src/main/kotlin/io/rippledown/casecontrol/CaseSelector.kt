@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.rippledown.constants.caseview.*
 import io.rippledown.model.CaseId
+import io.rippledown.model.CaseListInfo
 
 interface CaseSelectorHandler {
     var selectCase: (id: Long) -> Unit
@@ -38,15 +39,35 @@ fun CaseSelector(
     caseIds: List<CaseId>,
     cornerstoneCaseIds: List<CaseId> = emptyList(),
     handler: CaseSelectorHandler,
-    favouriteCaseIds: List<CaseId> = emptyList(),
+    userDefinedCaseLists: List<CaseListInfo> = emptyList(),
     selectedCaseId: Long? = null
 ) {
-    val allCaseIds = caseIds + cornerstoneCaseIds + favouriteCaseIds
+    val allCaseIds = caseIds + cornerstoneCaseIds + userDefinedCaseLists.flatMap { it.caseIds }
     val selectedCaseIndex = allCaseIds.indexOfFirst { it.id == selectedCaseId }
     val focusRequestors = remember(allCaseIds) { List(allCaseIds.size) { FocusRequester() } }
     var processedExpanded by remember { mutableStateOf(true) }
     var cornerstoneExpanded by remember { mutableStateOf(true) }
-    var favouritesExpanded by remember { mutableStateOf(true) }
+
+    // Expansion state per user-defined list, keyed by list name so it survives
+    // updates to the lists themselves. A list with no entry is expanded.
+    val userListsExpanded = remember { mutableStateMapOf<String, Boolean>() }
+    fun isUserListExpanded(name: String) = userListsExpanded[name] ?: true
+
+    // The expansion state of the section holding the case with the given index
+    // in the combined list: processed, then cornerstones, then each
+    // user-defined list in order.
+    fun sectionExpandedFor(index: Int): Boolean {
+        var sectionStart = 0
+        if (index < sectionStart + caseIds.size) return processedExpanded
+        sectionStart += caseIds.size
+        if (index < sectionStart + cornerstoneCaseIds.size) return cornerstoneExpanded
+        sectionStart += cornerstoneCaseIds.size
+        userDefinedCaseLists.forEach { list ->
+            if (index < sectionStart + list.caseIds.size) return isUserListExpanded(list.name)
+            sectionStart += list.caseIds.size
+        }
+        return false
+    }
 
     // A FocusRequester is only attached once its CaseNameItem has been
     // composed, which only happens when the item's section is expanded (the
@@ -59,12 +80,7 @@ fun CaseSelector(
     // requester on the current frame.
     fun requestFocusOnCase(index: Int) {
         if (index !in focusRequestors.indices) return
-        val isComposed = when {
-            index < caseIds.size -> processedExpanded
-            index < caseIds.size + cornerstoneCaseIds.size -> cornerstoneCaseIds.isNotEmpty() && cornerstoneExpanded
-            else -> favouriteCaseIds.isNotEmpty() && favouritesExpanded
-        }
-        if (!isComposed) return
+        if (!sectionExpandedFor(index)) return
         try {
             focusRequestors[index].requestFocus()
         } catch (_: IllegalStateException) {
@@ -139,23 +155,26 @@ fun CaseSelector(
                     onSelect = ::indexSelected
                 )
             }
-            if (favouriteCaseIds.isNotEmpty()) {
+            var userListFirstIndex = caseIds.size + cornerstoneCaseIds.size
+            userDefinedCaseLists.forEach { list ->
+                val expanded = isUserListExpanded(list.name)
                 CollapsibleSectionHeader(
-                    title = "Favourites (${favouriteCaseIds.size})",
-                    expanded = favouritesExpanded,
-                    onToggle = { favouritesExpanded = !favouritesExpanded },
-                    semanticId = FAVOURITES_SECTION_HEADER_ID
+                    title = "${list.name} (${list.caseIds.size})",
+                    expanded = expanded,
+                    onToggle = { userListsExpanded[list.name] = !expanded },
+                    semanticId = userListSectionHeaderId(list.name)
                 )
-            }
-            if (favouriteCaseIds.isNotEmpty() && favouritesExpanded) {
-                CaseSectionList(
-                    caseIds = favouriteCaseIds,
-                    firstIndex = caseIds.size + cornerstoneCaseIds.size,
-                    semanticId = FAVOURITES_SECTION_ID,
-                    selectedCaseIndex = selectedCaseIndex,
-                    focusRequestors = focusRequestors,
-                    onSelect = ::indexSelected
-                )
+                if (expanded) {
+                    CaseSectionList(
+                        caseIds = list.caseIds,
+                        firstIndex = userListFirstIndex,
+                        semanticId = userListSectionId(list.name),
+                        selectedCaseIndex = selectedCaseIndex,
+                        focusRequestors = focusRequestors,
+                        onSelect = ::indexSelected
+                    )
+                }
+                userListFirstIndex += list.caseIds.size
             }
         }
         VerticalScrollbar(
