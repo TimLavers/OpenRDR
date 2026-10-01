@@ -114,6 +114,29 @@ Not recommended until a deployment actually needs more than one server process.
 
 Stage 4 is not planned.
 
+## Testing
+
+Multi-user acceptance tests are REST-first; full UI clients are used only where client behaviour is what is under
+test.
+
+- **REST clients cover the server.** Everything the stages change — identity keying, per-user conversations, per-KB
+  pushes, the lease, commit-time revalidation — is observable through `Api` plus a web-socket listener. Two `Api`
+  instances with different user ids against one in-memory server cover every assertion in the groundwork plan, and the
+  chat is reachable the same way (`sendUserMessage` returns the `ChatResponse`), so "the second user is told who holds
+  the project" needs no window. Cucumber step defs address users by name (`user "alice" opens KB "X"`); the current
+  `RESTClient` wraps one `Api` with one `currentKB`, so it becomes one instance per named user, each with its own
+  `userId` and its own `WebSocketApi` listener for push assertions.
+- **UI clients cover what REST cannot see.** That user B's window does *not* switch KB when A opens one, does *not*
+  show A's cornerstone status, and shows the read-only indicator with editing disabled — these are client reactions to
+  frames that were or were not sent, and a REST client can only observe the frame. One scenario per stage of the shape
+  "two users, two windows, A edits, B sees read-only and is unaffected by A's pushes" is enough.
+- **Multi-UI scenarios are kept rare.** A UI run takes over the desktop; two Compose windows double the a11y-tree
+  flakiness, both chat panels drive the LLM, and the page objects (`ChatPO`, `InterpretationPO`, …) are singletons that
+  need a window parameter. Tag them `@multi-user`, put them in their own feature folder so routine folder runs exclude
+  them, and schedule them like the other long UI tests. The second window (a second `TestClientLauncher` plus
+  window-scoped page objects) is deferred to Stage 2, when there is first UI behaviour to test; the groundwork needs
+  none.
+
 ## Out of scope
 
 - User management, login, roles, permissions — the third-party system's job. OpenRDR sees an opaque `userId`.
