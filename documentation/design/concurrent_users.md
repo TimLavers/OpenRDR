@@ -3,11 +3,12 @@
 Goal: several users work on projects (knowledge bases) at the same time. First milestone: at most one user may modify a
 given project at a time, but different users can work on different projects concurrently. Later milestone: several
 users modify the same project concurrently. Authentication is handled by a third-party system, not OpenRDR; the server
-only needs a trustworthy user identity per request.
+only needs a trustworthy user identity per request. The unit of identity is the user, not the window: a user's second
+window shares their conversation and open KB (see the groundwork plan, step 1).
 
 ## Where the single-user assumptions live today
 
-The persistence layer is already multi-project safe (each KB has its own Postgres schema, routes carry a `kbId`), so
+The persistence layer is already multi-project safe (each KB has its own Postgres database, routes carry a `kbId`), so
 the work is almost entirely in the server's in-memory session state and the push channel.
 
 | Assumption                           | Where                                                                                                                                                                                                       |
@@ -20,41 +21,57 @@ the work is almost entirely in the server's in-memory session state and the push
 | Unsynchronised KB object graph       | `KB`'s managers (attributes, conditions, rules, cases, case view) mutate shared in-memory state with no locking; safe only because one request at a time mutates it                                         |
 | No user identity                     | No route reads a user id; nothing is keyed by user                                                                                                                                                          |
 
-## Common groundwork (needed for every option)
+## Stage 1 — common groundwork
 
 Implementation plan: [concurrent_users_groundwork.md](concurrent_users_groundwork.md).
 
 1. **User identity.** The third-party system authenticates; OpenRDR consumes an identity. Simplest contract: the server
    sits behind a reverse proxy / gateway that validates the token and forwards a `userId` header (or the server
    validates a JWT signature itself — validation only, no user management). Every REST call and the web-socket
-   handshake carry it. A Ktor plugin extracts it into a `UserPrincipal`; routes stop being anonymous.
+   handshake carry it. A `RoutingContext.userId()` helper reads the header; a missing header falls back to a fixed
+   local id (logged), so the packaged demo, curl and the cucumber suite keep working unauthenticated.
 2. **Connection registry.** Replace the single field in `WebSocketManager` with a registry: `userId → connection(s)`.
-   Push methods take an addressee — either one user (`sendStatus` for *their* rule session) or all users subscribed to
-   a KB (`sendCasesInfo` when the case list changes).
+   Push methods take an addressee — either one user (`sendKbInfo` when *their* chat opens a KB) or all users whose
+   open KB is a given one (`sendStatus`, `sendCasesInfo`). The server learns each user's open KB from the chat
+   context, so per-KB addressing needs no client change and lands in the groundwork, not with the lease.
 3. **Per-user chat.** `ChatCoordinator` becomes a registry `userId → (ChatManager, ChatContext)`. The `Mutex` guarding
    "one turn at a time" becomes per-user. The conversation is cheap state (prompt + history), so this is mechanical.
 4. **Per-user "open KB".** The notion of the open KB moves from the server singleton into the per-user chat context,
    which is where it really lives already — `openChatEndpoint()` just needs a user to look it up for.
 
-With the groundwork done, the remaining question is how writes to one KB are coordinated. Three options, in increasing
-order of ambition.
+With the groundwork done, the remaining question is how writes to one KB are coordinated. The following stages
+answer it in increasing order of ambition; each builds on the one before.
 
-## Option A — exclusive project lock (the first milestone)
+## Stage 2 — exclusive project lock (the first milestone)
 
 One user per project at a time, enforced server-side.
 
-- A `ProjectLockManager` maps `kbId → lease(userId, expiry)`. A user acquires the lease when they open the KB for
-  editing; every mutating route checks the lease; reads are allowed to anyone.
-- The lease is a lease, not a lock: it expires on inactivity or web-socket disconnect, so a crashed client cannot
-  strand a project. A second user opening the project is told who holds it and gets read-only access.
-- `KBSession` / `RuleSessionManager` are untouched: the lease guarantees the existing one-session-per-KB state is only
-  ever driven by one user, so no internal synchronisation is needed.
-- Client change: surface "read-only — locked by X" in the app bar, disable mutating UI.
+- A `ProjectLockManager` maps `kbId → lease(userId, expiry)`. The lease is taken lazily, on the user's first
+  knowledge-editing action, not on opening the KB: opening is just `START_CONVERSATION` with a `kbId`, there is no
+  read-only versus edit open, and a user merely reading a KB must not block an editor. Reads are allowed to anyone.
+- Which operations need the lease: knowledge editing — starting and driving a rule session, committing, renaming or
+  reordering attributes, editing definitions, renaming or describing the KB. KB metadata is included deliberately:
+  it does not touch the rule session, but one rule with no exceptions is simpler to state, test and explain in the
+  chat, and a rename under the holder would contradict their prompt and app bar. Case ingestion (`Interpreter.kt`,
+  `CaseManagement.kt`) mutates the KB too, but it comes from the laboratory system, not a user, and is never
+  lease-guarded. Deleting or renaming a KB that another user holds is refused with the holder's id.
+- The lease is a lease, not a lock: it expires on inactivity, so a crashed client cannot strand a project. It does *not*
+  expire on web-socket disconnect — the client has no reconnect loop and the ping timeout is 15 s, so a network
+  blip would hand the project to someone else mid rule session (the same reasoning that rejected conversation eviction
+  on disconnect in the groundwork plan).
+- Expiry or release of the lease cancels the KB's rule session. `RuleSessionManager` is still one per KB in this
+  stage, so without this the next holder would inherit a half-built rule (`ruleSession`, `currentChange`, cornerstone
+  cursor).
+- `KBSession` / `RuleSessionManager` are otherwise untouched: the lease guarantees the existing one-session-per-KB
+  state is only ever driven by one user, so no internal synchronisation is needed.
+- A second user's editing action is refused; the chat, as the primary surface, says who holds the project. The client
+  additionally shows "read-only — locked by X" in the app bar, which is a status indicator, not a control, so it is
+  within the chat-UI guidelines.
 
-Cheap, correct, and almost all of it survives into the later options (the lease becomes a finer-grained lock). The
+Cheap, correct, and almost all of it survives into the later stages (the lease becomes a finer-grained lock). The
 drawback is purely the product constraint it encodes.
 
-## Option B — shared project, single writer at the engine level
+## Stage 3 — shared project, single writer at the engine level
 
 Several users in the same project; concurrency resolved by serialising mutations, not by merging them.
 
@@ -75,10 +92,10 @@ Several users in the same project; concurrency resolved by serialising mutations
   `casesInfo` / `rule session completed` style pushes plus a new "KB changed" event; their clients re-fetch the current
   case. Users with an in-progress session get a warning that the KB changed under them.
 
-This is the natural end state for a single-server deployment and the lease from Option A degrades gracefully into the
+This is the natural end state for a single-server deployment and the lease from Stage 2 degrades gracefully into the
 per-KB write lock.
 
-## Option C — stateless server, database as the coordination point
+## Stage 4 — stateless server, database as the coordination point
 
 Multiple server instances; all shared state (locks, rule-session state, chat history) lives in Postgres or a shared
 cache, KB object graphs are rebuilt or refreshed from the store, and web-socket fan-out needs a pub/sub layer.
@@ -89,14 +106,16 @@ Not recommended until a deployment actually needs more than one server process.
 
 ## Recommended path
 
-1. Groundwork: identity plumbing, connection registry, per-user chat and per-user open-KB (no behaviour change for a
+1. Stage 1: identity plumbing, connection registry, per-user chat and per-user open-KB (no behaviour change for a
    single user).
-2. Option A: project lease — delivers the first milestone.
-3. Option B incrementally: first the per-KB write lock (safety), then per-user rule sessions and commit-time
+2. Stage 2: project lease — delivers the first milestone.
+3. Stage 3 incrementally: first the per-KB write lock (safety), then per-user rule sessions and commit-time
    revalidation (lifts the one-user-per-project constraint).
+
+Stage 4 is not planned.
 
 ## Out of scope
 
 - User management, login, roles, permissions — the third-party system's job. OpenRDR sees an opaque `userId`.
-- Cross-server deployment (Option C).
+- Cross-server deployment (Stage 4).
 - Merging two users' concurrent edits to the *same* rule session — a session belongs to one user.
