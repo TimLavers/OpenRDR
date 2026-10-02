@@ -8,8 +8,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.constants.chat.DEMO_CASE_NAME
 import io.rippledown.kb.KbResolution
+import io.rippledown.kb.chat.OpenKnowledgeBases
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.UserId
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -23,18 +25,50 @@ import kotlin.test.Test
 class ApplicationKbServiceTest {
     private lateinit var webSocketManager: WebSocketManager
     private lateinit var app: ServerApplication
-    private var openEndpoint: KBEndpoint? = null
-    private var closedCount = 0
+    private lateinit var openKnowledgeBases: FakeOpenKnowledgeBases
     private lateinit var service: ApplicationKbService
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
     private val now = 1_700_000_000_000L
+
+    // The user's open KB is their chat context; the fake stands in for the coordinator.
+    private class FakeOpenKnowledgeBases : OpenKnowledgeBases {
+        val open = mutableMapOf<UserId, KBEndpoint>()
+        val closed = mutableListOf<UserId>()
+        val deleted = mutableListOf<String>()
+
+        override fun openEndpointFor(userId: UserId) = open[userId]
+
+        override fun knowledgeBaseClosed(userId: UserId) {
+            closed += userId
+            open.remove(userId)
+        }
+
+        override fun knowledgeBaseDeleted(kbId: String): Set<UserId> {
+            deleted += kbId
+            val affected = open.filterValues { it.kbInfo().id == kbId }.keys.toSet()
+            affected.forEach { open.remove(it) }
+            return affected
+        }
+    }
+
+    private var openEndpoint: KBEndpoint?
+        get() = openKnowledgeBases.open[alice]
+        set(value) {
+            if (value == null) openKnowledgeBases.open.remove(alice) else openKnowledgeBases.open[alice] = value
+        }
+
+    private val closedCount get() = openKnowledgeBases.closed.count { it == alice }
+
+    private fun serviceFor(userId: UserId) =
+        ApplicationKbService(app, webSocketManager, userId, openKnowledgeBases) { now }
 
     @BeforeEach
     fun setup() {
         webSocketManager = mockk()
         app = ServerApplication(InMemoryPersistenceProvider(), webSocketManager)
-        openEndpoint = null
-        closedCount = 0
-        service = ApplicationKbService(app, webSocketManager, { openEndpoint }, { closedCount++ }, { now })
+        openKnowledgeBases = FakeOpenKnowledgeBases()
+        service = serviceFor(alice)
     }
 
     @Test
@@ -126,7 +160,7 @@ class ApplicationKbServiceTest {
         val zoo = KBInfo("legacy_zoo", "Zoo Animals")
         persistence.createKBPersistence(zoo)
         app = ServerApplication(persistence, webSocketManager)
-        service = ApplicationKbService(app, webSocketManager, { openEndpoint }, { closedCount++ }, { now })
+        service = serviceFor(alice)
 
         // When
         val resolution = service.resolve("Zoo Animals")
@@ -139,8 +173,8 @@ class ApplicationKbServiceTest {
     fun `create from sample builds the KB before pushing its KBInfo to the client`() = runBlocking<Unit> {
         // Given
         var processedCountWhenPushed: Int? = null
-        coEvery { webSocketManager.sendKbInfo(any()) } answers {
-            processedCountWhenPushed = app.kbForId(firstArg<KBInfo>().id).kb.processedCaseIds().size
+        coEvery { webSocketManager.sendKbInfo(alice, any()) } answers {
+            processedCountWhenPushed = app.kbForId(secondArg<KBInfo>().id).kb.processedCaseIds().size
         }
 
         // When
@@ -152,7 +186,7 @@ class ApplicationKbServiceTest {
         app.kbForId(created.id).kb.processedCaseIds() shouldHaveSize 101
         app.kbForId(created.id).kb.ruleTree.size() shouldBe 18L
         processedCountWhenPushed shouldBe 101
-        coVerify(exactly = 1) { webSocketManager.sendKbInfo(created) }
+        coVerify(exactly = 1) { webSocketManager.sendKbInfo(alice, created) }
     }
 
     @Test
@@ -168,27 +202,28 @@ class ApplicationKbServiceTest {
         // Then
         app.kbList() shouldBe listOf(existing)
         app.kbForId(existing.id).kb.processedCaseIds() shouldBe emptyList()
-        coVerify(exactly = 0) { webSocketManager.sendKbInfo(any()) }
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(any(), any()) }
     }
 
     @Test
-    fun `open pushes the KBInfo to the client`() = runBlocking<Unit> {
+    fun `open pushes the KBInfo to the opening user only`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)
-        coEvery { webSocketManager.sendKbInfo(thyroids) } just Runs
+        coEvery { webSocketManager.sendKbInfo(alice, thyroids) } just Runs
 
         // When
         service.open(thyroids)
 
         // Then
-        coVerify(exactly = 1) { webSocketManager.sendKbInfo(thyroids) }
+        coVerify(exactly = 1) { webSocketManager.sendKbInfo(alice, thyroids) }
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(bob, any()) }
     }
 
     @Test
-    fun `create makes the KB and pushes its KBInfo to the client`() = runBlocking<Unit> {
+    fun `create makes the KB and pushes its KBInfo to the creating user only`() = runBlocking<Unit> {
         // Given
         val pushed = slot<KBInfo>()
-        coEvery { webSocketManager.sendKbInfo(capture(pushed)) } just Runs
+        coEvery { webSocketManager.sendKbInfo(alice, capture(pushed)) } just Runs
 
         // When
         val created = service.create("Glucose")
@@ -197,6 +232,7 @@ class ApplicationKbServiceTest {
         created.name shouldBe "Glucose"
         app.kbList() shouldBe listOf(created)
         pushed.captured shouldBe created
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(bob, any()) }
     }
 
     @Test
@@ -209,27 +245,58 @@ class ApplicationKbServiceTest {
             service.create("glucose")
         }
         app.kbList().map { it.name } shouldBe listOf("Glucose")
-        coVerify(exactly = 0) { webSocketManager.sendKbInfo(any()) }
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(any(), any()) }
     }
 
     @Test
-    fun `close tells the client and changes nothing on the server`() = runBlocking<Unit> {
+    fun `close tells the closing user and changes nothing on the server`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
-        coEvery { webSocketManager.sendKbClosed() } just Runs
+        coEvery { webSocketManager.sendKbClosed(alice) } just Runs
 
         // When
         service.close()
 
         // Then
-        coVerify(exactly = 1) { webSocketManager.sendKbClosed() }
+        coVerify(exactly = 1) { webSocketManager.sendKbClosed(alice) }
         closedCount shouldBe 1
+        openEndpoint.shouldBeNull()
         app.kbList() shouldBe listOf(thyroids)
     }
 
     @Test
-    fun `deleting a KB that is not open does not close anything`() = runBlocking<Unit> {
+    fun `one user closing does not disturb another user on the same KB`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        openKnowledgeBases.open[alice] = app.kbForId(thyroids.id)
+        openKnowledgeBases.open[bob] = app.kbForId(thyroids.id)
+        coEvery { webSocketManager.sendKbClosed(alice) } just Runs
+
+        // When
+        service.close()
+
+        // Then
+        serviceFor(bob).openKnowledgeBase() shouldBe thyroids
+        openKnowledgeBases.closed shouldBe listOf(alice)
+        coVerify(exactly = 0) { webSocketManager.sendKbClosed(bob) }
+    }
+
+    @Test
+    fun `each user's open KB is their own`() {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        val glucose = app.createKB("Glucose", false)
+        openKnowledgeBases.open[alice] = app.kbForId(thyroids.id)
+        openKnowledgeBases.open[bob] = app.kbForId(glucose.id)
+
+        // When / Then
+        service.openKnowledgeBase() shouldBe thyroids
+        serviceFor(bob).openKnowledgeBase() shouldBe glucose
+    }
+
+    @Test
+    fun `deleting a KB nobody has open closes nothing`() = runBlocking<Unit> {
         // Given
         val thyroids = app.createKB("Thyroids", false)
         val scratch = app.createKB("Scratch", false)
@@ -240,7 +307,8 @@ class ApplicationKbServiceTest {
 
         // Then
         app.kbList() shouldBe listOf(thyroids)
-        coVerify(exactly = 0) { webSocketManager.sendKbClosed() }
+        openKnowledgeBases.deleted shouldBe listOf(scratch.id)
+        coVerify(exactly = 0) { webSocketManager.sendKbClosed(any()) }
         closedCount shouldBe 0
     }
 
@@ -249,15 +317,35 @@ class ApplicationKbServiceTest {
         // Given
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
-        coEvery { webSocketManager.sendKbClosed() } just Runs
+        coEvery { webSocketManager.sendKbClosed(alice) } just Runs
 
         // When
         service.delete(thyroids)
 
         // Then
         app.kbList() shouldBe emptyList()
-        coVerify(exactly = 1) { webSocketManager.sendKbClosed() }
-        closedCount shouldBe 1
+        openEndpoint.shouldBeNull()
+        coVerify(exactly = 1) { webSocketManager.sendKbClosed(alice) }
+    }
+
+    @Test
+    fun `deleting a KB another user has open closes it for that user only`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        val glucose = app.createKB("Glucose", false)
+        openKnowledgeBases.open[alice] = app.kbForId(thyroids.id)
+        openKnowledgeBases.open[bob] = app.kbForId(glucose.id)
+        coEvery { webSocketManager.sendKbClosed(bob) } just Runs
+
+        // When
+        service.delete(glucose)
+
+        // Then
+        app.kbList() shouldBe listOf(thyroids)
+        service.openKnowledgeBase() shouldBe thyroids
+        serviceFor(bob).openKnowledgeBase().shouldBeNull()
+        coVerify(exactly = 1) { webSocketManager.sendKbClosed(bob) }
+        coVerify(exactly = 0) { webSocketManager.sendKbClosed(alice) }
     }
 
     @Test
@@ -266,7 +354,7 @@ class ApplicationKbServiceTest {
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
         var listWhenClosed: List<KBInfo>? = null
-        coEvery { webSocketManager.sendKbClosed() } answers { listWhenClosed = app.kbList() }
+        coEvery { webSocketManager.sendKbClosed(alice) } answers { listWhenClosed = app.kbList() }
 
         // When
         service.delete(thyroids)
@@ -276,12 +364,12 @@ class ApplicationKbServiceTest {
     }
 
     @Test
-    fun `rename updates the open KB and pushes the renamed KBInfo`() = runBlocking<Unit> {
+    fun `rename updates the open KB and pushes the renamed KBInfo to the renaming user`() = runBlocking<Unit> {
         // given
         val thyroids = app.createKB("Thyroids", false)
         openEndpoint = app.kbForId(thyroids.id)
         val pushed = slot<KBInfo>()
-        coEvery { webSocketManager.sendKbInfo(capture(pushed)) } just Runs
+        coEvery { webSocketManager.sendKbInfo(alice, capture(pushed)) } just Runs
 
         // when
         val renamed = service.rename("Thyroid Function")

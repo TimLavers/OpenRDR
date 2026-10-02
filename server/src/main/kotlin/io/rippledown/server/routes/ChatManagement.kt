@@ -17,15 +17,17 @@ fun Application.chatManagement(application: ServerApplication) {
     val logger = lazyLogger
     routing {
         post(path = START_CONVERSATION) {
+            val userId = userId()
             val context = chatContext(application)
-            logger.info("startConversation: kbId=${call.parameters[KB_ID]} caseId=${call.parameters[CASE_ID]}")
-            val response = application.chatCoordinator.startConversation(context)
+            logger.info("startConversation: user=$userId kbId=${call.parameters[KB_ID]} caseId=${call.parameters[CASE_ID]}")
+            val response = application.chatCoordinator.startConversation(userId, context)
             call.respond(OK, response)
         }
         post(path = SEND_USER_MESSAGE) {
+            val userId = userId()
             val userMessage = call.receiveText()
-            logger.info("sendUserMessage: message='$userMessage'")
-            val response = application.chatCoordinator.responseToUserMessage(userMessage)
+            logger.info("sendUserMessage: user=$userId message='$userMessage'")
+            val response = application.chatCoordinator.responseToUserMessage(userId, userMessage)
             call.respond(OK, response)
         }
     }

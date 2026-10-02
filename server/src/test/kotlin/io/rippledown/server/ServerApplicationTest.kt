@@ -19,6 +19,7 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.routes.LOCAL_USER
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
@@ -72,8 +73,8 @@ internal class ServerApplicationTest {
         // Then
         error.message shouldBe kbNameReservedMessage(name)
         app.kbList().map { it.name } shouldBe listOf("MyCopy")
-        app.kbService.knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
-        app.openChatEndpoint() shouldBe null
+        app.kbServiceFor(LOCAL_USER).knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
+        app.openChatEndpoint(LOCAL_USER) shouldBe null
         app.kbForId(original.id).kbInfo().name shouldBe "MyCopy"
         persistenceProvider.idStore().data().keys shouldBe setOf(original.id)
         persistenceProvider.kbPersistence(original.id).kbInfo().name shouldBe "MyCopy"

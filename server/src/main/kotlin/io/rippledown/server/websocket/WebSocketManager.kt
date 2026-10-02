@@ -8,55 +8,71 @@ import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.UserId
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
+import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * The connected clients, keyed by user. One user may have several windows,
+ * hence a set of sessions per user. See documentation/design/concurrent_users_groundwork.md.
+ */
 class WebSocketManager {
 
-    private lateinit var connection: WebSocketSession
+    private val connections = ConcurrentHashMap<UserId, MutableSet<WebSocketSession>>()
     private val logger = lazyLogger
 
-    suspend fun setSession(session: WebSocketSession) {
-        connection = session
-
+    suspend fun setSession(userId: UserId, session: WebSocketSession) {
+        connections.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }.add(session)
         try {
             // Keep the session open until the client disconnects
             for (frame in session.incoming) {
-                // Handle incoming frames if needed
                 frame.readBytes()
             }
         } finally {
+            connections.compute(userId) { _, sessions ->
+                sessions?.apply { remove(session) }?.takeIf { it.isNotEmpty() }
+            }
             session.close()
         }
     }
 
+    fun connectedUsers(): Set<UserId> = connections.keys.toSet()
+
     suspend fun sendStatus(status: CornerstoneStatus) {
-        send(status.toJsonString<CornerstoneStatus>())
+        broadcast(status.toJsonString<CornerstoneStatus>())
     }
 
     suspend fun sendCasesInfo(casesInfo: CasesInfo) {
-        send(CASES_INFO_PREFIX + casesInfo.toJsonString<CasesInfo>())
+        broadcast(CASES_INFO_PREFIX + casesInfo.toJsonString<CasesInfo>())
     }
 
     suspend fun sendRuleSessionCompleted() {
-        send(RULE_SESSION_COMPLETED)
+        broadcast(RULE_SESSION_COMPLETED)
     }
 
-    suspend fun sendKbInfo(kbInfo: KBInfo) {
-        send(KB_INFO_PREFIX + kbInfo.toJsonString<KBInfo>())
+    suspend fun sendKbInfo(userId: UserId, kbInfo: KBInfo) {
+        sendToUser(userId, KB_INFO_PREFIX + kbInfo.toJsonString<KBInfo>())
     }
 
-    suspend fun sendKbClosed() {
-        send(KB_CLOSED)
+    suspend fun sendKbClosed(userId: UserId) {
+        sendToUser(userId, KB_CLOSED)
     }
 
-    private suspend fun send(message: String) {
+    suspend fun sendToUser(userId: UserId, message: String) {
+        connections[userId]?.forEach { send(it, message) }
+    }
+
+    suspend fun broadcast(message: String) {
+        connections.values.forEach { sessions -> sessions.forEach { send(it, message) } }
+    }
+
+    // A dead connection must not fail the request that triggered the push.
+    private suspend fun send(session: WebSocketSession, message: String) {
         try {
-            if (::connection.isInitialized) {
-                connection.send(message)
-            }
+            session.send(message)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.warn("Could not push to a client: ${e.message}")
         }
     }
 }

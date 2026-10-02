@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.rippledown.constants.chat.emptyKbGreeting
 import io.rippledown.constants.chat.noKbGreeting
 import io.rippledown.model.KBInfo
+import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.sample.SampleKB
@@ -26,19 +27,28 @@ class ChatCoordinatorTest {
     private lateinit var coordinator: ChatCoordinator
     private val thyroids = KBInfo("thyroids_1", "Thyroids")
     private val glucose = KBInfo("glucose_1", "Glucose")
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
 
     @BeforeTest
     fun setup() {
         factory = mockk()
         kbService = mockk()
         chatManager = mockk()
-        coordinator = ChatCoordinator(factory, kbService)
+        coordinator = ChatCoordinator(factory) { kbService }
+    }
+
+    private fun endpointFor(kbInfo: KBInfo): KBEndpoint {
+        val endpoint = mockk<KBEndpoint>()
+        every { endpoint.kbInfo() } returns kbInfo
+        return endpoint
     }
 
     @Test
     fun `the initial context is no knowledge base`() {
         // When / Then
-        coordinator.context() shouldBe ChatContext.NoKnowledgeBase
+        coordinator.contextFor(alice) shouldBe ChatContext.NoKnowledgeBase
+        coordinator.openEndpointFor(alice) shouldBe null
     }
 
     @Test
@@ -46,16 +56,16 @@ class ChatCoordinatorTest {
         // Given
         every { kbService.knowledgeBases() } returns listOf(glucose, thyroids)
         every { kbService.demonstrations() } returns emptyList()
-        every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
         val greeting = noKbGreeting(listOf("Glucose", "Thyroids"))
         coEvery { chatManager.startConversation(null, greeting) } returns ChatResponse(greeting)
 
         // When
-        val response = coordinator.startConversation(ChatContext.NoKnowledgeBase)
+        val response = coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
 
         // Then
         response shouldBe ChatResponse(greeting)
-        coordinator.context() shouldBe ChatContext.NoKnowledgeBase
+        coordinator.contextFor(alice) shouldBe ChatContext.NoKnowledgeBase
     }
 
     @Test
@@ -63,13 +73,13 @@ class ChatCoordinatorTest {
         // Given
         every { kbService.knowledgeBases() } returns emptyList()
         every { kbService.demonstrations() } returns SampleKB.demonstrations()
-        every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
         val demoTitles = SampleKB.demonstrations().map { it.title() }
         val greeting = noKbGreeting(emptyList(), demoTitles)
         coEvery { chatManager.startConversation(null, greeting) } returns ChatResponse(greeting)
 
         // When
-        val response = coordinator.startConversation(ChatContext.NoKnowledgeBase)
+        val response = coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
 
         // Then
         response shouldBe ChatResponse(greeting)
@@ -80,19 +90,19 @@ class ChatCoordinatorTest {
     @Test
     fun `starting with an empty knowledge base gives the fixed greeting naming it`() = runTest {
         // Given
-        val endpoint = mockk<KBEndpoint>()
-        every { endpoint.kbInfo() } returns thyroids
+        val endpoint = endpointFor(thyroids)
         val context = ChatContext.KnowledgeBaseOnly(endpoint)
-        every { factory.create(context) } returns chatManager
+        every { factory.create(alice, context) } returns chatManager
         val greeting = emptyKbGreeting("Thyroids")
         coEvery { chatManager.startConversation(null, greeting) } returns ChatResponse(greeting)
 
         // When
-        val response = coordinator.startConversation(context)
+        val response = coordinator.startConversation(alice, context)
 
         // Then
         response shouldBe ChatResponse(greeting)
-        coordinator.context() shouldBe context
+        coordinator.contextFor(alice) shouldBe context
+        coordinator.openEndpointFor(alice) shouldBe endpoint
     }
 
     @Test
@@ -101,15 +111,15 @@ class ChatCoordinatorTest {
         val endpoint = mockk<KBEndpoint>()
         val viewableCase = mockk<ViewableCase>()
         val context = ChatContext.CaseInKnowledgeBase(endpoint, viewableCase)
-        every { factory.create(context) } returns chatManager
+        every { factory.create(alice, context) } returns chatManager
         coEvery { chatManager.startConversation(viewableCase, null) } returns ChatResponse("Shall I add a comment?")
 
         // When
-        val response = coordinator.startConversation(context)
+        val response = coordinator.startConversation(alice, context)
 
         // Then
         response shouldBe ChatResponse("Shall I add a comment?")
-        coordinator.context() shouldBe context
+        coordinator.contextFor(alice) shouldBe context
     }
 
     @Test
@@ -117,13 +127,13 @@ class ChatCoordinatorTest {
         // Given
         every { kbService.knowledgeBases() } returns emptyList()
         every { kbService.demonstrations() } returns emptyList()
-        every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
         coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
-        coordinator.startConversation(ChatContext.NoKnowledgeBase)
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
         coEvery { chatManager.response("List the knowledge bases") } returns ChatResponse("A, B")
 
         // When
-        val response = coordinator.responseToUserMessage("List the knowledge bases")
+        val response = coordinator.responseToUserMessage(alice, "List the knowledge bases")
 
         // Then
         response shouldBe ChatResponse("A, B")
@@ -133,7 +143,7 @@ class ChatCoordinatorTest {
     @Test
     fun `a user message before any conversation is answered without a model`() = runTest {
         // When
-        val response = coordinator.responseToUserMessage("Hello")
+        val response = coordinator.responseToUserMessage(alice, "Hello")
 
         // Then
         response shouldBe ChatResponse(ChatCoordinator.NO_CONVERSATION_MESSAGE)
@@ -146,7 +156,7 @@ class ChatCoordinatorTest {
         val order = mutableListOf<String>()
         every { kbService.knowledgeBases() } returns emptyList()
         every { kbService.demonstrations() } returns emptyList()
-        every { factory.create(ChatContext.NoKnowledgeBase) } returns chatManager
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
         coEvery { chatManager.startConversation(null, any()) } coAnswers {
             order += "start"
             startFinished.await()
@@ -157,8 +167,8 @@ class ChatCoordinatorTest {
         }
 
         // When
-        val starting = async { coordinator.startConversation(ChatContext.NoKnowledgeBase) }
-        val replying = async { coordinator.responseToUserMessage("Hi") }
+        val starting = async { coordinator.startConversation(alice, ChatContext.NoKnowledgeBase) }
+        val replying = async { coordinator.responseToUserMessage(alice, "Hi") }
         testScheduler.runCurrent()
         order shouldBe listOf("start")
         startFinished.complete(ChatResponse(""))
@@ -172,21 +182,174 @@ class ChatCoordinatorTest {
     @Test
     fun `closing the knowledge base resets the context and drops the chat manager`() = runTest {
         // Given
-        val endpoint = mockk<KBEndpoint>()
-        every { endpoint.kbInfo() } returns thyroids
-        val context = ChatContext.KnowledgeBaseOnly(endpoint)
-        every { factory.create(context) } returns chatManager
+        val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        every { factory.create(alice, context) } returns chatManager
         coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
-        coordinator.startConversation(context)
+        coordinator.startConversation(alice, context)
 
         // When
-        coordinator.knowledgeBaseClosed()
-        val response = coordinator.responseToUserMessage("Add a comment")
+        coordinator.knowledgeBaseClosed(alice)
+        val response = coordinator.responseToUserMessage(alice, "Add a comment")
 
         // Then
-        coordinator.context() shouldBe ChatContext.NoKnowledgeBase
+        coordinator.contextFor(alice) shouldBe ChatContext.NoKnowledgeBase
         response shouldBe ChatResponse(ChatCoordinator.NO_CONVERSATION_MESSAGE)
         coVerify(exactly = 0) { chatManager.response(any()) }
+    }
+
+    @Test
+    fun `closing the knowledge base for one user leaves another user on the same KB untouched`() = runTest {
+        // Given
+        val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        val bobsManager = mockk<ChatManager>()
+        every { factory.create(alice, context) } returns chatManager
+        every { factory.create(bob, context) } returns bobsManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coEvery { bobsManager.startConversation(null, any()) } returns ChatResponse("")
+        coEvery { bobsManager.response("Hi") } returns ChatResponse("Hello Bob")
+        coordinator.startConversation(alice, context)
+        coordinator.startConversation(bob, context)
+
+        // When
+        coordinator.knowledgeBaseClosed(alice)
+
+        // Then
+        coordinator.contextFor(alice) shouldBe ChatContext.NoKnowledgeBase
+        coordinator.contextFor(bob) shouldBe context
+        coordinator.responseToUserMessage(bob, "Hi") shouldBe ChatResponse("Hello Bob")
+    }
+
+    @Test
+    fun `closing for a user who never started a conversation is a no-op`() {
+        // When
+        coordinator.knowledgeBaseClosed(alice)
+
+        // Then
+        coordinator.contextFor(alice) shouldBe ChatContext.NoKnowledgeBase
+    }
+
+    @Test
+    fun `deleting a knowledge base resets exactly the conversations on it and reports them`() = runTest {
+        // Given
+        val onThyroids = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        val onGlucose = ChatContext.KnowledgeBaseOnly(endpointFor(glucose))
+        val carol = UserId("carol")
+        val managers = listOf(alice, bob, carol).associateWith { mockk<ChatManager>() }
+        every { factory.create(alice, onThyroids) } returns managers.getValue(alice)
+        every { factory.create(bob, onGlucose) } returns managers.getValue(bob)
+        every { factory.create(carol, onThyroids) } returns managers.getValue(carol)
+        managers.values.forEach { coEvery { it.startConversation(null, any()) } returns ChatResponse("") }
+        coEvery { managers.getValue(bob).response("Hi") } returns ChatResponse("Hello Bob")
+        coordinator.startConversation(alice, onThyroids)
+        coordinator.startConversation(bob, onGlucose)
+        coordinator.startConversation(carol, onThyroids)
+        coordinator.usersOn(thyroids.id) shouldBe setOf(alice, carol)
+
+        // When
+        val affected = coordinator.knowledgeBaseDeleted(thyroids.id)
+
+        // Then
+        affected shouldBe setOf(alice, carol)
+        coordinator.usersOn(thyroids.id) shouldBe emptySet()
+        coordinator.contextFor(alice) shouldBe ChatContext.NoKnowledgeBase
+        coordinator.contextFor(carol) shouldBe ChatContext.NoKnowledgeBase
+        coordinator.contextFor(bob) shouldBe onGlucose
+        coordinator.responseToUserMessage(alice, "Hi") shouldBe ChatResponse(ChatCoordinator.NO_CONVERSATION_MESSAGE)
+        coordinator.responseToUserMessage(bob, "Hi") shouldBe ChatResponse("Hello Bob")
+    }
+
+    @Test
+    fun `deleting a knowledge base nobody is on affects no one`() {
+        // When / Then
+        coordinator.knowledgeBaseDeleted(thyroids.id) shouldBe emptySet()
+    }
+
+    @Test
+    fun `usersOn excludes users with no knowledge base and users on a case in another KB`() = runTest {
+        // Given
+        val onThyroidsCase = ChatContext.CaseInKnowledgeBase(endpointFor(thyroids), mockk<ViewableCase>())
+        val onGlucose = ChatContext.KnowledgeBaseOnly(endpointFor(glucose))
+        val managers = listOf(alice, bob).associateWith { mockk<ChatManager>() }
+        every { factory.create(alice, onThyroidsCase) } returns managers.getValue(alice)
+        every { factory.create(bob, onGlucose) } returns managers.getValue(bob)
+        coEvery { managers.getValue(alice).startConversation(any(), any()) } returns ChatResponse("")
+        coEvery { managers.getValue(bob).startConversation(null, any()) } returns ChatResponse("")
+        coordinator.startConversation(alice, onThyroidsCase)
+        coordinator.startConversation(bob, onGlucose)
+
+        // When / Then
+        coordinator.usersOn(thyroids.id) shouldBe setOf(alice)
+        coordinator.usersOn(glucose.id) shouldBe setOf(bob)
+        coordinator.usersOn("lipids_1") shouldBe emptySet()
+    }
+
+    @Test
+    fun `each user gets responses from their own chat manager`() = runTest {
+        // Given
+        val bobsManager = mockk<ChatManager>()
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
+        every { factory.create(bob, ChatContext.NoKnowledgeBase) } returns bobsManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coEvery { bobsManager.startConversation(null, any()) } returns ChatResponse("")
+        coEvery { chatManager.response("Hi") } returns ChatResponse("Hello Alice")
+        coEvery { bobsManager.response("Hi") } returns ChatResponse("Hello Bob")
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+        coordinator.startConversation(bob, ChatContext.NoKnowledgeBase)
+
+        // When / Then
+        coordinator.responseToUserMessage(alice, "Hi") shouldBe ChatResponse("Hello Alice")
+        coordinator.responseToUserMessage(bob, "Hi") shouldBe ChatResponse("Hello Bob")
+        coVerify(exactly = 1) { chatManager.response("Hi") }
+        coVerify(exactly = 1) { bobsManager.response("Hi") }
+    }
+
+    @Test
+    fun `a message from a user with no conversation is answered without a model even when others have one`() =
+        runTest {
+            // Given
+            every { kbService.knowledgeBases() } returns emptyList()
+            every { kbService.demonstrations() } returns emptyList()
+            every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
+            coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+            coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+
+            // When
+            val response = coordinator.responseToUserMessage(bob, "Hello")
+
+            // Then
+            response shouldBe ChatResponse(ChatCoordinator.NO_CONVERSATION_MESSAGE)
+            coVerify(exactly = 0) { chatManager.response(any()) }
+        }
+
+    @Test
+    fun `one user's turn in progress does not block another user's turn`() = runTest {
+        // Given
+        val aliceFinished = CompletableDeferred<ChatResponse>()
+        val bobsManager = mockk<ChatManager>()
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
+        every { factory.create(bob, ChatContext.NoKnowledgeBase) } returns bobsManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coEvery { bobsManager.startConversation(null, any()) } returns ChatResponse("")
+        coEvery { chatManager.response("Slow") } coAnswers { aliceFinished.await() }
+        coEvery { bobsManager.response("Quick") } returns ChatResponse("Done")
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+        coordinator.startConversation(bob, ChatContext.NoKnowledgeBase)
+
+        // When
+        val alicesTurn = async { coordinator.responseToUserMessage(alice, "Slow") }
+        val bobsTurn = async { coordinator.responseToUserMessage(bob, "Quick") }
+        testScheduler.runCurrent()
+
+        // Then
+        bobsTurn.isCompleted shouldBe true
+        bobsTurn.await() shouldBe ChatResponse("Done")
+        alicesTurn.isCompleted shouldBe false
+        aliceFinished.complete(ChatResponse("Finally"))
+        alicesTurn.await() shouldBe ChatResponse("Finally")
     }
 
     @Test
@@ -196,15 +359,15 @@ class ChatCoordinatorTest {
         val second = mockk<ChatManager>()
         every { kbService.knowledgeBases() } returns emptyList()
         every { kbService.demonstrations() } returns emptyList()
-        every { factory.create(ChatContext.NoKnowledgeBase) } returnsMany listOf(first, second)
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returnsMany listOf(first, second)
         coEvery { first.startConversation(null, any()) } returns ChatResponse("")
         coEvery { second.startConversation(null, any()) } returns ChatResponse("")
         coEvery { second.response("Hi") } returns ChatResponse("From the second")
 
         // When
-        coordinator.startConversation(ChatContext.NoKnowledgeBase)
-        coordinator.startConversation(ChatContext.NoKnowledgeBase)
-        val response = coordinator.responseToUserMessage("Hi")
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+        val response = coordinator.responseToUserMessage(alice, "Hi")
 
         // Then
         response shouldBe ChatResponse("From the second")

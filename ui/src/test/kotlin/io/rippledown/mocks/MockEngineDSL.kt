@@ -60,6 +60,7 @@ class EngineConfig {
     var deletedKbId: String? = null
     var kbRemainingAfterDeletion: KBInfo? = null
     var sampleKB: SampleKB? = null
+    var lastRequestHeaders: Headers? = null
 
     var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
     var lastRuleUndoCalled = false
@@ -75,6 +76,7 @@ private class EngineBuilder(private val config: EngineConfig) {
     }
 
     fun build() = MockEngine { request ->
+        config.lastRequestHeaders = request.headers
         when (request.url.encodedPath) {
             WAITING_CASES -> {
                 httpResponseData(json.encodeToString(config.returnCasesInfo))

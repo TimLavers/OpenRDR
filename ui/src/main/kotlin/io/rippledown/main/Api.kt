@@ -18,10 +18,12 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
+import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
@@ -36,7 +38,8 @@ import java.io.IOException
 
 class Api(
     engine: HttpClientEngine = CIO.create(),
-    private val webSocketPort: Int = PORT
+    private val webSocketPort: Int = PORT,
+    val userId: UserId = defaultUserId()
 ) {
     // @Volatile ensures that writes to `currentKB` from coroutines resumed on
     // background I/O threads (e.g. inside [createKBFromSample]) are visible to
@@ -57,6 +60,9 @@ class Api(
             socketTimeoutMillis = 120_000
         }
         install(WebSockets)
+        defaultRequest {
+            header(USER_ID_HEADER, userId.value)
+        }
     }
 
     private val logger = lazyLogger

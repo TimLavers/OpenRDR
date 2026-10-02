@@ -11,12 +11,14 @@ import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
+import io.rippledown.model.UserId
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.postgres.PostgresPersistenceProvider
 import io.rippledown.sample.SampleKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.util.EntityRetrieval
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.createTempDirectory
 
 class ServerApplication(
@@ -26,15 +28,15 @@ class ServerApplication(
     private val logger = lazyLogger
 
     private val kbManager = KBManager(persistenceProvider)
-    private val idToKBEndpoint = mutableMapOf<String, KBEndpoint>()
-    val kbService: KnowledgeBaseService =
-        ApplicationKbService(
-            this,
-            webSocketManager,
-            openEndpoint = { openChatEndpoint() },
-            onClosed = { chatCoordinator.knowledgeBaseClosed() }
-        )
-    val chatCoordinator = ChatCoordinator(ChatManagerFactory(kbService), kbService)
+    private val idToKBEndpoint = ConcurrentHashMap<String, KBEndpoint>()
+
+    // Users on different KBs do not contend, but they all share the set of KBs,
+    // so its mutations are serialised here.
+    private val kbSetLock = Any()
+    val chatCoordinator = ChatCoordinator(ChatManagerFactory(::kbServiceFor), ::kbServiceFor)
+
+    fun kbServiceFor(userId: UserId): KnowledgeBaseService =
+        ApplicationKbService(this, webSocketManager, userId, chatCoordinator)
 
     init {
         persistenceProvider.idStore().data().keys.forEach {
@@ -43,19 +45,19 @@ class ServerApplication(
         }
     }
 
-    fun createKB(name: String, force: Boolean): KBInfo {
+    fun createKB(name: String, force: Boolean): KBInfo = synchronized(kbSetLock) {
         logger.info("Creating KB, name: $name, force: $force.")
         val kbInfo = kbManager.createKB(name, force)
         loadKnownKB(kbInfo)
-        return kbInfo //todo test return value
+        kbInfo
     }
 
-    fun createKBFromSample(name: String, sampleKB: SampleKB): KBInfo {
+    fun createKBFromSample(name: String, sampleKB: SampleKB): KBInfo = synchronized(kbSetLock) {
         logger.info("Creating Sample KB, name: $name, sample: $sampleKB.")
         val kbInfo = kbManager.createKB(name, false)
         loadKnownKB(kbInfo)
         loadSampleKB(kbFor(kbInfo), sampleKB)
-        return kbInfo
+        kbInfo
     }
 
     fun selectKB(id: String): KBInfo {
@@ -63,20 +65,20 @@ class ServerApplication(
         return kbForId(id).kbInfo()
     }
 
-    fun deleteKB(id: String): KBInfo? {
+    fun deleteKB(id: String): KBInfo? = synchronized(kbSetLock) {
         val endpoint = kbForId(id)
         logger.info("Deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
         val remaining = kbManager.deleteKB(endpoint.kbInfo())
         idToKBEndpoint.remove(id)
-        return remaining
+        remaining
     }
 
-    fun renameKB(id: String, newName: String): KBInfo {
+    fun renameKB(id: String, newName: String): KBInfo = synchronized(kbSetLock) {
         kbForId(id)
-        return kbManager.renameKB(id, newName)
+        kbManager.renameKB(id, newName)
     }
 
-    fun openChatEndpoint(): KBEndpoint? = chatCoordinator.context().endpointOrNull
+    fun openChatEndpoint(userId: UserId): KBEndpoint? = chatCoordinator.openEndpointFor(userId)
 
     fun kbForId(id: String): KBEndpoint {
         return idToKBEndpoint[id] ?: throw IllegalArgumentException("Unknown kb id: $id")
@@ -97,7 +99,7 @@ class ServerApplication(
 
     fun kbList(): List<KBInfo> = kbManager.all().toList().sorted()
 
-    fun importKBFromZip(zipBytes: ByteArray): KBInfo {
+    fun importKBFromZip(zipBytes: ByteArray): KBInfo = synchronized(kbSetLock) {
         val tempDir: File = createTempDirectory().toFile()
         Unzipper(zipBytes, tempDir).unzip()
         val subDirectories = tempDir.listFiles()
@@ -109,7 +111,7 @@ class ServerApplication(
         logger.info("Imported KB with name: '${kb.kbInfo.name}' and id: '${kb.kbInfo.id}' from zip.")
         kbManager.register(kb)
         idToKBEndpoint[kb.kbInfo.id] = kbEndpoint(kb)
-        return kb.kbInfo
+        kb.kbInfo
     }
 
     private fun kbEndpoint(kb: KB) = KBEndpoint(KBSession(kb, webSocketManager))

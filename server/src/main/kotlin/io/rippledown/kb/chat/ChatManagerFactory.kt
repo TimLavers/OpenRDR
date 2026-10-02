@@ -6,6 +6,7 @@ import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.kb.RuleSessionManager
+import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 
 /**
@@ -13,15 +14,17 @@ import io.rippledown.model.caseview.ViewableCase
  * rule service, the reason transformer and the suggestion handlers; without one
  * it has none of them, and the model can only talk and manage knowledge bases.
  */
-class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
+class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseService) {
 
-    fun create(context: ChatContext): ChatManager {
+    fun create(userId: UserId, context: ChatContext): ChatManager {
+        val kbService = kbServiceFor(userId)
         val kbNames = kbService.knowledgeBases().map { it.name }
         val kbName = context.kbInfoOrNull?.name
         val demonstrationNames = kbService.demonstrations().map { it.title() }
         return when (context) {
             is ChatContext.CaseInKnowledgeBase ->
                 forCase(
+                    kbService,
                     context.viewableCase,
                     context.endpoint.session.ruleSessionManager,
                     kbName,
@@ -29,11 +32,16 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
                     demonstrationNames
                 )
 
-            else -> caseLess(kbName, kbNames, demonstrationNames)
+            else -> caseLess(kbService, kbName, kbNames, demonstrationNames)
         }
     }
 
-    private fun caseLess(kbName: String?, kbNames: List<String>, demonstrationNames: List<String>): ChatManager {
+    private fun caseLess(
+        kbService: KnowledgeBaseService,
+        kbName: String?,
+        kbNames: List<String>,
+        demonstrationNames: List<String>
+    ): ChatManager {
         val chatService =
             KBChatService.createKBChatService(null, kbName, kbNames, demonstrationNames = demonstrationNames)
         val conversation = Conversation(chatService, emptyMap(), openingMessage = null)
@@ -41,6 +49,7 @@ class ChatManagerFactory(private val kbService: KnowledgeBaseService) {
     }
 
     private fun forCase(
+        kbService: KnowledgeBaseService,
         viewableCase: ViewableCase,
         ruleSessionManager: RuleSessionManager,
         kbName: String?,

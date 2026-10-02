@@ -16,8 +16,10 @@ client sends its own id; swapping to a gateway-injected header later changes not
 - A `USER_ID_HEADER` constant in `common` (`constants.server.Constants`), beside `KB_ID` / `CASE_ID`.
 - A helper in `RoutingUtilities.kt`: `fun RoutingContext.userId(): UserId`, reading the header. A missing header
   resolves to a fixed default id (`"local"`), so the packaged demo, curl and the cucumber suite keep working
-  unauthenticated. The fallback is logged at WARN: behind a gateway, a missing header would silently merge every
-  user into one. `UserId` is a value class over `String` in `common`.
+  unauthenticated. The fallback is logged at WARN, once per server start rather than per request — the demo and the
+  cucumber suite are unauthenticated by design and a warning per call would drown the log; behind a gateway, a
+  missing header would silently merge every user into one, and one warning is enough to notice. `UserId` is a value
+  class over `String` in `common`.
 - The web-socket route (`WebSockets.kt`) reads the same header from the handshake request.
 - No route *acts* on the id yet — this step only makes it available.
 - The identity unit is the *user*, not the window. A user's second window shares their conversation and open KB
@@ -52,8 +54,7 @@ arbitrary request and on the web-socket handshake.
 - In this stage every existing call site (`sendStatus`, `sendCasesInfo`, `sendRuleSessionCompleted`, `sendKbInfo`,
   `sendKbClosed`) becomes a `broadcast`. With one connected client that is byte-for-byte today's behaviour.
   `sendToUser` exists from day one so steps 3–4 can use it.
-- Per-KB addressing (`sendToUsersOn(kbId, message)`) is added in step 4, not here: it needs to know each user's open
-  KB, which step 4 provides. It does *not* need a client change — `START_CONVERSATION` already carries the `kbId`.
+- Per-KB addressing (`sendToUsersOn(kbId, message)`) is **deferred to Stage 2**, see step 4.
 - `send` swallows exceptions with `printStackTrace()`; switch it to the class's (currently unused) `logger`.
 
 **Client.** No change beyond step 1's header. `WebSocketApi`'s dispatch loop is untouched.
@@ -103,16 +104,15 @@ exactly the conversations on that KB and reports them; one user's held mutex doe
 The server-wide "open KB" is derived from the single chat context. With step 3 it is per user:
 
 - `ServerApplication.openChatEndpoint()` → `openChatEndpoint(userId)` delegating to
-  `chatCoordinator.contextFor(userId).endpointOrNull`.
-- `ApplicationKbService` is constructed once with `openEndpoint: () -> KBEndpoint?` and `onClosed: () -> Unit`. These
-  close over "the" user, so the service must become user-scoped. Cleanest shape: keep one `ApplicationKbService` but
-  give `KnowledgeBaseService`'s open-KB-dependent operations (`openKnowledgeBase`, `close`, `delete`'s was-open check,
-  `rename`, `addDemonstrationCase`, `isRuleSessionActive`) a user binding via a thin facade:
-  `fun ApplicationKbService.forUser(userId): KnowledgeBaseService`, handed to the chat actions. Chat actions themselves
-  are untouched; they keep calling the same interface.
-- `ChatManagerFactory.create(context)` has no user today, so it becomes `create(userId, context)` (or the factory is
-  constructed with `(UserId) -> KnowledgeBaseService`). The coordinator's own `kbService`, used only for the greeting
-  (`knowledgeBases()`, `demonstrations()`), is user-independent and stays unscoped.
+  `chatCoordinator.openEndpointFor(userId)`.
+- `ApplicationKbService` was constructed once with `openEndpoint: () -> KBEndpoint?` and `onClosed: () -> Unit`,
+  closing over "the" user. It is now constructed per user — `ServerApplication.kbServiceFor(userId)` — with the
+  `userId` and an `OpenKnowledgeBases` (`openEndpointFor`, `knowledgeBaseClosed`, `knowledgeBaseDeleted`), which
+  `ChatCoordinator` implements. The service is stateless apart from those two, so one instance per conversation
+  is cheap, and the interface breaks the construction cycle coordinator → factory → service → coordinator. Chat
+  actions are untouched; they keep calling `KnowledgeBaseService`.
+- `ChatManagerFactory` and `ChatCoordinator` take `kbServiceFor: (UserId) -> KnowledgeBaseService`;
+  `create(userId, context)` builds the manager with that user's service.
 - *Every* `sendKbInfo` / `sendKbClosed` the service makes switches from `broadcast` to `sendToUser(userId, …)` — that
   is `open`, `create`, `createFromSample`, `rename` and `close`, not only the open-KB-dependent ones: opening or
   creating a KB in *my* chat must not switch *your* window. This is the first behavioural use of `sendToUser`, and it
@@ -120,13 +120,17 @@ The server-wide "open KB" is derived from the single chat context. With step 3 i
 - The two callbacks replace `onClosed`: `close()` calls `chatCoordinator.knowledgeBaseClosed(userId)` and pushes
   `KB_CLOSED` to the caller; `delete()` calls `chatCoordinator.knowledgeBaseDeleted(kbId)` and pushes `KB_CLOSED` to
   each user it returns (`sendToUser` per affected user), whether or not the deleter had the KB open.
-- **Per-KB addressing.** `WebSocketManager.sendToUsersOn(kbId, message)` resolves the addressees through
-  `chatCoordinator.usersOn(kbId)`. `sendStatus`, `sendRuleSessionCompleted` and `sendCasesInfo` switch from
-  `broadcast` to it: `RuleSessionManager` has its `kb`, and the case routes have the `kbId`, so no user id is needed
-  inside `RuleSessionManager`. Without this, two users on different KBs — the first milestone — would see each other's
-  cornerstone status and `RuleSessionCompleted`; the client filters `casesInfo` by `kbName` (`OpenRDRUI.kt`), but
-  nothing filters those two. Under Stage 2's lease, per-KB is per-user, so this also covers what the exclusive-lock
-  milestone needs from the push channel.
+- **Per-KB addressing — deferred to Stage 2.** The plan was `WebSocketManager.sendToUsersOn(kbId, message)`
+  resolving addressees through `chatCoordinator.usersOn(kbId)`, with `sendStatus`, `sendRuleSessionCompleted` and
+  `sendCasesInfo` switching to it. Implementation showed a race: the client only starts a conversation once its
+  context has *settled* (`OpenRDRUI.chatContext` is null until the case list for the newly opened KB has arrived),
+  so for a round-trip or two after a KB opens the server does not yet know the user is on it, and a `casesInfo` push
+  for a case posted in that window would reach nobody — exactly the cucumber flow "open KB, post cases, expect the
+  list". The three stay `broadcast` in this stage; the client already filters `casesInfo` by `kbName`
+  (`OpenRDRUI.kt`), and the two unfiltered ones (cornerstone status, `RuleSessionCompleted`) only matter once two
+  users work at the same time, which Stage 2 introduces. Stage 2 should address them by the lease holder (a rule
+  session exists only under a lease), which needs no settled chat context. `usersOn(kbId)` exists on the coordinator
+  for it.
 - **The KB set is shared state.** Nothing in this stage lets two users mutate the same KB, but they can both create,
   delete, rename or import KBs. `ServerApplication.idToKBEndpoint` is a plain `mutableMapOf` and `KBManager` is
   likewise unsynchronised. Make `idToKBEndpoint` a `ConcurrentHashMap` and run the KB-set mutations (`createKB`,
@@ -136,7 +140,7 @@ The server-wide "open KB" is derived from the single chat context. With step 3 i
 **Tests.** `ApplicationKbServiceTest`: two user facades, user A opens KB-1 and user B opens KB-2;
 `openKnowledgeBase()` differs per facade; A's `close()` resets A only and pushes `KB_CLOSED` to A only; A deleting
 KB-2 (which A does not have open) resets B's conversation and pushes `KB_CLOSED` to B only; A's `create` pushes
-`KB_INFO` to A only. `WebSocketManagerTest`: `sendToUsersOn(kbId)` reaches the users on that KB and no one else.
+`KB_INFO` to A only.
 
 **Pre-existing, out of scope.** The REST `DELETE_KB` and `RENAME_KB` routes in `KbManagement.kt` bypass
 `KnowledgeBaseService`, so a KB deleted or renamed over REST resets no conversation and pushes nothing. The cucumber

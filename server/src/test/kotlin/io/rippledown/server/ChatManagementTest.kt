@@ -10,9 +10,12 @@ import io.rippledown.constants.api.SEND_USER_MESSAGE
 import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.kb.chat.ChatContext
+import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.server.routes.LOCAL_USER
 import kotlin.test.Test
 
 class ChatManagementTest : OpenRDRServerTestBase() {
@@ -26,10 +29,11 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         every { kbEndpoint.viewableCase(caseId) } returns viewableCase
         val response = ChatResponse("Shall I add a surfing comment to the report?")
         val context = slot<ChatContext>()
-        coEvery { chatCoordinator.startConversation(capture(context)) } returns response
+        coEvery { chatCoordinator.startConversation(UserId("alice"), capture(context)) } returns response
 
         //When
         val result = httpClient.post(START_CONVERSATION) {
+            header(USER_ID_HEADER, "alice")
             parameter(KB_ID, kbId)
             parameter(CASE_ID, caseId)
         }
@@ -41,12 +45,27 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
+    fun `a request without the identity header starts the conversation for the local user`() = testApplication {
+        //Given
+        setupServer()
+        val response = ChatResponse("Hello")
+        coEvery { chatCoordinator.startConversation(LOCAL_USER, ChatContext.NoKnowledgeBase) } returns response
+
+        //When
+        val result = httpClient.post(START_CONVERSATION)
+
+        //Then
+        result.status shouldBe HttpStatusCode.OK
+        coVerify(exactly = 1) { chatCoordinator.startConversation(LOCAL_USER, ChatContext.NoKnowledgeBase) }
+    }
+
+    @Test
     fun `starting a conversation with a KB but no case starts it in the KB-only context`() = testApplication {
         //Given
         setupServer()
         val response = ChatResponse("The knowledge base has no cases.")
         val context = slot<ChatContext>()
-        coEvery { chatCoordinator.startConversation(capture(context)) } returns response
+        coEvery { chatCoordinator.startConversation(LOCAL_USER, capture(context)) } returns response
 
         //When
         val result = httpClient.post(START_CONVERSATION) {
@@ -65,7 +84,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val response = ChatResponse("No knowledge base is open.")
         val context = slot<ChatContext>()
-        coEvery { chatCoordinator.startConversation(capture(context)) } returns response
+        coEvery { chatCoordinator.startConversation(LOCAL_USER, capture(context)) } returns response
 
         //When
         val result = httpClient.post(START_CONVERSATION)
@@ -82,17 +101,18 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val userMessage = "The report should include a surfing comment"
         val response = ChatResponse("Shall I add a surfing comment to the report?")
-        coEvery { chatCoordinator.responseToUserMessage(userMessage) } returns response
+        coEvery { chatCoordinator.responseToUserMessage(UserId("bob"), userMessage) } returns response
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {
+            header(USER_ID_HEADER, "bob")
             parameter(KB_ID, kbId)
             parameter(CASE_ID, 42L)
             setBody(userMessage)
         }
 
         //Then
-        coVerify { chatCoordinator.responseToUserMessage(userMessage) }
+        coVerify { chatCoordinator.responseToUserMessage(UserId("bob"), userMessage) }
         result.status shouldBe HttpStatusCode.OK
         result.body<ChatResponse>() shouldBe response
     }
@@ -103,7 +123,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val userMessage = "List the knowledge bases"
         val response = ChatResponse("Glucose\nThyroids")
-        coEvery { chatCoordinator.responseToUserMessage(userMessage) } returns response
+        coEvery { chatCoordinator.responseToUserMessage(LOCAL_USER, userMessage) } returns response
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {

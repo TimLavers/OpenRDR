@@ -2,6 +2,7 @@ package io.rippledown.main
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.mocks.EngineConfig
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
@@ -28,6 +29,33 @@ class ApiTest {
         val api = Api(mock(config))
         api.createKB("Test")
         return api
+    }
+
+    @Test
+    fun `every request carries the user id header`() = runTest {
+        // Given
+        val config = config {}
+        val api = Api(mock(config), userId = UserId("alice"))
+
+        // When
+        api.kbList()
+
+        // Then
+        config.lastRequestHeaders?.get(USER_ID_HEADER) shouldBe "alice"
+    }
+
+    @Test
+    fun `the user id defaults to the local identity`() = runTest {
+        // Given
+        val config = config {}
+        val api = Api(mock(config))
+
+        // When
+        api.kbList()
+
+        // Then
+        api.userId shouldBe defaultUserId()
+        config.lastRequestHeaders?.get(USER_ID_HEADER) shouldBe defaultUserId().value
     }
 
     @Test

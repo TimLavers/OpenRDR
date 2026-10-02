@@ -8,9 +8,8 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.server.CASE_ID
-import io.rippledown.constants.server.KB_ID
-import io.rippledown.constants.server.KB_NAME
+import io.rippledown.constants.server.*
+import io.rippledown.model.UserId
 import io.rippledown.server.routes.*
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
@@ -95,6 +94,54 @@ class RoutingUtilitiesTest : OpenRDRServerTestBase() {
 
         every { parameters.get(KB_ID) } returns "Hurstville"
         context.kbId() shouldBe "Hurstville"
+    }
+
+    @Test
+    fun `userId reads the identity header`() {
+        // Given
+        val headers = headersOf(USER_ID_HEADER, "alice")
+
+        // When / Then
+        headers.userId() shouldBe UserId("alice")
+    }
+
+    @Test
+    fun `userId trims the header value`() {
+        // Given
+        val headers = headersOf(USER_ID_HEADER, " alice ")
+
+        // When / Then
+        headers.userId() shouldBe UserId("alice")
+    }
+
+    @Test
+    fun `userId falls back to the local user when the header is absent`() {
+        // Given
+        val headers = Headers.Empty
+
+        // When / Then
+        headers.userId() shouldBe LOCAL_USER
+        LOCAL_USER shouldBe UserId(LOCAL_USER_ID)
+    }
+
+    @Test
+    fun `userId falls back to the local user when the header is blank`() {
+        // Given
+        val headers = headersOf(USER_ID_HEADER, "   ")
+
+        // When / Then
+        headers.userId() shouldBe LOCAL_USER
+    }
+
+    @Test
+    fun `userId on a routing context reads the request headers`() {
+        // Given
+        val request = mockk<RoutingRequest>()
+        every { call.request } returns request
+        every { request.headers } returns headersOf(USER_ID_HEADER, "bob")
+
+        // When / Then
+        context.userId() shouldBe UserId("bob")
     }
 
     @Test
