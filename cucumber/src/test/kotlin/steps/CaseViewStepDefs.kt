@@ -19,8 +19,9 @@ class CaseViewStepDefs {
 
     @Then("I (should )see these attributes:")
     fun requireAttributes(dataTable: DataTable) {
-        val expectedNames = dataTable.asList()
-        caseViewPO().attributeNames() shouldBe expectedNames
+        waitAtMost(10, SECONDS).untilAsserted {
+            caseViewPO().attributeNames() shouldBe dataTable.asList()
+        }
     }
 
     @Then("I (should )see these values for {string}:")

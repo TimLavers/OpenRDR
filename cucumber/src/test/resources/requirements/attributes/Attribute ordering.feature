@@ -56,6 +56,7 @@
       | A | a |  |
       | B | b |  |
       | C | c |  |
+    And the chatbot has asked if I would like to add a comment
     And Alice starts a rule session on case CaseABC in the knowledge base Thyroids
     When I try to move attribute C below attribute A
     Then the chatbot response contains the following terms:
