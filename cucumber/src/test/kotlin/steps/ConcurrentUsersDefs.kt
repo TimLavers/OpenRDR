@@ -5,10 +5,16 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.assertions.withClue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.rippledown.main.Api
+import io.rippledown.model.KnowledgeBaseHeldException
 import io.rippledown.model.UserId
+import io.rippledown.model.diff.Addition
+import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -22,6 +28,9 @@ class ConcurrentUsersDefs {
         private val api = Api(userId = UserId(name))
         var lastResponse: String = ""
 
+        // The outcome of the last REST request: null if it succeeded, else the server's refusal.
+        var lastRefusal: String? = null
+
         fun startConversation(kbName: String?) = runBlocking {
             val kbId = kbName?.let { name -> api.kbList().first { it.name == name }.id }
             lastResponse = api.startConversation(kbId, null).text
@@ -30,6 +39,30 @@ class ConcurrentUsersDefs {
         fun say(message: String): String = runBlocking {
             lastResponse = api.sendUserMessage(message).text
             lastResponse
+        }
+
+        fun startRuleSession(kbName: String, caseName: String) = request {
+            api.startRuleSession(SessionStartRequest(caseIdIn(kbName, caseName), Addition("Go to Bondi.")))
+        }
+
+        fun readCase(kbName: String, caseName: String) = request {
+            requireNotNull(api.getCase(caseIdIn(kbName, caseName))) { "$caseName was not returned." }
+        }
+
+        fun cancelRuleSession() = request { api.cancelRuleSession() }
+
+        private suspend fun caseIdIn(kbName: String, caseName: String): Long {
+            api.selectKB(api.kbList().first { it.name == kbName }.id)
+            return requireNotNull(api.waitingCasesInfo().caseIds.first { it.name == caseName }.id)
+        }
+
+        private fun request(block: suspend () -> Unit) = runBlocking {
+            lastRefusal = try {
+                block()
+                null
+            } catch (held: KnowledgeBaseHeldException) {
+                held.message
+            }
         }
     }
 
@@ -58,6 +91,38 @@ class ConcurrentUsersDefs {
             say("Delete the knowledge base $kbName") shouldContain "cannot be undone"
             say("yes") shouldContain "Deleted"
         }
+    }
+
+    @When("{word} asks the chat to close the knowledge base")
+    fun asksToCloseKb(userName: String) {
+        user(userName).say("Close the knowledge base") shouldContain "Closed"
+    }
+
+    @When("{word} starts a rule session on case {word} in the knowledge base {word}")
+    fun startsRuleSession(userName: String, caseName: String, kbName: String) {
+        user(userName).startRuleSession(kbName, caseName)
+    }
+
+    @When("{word} reads case {word} in the knowledge base {word}")
+    fun readsCase(userName: String, caseName: String, kbName: String) {
+        user(userName).readCase(kbName, caseName)
+    }
+
+    @When("{word} cancels her rule session")
+    fun cancelsRuleSession(userName: String) {
+        user(userName).cancelRuleSession()
+    }
+
+    @Then("{word}'s request succeeds")
+    fun requestSucceeds(userName: String) {
+        withClue("$userName's last request") { user(userName).lastRefusal.shouldBeNull() }
+    }
+
+    @Then("{word}'s request is refused with {string}")
+    fun requestRefused(userName: String, refusal: String) {
+        val actual = user(userName).lastRefusal
+        withClue("$userName's last request") { actual.shouldNotBeNull() }
+        actual shouldBe refusal
     }
 
     @Then("the chat response to {word} contains the following terms:")

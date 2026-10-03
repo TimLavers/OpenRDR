@@ -22,7 +22,7 @@ fun Application.ruleSession(application: ServerApplication) {
             logger.info(START_RULE_SESSION)
             val sessionStartRequest = call.receive<SessionStartRequest>()
             logger.info("session start request: $sessionStartRequest")
-            val cornerstoneStatus = kbEndpoint(application).startRuleSession(sessionStartRequest)
+            val cornerstoneStatus = heldKbEndpoint(application).startRuleSession(sessionStartRequest)
             call.respond(HttpStatusCode.OK, cornerstoneStatus)
             logger.info("start rule session returned with OK")
         }
@@ -31,32 +31,32 @@ fun Application.ruleSession(application: ServerApplication) {
             logger.info(COMMIT_RULE_SESSION)
             val ruleRequest = call.receive<RuleRequest>()
             logger.info("commit session request: $ruleRequest")
-            val viewableCase = kbEndpoint(application).commitRuleSession(ruleRequest)
+            val viewableCase = heldKbEndpoint(application).commitRuleSession(ruleRequest)
             call.respond(HttpStatusCode.OK, viewableCase)
         }
 
         post(CANCEL_RULE_SESSION) {
             logger.info(CANCEL_RULE_SESSION)
-            kbEndpoint(application).cancelRuleSession()
+            heldKbEndpoint(application).cancelRuleSession()
             call.respond(HttpStatusCode.OK)
         }
 
         post(UPDATE_CORNERSTONES) {
             logger.info(UPDATE_CORNERSTONES)
             val request = call.receive<UpdateCornerstoneRequest>()
-            val cornerstoneStatus = kbEndpoint(application).updateCornerstone(request)
+            val cornerstoneStatus = heldKbEndpoint(application).updateCornerstone(request)
             call.respond(HttpStatusCode.OK, cornerstoneStatus)
         }
 
         post(EXEMPT_CORNERSTONE) {
             val index = call.receive<Int>()
-            val updatedCornerstoneStatus = kbEndpoint(application).exemptCornerstone(index)
+            val updatedCornerstoneStatus = heldKbEndpoint(application).exemptCornerstone(index)
             call.respond(HttpStatusCode.OK, updatedCornerstoneStatus)
         }
 
         get(SELECT_CORNERSTONE) {
             val index = call.receive<Int>()
-            val updatedCornerstoneStatus = kbEndpoint(application).selectCornerstone(index)
+            val updatedCornerstoneStatus = heldKbEndpoint(application).selectCornerstone(index)
             call.respond(HttpStatusCode.OK, updatedCornerstoneStatus)
         }
 
@@ -71,9 +71,9 @@ fun Application.ruleSession(application: ServerApplication) {
             logger.info(BUILD_RULE)
             val request = call.receive<BuildRuleRequest>()
             logger.info("build rule request: $request")
-            kbEndpoint(application).buildRule(request)
+            val endpoint = heldKbEndpoint(application)
+            endpoint.buildRule(request)
             call.respond(HttpStatusCode.OK)
-            val endpoint = kbEndpoint(application)
             application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
     }

@@ -39,16 +39,16 @@ class WebSocketManager {
 
     fun connectedUsers(): Set<UserId> = connections.keys.toSet()
 
-    suspend fun sendStatus(status: CornerstoneStatus) {
-        broadcast(status.toJsonString<CornerstoneStatus>())
+    suspend fun sendStatus(userId: UserId, status: CornerstoneStatus) {
+        sendToUser(userId, status.toJsonString<CornerstoneStatus>())
     }
 
     suspend fun sendCasesInfo(casesInfo: CasesInfo) {
         broadcast(CASES_INFO_PREFIX + casesInfo.toJsonString<CasesInfo>())
     }
 
-    suspend fun sendRuleSessionCompleted() {
-        broadcast(RULE_SESSION_COMPLETED)
+    suspend fun sendRuleSessionCompleted(userId: UserId) {
+        sendToUser(userId, RULE_SESSION_COMPLETED)
     }
 
     suspend fun sendKbInfo(userId: UserId, kbInfo: KBInfo) {

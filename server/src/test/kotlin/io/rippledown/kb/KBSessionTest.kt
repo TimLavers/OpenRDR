@@ -1,12 +1,19 @@
 package io.rippledown.kb
 
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.rippledown.kb.lease.LEASE_EXPIRY_MS
+import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.UserId
 import io.rippledown.model.diff.Addition
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
@@ -17,12 +24,18 @@ import kotlin.test.Test
 class KBSessionTest {
     private lateinit var kb: KB
     private lateinit var session: KBSession
+    private lateinit var webSocketManager: WebSocketManager
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
+    private var now = 5_000_000L
 
     @BeforeTest
     fun setup() {
         val kbInfo = KBInfo("id123", "TestKB")
         kb = KB(InMemoryKB(kbInfo))
-        session = KBSession(kb)
+        webSocketManager = mockk()
+        coEvery { webSocketManager.sendRuleSessionCompleted(any()) } returns Unit
+        session = KBSession(kb, webSocketManager) { now }
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
@@ -92,6 +105,119 @@ class KBSessionTest {
         // Then
         session.ruleSessionManager.currentDiff shouldBe
                 Addition(comment, "C1", kb.attributeManager.byName("C1")?.id)
+    }
+
+    @Test
+    fun `the lease is named after the KB`() {
+        // Given
+        session.hold(alice)
+
+        // When
+        val refusal = shouldThrow<ProjectHeldException> { session.hold(bob) }
+
+        // Then
+        refusal.message shouldBe "TestKB is being edited by alice."
+    }
+
+    @Test
+    fun `a refused hold leaves the holder's rule session untouched`() {
+        // Given
+        session.hold(alice)
+        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+
+        // When
+        shouldThrow<ProjectHeldException> { session.hold(bob) }
+
+        // Then
+        session.ruleSessionManager.isRuleSessionActive() shouldBe true
+        session.lease.holder() shouldBe alice
+        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @Test
+    fun `taking an expired lease cancels the old holder's rule session and tells them`() {
+        // Given
+        session.hold(alice)
+        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        now += LEASE_EXPIRY_MS
+
+        // When
+        session.hold(bob)
+
+        // Then
+        session.lease.holder() shouldBe bob
+        session.ruleSessionManager.isRuleSessionActive() shouldBe false
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
+    }
+
+    @Test
+    fun `taking an expired lease with no rule session pushes nothing`() {
+        // Given
+        session.hold(alice)
+        now += LEASE_EXPIRY_MS
+
+        // When
+        session.hold(bob)
+
+        // Then
+        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @Test
+    fun `the holder releasing cancels their rule session and tells them`() {
+        // Given
+        session.hold(alice)
+        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+
+        // When
+        session.release(alice)
+
+        // Then
+        session.lease.holder().shouldBeNull()
+        session.ruleSessionManager.isRuleSessionActive() shouldBe false
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
+        session.hold(bob)
+    }
+
+    @Test
+    fun `a non-holder releasing changes nothing`() {
+        // Given
+        session.hold(alice)
+        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+
+        // When
+        session.release(bob)
+
+        // Then
+        session.lease.holder() shouldBe alice
+        session.ruleSessionManager.isRuleSessionActive() shouldBe true
+        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @Test
+    fun `releasing an unheld lease changes nothing`() {
+        // When
+        session.release(alice)
+
+        // Then
+        session.lease.holder().shouldBeNull()
+        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @Test
+    fun `a rule session's pushes go to the lease holder`() {
+        // Given
+        coEvery { webSocketManager.sendStatus(any(), any()) } returns Unit
+        session.hold(alice)
+        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+
+        // When
+        session.ruleSessionManager.sendCornerstoneStatus()
+        session.ruleSessionManager.sendRuleSessionCompleted()
+
+        // Then
+        coVerify(exactly = 1) { webSocketManager.sendStatus(alice, any()) }
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
     }
 
     @Test

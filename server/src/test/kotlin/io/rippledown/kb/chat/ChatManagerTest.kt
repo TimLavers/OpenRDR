@@ -14,9 +14,11 @@ import io.rippledown.kb.chat.ChatResponseEnricher.Companion.commentVariableTip
 import io.rippledown.kb.chat.RuleConversation.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
+import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.Attribute
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
+import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KnowledgeBaseListing
@@ -410,6 +412,38 @@ class ChatManagerTest {
         loggerField.set(chatManager, logger)
         every { logger.isInfoEnabled } returns true
         every { logger.isErrorEnabled } returns true
+    }
+
+    @Test
+    fun `a rule action refused by the lease is answered with who is editing the KB`() = runTest {
+        // Given
+        coEvery { conversationService.response(any()) } returns """{"action":"$CANCEL_RULE"}"""
+        every { ruleService.cancelCurrentRuleSession() } throws ProjectHeldException("Thyroids", UserId("alice"))
+
+        // When
+        val response = chatManager.response("cancel")
+
+        // Then
+        response shouldBe ChatResponse(projectHeldChatMessage("Thyroids", "alice"))
+        coVerify(exactly = 0) { ruleService.sendRuleSessionCompleted() }
+    }
+
+    @Test
+    fun `a KB action refused by the lease is answered with who is editing the KB`() = runTest {
+        // Given
+        val thyroids = KBInfo("t1", "Thyroids")
+        every { kbService.resolve("Thyroids") } returns KbResolution.Exact(thyroids)
+        every { kbService.openKnowledgeBase() } returns null
+        coEvery { conversationService.response(any()) } returns
+                """{"action":"$DELETE_KNOWLEDGE_BASE","kbName":"Thyroids"}"""
+        coEvery { kbService.delete(thyroids) } throws ProjectHeldException("Thyroids", UserId("alice"))
+
+        // When
+        chatManager.response("delete Thyroids")
+        val response = chatManager.response("yes")
+
+        // Then
+        response shouldBe ChatResponse(projectHeldChatMessage("Thyroids", "alice"))
     }
 
     @Test

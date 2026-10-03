@@ -33,6 +33,16 @@ fun RoutingContext.kbEndpoint(serverApplication: ServerApplication): KBEndpoint 
     return serverApplication.kbForId(kbId)
 }
 
+/**
+ * The endpoint for a route that edits the knowledge base: the caller takes or
+ * renews the project lease first, so a KB held by someone else is refused
+ * before anything happens. See documentation/design/concurrent_users.md.
+ */
+fun RoutingContext.heldKbEndpoint(serverApplication: ServerApplication): KBEndpoint {
+    val userId = userId()
+    return kbEndpoint(serverApplication).also { it.session.hold(userId) }
+}
+
 fun RoutingContext.kbEndpointByName(serverApplication: ServerApplication): KBEndpoint {
     val kbId = call.parameterValue(KB_NAME, MISSING_KB_NAME)
     return serverApplication.kbForName(kbId)

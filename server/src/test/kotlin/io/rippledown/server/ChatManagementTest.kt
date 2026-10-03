@@ -10,7 +10,6 @@ import io.rippledown.constants.api.SEND_USER_MESSAGE
 import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
-import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.kb.chat.ChatContext
 import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
@@ -32,8 +31,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         coEvery { chatCoordinator.startConversation(UserId("alice"), capture(context)) } returns response
 
         //When
-        val result = httpClient.post(START_CONVERSATION) {
-            header(USER_ID_HEADER, "alice")
+        val result = clientFor(UserId("alice")).post(START_CONVERSATION) {
             parameter(KB_ID, kbId)
             parameter(CASE_ID, caseId)
         }
@@ -48,9 +46,10 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     fun `a request without the identity header is refused`() = testApplication {
         //Given
         setupServer()
+        val anonymousClient = createClient { }
 
         //When
-        val result = httpClient.post(START_CONVERSATION)
+        val result = anonymousClient.post(START_CONVERSATION)
 
         //Then
         result.status shouldBe HttpStatusCode.InternalServerError
@@ -66,8 +65,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         coEvery { chatCoordinator.startConversation(carol, capture(context)) } returns response
 
         //When
-        val result = httpClient.post(START_CONVERSATION) {
-            header(USER_ID_HEADER, carol.value)
+        val result = clientFor(carol).post(START_CONVERSATION) {
             parameter(KB_ID, kbId)
         }
 
@@ -86,9 +84,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         coEvery { chatCoordinator.startConversation(carol, capture(context)) } returns response
 
         //When
-        val result = httpClient.post(START_CONVERSATION) {
-            header(USER_ID_HEADER, carol.value)
-        }
+        val result = clientFor(carol).post(START_CONVERSATION)
 
         //Then
         result.status shouldBe HttpStatusCode.OK
@@ -105,8 +101,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         coEvery { chatCoordinator.responseToUserMessage(UserId("bob"), userMessage) } returns response
 
         //When
-        val result = httpClient.post(SEND_USER_MESSAGE) {
-            header(USER_ID_HEADER, "bob")
+        val result = clientFor(UserId("bob")).post(SEND_USER_MESSAGE) {
             parameter(KB_ID, kbId)
             parameter(CASE_ID, 42L)
             setBody(userMessage)
@@ -127,8 +122,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         coEvery { chatCoordinator.responseToUserMessage(carol, userMessage) } returns response
 
         //When
-        val result = httpClient.post(SEND_USER_MESSAGE) {
-            header(USER_ID_HEADER, carol.value)
+        val result = clientFor(carol).post(SEND_USER_MESSAGE) {
             setBody(userMessage)
         }
 

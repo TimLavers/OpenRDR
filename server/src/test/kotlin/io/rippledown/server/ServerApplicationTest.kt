@@ -11,6 +11,7 @@ import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
+import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
@@ -36,6 +37,8 @@ internal class ServerApplicationTest {
 
     private lateinit var persistenceProvider: PersistenceProvider
     private lateinit var app: ServerApplication
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
 
     @BeforeEach
     fun setup() {
@@ -60,7 +63,7 @@ internal class ServerApplicationTest {
             when (operation) {
                 "create" -> app.createKB(name, true)
                 "sample" -> app.createKBFromSample(name, SampleKB.TSH_CASES)
-                "rename" -> app.renameKB(original.id, name)
+                "rename" -> app.renameKB(original.id, name, alice)
                 "import" -> app.importKBFromZip(zip)
                 else -> error("Unknown operation $operation")
             }
@@ -287,7 +290,7 @@ internal class ServerApplicationTest {
         app.kbList() shouldBe listOf(glucose, thyroids)
 
         // When
-        app.deleteKB(glucose.id)
+        app.deleteKB(glucose.id, alice)
 
         // Then
         app.kbList() shouldBe listOf(thyroids)
@@ -304,7 +307,7 @@ internal class ServerApplicationTest {
         val only = app.createKB("Only", false)
 
         // When
-        app.deleteKB(only.id)
+        app.deleteKB(only.id, alice)
 
         // Then
         app.kbList() shouldBe emptyList()
@@ -317,7 +320,7 @@ internal class ServerApplicationTest {
 
         // When / Then
         shouldThrow<IllegalArgumentException> {
-            app.deleteKB("Unknown")
+            app.deleteKB("Unknown", alice)
         }.message shouldBe "Unknown kb id: Unknown"
         app.kbList().map { it.name } shouldBe listOf("Glucose")
     }
@@ -329,7 +332,7 @@ internal class ServerApplicationTest {
         val endpoint = app.kbForId(original.id)
 
         // when
-        val renamed = app.renameKB(original.id, "Thyroid Function")
+        val renamed = app.renameKB(original.id, "Thyroid Function", alice)
 
         // then
         renamed shouldBe KBInfo(original.id, "Thyroid Function")
@@ -337,6 +340,49 @@ internal class ServerApplicationTest {
         app.kbList() shouldBe listOf(renamed)
         endpoint.kbInfo() shouldBe renamed
         app.kbForId(original.id) shouldBe endpoint
+        endpoint.session.lease.holder() shouldBe alice
+    }
+
+    @Test
+    fun `renaming a KB held by someone else is refused and changes nothing`() {
+        // Given
+        val original = app.createKB("Thyroids", false)
+        app.kbForId(original.id).session.hold(alice)
+
+        // When
+        val refusal = shouldThrow<ProjectHeldException> { app.renameKB(original.id, "Thyroid Function", bob) }
+
+        // Then
+        refusal.message shouldBe "Thyroids is being edited by alice."
+        app.kbList() shouldBe listOf(original)
+    }
+
+    @Test
+    fun `deleting a KB held by someone else is refused and changes nothing`() {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        app.kbForId(thyroids.id).session.hold(alice)
+
+        // When
+        val refusal = shouldThrow<ProjectHeldException> { app.deleteKB(thyroids.id, bob) }
+
+        // Then
+        refusal.message shouldBe "Thyroids is being edited by alice."
+        app.kbList() shouldBe listOf(thyroids)
+        app.kbForId(thyroids.id).kbInfo() shouldBe thyroids
+    }
+
+    @Test
+    fun `the holder can delete the KB they hold`() {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        app.kbForId(thyroids.id).session.hold(alice)
+
+        // When
+        app.deleteKB(thyroids.id, alice)
+
+        // Then
+        app.kbList() shouldBe emptyList()
     }
 
     @Test
@@ -375,7 +421,7 @@ internal class ServerApplicationTest {
         app.kbForId(stored.id).kb.addCornerstoneCase(createCase("Case1"))
         KBExporter(directory, app.kbForId(stored.id).kb).export()
         val zip = Zipper(directory).zip()
-        app.deleteKB(stored.id)
+        app.deleteKB(stored.id, alice)
 
         // When
         val imported = app.importKBFromZip(zip)

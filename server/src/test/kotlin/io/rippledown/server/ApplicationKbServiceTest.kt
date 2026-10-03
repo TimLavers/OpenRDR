@@ -9,6 +9,7 @@ import io.mockk.*
 import io.rippledown.constants.chat.DEMO_CASE_NAME
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.OpenKnowledgeBases
+import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.UserId
@@ -263,6 +264,78 @@ class ApplicationKbServiceTest {
         closedCount shouldBe 1
         openEndpoint.shouldBeNull()
         app.kbList() shouldBe listOf(thyroids)
+    }
+
+    @Test
+    fun `close releases the lease and ends the rule session`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        val endpoint = app.kbForId(thyroids.id)
+        openEndpoint = endpoint
+        coEvery { webSocketManager.sendCasesInfo(any()) } just Runs
+        coEvery { webSocketManager.sendKbClosed(alice) } just Runs
+        coEvery { webSocketManager.sendRuleSessionCompleted(alice) } just Runs
+        val case = service.addDemonstrationCase()
+        endpoint.session.hold(alice)
+        endpoint.startRuleSession(SessionStartRequest(requireNotNull(case.caseId.id), Addition("Go to Bondi.")))
+
+        // When
+        service.close()
+
+        // Then
+        endpoint.session.lease.holder().shouldBeNull()
+        endpoint.session.ruleSessionManager.isRuleSessionActive() shouldBe false
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
+        endpoint.session.hold(bob)
+    }
+
+    @Test
+    fun `closing a KB someone else holds leaves their lease alone`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        val endpoint = app.kbForId(thyroids.id)
+        openEndpoint = endpoint
+        endpoint.session.hold(bob)
+        coEvery { webSocketManager.sendKbClosed(alice) } just Runs
+
+        // When
+        service.close()
+
+        // Then
+        endpoint.session.lease.holder() shouldBe bob
+    }
+
+    @Test
+    fun `describing, renaming and deleting a KB someone else holds are refused`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        openEndpoint = app.kbForId(thyroids.id)
+        app.kbForId(thyroids.id).session.hold(bob)
+
+        // When
+        val describe = shouldThrow<ProjectHeldException> { service.setDescription(thyroids, "Mine now.") }
+        val rename = shouldThrow<ProjectHeldException> { service.rename("Thyroid Function") }
+        val delete = shouldThrow<ProjectHeldException> { service.delete(thyroids) }
+
+        // Then
+        listOf(describe, rename, delete).forEach { it.message shouldBe "Thyroids is being edited by bob." }
+        service.description(thyroids) shouldBe ""
+        app.kbList() shouldBe listOf(thyroids)
+        openEndpoint?.kbInfo() shouldBe thyroids
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(any(), any()) }
+        coVerify(exactly = 0) { webSocketManager.sendKbClosed(any()) }
+    }
+
+    @Test
+    fun `describing a KB takes the lease`() {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+
+        // When
+        service.setDescription(thyroids, "A thyroid knowledge base.")
+
+        // Then
+        app.kbForId(thyroids.id).session.lease.holder() shouldBe alice
     }
 
     @Test

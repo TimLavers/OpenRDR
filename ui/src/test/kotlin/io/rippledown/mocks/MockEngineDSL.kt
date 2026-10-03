@@ -61,6 +61,7 @@ class EngineConfig {
     var kbRemainingAfterDeletion: KBInfo? = null
     var sampleKB: SampleKB? = null
     var lastRequestHeaders: Headers? = null
+    var refusedBecauseHeld: String? = null
 
     var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
     var lastRuleUndoCalled = false
@@ -77,6 +78,13 @@ private class EngineBuilder(private val config: EngineConfig) {
 
     fun build() = MockEngine { request ->
         config.lastRequestHeaders = request.headers
+        config.refusedBecauseHeld?.let { message ->
+            return@MockEngine respond(
+                content = ByteReadChannel(message),
+                status = HttpStatusCode.Conflict,
+                headers = headersOf(HttpHeaders.ContentType, "text/plain")
+            )
+        }
         when (request.url.encodedPath) {
             WAITING_CASES -> {
                 httpResponseData(json.encodeToString(config.returnCasesInfo))

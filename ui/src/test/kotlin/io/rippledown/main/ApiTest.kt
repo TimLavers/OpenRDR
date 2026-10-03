@@ -59,6 +59,22 @@ class ApiTest {
     }
 
     @Test
+    fun `a request refused because the KB is held throws with the server's sentence`() = runTest {
+        // Given
+        val config = config {}
+        val api = apiWithKb(config)
+        config.refusedBecauseHeld = "Thyroids is being edited by alice."
+
+        // When
+        val refusal = shouldThrow<KnowledgeBaseHeldException> {
+            api.startRuleSession(SessionStartRequest(1L, Addition("Go.")))
+        }
+
+        // Then
+        refusal.message shouldBe "Thyroids is being edited by alice."
+    }
+
+    @Test
     fun kbDescriptionTest() = runTest {
         val config = config {}
         apiWithKb(config).kbDescription() shouldBe config.returnedKbDescription

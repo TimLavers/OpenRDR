@@ -65,16 +65,17 @@ class ServerApplication(
         return kbForId(id).kbInfo()
     }
 
-    fun deleteKB(id: String): KBInfo? = synchronized(kbSetLock) {
+    fun deleteKB(id: String, userId: UserId): KBInfo? = synchronized(kbSetLock) {
         val endpoint = kbForId(id)
-        logger.info("Deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
+        endpoint.session.hold(userId)
+        logger.info("User '$userId' deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
         val remaining = kbManager.deleteKB(endpoint.kbInfo())
         idToKBEndpoint.remove(id)
         remaining
     }
 
-    fun renameKB(id: String, newName: String): KBInfo = synchronized(kbSetLock) {
-        kbForId(id)
+    fun renameKB(id: String, newName: String, userId: UserId): KBInfo = synchronized(kbSetLock) {
+        kbForId(id).session.hold(userId)
         kbManager.renameKB(id, newName)
     }
 

@@ -119,7 +119,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // Given
         setupServer()
         val remaining = KBInfo("10", "Glucose")
-        every { serverApplication.deleteKB(kbId) } returns remaining
+        every { serverApplication.deleteKB(kbId, testUser) } returns remaining
 
         // When
         val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
@@ -127,14 +127,14 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // Then
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe remaining
-        verify { serverApplication.deleteKB(kbId) }
+        verify { serverApplication.deleteKB(kbId, testUser) }
     }
 
     @Test
     fun `deleting the only KB should respond with no content`() = testApplication {
         // Given
         setupServer()
-        every { serverApplication.deleteKB(kbId) } returns null
+        every { serverApplication.deleteKB(kbId, testUser) } returns null
 
         // When
         val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
@@ -142,7 +142,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // Then
         result.status shouldBe HttpStatusCode.NoContent
         result.bodyAsText() shouldBe ""
-        verify { serverApplication.deleteKB(kbId) }
+        verify { serverApplication.deleteKB(kbId, testUser) }
     }
 
     @Test
@@ -150,7 +150,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // given
         setupServer()
         val renamed = KBInfo(kbId, "New wisdom")
-        every { serverApplication.renameKB(kbId, renamed.name) } returns renamed
+        every { serverApplication.renameKB(kbId, renamed.name, testUser) } returns renamed
 
         // when
         val result = httpClient.post(RENAME_KB) {
@@ -162,7 +162,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // then
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe renamed
-        verify { serverApplication.renameKB(kbId, renamed.name) }
+        verify { serverApplication.renameKB(kbId, renamed.name, testUser) }
     }
 
     @Test

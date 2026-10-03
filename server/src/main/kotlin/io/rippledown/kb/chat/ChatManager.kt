@@ -5,12 +5,14 @@ import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.constants.chat.NO_KB_OPEN_MESSAGE
 import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
+import io.rippledown.constants.chat.projectHeldChatMessage
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.chat.action.ChatAction
 import io.rippledown.kb.chat.action.KbManagementAction
 import io.rippledown.kb.chat.action.ListCapabilities
 import io.rippledown.kb.chat.action.UserAction
+import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
@@ -52,7 +54,13 @@ class ChatManager(
         return dispatchModelResponse(response, opening = true)
     }
 
-    override suspend fun response(message: String): ChatResponse {
+    override suspend fun response(message: String): ChatResponse = try {
+        respond(message)
+    } catch (held: ProjectHeldException) {
+        refused(held)
+    }
+
+    private suspend fun respond(message: String): ChatResponse {
         logger.info("$LOG_PREFIX_FOR_USER_MESSAGE '$message'")
         rules.cornerstoneAction(message)?.let { return executeAction(it) }
         knowledgeBases.answer(message)?.let { return it }
@@ -95,10 +103,17 @@ class ChatManager(
         val json = extractJsonFragments(response).firstOrNull()
         if (json == null) ChatResponse(response)
         else processActionComment(json.sanitizeLlmJson().fromJsonString<ActionComment>())
+    } catch (held: ProjectHeldException) {
+        refused(held)
     } catch (e: Exception) {
         val context = if (opening) "start-conversation ActionComment" else "ActionComment"
         logger.error("Failed to process $context: $response", e)
         ChatResponse(if (opening) response else "$SYSTEM_ERROR_PREFIX: '$response'")
+    }
+
+    private fun refused(held: ProjectHeldException): ChatResponse {
+        logger.info("Refused: ${held.message}")
+        return ChatResponse(projectHeldChatMessage(held.kbName, held.holder.value))
     }
 
     companion object {

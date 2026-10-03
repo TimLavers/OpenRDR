@@ -45,6 +45,7 @@ class KBTest {
     private lateinit var session: KBSession
     private lateinit var rsm: RuleSessionManager
     lateinit var webSocketManager: WebSocketManager
+    private val alice = UserId("alice")
 
     @BeforeTest
     fun setup() {
@@ -63,7 +64,7 @@ class KBTest {
         rsm.sendCornerstoneStatus()
 
         //Then
-        coVerify { webSocketManager.sendStatus(ccStatus) }
+        coVerify { webSocketManager.sendStatus(alice, ccStatus) }
     }
 
     @Test
@@ -81,7 +82,11 @@ class KBTest {
         rsm.sendCornerstoneStatus()
 
         //Then
-        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc2 && it.indexOfCornerstoneToReview == 1 }) }
+        coVerify {
+            webSocketManager.sendStatus(
+                alice,
+                match { it.cornerstoneToReview == vcc2 && it.indexOfCornerstoneToReview == 1 })
+        }
     }
 
     @Test
@@ -99,7 +104,11 @@ class KBTest {
         rsm.sendCornerstoneStatus()
 
         //Then
-        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc3 && it.indexOfCornerstoneToReview == 2 }) }
+        coVerify {
+            webSocketManager.sendStatus(
+                alice,
+                match { it.cornerstoneToReview == vcc3 && it.indexOfCornerstoneToReview == 2 })
+        }
     }
 
     @Test
@@ -116,7 +125,11 @@ class KBTest {
         rsm.sendCornerstoneStatus()
 
         //Then
-        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc1 && it.indexOfCornerstoneToReview == 0 }) }
+        coVerify {
+            webSocketManager.sendStatus(
+                alice,
+                match { it.cornerstoneToReview == vcc1 && it.indexOfCornerstoneToReview == 0 })
+        }
     }
 
     @Test
@@ -135,7 +148,11 @@ class KBTest {
         rsm.sendCornerstoneStatus()
 
         //Then - should send the third (most recent selection)
-        coVerify { webSocketManager.sendStatus(match { it.cornerstoneToReview == vcc3 && it.indexOfCornerstoneToReview == 2 }) }
+        coVerify {
+            webSocketManager.sendStatus(
+                alice,
+                match { it.cornerstoneToReview == vcc3 && it.indexOfCornerstoneToReview == 2 })
+        }
     }
 
     @Test
@@ -228,7 +245,7 @@ class KBTest {
         rsm.sendRuleSessionCompleted()
 
         //Then
-        coVerify { webSocketManager.sendRuleSessionCompleted() }
+        coVerify { webSocketManager.sendRuleSessionCompleted(alice) }
     }
 
     @Test
@@ -2071,6 +2088,7 @@ class KBTest {
         persistentKB = InMemoryKB(kbInfo)
         val newKb = KB(persistentKB)
         session = KBSession(newKb, webSocketManager)
+        session.hold(alice)
         rsm = session.ruleSessionManager
         return newKb
     }

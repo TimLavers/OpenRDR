@@ -80,7 +80,7 @@ fun Application.kbManagement(application: ServerApplication) {
         }
 
         delete(DELETE_KB) {
-            val kbInfo = application.deleteKB(kbId())
+            val kbInfo = application.deleteKB(kbId(), userId())
             if (kbInfo == null) {
                 call.respond(HttpStatusCode.NoContent)
             } else {
@@ -89,7 +89,7 @@ fun Application.kbManagement(application: ServerApplication) {
         }
 
         post(RENAME_KB) {
-            val renamed = application.renameKB(kbId(), call.receive<String>())
+            val renamed = application.renameKB(kbId(), call.receive<String>(), userId())
             call.respond(renamed)
         }
 

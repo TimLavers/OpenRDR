@@ -5,7 +5,6 @@ import io.rippledown.chat.Conversation.Companion.GET_SUGGESTED_CONDITIONS
 import io.rippledown.chat.Conversation.Companion.SELECT_SUGGESTED_CONDITION
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.FunctionCallHandler
-import io.rippledown.kb.RuleSessionManager
 import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 
@@ -26,7 +25,7 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
                 forCase(
                     kbService,
                     context.viewableCase,
-                    context.endpoint.session.ruleSessionManager,
+                    LeasedRuleService(userId, context.endpoint.session, context.endpoint.session.ruleSessionManager),
                     kbName,
                     kbNames,
                     demonstrationNames
@@ -51,7 +50,7 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
     private fun forCase(
         kbService: KnowledgeBaseService,
         viewableCase: ViewableCase,
-        ruleSessionManager: RuleSessionManager,
+        ruleService: RuleService,
         kbName: String?,
         kbNames: List<String>,
         demonstrationNames: List<String>
@@ -60,8 +59,8 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
             viewableCase,
             kbName,
             kbNames,
-            ruleSessionManager::attributeById,
-            ruleSessionManager.allAttributes(),
+            ruleService::attributeById,
+            ruleService.allAttributes(),
             demonstrationNames
         )
         // The reason transformer needs the chat manager, which is created after the conversation.
@@ -71,20 +70,20 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
         }
         val acknowledgements = ReasonAcknowledgements()
         val reasonTransformer =
-            createReasonTransformer(viewableCase, ruleSessionManager, modelResponder, acknowledgements)
+            createReasonTransformer(viewableCase, ruleService, modelResponder, acknowledgements)
         val suggestionsBuffer = SuggestionsBuffer()
         val suggestedConditionsHandler =
-            SuggestedConditionsHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
+            SuggestedConditionsHandler(viewableCase.case, ruleService, suggestionsBuffer)
         val selectSuggestionHandler =
-            SelectSuggestionHandler(viewableCase.case, ruleSessionManager, suggestionsBuffer)
+            SelectSuggestionHandler(viewableCase.case, ruleService, suggestionsBuffer)
         val functionCallHandlers: Map<String, FunctionCallHandler> = mapOf(
-            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer, ruleSessionManager),
+            TRANSFORM_REASON to ReasonTransformHandler(reasonTransformer, ruleService),
             GET_SUGGESTED_CONDITIONS to suggestedConditionsHandler,
             SELECT_SUGGESTED_CONDITION to selectSuggestionHandler
         )
         val conversation = Conversation(chatService, functionCallHandlers)
         chatManager = ChatManager(
-            conversation, ruleSessionManager, kbService, suggestionsBuffer, suggestedConditionsHandler, acknowledgements
+            conversation, ruleService, kbService, suggestionsBuffer, suggestedConditionsHandler, acknowledgements
         )
         return chatManager
     }

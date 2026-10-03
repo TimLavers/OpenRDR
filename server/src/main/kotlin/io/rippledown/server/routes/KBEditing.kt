@@ -5,7 +5,9 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.rippledown.constants.api.*
+import io.rippledown.constants.api.KB_DESCRIPTION
+import io.rippledown.constants.api.KB_INFO
+import io.rippledown.constants.api.LAST_RULE_DESCRIPTION
 import io.rippledown.server.ServerApplication
 
 fun Application.kbEditing(application: ServerApplication) {
@@ -20,7 +22,7 @@ fun Application.kbEditing(application: ServerApplication) {
 
         post(KB_DESCRIPTION) {
             val newDescription = call.receive<String>()
-            kbEndpoint(application).setDescription(newDescription)
+            heldKbEndpoint(application).setDescription(newDescription)
             call.respond(OK)
         }
 
@@ -29,7 +31,7 @@ fun Application.kbEditing(application: ServerApplication) {
         }
 
         delete(LAST_RULE_DESCRIPTION){
-            kbEndpoint(application).undoLastRule()
+            heldKbEndpoint(application).undoLastRule()
             call.respond(OK)
         }
     }

@@ -79,8 +79,9 @@ drawback is purely the product constraint it encodes.
 The decisions a test can be written against. Each item is a commitment, not a design sketch; the implementation
 plan follows from them.
 
-1. **One holder per KB.** `ProjectLeaseManager` (name chosen over "lock" to match the semantics) maps
-   `kbId → Lease(userId, lastActivity)`. A user may hold leases on several KBs at once; a KB has at most one holder.
+1. **One holder per KB.** Each `KBSession` owns a `ProjectLease` ("lease" chosen over "lock" to match the
+   semantics) holding `(userId, lastActivity)` or nothing. One object per KB rather than a `kbId → lease` map: a
+   KB has at most one holder, a user may hold several KBs, and deleting the KB discards its lease for free.
 2. **Taken on first guarded action, renewed on every one.** Opening a KB (`START_CONVERSATION`) and every read take
    no lease. The first guarded action by a user on an unheld KB takes it; each later guarded action by the holder
    moves `lastActivity`. If the KB is held by someone else, the action is refused and nothing else happens.
@@ -111,10 +112,19 @@ plan follows from them.
    lease expires. A lighter policy for one-shot actions ("check, don't take") would bring the silent overwrite back,
    and "release when the rule session ends" has the same hole. One policy, no exceptions; the refusal message tells
    the other user that closing the KB hands it over.
-4. **One choke point.** The guard lives in `KBEndpoint`, which both the chat actions and the REST routes call, so
-   neither surface can bypass it. `KBEndpoint`'s guarded methods gain a `userId` parameter; unguarded methods do not
-   change. This closes the pre-existing gap where `DELETE_KB` / `RENAME_KB` over REST bypassed `KnowledgeBaseService`
-   — they still bypass the *service*, but not the *lease*.
+4. **One primitive, applied at each surface's entry.** The chat does not go through `KBEndpoint`: its rule actions
+   drive `RuleSessionManager` directly as `RuleService`, and its KB-management actions go through
+   `ApplicationKbService` to `ServerApplication`. So the single primitive is `KBSession.hold(userId)` (take or renew,
+   else throw `ProjectHeldException`), and it is called from three places, each of which is the only way in for its
+   surface:
+    - REST: `KBEndpoint`'s guarded methods gain a `userId` parameter and call `hold` first.
+    - Chat rule actions: `ChatManagerFactory` wraps the KB's `RuleSessionManager` in a per-user `LeasedRuleService`
+      whose guarded methods call `hold` and delegate; the actions and function-call handlers are untouched.
+    - KB metadata: `ServerApplication.renameKB` / `deleteKB` take a `userId` and call `hold`, so the REST
+      `KbManagement` routes and `ApplicationKbService` cannot differ; `setDescription` goes through `KBEndpoint`.
+
+   This closes the pre-existing gap where `DELETE_KB` / `RENAME_KB` over REST bypassed `KnowledgeBaseService` —
+   they still bypass the *service*, but not the *lease*.
 5. **What the loser gets.** Over REST: `409 Conflict`, body `"<kbName> is being edited by <holderId>."`. In the chat:
    the same sentence, followed by what the user can still do (read the cases, open another KB). The chat never
    retries or queues the action. The client shows the sentence in the app bar as a status indicator; it adds no
@@ -143,6 +153,28 @@ plan follows from them.
     once the guard lands on `KBEndpoint`, every guarded route reads it and those calls are refused outright. Before
     the guard lands, the `RESTClient` must present the same identity as the GUI (route everything through its `Api`,
     or give the raw client the same default header). This is a prerequisite task, not a test fix.
+
+### Stage 2 implementation plan
+
+In order; each step keeps the suites green.
+
+1. **Test-suite identity.** The cucumber `RESTClient`'s raw `HttpClient` sends the same `X-User-Id` as its `Api`.
+2. **`ProjectLease`** (`kb.lease`): `hold(userId)` takes, renews or throws; `release()`; `holder()`; expiry
+   `LEASE_EXPIRY_MS` checked on access; injected clock. `KBSession` owns one and adds `hold(userId)` /
+   `release()`, which also cancel a rule session that loses its lease and push `RULE_SESSION_COMPLETED` to its
+   holder.
+3. **409 over REST.** A `StatusPages` handler maps `ProjectHeldException` to `409 Conflict` with the message;
+   installed in `module()` and the server test base.
+4. **REST guard.** `KBEndpoint` guarded methods take `userId`; the routes pass `userId()`. Guarded: start/commit/
+   cancel session, update/select/exempt cornerstone, add condition, build rule, undo, delete case, move attribute,
+   set attribute order, set description. `ServerApplication.renameKB` / `deleteKB` take `userId`.
+5. **Chat guard.** `LeasedRuleService`; `ChatManager.response` turns `ProjectHeldException` into the chat sentence.
+   `ApplicationKbService.rename` / `delete` / `setDescription` pass their user. `close()` releases.
+6. **Pushes to the holder.** `RuleSessionManager` sends cornerstone status and `RULE_SESSION_COMPLETED` to
+   `lease.holder()` instead of broadcasting.
+7. **Acceptance.** The REST-only two-user scenario below, red at the start of step 4 and green at the end of step 6.
+8. **Client indicator.** The app-bar status for a 409 — last, since the GUI reaches a guarded route only through
+   attribute reordering today.
 
 **Open points, to settle before implementation starts:**
 

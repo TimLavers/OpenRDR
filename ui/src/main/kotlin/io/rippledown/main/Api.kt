@@ -20,10 +20,7 @@ import io.rippledown.constants.server.EXPRESSION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.KBInfo
-import io.rippledown.model.OperationResult
-import io.rippledown.model.UserId
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
@@ -62,6 +59,11 @@ class Api(
         install(WebSockets)
         defaultRequest {
             header(USER_ID_HEADER, userId.value)
+        }
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (response.status == HttpStatusCode.Conflict) throw KnowledgeBaseHeldException(response.bodyAsText())
+            }
         }
     }
 

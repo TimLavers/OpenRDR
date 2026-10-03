@@ -68,12 +68,13 @@ class ApplicationKbService(
 
     override suspend fun close() {
         logger.info("User '$userId' closing KB '${openKnowledgeBase()?.name}'.")
+        openEndpoint()?.session?.release(userId)
         openKnowledgeBases.knowledgeBaseClosed(userId)
         webSocketManager.sendKbClosed(userId)
     }
 
     override suspend fun delete(kbInfo: KBInfo) {
-        application.deleteKB(kbInfo.id)
+        application.deleteKB(kbInfo.id, userId)
         val affected = openKnowledgeBases.knowledgeBaseDeleted(kbInfo.id)
         if (affected.isNotEmpty()) {
             logger.info("KB '${kbInfo.name}' deleted; closing it for users $affected.")
@@ -90,7 +91,7 @@ class ApplicationKbService(
 
     override suspend fun rename(newName: String): KBInfo {
         val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
-        val renamed = application.renameKB(endpoint.kbInfo().id, newName)
+        val renamed = application.renameKB(endpoint.kbInfo().id, newName, userId)
         webSocketManager.sendKbInfo(userId, renamed)
         return renamed
     }
@@ -98,7 +99,9 @@ class ApplicationKbService(
     override fun description(kbInfo: KBInfo): String = application.kbFor(kbInfo).description()
 
     override fun setDescription(kbInfo: KBInfo, text: String) {
-        application.kbFor(kbInfo).setDescription(text)
+        val endpoint = application.kbFor(kbInfo)
+        endpoint.session.hold(userId)
+        endpoint.setDescription(text)
     }
 
     override fun isRuleSessionActive() = openEndpoint()?.session?.ruleSessionManager?.isRuleSessionActive() == true

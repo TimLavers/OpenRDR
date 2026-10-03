@@ -44,7 +44,8 @@ private val FORMULA_OPERATORS = Regex("""[+\-*/()^]""")
 
 class RuleSessionManager(
     private val kb: KB,
-    private val webSocketManager: WebSocketManager? = null
+    private val webSocketManager: WebSocketManager? = null,
+    private val leaseHolder: () -> UserId? = { null }
 ) : RuleService {
     val logger = lazyLogger
 
@@ -694,12 +695,15 @@ class RuleSessionManager(
 
     override fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-        runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
+        runBlocking { webSocketManager?.sendStatus(holder(), cornerstoneStatus) }
     }
 
     override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted() }
+        runBlocking { webSocketManager?.sendRuleSessionCompleted(holder()) }
     }
+
+    // A rule session exists only under a lease, so its pushes always have an addressee.
+    private fun holder() = checkNotNull(leaseHolder()) { "A rule session push with no lease holder." }
 
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
         val session = activeRuleSession("No rule session in progress.")
