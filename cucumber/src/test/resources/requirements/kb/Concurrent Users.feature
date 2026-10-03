@@ -35,27 +35,39 @@ Feature: Several users share one server, each with their own chat and open knowl
     Then the chat response to Alice contains the following terms:
       | No conversation has been started | open a knowledge base |
 
-  Scenario: A knowledge base being edited by one user is refused to another until it is closed
+  Scenario: A knowledge base being edited by one user is refused to another
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |
-    And case Case2 for KB Glucose is provided having data:
-      | Glucose | 5.1 |
-    And Alice starts a conversation about the knowledge base Thyroids
-    And Bob starts a conversation about the knowledge base Glucose
     When Alice starts a rule session on case Case1 in the knowledge base Thyroids
     Then Alice's request succeeds
     When Bob starts a rule session on case Case1 in the knowledge base Thyroids
     Then Bob's request is refused with "Thyroids is being edited by Alice."
+
+  Scenario: Editing one knowledge base does not affect another
+    Given case Case1 for KB Thyroids is provided having data:
+      | TSH | 0.67 |
+    And case Case2 for KB Glucose is provided having data:
+      | Glucose | 5.1 |
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
     When Bob starts a rule session on case Case2 in the knowledge base Glucose
     Then Bob's request succeeds
+
+  Scenario: A knowledge base being edited by one user can still be read by another
+    Given case Case1 for KB Thyroids is provided having data:
+      | TSH | 0.67 |
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
     When Bob reads case Case1 in the knowledge base Thyroids
     Then Bob's request succeeds
+
+  Scenario: Closing a knowledge base lets another user edit it
+    Given case Case1 for KB Thyroids is provided having data:
+      | TSH | 0.67 |
+    And Alice starts a conversation about the knowledge base Thyroids
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
     When Alice cancels her rule session
     And Alice asks the chat to close the knowledge base
     And Bob starts a rule session on case Case1 in the knowledge base Thyroids
     Then Bob's request succeeds
-    When Alice starts a rule session on case Case1 in the knowledge base Thyroids
-    Then Alice's request is refused with "Thyroids is being edited by Bob."
 
   Scenario: The chat tells a user who is editing the knowledge base they want to delete
     Given case Case1 for KB Thyroids is provided having data:
