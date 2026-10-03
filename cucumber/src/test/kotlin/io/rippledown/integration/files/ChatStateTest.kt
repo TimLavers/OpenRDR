@@ -135,6 +135,22 @@ class ChatStateTest {
     }
 
     @Test
+    fun `a warning is shown as a warning and does not block the next response`() {
+        // Given
+        val state = ChatState()
+
+        // When
+        state.warning("The attribute order was not changed: Thyroids is being edited by Alice.")
+        state.receive(ChatResponse("Would you like to add a comment?")) {}
+
+        // Then
+        state.history shouldBe listOf(
+            WarningMessage("The attribute order was not changed: Thyroids is being edited by Alice."),
+            BotMessage("Would you like to add a comment?")
+        )
+    }
+
+    @Test
     fun `user submission waits for a response without adding empty messages`() {
         // Given
         val state = ChatState()

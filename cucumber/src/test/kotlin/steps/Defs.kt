@@ -150,6 +150,14 @@ class Defs {
         }
     }
 
+    @When("I try to move attribute {word} below attribute {word}")
+    fun tryToMoveAttributeBelowAttribute(moved: String, target: String) {
+        chatPO().waitForChatToBeFocusedQuietly()
+        StepsInfrastructure.client().withWindowOnTop {
+            caseViewPO().dragAttribute(moved, target)
+        }
+    }
+
     @Given("the initial Attribute order is A, B, C")
     fun theInitialAttributeOrderIsABC() {
         labProxy().provideCase("Case1", mapOf("A" to "a"))

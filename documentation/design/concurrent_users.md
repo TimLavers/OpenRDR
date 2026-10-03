@@ -39,8 +39,9 @@ Implementation plan: [concurrent_users_groundwork.md](concurrent_users_groundwor
    Stage 2 addresses them by lease holder instead (see the contract below). *Done.*
 3. **Per-user chat.** `ChatCoordinator` becomes a registry `userId → (ChatManager, ChatContext)`. The `Mutex` guarding
    "one turn at a time" becomes per-user. The conversation is cheap state (prompt + history), so this is mechanical.
+   *Done.*
 4. **Per-user "open KB".** The notion of the open KB moves from the server singleton into the per-user chat context,
-   which is where it really lives already — `openChatEndpoint()` just needs a user to look it up for.
+   which is where it really lives already — `openChatEndpoint()` just needs a user to look it up for. *Done.*
 
 With the groundwork done, the remaining question is how writes to one KB are coordinated. The following stages
 answer it in increasing order of ambition; each builds on the one before.
@@ -49,7 +50,8 @@ answer it in increasing order of ambition; each builds on the one before.
 
 One user per project at a time, enforced server-side.
 
-- A `ProjectLockManager` maps `kbId → lease(userId, expiry)`. The lease is taken lazily, on the user's first
+- Each `KBSession` owns a `ProjectLease` holding `(userId, lastActivity)` or nothing. The lease is taken lazily, on the
+  user's first
   knowledge-editing action, not on opening the KB: opening is just `START_CONVERSATION` with a `kbId`, there is no
   read-only versus edit open, and a user merely reading a KB must not block an editor. Reads are allowed to anyone.
 - Which operations need the lease: knowledge editing — starting and driving a rule session, committing, renaming or
@@ -67,9 +69,9 @@ One user per project at a time, enforced server-side.
   cursor).
 - `KBSession` / `RuleSessionManager` are otherwise untouched: the lease guarantees the existing one-session-per-KB
   state is only ever driven by one user, so no internal synchronisation is needed.
-- A second user's editing action is refused; the chat, as the primary surface, says who holds the project. The client
-  additionally shows "read-only — locked by X" in the app bar, which is a status indicator, not a control, so it is
-  within the chat-UI guidelines.
+- A second user's editing action is refused; the chat, as the primary surface, says who holds the project. An
+  app-bar "read-only — locked by X" indicator was considered and dropped: the client learns of the lease only from a
+  refused action, and nothing tells it when the lease is released, so the indicator would go stale.
 
 Cheap, correct, and almost all of it survives into the later stages (the lease becomes a finer-grained lock). The
 drawback is purely the product constraint it encodes.
@@ -117,7 +119,8 @@ plan follows from them.
    `ApplicationKbService` to `ServerApplication`. So the single primitive is `KBSession.hold(userId)` (take or renew,
    else throw `ProjectHeldException`), and it is called from three places, each of which is the only way in for its
    surface:
-    - REST: `KBEndpoint`'s guarded methods gain a `userId` parameter and call `hold` first.
+    - REST: each guarded route resolves its endpoint through `heldKbEndpoint()` (`RoutingUtilities.kt`), which reads
+      the identity header and calls `hold` before the route body runs; `KBEndpoint` itself is unchanged.
     - Chat rule actions: `ChatManagerFactory` wraps the KB's `RuleSessionManager` in a per-user `LeasedRuleService`
       whose guarded methods call `hold` and delegate; the actions and function-call handlers are untouched.
     - KB metadata: `ServerApplication.renameKB` / `deleteKB` take a `userId` and call `hold`, so the REST
@@ -127,8 +130,9 @@ plan follows from them.
    they still bypass the *service*, but not the *lease*.
 5. **What the loser gets.** Over REST: `409 Conflict`, body `"<kbName> is being edited by <holderId>."`. In the chat:
    the same sentence, followed by what the user can still do (read the cases, open another KB). The chat never
-   retries or queues the action. The client shows the sentence in the app bar as a status indicator; it adds no
-   control (chat-UI guidelines).
+   retries or queues the action. A 409 to a GUI action (today only attribute reordering) is shown as a warning row in
+   the chat — warning icon, "The attribute order was not changed: <sentence>" — and the case is re-fetched so the
+   table reverts the optimistic reorder; it adds no control (chat-UI guidelines).
 6. **Expiry.** A lease with no activity for **10 minutes** is expired; the next guarded action by anyone (including
    the old holder) treats the KB as unheld. There is no background timer: expiry is checked on access, so a server
    with no traffic does nothing. Disconnecting the web-socket does not release the lease (reasoning above).
@@ -136,7 +140,7 @@ plan follows from them.
    The figure is bounded below by the longest natural pause inside a rule session (reading a cornerstone, thinking
    about a condition, a phone call) because expiry cancels the session and loses the half-built rule; it is bounded
    above by how long an abandoned client blocks the project. Ten minutes is a constant, not configuration, and is
-   cheap to change once someone is bitten in either direction. `ProjectLeaseManager` takes an injected clock
+   cheap to change once someone is bitten in either direction. `ProjectLease` takes an injected clock
    (`() -> Long`, as `ApplicationKbService` already does), so expiry is unit-tested by advancing a fake clock; the
    cucumber acceptance uses close-to-release and never waits on expiry.
 7. **Release.** The holder releases by closing the KB in the chat, by deleting it, or by expiry. There is no explicit
@@ -159,33 +163,30 @@ plan follows from them.
 In order; each step keeps the suites green.
 
 1. **Test-suite identity.** The cucumber `RESTClient`'s raw `HttpClient` sends the same `X-User-Id` as its `Api`.
+   *Done.*
 2. **`ProjectLease`** (`kb.lease`): `hold(userId)` takes, renews or throws; `release()`; `holder()`; expiry
    `LEASE_EXPIRY_MS` checked on access; injected clock. `KBSession` owns one and adds `hold(userId)` /
    `release()`, which also cancel a rule session that loses its lease and push `RULE_SESSION_COMPLETED` to its
-   holder.
+   holder. *Done.*
 3. **409 over REST.** A `StatusPages` handler maps `ProjectHeldException` to `409 Conflict` with the message;
-   installed in `module()` and the server test base.
-4. **REST guard.** `KBEndpoint` guarded methods take `userId`; the routes pass `userId()`. Guarded: start/commit/
+   installed in `module()` and the server test base. *Done.*
+4. **REST guard.** Guarded routes resolve their endpoint through `heldKbEndpoint()`. Guarded: start/commit/
    cancel session, update/select/exempt cornerstone, add condition, build rule, undo, delete case, move attribute,
-   set attribute order, set description. `ServerApplication.renameKB` / `deleteKB` take `userId`.
+   set attribute order, set description. `ServerApplication.renameKB` / `deleteKB` take `userId`. *Done.*
 5. **Chat guard.** `LeasedRuleService`; `ChatManager.response` turns `ProjectHeldException` into the chat sentence.
-   `ApplicationKbService.rename` / `delete` / `setDescription` pass their user. `close()` releases.
+   `ApplicationKbService.rename` / `delete` / `setDescription` pass their user. `close()` releases. *Done.*
 6. **Pushes to the holder.** `RuleSessionManager` sends cornerstone status and `RULE_SESSION_COMPLETED` to
-   `lease.holder()` instead of broadcasting.
-7. **Acceptance.** The REST-only two-user scenario below, red at the start of step 4 and green at the end of step 6.
-8. **Client indicator.** The app-bar status for a 409 — last, since the GUI reaches a guarded route only through
-   attribute reordering today.
+   `lease.holder()` instead of broadcasting. *Done.*
+7. **Acceptance.** The REST-only two-user scenarios in `requirements/kb/Concurrent Users.feature`, one per contract
+   point: refused while held, other KBs unaffected, reads unguarded, close releases, chat names the holder on a
+   refused delete. *Done.*
+8. **Client refusal.** `Api` turns a 409 into `KnowledgeBaseHeldException`; `OpenRDRUI.swapAttributes` posts a
+   `WarningMessage` to the chat and refreshes the case. Acceptance: "Attributes cannot be re-ordered while another
+   user is editing the knowledge base" in `requirements/attributes/Attribute ordering.feature` (one GUI user plus a
+   REST user). *Done.*
 
-**Open points, to settle before implementation starts:**
-
-- Whether the holder's own client should see "you are editing" in the app bar. Proposal: no — single-user behaviour
-  must stay byte-for-byte, and the indicator is for the *other* user.
-
-**Acceptance (REST-only, two `Api` users against one server):** Alice starts a rule session on Thyroids; Bob's attempt
-to start one on Thyroids gets 409 naming Alice; Bob's attempt on Glucose succeeds; Bob reads a Thyroids case
-successfully; Alice closes Thyroids in the chat; Bob's retry on Thyroids succeeds and Alice's session is gone.
-In the chat: Bob asks to delete Thyroids while Alice holds it and is told who is editing it. These are the
-scenarios that should be red at the start of Stage 2.
+The holder's own client shows nothing: single-user behaviour stays byte-for-byte, and the message is for the *other*
+user.
 
 ## Stage 3 — shared project, single writer at the engine level
 

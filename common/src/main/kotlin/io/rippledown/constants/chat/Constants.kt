@@ -107,6 +107,8 @@ const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Do you want to see th
 fun projectHeldChatMessage(kbName: String, holder: String) =
     "$kbName is being edited by $holder. You can still look at its cases, or open another knowledge base; " +
             "it becomes available when $holder closes it."
+const val ATTRIBUTE_ORDER_NOT_CHANGED = "The attribute order was not changed"
+fun attributeOrderNotChangedWarning(refusal: String) = "$ATTRIBUTE_ORDER_NOT_CHANGED: $refusal"
 const val KB_ACTION_DURING_RULE_MESSAGE =
     "Please finish or cancel the current rule before opening, creating, closing, deleting, importing or exporting a knowledge base."
 const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."

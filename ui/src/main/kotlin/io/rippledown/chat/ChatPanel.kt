@@ -77,6 +77,12 @@ data class TipMessage(
     override val isUser: Boolean = false
 }
 
+data class WarningMessage(
+    override val text: String
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
+
 data class KbChoiceListMessage(
     override val text: String,
     val listing: KnowledgeBaseListing
@@ -103,6 +109,7 @@ const val SUGGESTION_LIST = "SUGGESTION_LIST_"
 const val SUGGESTION_ITEM = "SUGGESTION_ITEM_"
 const val EDITABLE_MARKER = " [editable]"
 const val TIP = "TIP_"
+const val WARNING = "WARNING_"
 const val KB_CHOICE_LIST = "KB_CHOICE_LIST_"
 const val KB_CHOICE_ITEM = "KB_CHOICE_ITEM_"
 
@@ -166,6 +173,7 @@ fun ChatPanel(
                         is CapabilityListMessage -> CapabilityCard(message, index, capabilityHeight)
                         is UserMessage -> UserRow(message.text, index)
                         is TipMessage -> TipRow(message.text, index)
+                        is WarningMessage -> WarningRow(message.text, index)
                         is SuggestionListMessage -> SuggestionListRow(
                             message.suggestions, index
                         ) { suggestion, isEditable ->

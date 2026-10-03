@@ -20,12 +20,14 @@ import io.rippledown.casecontrol.CaseSelectorHandler
 import io.rippledown.chat.ChatController
 import io.rippledown.chat.ChatControllerHandler
 import io.rippledown.chat.ChatState
+import io.rippledown.constants.chat.attributeOrderNotChangedWarning
 import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.files.KbFileDialogs
 import io.rippledown.files.KbFileTransferController
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.KnowledgeBaseHeldException
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.report.CaseReport
@@ -331,7 +333,13 @@ fun OpenRDRUI(
                         handler = object : CaseControlHandler {
                             override fun swapAttributes(moved: Attribute, target: Attribute) {
                                 CoroutineScope(dispatcher).launch {
-                                    api.moveAttribute(moved.id, target.id)
+                                    try {
+                                        api.moveAttribute(moved.id, target.id)
+                                    } catch (held: KnowledgeBaseHeldException) {
+                                        chatState.warning(attributeOrderNotChangedWarning(held.message))
+                                    }
+                                    // The table reordered its rows during the drag; the
+                                    // refreshed case confirms the move or reverts it.
                                     currentCase = api.getCase(currentCaseId!!)
                                 }
                             }

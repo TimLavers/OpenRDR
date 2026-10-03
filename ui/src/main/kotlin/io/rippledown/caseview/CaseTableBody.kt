@@ -36,7 +36,12 @@ fun CaseTableBody(
     filter: String = "",
     attributeMoveListener: (Attribute, Attribute) -> Unit = { _, _ -> },
 ) {
-    val attributes = remember(viewableCase) {
+    // The rows are reordered locally during a drag and the refreshed case then
+    // confirms or reverts the move. A refused move returns a case equal to the
+    // one showing, so keying on the value would keep the stale local order;
+    // every refreshed instance resets it (cf. neverEqualPolicy in OpenRDRUI).
+    val caseInstance = System.identityHashCode(viewableCase)
+    val attributes = remember(caseInstance) {
         // Derived and comment attributes have their own panels; do not render
         // them as rows in the episodic case data table.
         mutableStateListOf<Attribute>().apply {
@@ -60,7 +65,7 @@ fun CaseTableBody(
     // this, an in-flight pointer event arriving after the case swap could be
     // hit-tested against rows that no longer exist and index past the end of
     // `attributes`.
-    val dragDropState = remember(viewableCase) {
+    val dragDropState = remember(caseInstance) {
         DragDropState(
             onDragStarted = {
                 if (it in attributes.indices) {

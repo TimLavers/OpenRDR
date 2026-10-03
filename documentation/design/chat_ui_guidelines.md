@@ -35,15 +35,17 @@ If either fails, the answer belongs in the text field.
 
 ## Judgements
 
-| Affordance                                 | Verdict            | Why                                                                               |
-|--------------------------------------------|--------------------|-----------------------------------------------------------------------------------|
-| Suggested-condition chips                  | Built              | Closed list from the suggester, consumed by the rule being built.                 |
-| Knowledge base list rows                   | Built              | One grouped list; a click sends `Open <name>`; the conversation restarts on open. |
-| Capability card                            | Built (display)    | Scrollable card with headings; no controls in it.                                 |
-| Cornerstone "Allow" / "Don't allow"        | Allowed, not built | Binary, one shot.                                                                 |
-| "Provide more reasons?" buttons            | No                 | The real answer is usually a reason, in words; a button invites a worse one.      |
-| Delete knowledge base chip                 | No                 | Irreversible; the confirmation is the point.                                      |
-| Anything needing a value or an explanation | No                 | Not a closed set.                                                                 |
+| Affordance                                 | Verdict            | Why                                                                                                                                                                                  |
+|--------------------------------------------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Suggested-condition chips                  | Built              | Closed list from the suggester, consumed by the rule being built.                                                                                                                    |
+| Knowledge base list rows                   | Built              | One grouped list; a click sends `Open <name>`; the conversation restarts on open.                                                                                                    |
+| Capability card                            | Built (display)    | Scrollable card with headings; no controls in it.                                                                                                                                    |
+| Cornerstone "Allow" / "Don't allow"        | Allowed, not built | Binary, one shot.                                                                                                                                                                    |
+| "Provide more reasons?" buttons            | No                 | The real answer is usually a reason, in words; a button invites a worse one.                                                                                                         |
+| Delete knowledge base chip                 | No                 | Irreversible; the confirmation is the point.                                                                                                                                         |
+| Anything needing a value or an explanation | No                 | Not a closed set.                                                                                                                                                                    |
+| Warning row                                | Built (display)    | A GUI action the server refused (e.g. attribute reorder while another user holds the KB) is reported in the chat with a warning icon, saying what was not done and why. No controls. |
+| App-bar "locked by X" indicator            | No                 | The client learns of the lease only from a refusal and never of its release, so the indicator would go stale.                                                                        |
 
 Hover tooltips (a KB's one-line description on its row, help on a heading) are passive disclosure and need not pass the
 test.

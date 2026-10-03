@@ -21,6 +21,7 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
             message is KbChoiceListMessage -> "$BOT$idx"
             // TipRow encodes its visible text as "$TIP$idx:$text", mirroring BotRow.
             message is TipMessage -> "$TIP$idx:${message.text}"
+            message is WarningMessage -> "$WARNING$idx:${message.text}"
             else -> "$BOT$idx:${message.text}"
         }
         waitUntilAtLeastOneExists(hasContentDescription(expectedLabel))
