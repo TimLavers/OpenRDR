@@ -9,13 +9,13 @@ import io.rippledown.constants.chat.KB_CLOSED
 import io.rippledown.constants.chat.KB_INFO_PREFIX
 import io.rippledown.fromJsonString
 import io.rippledown.model.*
-import io.rippledown.server.routes.LOCAL_USER
 import io.rippledown.toJsonString
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlin.test.Test
 
 class WebSocketManagerTest {
+    private val carol = UserId("carol")
 
     @Test
     fun `CASES_INFO_PREFIX should be the expected value`() {
@@ -63,7 +63,7 @@ class WebSocketManagerTest {
         val kbInfo = KBInfo("glucose_123", "Glucose")
 
         //When
-        manager.sendKbInfo(LOCAL_USER, kbInfo)
+        manager.sendKbInfo(carol, kbInfo)
 
         //Then
         sent.size shouldBe 1
@@ -74,7 +74,7 @@ class WebSocketManagerTest {
     @Test
     fun `sendKbClosed sends the KB_CLOSED marker`() = withConnectedManager { manager, sent ->
         //When
-        manager.sendKbClosed(LOCAL_USER)
+        manager.sendKbClosed(carol)
 
         //Then
         sent shouldBe listOf(KB_CLOSED)
@@ -86,8 +86,8 @@ class WebSocketManagerTest {
         val manager = WebSocketManager()
 
         //When / Then - no exception
-        manager.sendKbInfo(LOCAL_USER, KBInfo("glucose_123", "Glucose"))
-        manager.sendKbClosed(LOCAL_USER)
+        manager.sendKbInfo(carol, KBInfo("glucose_123", "Glucose"))
+        manager.sendKbClosed(carol)
     }
 
     @Test
@@ -97,18 +97,18 @@ class WebSocketManagerTest {
         val oldIncoming = Channel<Frame>()
         val oldFrames = mutableListOf<Frame>()
         val oldSession = sessionMock(oldIncoming, oldFrames)
-        val oldJob = launch { manager.setSession(LOCAL_USER, oldSession) }
+        val oldJob = launch { manager.setSession(carol, oldSession) }
         yield()
         val newIncoming = Channel<Frame>()
         val newFrames = mutableListOf<Frame>()
         val newSession = sessionMock(newIncoming, newFrames)
-        val newJob = launch { manager.setSession(LOCAL_USER, newSession) }
+        val newJob = launch { manager.setSession(carol, newSession) }
         yield()
 
         //When
         oldIncoming.close()
         oldJob.join()
-        manager.sendKbClosed(LOCAL_USER)
+        manager.sendKbClosed(carol)
 
         //Then
         oldFrames.filterIsInstance<Frame.Close>().size shouldBe 1
@@ -134,7 +134,7 @@ class WebSocketManagerTest {
         val incoming = Channel<Frame>()
         val session = sessionMock(incoming) { if (it is Frame.Text) sent.add(it.readText()) }
         val manager = WebSocketManager()
-        val sessionJob = launch { manager.setSession(LOCAL_USER, session) }
+        val sessionJob = launch { manager.setSession(carol, session) }
         yield()
         block(manager, sent)
         incoming.close()

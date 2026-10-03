@@ -15,10 +15,10 @@ import io.rippledown.kb.chat.ChatContext
 import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
-import io.rippledown.server.routes.LOCAL_USER
 import kotlin.test.Test
 
 class ChatManagementTest : OpenRDRServerTestBase() {
+    private val carol = UserId("carol")
 
     @Test
     fun `starting a conversation with a KB and a case starts it in the case context`() = testApplication {
@@ -45,18 +45,16 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun `a request without the identity header starts the conversation for the local user`() = testApplication {
+    fun `a request without the identity header is refused`() = testApplication {
         //Given
         setupServer()
-        val response = ChatResponse("Hello")
-        coEvery { chatCoordinator.startConversation(LOCAL_USER, ChatContext.NoKnowledgeBase) } returns response
 
         //When
         val result = httpClient.post(START_CONVERSATION)
 
         //Then
-        result.status shouldBe HttpStatusCode.OK
-        coVerify(exactly = 1) { chatCoordinator.startConversation(LOCAL_USER, ChatContext.NoKnowledgeBase) }
+        result.status shouldBe HttpStatusCode.InternalServerError
+        coVerify(exactly = 0) { chatCoordinator.startConversation(any(), any()) }
     }
 
     @Test
@@ -65,10 +63,11 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val response = ChatResponse("The knowledge base has no cases.")
         val context = slot<ChatContext>()
-        coEvery { chatCoordinator.startConversation(LOCAL_USER, capture(context)) } returns response
+        coEvery { chatCoordinator.startConversation(carol, capture(context)) } returns response
 
         //When
         val result = httpClient.post(START_CONVERSATION) {
+            header(USER_ID_HEADER, carol.value)
             parameter(KB_ID, kbId)
         }
 
@@ -84,10 +83,12 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val response = ChatResponse("No knowledge base is open.")
         val context = slot<ChatContext>()
-        coEvery { chatCoordinator.startConversation(LOCAL_USER, capture(context)) } returns response
+        coEvery { chatCoordinator.startConversation(carol, capture(context)) } returns response
 
         //When
-        val result = httpClient.post(START_CONVERSATION)
+        val result = httpClient.post(START_CONVERSATION) {
+            header(USER_ID_HEADER, carol.value)
+        }
 
         //Then
         result.status shouldBe HttpStatusCode.OK
@@ -123,10 +124,11 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val userMessage = "List the knowledge bases"
         val response = ChatResponse("Glucose\nThyroids")
-        coEvery { chatCoordinator.responseToUserMessage(LOCAL_USER, userMessage) } returns response
+        coEvery { chatCoordinator.responseToUserMessage(carol, userMessage) } returns response
 
         //When
         val result = httpClient.post(SEND_USER_MESSAGE) {
+            header(USER_ID_HEADER, carol.value)
             setBody(userMessage)
         }
 

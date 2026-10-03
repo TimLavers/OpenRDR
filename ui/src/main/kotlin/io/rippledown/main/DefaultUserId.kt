@@ -1,9 +1,9 @@
 package io.rippledown.main
 
-import io.rippledown.constants.server.LOCAL_USER_ID
 import io.rippledown.model.UserId
 
 const val USER_ID_PROPERTY = "openrdr.userId"
+const val NO_USER_IDENTITY = "No user identity: set the $USER_ID_PROPERTY system property."
 
 /**
  * Until a gateway injects the identity header, the desktop client identifies
@@ -14,6 +14,6 @@ fun defaultUserId(
 ): UserId {
     val candidate = properties(USER_ID_PROPERTY)?.takeIf { it.isNotBlank() }
         ?: properties("user.name")?.takeIf { it.isNotBlank() }
-        ?: LOCAL_USER_ID
+        ?: error(NO_USER_IDENTITY)
     return UserId(candidate.trim())
 }

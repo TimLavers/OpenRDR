@@ -12,7 +12,6 @@ const val KB_ID = "kb"
 const val KB_NAME = "kb_name"
 const val CASE_ID = "caseId"
 const val USER_ID_HEADER = "X-User-Id"
-const val LOCAL_USER_ID = "local"
 
 const val EXPRESSION = "expression"
 const val ATTRIBUTE_NAMES = "attributeNames"

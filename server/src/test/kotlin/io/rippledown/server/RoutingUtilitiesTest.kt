@@ -8,7 +8,10 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.rippledown.constants.server.*
+import io.rippledown.constants.server.CASE_ID
+import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.KB_NAME
+import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.model.UserId
 import io.rippledown.server.routes.*
 import org.junit.jupiter.api.BeforeEach
@@ -115,22 +118,25 @@ class RoutingUtilitiesTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun `userId falls back to the local user when the header is absent`() {
+    fun `userId is an error when the header is absent`() {
         // Given
         val headers = Headers.Empty
 
         // When / Then
-        headers.userId() shouldBe LOCAL_USER
-        LOCAL_USER shouldBe UserId(LOCAL_USER_ID)
+        shouldThrow<IllegalStateException> {
+            headers.userId()
+        }.message shouldBe MISSING_USER_ID
     }
 
     @Test
-    fun `userId falls back to the local user when the header is blank`() {
+    fun `userId is an error when the header is blank`() {
         // Given
         val headers = headersOf(USER_ID_HEADER, "   ")
 
         // When / Then
-        headers.userId() shouldBe LOCAL_USER
+        shouldThrow<IllegalStateException> {
+            headers.userId()
+        }.message shouldBe MISSING_USER_ID
     }
 
     @Test

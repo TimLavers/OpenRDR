@@ -11,15 +11,11 @@ import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.kb.KB
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
-import io.rippledown.model.Attribute
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.Result
+import io.rippledown.model.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
-import io.rippledown.server.routes.LOCAL_USER
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
@@ -73,8 +69,8 @@ internal class ServerApplicationTest {
         // Then
         error.message shouldBe kbNameReservedMessage(name)
         app.kbList().map { it.name } shouldBe listOf("MyCopy")
-        app.kbServiceFor(LOCAL_USER).knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
-        app.openChatEndpoint(LOCAL_USER) shouldBe null
+        app.kbServiceFor(UserId("carol")).knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
+        app.openChatEndpoint(UserId("carol")) shouldBe null
         app.kbForId(original.id).kbInfo().name shouldBe "MyCopy"
         persistenceProvider.idStore().data().keys shouldBe setOf(original.id)
         persistenceProvider.kbPersistence(original.id).kbInfo().name shouldBe "MyCopy"

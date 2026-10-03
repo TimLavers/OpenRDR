@@ -14,11 +14,12 @@ client sends its own id; swapping to a gateway-injected header later changes not
 **Server.**
 
 - A `USER_ID_HEADER` constant in `common` (`constants.server.Constants`), beside `KB_ID` / `CASE_ID`.
-- A helper in `RoutingUtilities.kt`: `fun RoutingContext.userId(): UserId`, reading the header. A missing header
-  resolves to a fixed default id (`"local"`), so the packaged demo, curl and the cucumber suite keep working
-  unauthenticated. The fallback is logged at WARN, once per server start rather than per request — the demo and the
-  cucumber suite are unauthenticated by design and a warning per call would drown the log; behind a gateway, a
-  missing header would silently merge every user into one, and one warning is enough to notice. `UserId` is a value
+- A helper in `RoutingUtilities.kt`: `fun RoutingContext.userId(): UserId`, reading the header. A missing or blank
+  header is an error (`MISSING_USER_ID`), handled like a missing `kbId`. There is no fallback identity: every user is
+  authenticated by assumption, so a header-less request is a state that cannot arise and is not defended against. A
+  fallback to a fixed `"local"` id was built first and removed — behind a misconfigured gateway it would silently merge
+  every user into one and defeat the Stage 2 lease, with only a log line to show for it. The lab system never hits a
+  route that reads the id. curl against chat or guarded routes must pass `-H "X-User-Id: …"`. `UserId` is a value
   class over `String` in `common`.
 - The web-socket route (`WebSockets.kt`) reads the same header from the handshake request.
 - No route *acts* on the id yet — this step only makes it available.
@@ -28,9 +29,10 @@ client sends its own id; swapping to a gateway-injected header later changes not
 
 **Client.**
 
-- `Api` gains a `userId` (constructor parameter, defaulted — e.g. from a system property or the OS user name) and
-  installs it as a default request header on the `HttpClient`, so every REST call and the `client.webSocket(...)`
-  handshake in `WebSocketApi` carry it without touching individual call sites.
+- `Api` gains a `userId` (constructor parameter, defaulted from the `openrdr.userId` system property, else the OS
+  user name; neither available is an error) and installs it as a default request header on the `HttpClient`, so every
+  REST call and the `client.webSocket(...)` handshake in `WebSocketApi` carry it without touching individual call
+  sites.
 
 **Cucumber.** The GUI's `Api` and the test `RESTClient`'s `Api` run as the same OS user, so they present the same
 identity. Only chat state is per user and the `RESTClient` never chats, so the suite does not depend on this; it is
@@ -38,8 +40,9 @@ noted so nobody is surprised. `ServerApplicationTest` uses `openChatEndpoint()`,
 
 4.
 
-**Tests.** Unit tests for the helper (header present, absent, blank); an `Api` test asserting the header is on an
-arbitrary request and on the web-socket handshake.
+**Tests.** Unit tests for the helper (header present and trimmed; absent and blank refused); a `ChatManagement`
+route test that a header-less request is refused and never reaches the coordinator; an `Api` test asserting the
+header is on an arbitrary request and on the web-socket handshake.
 
 ## Step 2 — connection registry
 

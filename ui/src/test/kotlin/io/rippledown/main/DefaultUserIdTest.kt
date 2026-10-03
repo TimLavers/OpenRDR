@@ -1,7 +1,7 @@
 package io.rippledown.main
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.rippledown.constants.server.LOCAL_USER_ID
 import io.rippledown.model.UserId
 import kotlin.test.Test
 
@@ -35,12 +35,14 @@ class DefaultUserIdTest {
     }
 
     @Test
-    fun `falls back to the local id when nothing is set`() {
+    fun `it is an error when neither the property nor the OS user name is set`() {
         // Given
         val properties = emptyMap<String, String>()
 
         // When / Then
-        defaultUserId(properties::get) shouldBe UserId(LOCAL_USER_ID)
+        shouldThrow<IllegalStateException> {
+            defaultUserId(properties::get)
+        }.message shouldBe NO_USER_IDENTITY
     }
 
     @Test

@@ -28,12 +28,15 @@ Implementation plan: [concurrent_users_groundwork.md](concurrent_users_groundwor
 1. **User identity.** The third-party system authenticates; OpenRDR consumes an identity. Simplest contract: the server
    sits behind a reverse proxy / gateway that validates the token and forwards a `userId` header (or the server
    validates a JWT signature itself — validation only, no user management). Every REST call and the web-socket
-   handshake carry it. A `RoutingContext.userId()` helper reads the header; a missing header falls back to a fixed
-   local id (logged), so the packaged demo, curl and the cucumber suite keep working unauthenticated.
+   handshake carry it. A `RoutingContext.userId()` helper reads the header; a missing header is an error. There is
+   no fallback identity — every user is authenticated by assumption, and a default id would silently merge users
+   behind a misconfigured gateway and defeat the Stage 2 lease. *Done.*
 2. **Connection registry.** Replace the single field in `WebSocketManager` with a registry: `userId → connection(s)`.
-   Push methods take an addressee — either one user (`sendKbInfo` when *their* chat opens a KB) or all users whose
-   open KB is a given one (`sendStatus`, `sendCasesInfo`). The server learns each user's open KB from the chat
-   context, so per-KB addressing needs no client change and lands in the groundwork, not with the lease.
+   Push methods take an addressee: one user (`sendKbInfo` / `sendKbClosed` when *their* chat opens or closes a KB)
+   or everyone (`broadcast`). Per-KB addressing of `sendStatus`, `sendCasesInfo` and `sendRuleSessionCompleted` was
+   planned here but is deferred to Stage 2: the chat context is the only record of a user's open KB, and the client
+   does not start the conversation until its case list has arrived, so a push in that window would reach nobody.
+   Stage 2 addresses them by lease holder instead (see the contract below). *Done.*
 3. **Per-user chat.** `ChatCoordinator` becomes a registry `userId → (ChatManager, ChatContext)`. The `Mutex` guarding
    "one turn at a time" becomes per-user. The conversation is cheap state (prompt + history), so this is mechanical.
 4. **Per-user "open KB".** The notion of the open KB moves from the server singleton into the per-user chat context,
@@ -70,6 +73,87 @@ One user per project at a time, enforced server-side.
 
 Cheap, correct, and almost all of it survives into the later stages (the lease becomes a finer-grained lock). The
 drawback is purely the product constraint it encodes.
+
+### Lease contract
+
+The decisions a test can be written against. Each item is a commitment, not a design sketch; the implementation
+plan follows from them.
+
+1. **One holder per KB.** `ProjectLeaseManager` (name chosen over "lock" to match the semantics) maps
+   `kbId → Lease(userId, lastActivity)`. A user may hold leases on several KBs at once; a KB has at most one holder.
+2. **Taken on first guarded action, renewed on every one.** Opening a KB (`START_CONVERSATION`) and every read take
+   no lease. The first guarded action by a user on an unheld KB takes it; each later guarded action by the holder
+   moves `lastActivity`. If the KB is held by someone else, the action is refused and nothing else happens.
+3. **Guarded actions** are exactly the KB mutations a *user* initiates:
+    - rule building: start session, add/remove condition, select cornerstone, exempt cornerstone, commit, cancel;
+    - attribute edits: rename, reorder, add/edit a derived attribute;
+    - comment edits outside a rule session (rename a comment);
+    - changes to the set of cases a user makes: deleting a case (REST `DELETE_CASE_WITH_NAME` and the chat's
+      `DeleteCaseFromList`), copying a case to a list;
+    - KB metadata: rename, describe, delete.
+
+   Not guarded: case ingestion from the laboratory system (`Interpreter.kt`, `CaseManagement.kt` posts) — new cases
+   arriving take nothing away from the holder — favourites and views (per-user presentation), exporting, and every
+   read. Creating a KB is unguarded (nothing to hold yet).
+
+   Guarding case deletion is what protects an in-progress rule session's case: today nothing stops a case being
+   deleted while a rule is being built on it, and the session would carry on against a case that no longer exists
+   and copy it back in as a cornerstone at commit. With one user this never happens in practice; with two it is the
+   first thing that would.
+
+   Describing the KB is in the set for a different reason. It is a one-shot overwrite with no session: two users
+   composing in their chat text areas and pressing Enter a second apart would silently lose the first text. The
+   lease is the only thing that turns that into a refusal, so the weakest-looking member of the set is the one
+   with no other protection.
+
+   The consequence, accepted deliberately: a one-shot action such as a description edit takes the lease and holds it
+   like any other, so a user who only tweaked the description blocks other editors until they close the KB or the
+   lease expires. A lighter policy for one-shot actions ("check, don't take") would bring the silent overwrite back,
+   and "release when the rule session ends" has the same hole. One policy, no exceptions; the refusal message tells
+   the other user that closing the KB hands it over.
+4. **One choke point.** The guard lives in `KBEndpoint`, which both the chat actions and the REST routes call, so
+   neither surface can bypass it. `KBEndpoint`'s guarded methods gain a `userId` parameter; unguarded methods do not
+   change. This closes the pre-existing gap where `DELETE_KB` / `RENAME_KB` over REST bypassed `KnowledgeBaseService`
+   — they still bypass the *service*, but not the *lease*.
+5. **What the loser gets.** Over REST: `409 Conflict`, body `"<kbName> is being edited by <holderId>."`. In the chat:
+   the same sentence, followed by what the user can still do (read the cases, open another KB). The chat never
+   retries or queues the action. The client shows the sentence in the app bar as a status indicator; it adds no
+   control (chat-UI guidelines).
+6. **Expiry.** A lease with no activity for **10 minutes** is expired; the next guarded action by anyone (including
+   the old holder) treats the KB as unheld. There is no background timer: expiry is checked on access, so a server
+   with no traffic does nothing. Disconnecting the web-socket does not release the lease (reasoning above).
+
+   The figure is bounded below by the longest natural pause inside a rule session (reading a cornerstone, thinking
+   about a condition, a phone call) because expiry cancels the session and loses the half-built rule; it is bounded
+   above by how long an abandoned client blocks the project. Ten minutes is a constant, not configuration, and is
+   cheap to change once someone is bitten in either direction. `ProjectLeaseManager` takes an injected clock
+   (`() -> Long`, as `ApplicationKbService` already does), so expiry is unit-tested by advancing a fake clock; the
+   cucumber acceptance uses close-to-release and never waits on expiry.
+7. **Release.** The holder releases by closing the KB in the chat, by deleting it, or by expiry. There is no explicit
+   "release" verb to learn; closing is the natural one. Release of any kind cancels the KB's rule session if one is in
+   progress and the holder's client is told via `RULE_SESSION_COMPLETED`-style push so it drops its session state.
+8. **Deleting or renaming a held KB** by a non-holder is refused as in 5. By the holder, delete releases the lease and
+   resets every user's conversation on that KB (groundwork step 4); rename keeps the lease.
+9. **Pushes go to the holder.** `sendStatus` (cornerstone status) and `sendRuleSessionCompleted` are addressed to
+   the lease holder of the KB — a rule session exists only under a lease, so the addressee is always defined and
+   needs no settled chat context. `sendCasesInfo` stays `broadcast` (ingestion is not a user action; the client
+   filters by KB name). This resolves the item deferred from the groundwork.
+10. **Identity in the test suite.** The GUI's `Api` sends the OS user name; the cucumber `RESTClient` keeps a raw
+    `HttpClient` for some calls that sends no header. Today none of those calls reads the id, so nothing fails;
+    once the guard lands on `KBEndpoint`, every guarded route reads it and those calls are refused outright. Before
+    the guard lands, the `RESTClient` must present the same identity as the GUI (route everything through its `Api`,
+    or give the raw client the same default header). This is a prerequisite task, not a test fix.
+
+**Open points, to settle before implementation starts:**
+
+- Whether the holder's own client should see "you are editing" in the app bar. Proposal: no — single-user behaviour
+  must stay byte-for-byte, and the indicator is for the *other* user.
+
+**Acceptance (REST-only, two `Api` users against one server):** Alice starts a rule session on Thyroids; Bob's attempt
+to start one on Thyroids gets 409 naming Alice; Bob's attempt on Glucose succeeds; Bob reads a Thyroids case
+successfully; Alice closes Thyroids in the chat; Bob's retry on Thyroids succeeds and Alice's session is gone.
+In the chat: Bob asks to delete Thyroids while Alice holds it and is told who is editing it. These are the
+scenarios that should be red at the start of Stage 2.
 
 ## Stage 3 — shared project, single writer at the engine level
 
