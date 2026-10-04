@@ -67,11 +67,14 @@ class ServerApplication(
 
     fun deleteKB(id: String, userId: UserId): KBInfo? = synchronized(kbSetLock) {
         val endpoint = kbForId(id)
-        endpoint.session.hold(userId)
-        logger.info("User '$userId' deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
-        val remaining = kbManager.deleteKB(endpoint.kbInfo())
-        idToKBEndpoint.remove(id)
-        remaining
+        // Under the KB's own lock too, so a mutation in flight finishes before the KB goes.
+        endpoint.session.locked {
+            endpoint.session.hold(userId)
+            logger.info("User '$userId' deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
+            val remaining = kbManager.deleteKB(endpoint.kbInfo())
+            idToKBEndpoint.remove(id)
+            remaining
+        }
     }
 
     fun renameKB(id: String, newName: String, userId: UserId): KBInfo = synchronized(kbSetLock) {

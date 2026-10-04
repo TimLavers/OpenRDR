@@ -6,24 +6,69 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.ConditionList
+import io.rippledown.model.condition.ConditionParsingResult
+import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.model.rule.UndoRuleDescription
 
 /**
- * The chat's view of a KB's [RuleService] for one user: every call that edits
- * the KB takes or renews the project lease first, so a KB held by someone else
- * is refused before anything happens. Reads and pushes pass straight through.
- * See documentation/design/concurrent_users.md.
+ * The chat's view of a KB's [RuleService] for one user. Every call runs under
+ * the KB's lock, and every call that edits the KB takes or renews the project
+ * lease first, so a KB held by someone else is refused before anything happens.
+ * See documentation/design/concurrent_users.md and concurrent_users_write_lock.md.
  */
 class LeasedRuleService(
     private val userId: UserId,
     private val session: KBSession,
     private val delegate: RuleService
-) : RuleService by delegate {
+) : RuleService {
 
-    private fun <T> held(action: RuleService.() -> T): T {
+    private fun <T> held(action: RuleService.() -> T): T = session.locked {
         session.hold(userId)
-        return delegate.action()
+        delegate.action()
     }
+
+    private fun <T> read(action: RuleService.() -> T): T = session.locked { delegate.action() }
+
+    override fun nameOfCommentAttributeInSession() = read { nameOfCommentAttributeInSession() }
+
+    override fun offeredValueExpressionFor(valueExpression: String) =
+        read { offeredValueExpressionFor(valueExpression) }
+
+    // Translates the expression, which may call the LLM: the delegate locks only
+    // the part that touches the KB, so this must not be wrapped here.
+    override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult =
+        delegate.conditionForExpression(case, expression)
+
+    override fun conditionForEditedSuggestion(
+        case: RDRCase,
+        editableCondition: EditableCondition,
+        value: String
+    ): ConditionParsingResult = read { conditionForEditedSuggestion(case, editableCondition, value) }
+
+    override fun descriptionOfMostRecentRule(): UndoRuleDescription = read { descriptionOfMostRecentRule() }
+
+    override fun sendCornerstoneStatus() = read { sendCornerstoneStatus() }
+
+    override fun sendRuleSessionCompleted() = read { sendRuleSessionCompleted() }
+
+    override fun cornerstoneStatus(): CornerstoneStatus = read { cornerstoneStatus() }
+
+    override fun conditionHintsForCase(case: RDRCase): ConditionList = read { conditionHintsForCase(case) }
+
+    override fun conditionForSuggestionText(case: RDRCase, conditionText: String): Condition? =
+        read { conditionForSuggestionText(case, conditionText) }
+
+    override fun currentRuleSessionConditionTexts(): Set<String> = read { currentRuleSessionConditionTexts() }
+
+    override fun isRuleSessionActive(): Boolean = read { isRuleSessionActive() }
+
+    override fun attributeForName(name: String) = read { attributeForName(name) }
+
+    override fun attributeById(id: Int) = read { attributeById(id) }
+
+    override fun allAttributes() = read { allAttributes() }
 
     override fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,

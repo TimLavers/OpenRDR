@@ -35,51 +35,54 @@ class KBEndpoint(
         return kb.kbInfo
     }
 
-    fun description() = kb.description()
+    fun description() = session.locked { kb.description() }
 
-    fun setDescription(newDescription: String) {
+    fun setDescription(newDescription: String) = session.locked {
         kb.setDescription(newDescription)
     }
 
-    fun descriptionOfMostRecentRule() = ruleSessionManager().descriptionOfMostRecentRule()
+    fun descriptionOfMostRecentRule() = session.locked { ruleSessionManager().descriptionOfMostRecentRule() }
 
-    fun undoLastRule() {
+    fun undoLastRule() = session.locked {
         ruleSessionManager().undoLastRuleSession()
     }
 
-    fun exportKBToZip(): File {
+    fun exportKBToZip(): File = session.locked {
         val tempDir: File = createTempDirectory().toFile()
         KBExporter(tempDir, kb).export()
         val bytes = Zipper(tempDir).zip()
         val file = File(tempDir, "${kb.kbInfo}.zip")
         file.writeBytes(bytes)
-        return file
+        file
     }
 
-    fun cancelRuleSession() = ruleSessionManager().cancelRuleSession()
+    fun cancelRuleSession() = session.locked { ruleSessionManager().cancelRuleSession() }
 
-    fun addConditionToCurrentRuleBuildingSession(condition: Condition) {
+    fun addConditionToCurrentRuleBuildingSession(condition: Condition) = session.locked {
         ruleSessionManager().addConditionToCurrentRuleSession(condition)
     }
 
-    fun commitCurrentRuleSession() = ruleSessionManager().commitCurrentRuleSession()
+    fun commitCurrentRuleSession() = session.locked { ruleSessionManager().commitCurrentRuleSession() }
 
-    fun waitingCasesInfo() = CasesInfo(
-        caseIds = kb.processedCaseIds(),
-        cornerstoneCaseIds = kb.cornerstoneCaseIds(),
-        userDefinedCaseLists = kb.userDefinedCaseLists(),
-        kbName = kb.kbInfo.name
-    )
-
-    fun case(id: Long): RDRCase {
-        val case = uninterpretedCase(id)
-        kb.interpret(case)
-        return case
+    fun waitingCasesInfo() = session.locked {
+        CasesInfo(
+            caseIds = kb.processedCaseIds(),
+            cornerstoneCaseIds = kb.cornerstoneCaseIds(),
+            userDefinedCaseLists = kb.userDefinedCaseLists(),
+            kbName = kb.kbInfo.name
+        )
     }
 
-    fun viewableCase(id: Long) = kb.viewableCase(uninterpretedCase(id))
+    fun case(id: Long): RDRCase = session.locked {
+        val case = uninterpretedCase(id)
+        kb.interpret(case)
+        case
+    }
 
-    fun conditionHintsForCase(id: Long): ConditionList = ruleSessionManager().conditionHintsForCase(case(id))
+    fun viewableCase(id: Long) = session.locked { kb.viewableCase(uninterpretedCase(id)) }
+
+    fun conditionHintsForCase(id: Long): ConditionList =
+        session.locked { ruleSessionManager().conditionHintsForCase(case(id)) }
 
     suspend fun caseReport(caseId: Long): CaseReport {
         val viewable = viewableCase(caseId)
@@ -93,40 +96,49 @@ class KBEndpoint(
         return report
     }
 
-    fun processCase(externalCase: ExternalCase) = kb.processCase(externalCase)
+    fun processCase(externalCase: ExternalCase) = session.locked { kb.processCase(externalCase) }
 
-    fun addCornerstoneCase(externalCase: ExternalCase) = kb.addCornerstoneCase(externalCase)
+    fun addCornerstoneCase(externalCase: ExternalCase) = session.locked { kb.addCornerstoneCase(externalCase) }
 
-    fun deleteCase(name: String) = kb.deletedProcessedCaseWithName(name)
+    fun deleteCase(name: String) = session.locked { kb.deletedProcessedCaseWithName(name) }
 
-    fun moveAttribute(movedId: Int, targetId: Int) {
+    fun moveAttribute(movedId: Int, targetId: Int) = session.locked {
         val moved = kb.attributeManager.getById(movedId)
         val target = kb.attributeManager.getById(targetId)
         kb.caseViewManager.move(moved, target)
     }
 
-    fun getOrCreateAttribute(name: String) = kb.attributeManager.getOrCreate(name)
+    fun getOrCreateAttribute(name: String) = session.locked { kb.attributeManager.getOrCreate(name) }
 
-    fun setAttributeOrder(attributesInOrder: List<Attribute>) = kb.caseViewManager.set(attributesInOrder)
+    fun setAttributeOrder(attributesInOrder: List<Attribute>) =
+        session.locked { kb.caseViewManager.set(attributesInOrder) }
 
-    fun getOrCreateCondition(condition: Condition) = kb.conditionManager.getOrCreate(condition)
+    fun getOrCreateCondition(condition: Condition) = session.locked { kb.conditionManager.getOrCreate(condition) }
 
-    fun startRuleSession(request: SessionStartRequest) = ruleSessionManager().startRuleSession(request)
+    fun startRuleSession(request: SessionStartRequest) =
+        session.locked { ruleSessionManager().startRuleSession(request) }
 
-    fun commitRuleSession(request: RuleRequest) = ruleSessionManager().commitRuleSession(request)
+    fun commitRuleSession(request: RuleRequest) = session.locked { ruleSessionManager().commitRuleSession(request) }
 
-    fun uninterpretedCase(id: Long) = kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
+    fun uninterpretedCase(id: Long) = session.locked {
+        kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
+    }
 
-    fun updateCornerstone(request: UpdateCornerstoneRequest) = ruleSessionManager().updateCornerstone(request)
-    fun selectCornerstone(index: Int) = ruleSessionManager().selectCornerstone(index)
-    fun exemptCornerstone(index: Int) = ruleSessionManager().exemptCornerstone(index)
+    fun updateCornerstone(request: UpdateCornerstoneRequest) =
+        session.locked { ruleSessionManager().updateCornerstone(request) }
+
+    fun selectCornerstone(index: Int) = session.locked { ruleSessionManager().selectCornerstone(index) }
+    fun exemptCornerstone(index: Int) = session.locked { ruleSessionManager().exemptCornerstone(index) }
+
+    // Not locked here: the translation inside calls the LLM, so the
+    // RuleSessionManager locks only the part that touches the KB.
     fun conditionForExpression(expression: String) = ruleSessionManager().conditionForExpression(expression)
 
     /**
      * Build a complete rule in one call, without using the UI.
      * Condition expressions are parsed deterministically from human-readable text.
      */
-    fun buildRule(request: BuildRuleRequest) = ruleSessionManager().buildRule(request)
+    fun buildRule(request: BuildRuleRequest) = session.locked { ruleSessionManager().buildRule(request) }
 
     private fun ruleSessionManager(): RuleSessionManager = session.ruleSessionManager
 }

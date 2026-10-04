@@ -29,6 +29,8 @@ import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.suggestions.ConditionSuggester
 import io.rippledown.suggestions.SuggestionContext
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * The name a comment variable's marker is rendered with when the variable names
@@ -45,6 +47,7 @@ private val FORMULA_OPERATORS = Regex("""[+\-*/()^]""")
 class RuleSessionManager(
     private val kb: KB,
     private val webSocketManager: WebSocketManager? = null,
+    private val kbLock: ReentrantLock = ReentrantLock(),
     private val leaseHolder: () -> UserId? = { null }
 ) : RuleService {
     val logger = lazyLogger
@@ -118,8 +121,10 @@ class RuleSessionManager(
 
     init {
         conditionParser = object : ConditionParser {
-            override fun parse(expression: String, attributeFor: AttributeFor) =
-                ConditionGenerator(attributeFor, conditionChatService, kb.attributeNames()).conditionFor(expression)
+            override fun parse(expression: String, attributeFor: AttributeFor): Condition? {
+                val attributeNames = kbLock.withLock { kb.attributeNames() }
+                return ConditionGenerator(attributeFor, conditionChatService, attributeNames).conditionFor(expression)
+            }
         }
     }
 
@@ -924,10 +929,12 @@ class RuleSessionManager(
         conditionParser = parser
     }
 
+    // Translating the expression may call the LLM, so the KB lock is held only
+    // around the attribute lookups and the validation, never across the call.
     override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult {
-        val attributeFor: AttributeFor = { kb.attributeManager.getOrCreate(it) }
+        val attributeFor: AttributeFor = { kbLock.withLock { kb.attributeManager.getOrCreate(it) } }
         val condition = conditionParser.parse(expression, attributeFor)
-        return validated(condition, case, expression)
+        return kbLock.withLock { validated(condition, case, expression) }
     }
 
     override fun conditionForEditedSuggestion(

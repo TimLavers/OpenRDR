@@ -32,6 +32,7 @@ class LeasedRuleServiceTest {
     @BeforeTest
     fun setup() {
         session = mockk()
+        every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         delegate = mockk()
         service = LeasedRuleService(alice, session, delegate)
     }
@@ -99,6 +100,7 @@ class LeasedRuleServiceTest {
 
         // Then
         verify(exactly = guardedCalls.size) { session.hold(alice) }
+        verify(exactly = guardedCalls.size) { session.locked(any<() -> Any?>()) }
         verify(exactly = 1) { delegate.startRuleSessionToAddComment(viewableCase, "Go.", emptyList()) }
         verify(exactly = 1) { delegate.commitCurrentRuleSession() }
         verify(exactly = 1) { delegate.deleteCaseFromUserList(viewableCase) }
@@ -121,7 +123,7 @@ class LeasedRuleServiceTest {
     }
 
     @Test
-    fun `reads and pushes delegate without touching the lease`() {
+    fun `reads and pushes run under the KB lock without touching the lease`() {
         // Given
         every { delegate.nameOfCommentAttributeInSession() } returns "C1"
         every { delegate.offeredValueExpressionFor("x") } returns null
@@ -154,7 +156,20 @@ class LeasedRuleServiceTest {
         service.attributeById(1) shouldBe Attribute(1, "x")
         service.allAttributes() shouldBe setOf(Attribute(1, "x"))
 
-        // Then
+        // Then every call but the LLM-translating one ran under the lock
         verify(exactly = 0) { session.hold(any()) }
+        verify(exactly = 13) { session.locked(any<() -> Any?>()) }
+    }
+
+    @Test
+    fun `translating a condition expression is not wrapped in the KB lock`() {
+        // Given
+        every { delegate.conditionForExpression(case, "x > 1") } returns ConditionParsingResult(condition)
+
+        // When
+        service.conditionForExpression(case, "x > 1")
+
+        // Then the delegate holds the lock only around its own KB access, so none is taken here
+        verify(exactly = 0) { session.locked(any<() -> Any?>()) }
     }
 }

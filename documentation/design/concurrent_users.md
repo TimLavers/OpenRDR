@@ -188,17 +188,30 @@ In order; each step keeps the suites green.
 The holder's own client shows nothing: single-user behaviour stays byte-for-byte, and the message is for the *other*
 user.
 
+### Possible follow-up: a "held by" indicator
+
+The app-bar indicator was dropped on staleness, not on principle (it is a display, not a control, so the chat-UI
+guidelines allow it). Now that the per-user chat context records each user's open KB, the server could push
+`lease taken` / `lease released` to everyone with that KB open, which removes the staleness on take and release.
+Expiry would still be invisible until someone's next guarded action, so the indicator would have to show when the
+lease was taken ("held by Alice since 14:02") to be honest. Considered and rejected along the way: letting users
+name themselves in the chat (an asserted identity defeats the lease, and arrives after the conversation it would
+name), and a server-wide "who is logged on" count (presence is per server, the lease is per KB, so it answers the
+wrong question). Not scheduled; revisit if refusal messages prove confusing in use.
+
 ## Stage 3 — shared project, single writer at the engine level
 
 Several users in the same project; concurrency resolved by serialising mutations, not by merging them.
+Implementation plan for the first increment: [concurrent_users_write_lock.md](concurrent_users_write_lock.md).
 
 - **Per-user rule sessions.** `RuleSessionManager` splits in two: the stateless engine operations stay per-KB; the
   session state (`ruleSession`, `currentChange`, cornerstone cursor, translator conversation) moves into a
   `RuleBuildingSessionState` held per `(userId, kbId)`. Rule-session routes resolve the caller's session from the
   authenticated user — no wire-format change beyond the identity header.
-- **KB write lock.** All KB mutations (commit rule, rename comment, add case, reorder attributes, …) run under one
-  per-KB lock (a `Mutex` or single-threaded dispatcher per KB). Mutations are short; users never wait noticeably. This
-  also fixes the unsynchronised-object-graph hazard without touching the managers.
+- **KB write lock.** Every KB access (reads included: interpreting a case writes into it) runs under one per-KB
+  `ReentrantLock` owned by `KBSession`, taken at each surface's entry (`KBEndpoint`, `LeasedRuleService`). Accesses
+  are short; users never wait noticeably. This fixes the unsynchronised-object-graph hazard without touching the
+  managers. *Done* — see the plan linked above.
 - **Commit-time revalidation.** The RDR-specific problem: user A's in-progress session was started against an
   interpretation that user B's committed rule may have changed. At commit, the server re-interprets the session case
   and checks the session's diff still applies; if not, the commit is rejected with "the case's interpretation changed
@@ -244,9 +257,9 @@ test.
   `RESTClient` wraps one `Api` with one `currentKB`, so it becomes one instance per named user, each with its own
   `userId` and its own `WebSocketApi` listener for push assertions.
 - **UI clients cover what REST cannot see.** That user B's window does *not* switch KB when A opens one, does *not*
-  show A's cornerstone status, and shows the read-only indicator with editing disabled — these are client reactions to
-  frames that were or were not sent, and a REST client can only observe the frame. One scenario per stage of the shape
-  "two users, two windows, A edits, B sees read-only and is unaffected by A's pushes" is enough.
+  show A's cornerstone status, and shows A's lease as a warning in the chat when B's edit is refused — these are
+  client reactions to frames that were or were not sent, and a REST client can only observe the frame. One scenario
+  per stage of the shape "two users, two windows, A edits, B is refused and is unaffected by A's pushes" is enough.
 - **Multi-UI scenarios are kept rare.** A UI run takes over the desktop; two Compose windows double the a11y-tree
   flakiness, both chat panels drive the LLM, and the page objects (`ChatPO`, `InterpretationPO`, …) are singletons that
   need a window parameter. Tag them `@multi-user`, put them in their own feature folder so routine folder runs exclude

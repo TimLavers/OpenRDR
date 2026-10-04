@@ -77,7 +77,9 @@ internal class KBEndpointTest {
         every { rsm.descriptionOfMostRecentRule() } returns undoDescription
         val session = mockk<KBSession>()
         every { session.ruleSessionManager } returns rsm
+        every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         KBEndpoint(session).descriptionOfMostRecentRule() shouldBe undoDescription
+        verify(exactly = 1) { session.locked(any<() -> Any?>()) }
     }
 
     @Test
@@ -85,8 +87,10 @@ internal class KBEndpointTest {
         val rsm = mockk<RuleSessionManager>()
         val session = mockk<KBSession>()
         every { session.ruleSessionManager } returns rsm
+        every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         KBEndpoint(session).undoLastRule()
         verify { rsm.undoLastRuleSession() }
+        verify(exactly = 1) { session.locked(any<() -> Any?>()) }
     }
 
     @Test
