@@ -34,7 +34,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         val expression = "elevated waves"
         val waves = Attribute(0, "Waves")
         val condition = EpisodicCondition(null, waves, High, Current, expression)
-        every { kbEndpoint.conditionForExpression(any<String>()) } returns ConditionParsingResult(
+        every { kbEndpoint.conditionForExpression(any<String>(), any()) } returns ConditionParsingResult(
             condition
         )
 
@@ -45,7 +45,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe OK
         result.body<ConditionParsingResult>().condition shouldBe condition
-        verify { kbEndpoint.conditionForExpression(expression) }
+        verify { kbEndpoint.conditionForExpression(expression, testUser) }
     }
 
     @Test
@@ -56,7 +56,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             diff = Addition("Glucose ok."),
             conditions = listOf("Glucose <= 1.5")
         )
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
 
         val result = httpClient.post(BUILD_RULE) {
@@ -66,7 +66,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         }
 
         result.status shouldBe OK
-        verify { kbEndpoint.buildRule(request) }
+        verify { kbEndpoint.buildRule(request, testUser) }
     }
 
     @Test
@@ -78,7 +78,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             conditions = listOf("TSH >= 0.6")
         )
         val updatedCasesInfo = CasesInfo(listOf(CaseId(id = 1, name = "Case1")), kbName = "TestKB")
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns updatedCasesInfo
 
         httpClient.post(BUILD_RULE) {
@@ -98,7 +98,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             diff = Removal("Outdated comment."),
             conditions = listOf("TSH is normal")
         )
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
 
         val result = httpClient.post(BUILD_RULE) {
@@ -108,7 +108,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         }
 
         result.status shouldBe OK
-        verify { kbEndpoint.buildRule(request) }
+        verify { kbEndpoint.buildRule(request, testUser) }
     }
 
     @Test
@@ -119,7 +119,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             diff = Replacement("Old comment.", "New comment."),
             conditions = listOf("Free T4 is high")
         )
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
 
         val result = httpClient.post(BUILD_RULE) {
@@ -129,7 +129,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         }
 
         result.status shouldBe OK
-        verify { kbEndpoint.buildRule(request) }
+        verify { kbEndpoint.buildRule(request, testUser) }
     }
 
     @Test
@@ -140,7 +140,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             diff = Addition("Always applies."),
             conditions = emptyList()
         )
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
 
         val result = httpClient.post(BUILD_RULE) {
@@ -150,7 +150,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         }
 
         result.status shouldBe OK
-        verify { kbEndpoint.buildRule(request) }
+        verify { kbEndpoint.buildRule(request, testUser) }
     }
 
     @Test
@@ -161,7 +161,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             diff = Addition("Complex rule."),
             conditions = listOf("TSH >= 0.6", "Free T4 is high", "Age > 50")
         )
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
 
         val result = httpClient.post(BUILD_RULE) {
@@ -171,7 +171,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
         }
 
         result.status shouldBe OK
-        verify { kbEndpoint.buildRule(request) }
+        verify { kbEndpoint.buildRule(request, testUser) }
     }
 
     @Test
@@ -182,7 +182,7 @@ class RuleSessionsTest : OpenRDRServerTestBase() {
             diff = Addition("Some comment."),
             conditions = listOf("TSH >= 0.6")
         )
-        every { kbEndpoint.buildRule(request) } throws Exception("Case not found")
+        every { kbEndpoint.buildRule(request, testUser) } throws Exception("Case not found")
 
         val result = httpClient.post(BUILD_RULE) {
             contentType(ContentType.Application.Json)

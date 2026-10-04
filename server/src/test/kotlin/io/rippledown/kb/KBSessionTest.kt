@@ -5,6 +5,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -65,25 +66,38 @@ class KBSessionTest {
     }
 
     @Test
-    fun `should create a RuleSessionManager`() {
+    fun `a user gets the same rule session manager each time`() {
         // Given/When
-        val rsm = session.ruleSessionManager
+        val rsm = session.ruleSessionManagerFor(alice)
 
         // Then
         rsm.shouldBeInstanceOf<RuleSessionManager>()
+        session.ruleSessionManagerFor(alice) shouldBeSameInstanceAs rsm
     }
 
     @Test
-    fun `should pass webSocketManager to RuleSessionManager`() {
+    fun `different users get rule session managers with independent state`() {
         // Given
-        val webSocketManager = mockk<WebSocketManager>()
-        val sessionWithWs = KBSession(kb, webSocketManager)
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
+
+        // When / Then
+        session.ruleSessionManagerFor(bob).isRuleSessionActive() shouldBe false
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe true
+    }
+
+    @Test
+    fun `each user's rule session manager works on the one KB`() {
+        // Given
+        val sessionCase = createCase("Case1")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(sessionCase, "Go.")
+        session.ruleSessionManagerFor(alice).commitCurrentRuleSession()
 
         // When
-        val rsm = sessionWithWs.ruleSessionManager
+        val description = session.ruleSessionManagerFor(bob).descriptionOfMostRecentRule()
 
-        // Then - verify it works by using the rsm (indirectly confirms wiring)
-        rsm shouldNotBe null
+        // Then
+        description.description shouldNotBe ""
+        kb.ruleTree.size() shouldBe 2
     }
 
     @Test
@@ -92,8 +106,8 @@ class KBSessionTest {
         val sessionCase = createCase("Case1")
 
         // When
-        session.ruleSessionManager.startRuleSessionToAddComment(sessionCase, "Go.")
-        session.ruleSessionManager.commitCurrentRuleSession()
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(sessionCase, "Go.")
+        session.ruleSessionManagerFor(alice).commitCurrentRuleSession()
 
         // Then
         kb.interpret(sessionCase)
@@ -109,10 +123,10 @@ class KBSessionTest {
         val comment = "Go to Bondi."
 
         // When
-        session.ruleSessionManager.startRuleSessionToAddComment(viewableCase, comment, emptyList())
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(viewableCase, comment, emptyList())
 
         // Then
-        session.ruleSessionManager.currentDiff shouldBe
+        session.ruleSessionManagerFor(alice).currentDiff shouldBe
                 Addition(comment, "C1", kb.attributeManager.byName("C1")?.id)
     }
 
@@ -132,13 +146,13 @@ class KBSessionTest {
     fun `a refused hold leaves the holder's rule session untouched`() {
         // Given
         session.hold(alice)
-        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
 
         // When
         shouldThrow<ProjectHeldException> { session.hold(bob) }
 
         // Then
-        session.ruleSessionManager.isRuleSessionActive() shouldBe true
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe true
         session.lease.holder() shouldBe alice
         coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
     }
@@ -147,7 +161,7 @@ class KBSessionTest {
     fun `taking an expired lease cancels the old holder's rule session and tells them`() {
         // Given
         session.hold(alice)
-        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
         now += LEASE_EXPIRY_MS
 
         // When
@@ -155,8 +169,26 @@ class KBSessionTest {
 
         // Then
         session.lease.holder() shouldBe bob
-        session.ruleSessionManager.isRuleSessionActive() shouldBe false
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
+    }
+
+    @Test
+    fun `losing the lease cancels only the loser's rule session`() {
+        // Given alice holds the lease with a session, and bob has a session too (he will be able to once the lease is lifted)
+        session.hold(alice)
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(bob).startRuleSessionToAddComment(createCase("Case2"), "Stop.")
+        now += LEASE_EXPIRY_MS
+
+        // When
+        session.hold(bob)
+
+        // Then
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
+        session.ruleSessionManagerFor(bob).isRuleSessionActive() shouldBe true
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
+        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(bob) }
     }
 
     @Test
@@ -176,14 +208,14 @@ class KBSessionTest {
     fun `the holder releasing cancels their rule session and tells them`() {
         // Given
         session.hold(alice)
-        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
 
         // When
         session.release(alice)
 
         // Then
         session.lease.holder().shouldBeNull()
-        session.ruleSessionManager.isRuleSessionActive() shouldBe false
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
         session.hold(bob)
     }
@@ -192,14 +224,14 @@ class KBSessionTest {
     fun `a non-holder releasing changes nothing`() {
         // Given
         session.hold(alice)
-        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
 
         // When
         session.release(bob)
 
         // Then
         session.lease.holder() shouldBe alice
-        session.ruleSessionManager.isRuleSessionActive() shouldBe true
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe true
         coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
     }
 
@@ -214,15 +246,15 @@ class KBSessionTest {
     }
 
     @Test
-    fun `a rule session's pushes go to the lease holder`() {
+    fun `a rule session's pushes go to its user`() {
         // Given
         coEvery { webSocketManager.sendStatus(any(), any()) } returns Unit
         session.hold(alice)
-        session.ruleSessionManager.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
 
         // When
-        session.ruleSessionManager.sendCornerstoneStatus()
-        session.ruleSessionManager.sendRuleSessionCompleted()
+        session.ruleSessionManagerFor(alice).sendCornerstoneStatus()
+        session.ruleSessionManagerFor(alice).sendRuleSessionCompleted()
 
         // Then
         coVerify(exactly = 1) { webSocketManager.sendStatus(alice, any()) }
@@ -286,7 +318,7 @@ class KBSessionTest {
         // Given a parser (the LLM stand-in) that checks whether another thread can get the lock while it runs
         val case = createCase("Case1", value = "12.0")
         var lockWasFreeDuringTranslation = false
-        session.ruleSessionManager.setConditionParser(object : ConditionParser {
+        session.ruleSessionManagerFor(alice).setConditionParser(object : ConditionParser {
             override fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? {
                 lockWasFreeDuringTranslation = anotherThreadCanEnterTheLock()
                 return greaterThanOrEqualTo(null, attributeFor("Glucose"), 11.0)
@@ -294,7 +326,7 @@ class KBSessionTest {
         })
 
         // When
-        val result = session.ruleSessionManager.conditionForExpression(case, "raised glucose")
+        val result = session.ruleSessionManagerFor(alice).conditionForExpression(case, "raised glucose")
 
         // Then
         lockWasFreeDuringTranslation shouldBe true
@@ -306,9 +338,9 @@ class KBSessionTest {
     fun `a rule session started through the RuleSessionManager is active`() {
         // Given - start a rule session through rsm
         val sessionCase = createCase("Case1")
-        session.ruleSessionManager.startRuleSessionToAddComment(sessionCase, "Go.")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(sessionCase, "Go.")
 
         // When/Then - the session should show active
-        session.ruleSessionManager.isRuleSessionActive() shouldBe true
+        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe true
     }
 }

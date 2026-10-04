@@ -48,7 +48,7 @@ class RuleSessionManager(
     private val kb: KB,
     private val webSocketManager: WebSocketManager? = null,
     private val kbLock: ReentrantLock = ReentrantLock(),
-    private val leaseHolder: () -> UserId? = { null }
+    private val userId: UserId? = null
 ) : RuleService {
     val logger = lazyLogger
 
@@ -700,15 +700,15 @@ class RuleSessionManager(
 
     override fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-        runBlocking { webSocketManager?.sendStatus(holder(), cornerstoneStatus) }
+        runBlocking { webSocketManager?.sendStatus(addressee(), cornerstoneStatus) }
     }
 
     override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted(holder()) }
+        runBlocking { webSocketManager?.sendRuleSessionCompleted(addressee()) }
     }
 
-    // A rule session exists only under a lease, so its pushes always have an addressee.
-    private fun holder() = checkNotNull(leaseHolder()) { "A rule session push with no lease holder." }
+    // A session that pushes belongs to a user; only test fixtures build one without.
+    private fun addressee() = checkNotNull(userId) { "A rule session push with no user." }
 
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
         val session = activeRuleSession("No rule session in progress.")

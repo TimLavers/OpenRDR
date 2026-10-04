@@ -25,7 +25,11 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
                 forCase(
                     kbService,
                     context.viewableCase,
-                    LeasedRuleService(userId, context.endpoint.session, context.endpoint.session.ruleSessionManager),
+                    LeasedRuleService(
+                        userId,
+                        context.endpoint.session,
+                        context.endpoint.session.ruleSessionManagerFor(userId)
+                    ),
                     kbName,
                     kbNames,
                     demonstrationNames

@@ -27,11 +27,11 @@ fun Application.kbEditing(application: ServerApplication) {
         }
 
         get(LAST_RULE_DESCRIPTION){
-            call.respond(kbEndpoint(application).descriptionOfMostRecentRule())
+            call.respond(kbEndpoint(application).descriptionOfMostRecentRule(userId()))
         }
 
         delete(LAST_RULE_DESCRIPTION){
-            heldKbEndpoint(application).undoLastRule()
+            heldKbEndpoint(application).undoLastRule(userId())
             call.respond(OK)
         }
     }

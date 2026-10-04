@@ -43,6 +43,15 @@ Feature: Several users share one server, each with their own chat and open knowl
     When Bob starts a rule session on case Case1 in the knowledge base Thyroids
     Then Bob's request is refused with "Thyroids is being edited by Alice."
 
+  Scenario: A refused editor does not disturb the rule session of the user who holds the knowledge base
+    Given case Case1 for KB Thyroids is provided having data:
+      | TSH | 0.67 |
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
+    When Bob starts a rule session on case Case1 in the knowledge base Thyroids
+    And Alice commits her rule session
+    Then Alice's request succeeds
+    And the comment given to case Case1 in the knowledge base Thyroids is "Go to Bondi."
+
   Scenario: Editing one knowledge base does not affect another
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |

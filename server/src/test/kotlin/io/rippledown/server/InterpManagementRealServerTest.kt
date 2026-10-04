@@ -34,7 +34,7 @@ class InterpManagementRealServerTest {
         kbEndpoint = app.kbFor(kbInfo)
         val caseId = kbEndpoint.waitingCasesInfo().caseIds[0]
         val start = SessionStartRequest(caseId.id!!, Addition("Cool new comment."))
-        kbEndpoint.startRuleSession(start)
+        kbEndpoint.startRuleSession(start, TEST_USER)
         runBlocking {
             repeat(1000) {
                 launch(Dispatchers.Default) {
@@ -45,7 +45,7 @@ class InterpManagementRealServerTest {
     }
 
     private fun getCCAndSerializeIt() {
-        val status = kbEndpoint.selectCornerstone(0)
+        val status = kbEndpoint.selectCornerstone(0, TEST_USER)
         status shouldBe serializeDeserialize(status)
     }
 }

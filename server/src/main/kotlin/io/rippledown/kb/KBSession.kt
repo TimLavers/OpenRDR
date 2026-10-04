@@ -4,6 +4,7 @@ import io.rippledown.kb.lease.ProjectLease
 import io.rippledown.model.UserId
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -14,7 +15,15 @@ class KBSession(
 ) {
     private val lock = ReentrantLock()
     val lease = ProjectLease({ kb.kbInfo.name }, clock)
-    val ruleSessionManager = RuleSessionManager(kb, webSocketManager, lock, lease::holder)
+    private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
+
+    /**
+     * The rule-building session of [userId] on this KB. Each user has their own
+     * session state; the engine operations all act on the one [kb] under [locked].
+     * See documentation/design/concurrent_users_per_user_sessions.md.
+     */
+    fun ruleSessionManagerFor(userId: UserId): RuleSessionManager =
+        ruleSessionManagers.computeIfAbsent(userId) { RuleSessionManager(kb, webSocketManager, lock, it) }
 
     /**
      * Runs [block] as the only thread touching this KB. Reads are included: interpreting
@@ -36,6 +45,7 @@ class KBSession(
     }
 
     private fun leaseLostBy(holder: UserId) {
+        val ruleSessionManager = ruleSessionManagers[holder] ?: return
         if (!ruleSessionManager.isRuleSessionActive()) return
         ruleSessionManager.cancelRuleSession()
         runBlocking { webSocketManager?.sendRuleSessionCompleted(holder) }

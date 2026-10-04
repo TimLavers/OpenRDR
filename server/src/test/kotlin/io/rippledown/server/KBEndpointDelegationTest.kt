@@ -18,7 +18,7 @@ internal class KBEndpointDelegationTest {
     fun setup() {
         rsm = mockk<RuleSessionManager>()
         session = mockk<KBSession>()
-        every { session.ruleSessionManager } returns rsm
+        every { session.ruleSessionManagerFor(TEST_USER) } returns rsm
         every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         endpoint = KBEndpoint(session)
     }
@@ -26,7 +26,7 @@ internal class KBEndpointDelegationTest {
     @Test
     fun `should delegate to the ruleSessionManager to cancel a rule session, under the KB lock`() {
         // When
-        endpoint.cancelRuleSession()
+        endpoint.cancelRuleSession(TEST_USER)
 
         // Then
         verify { rsm.cancelRuleSession() }

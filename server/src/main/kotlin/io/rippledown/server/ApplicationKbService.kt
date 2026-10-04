@@ -104,7 +104,8 @@ class ApplicationKbService(
         endpoint.setDescription(text)
     }
 
-    override fun isRuleSessionActive() = openEndpoint()?.session?.ruleSessionManager?.isRuleSessionActive() == true
+    override fun isRuleSessionActive() =
+        openEndpoint()?.session?.ruleSessionManagerFor(userId)?.isRuleSessionActive() == true
 
     private fun demonstrationCase(): ExternalCase {
         val stream = checkNotNull(ApplicationKbService::class.java.getResourceAsStream(DEMO_CASE_RESOURCE)) {

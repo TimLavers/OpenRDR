@@ -30,14 +30,13 @@ class RuleSessionManagerTest {
     private lateinit var rsm: RuleSessionManager
     private lateinit var webSocketManager: WebSocketManager
     private val alice = UserId("alice")
-    private var leaseHolder: UserId? = alice
 
     @BeforeTest
     fun setup() {
         val kbInfo = KBInfo("id123", "TestKB")
         kb = KB(InMemoryKB(kbInfo))
         webSocketManager = mockk()
-        rsm = RuleSessionManager(kb, webSocketManager) { leaseHolder }
+        rsm = RuleSessionManager(kb, webSocketManager, userId = alice)
     }
 
     private fun glucose(): Attribute = kb.attributeManager.getOrCreate("Glucose")
@@ -520,16 +519,16 @@ class RuleSessionManagerTest {
     }
 
     @Test
-    fun `a cornerstone status push with no lease holder is a contract violation`() {
+    fun `a cornerstone status push from a manager with no user is a contract violation`() {
         // Given
+        val userless = RuleSessionManager(kb, webSocketManager)
         val sessionCase = createCase("Case1")
-        rsm.startRuleSessionToAddComment(sessionCase, "Go.")
-        leaseHolder = null
+        userless.startRuleSessionToAddComment(sessionCase, "Go.")
 
         // When / Then
         shouldThrow<IllegalStateException> {
-            rsm.sendCornerstoneStatus()
-        }.message shouldBe "A rule session push with no lease holder."
+            userless.sendCornerstoneStatus()
+        }.message shouldBe "A rule session push with no user."
     }
 
     // --- sendRuleSessionCompleted ---

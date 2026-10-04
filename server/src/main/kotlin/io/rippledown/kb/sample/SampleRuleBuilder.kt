@@ -1,6 +1,7 @@
 package io.rippledown.kb.sample
 
 import io.rippledown.model.Attribute
+import io.rippledown.model.UserId
 import io.rippledown.model.condition.CaseStructureCondition
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.EpisodicCondition
@@ -12,6 +13,12 @@ import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.server.KBEndpoint
+
+/**
+ * Rule sessions are per user; sample rules are built before any user has touched
+ * the KB, so they run in a session owned by this fixed identity.
+ */
+val SAMPLE_BUILDER = UserId("sample-builder")
 
 open class SampleRuleBuilder(val kbe: KBEndpoint) {
 
@@ -48,7 +55,7 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
     fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
         val case = kbe.kb.getCaseByName(caseName)
         val sessionStartRequest = SessionStartRequest(case.id!!, Addition(comment))
-        kbe.startRuleSession(sessionStartRequest)
+        kbe.startRuleSession(sessionStartRequest, SAMPLE_BUILDER)
         addConditionsAndCommitRule(*conditions)
     }
 
@@ -60,7 +67,7 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
     ) {
         val case = kbe.kb.getCaseByName(caseName)
         val sessionStartRequest = SessionStartRequest(case.id!!, Replacement(toGo, replacement))
-        kbe.startRuleSession(sessionStartRequest)
+        kbe.startRuleSession(sessionStartRequest, SAMPLE_BUILDER)
         addConditionsAndCommitRule(*conditions)
     }
 
@@ -71,14 +78,14 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
     ) {
         val case = kbe.kb.getCaseByName(caseName)
         val sessionStartRequest = SessionStartRequest(case.id!!, Removal(toGo))
-        kbe.startRuleSession(sessionStartRequest)
+        kbe.startRuleSession(sessionStartRequest, SAMPLE_BUILDER)
         addConditionsAndCommitRule(*conditions)
     }
 
     private fun addConditionsAndCommitRule(vararg conditions: Condition) {
         conditions.forEach {
-            kbe.addConditionToCurrentRuleBuildingSession(it)
+            kbe.addConditionToCurrentRuleBuildingSession(it, SAMPLE_BUILDER)
         }
-        kbe.commitCurrentRuleSession()
+        kbe.commitCurrentRuleSession(SAMPLE_BUILDER)
     }
 }

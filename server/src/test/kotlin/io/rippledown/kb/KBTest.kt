@@ -2089,7 +2089,7 @@ class KBTest {
         val newKb = KB(persistentKB)
         session = KBSession(newKb, webSocketManager)
         session.hold(alice)
-        rsm = session.ruleSessionManager
+        rsm = session.ruleSessionManagerFor(alice)
         return newKb
     }
 }

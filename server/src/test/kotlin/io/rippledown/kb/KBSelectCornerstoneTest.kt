@@ -7,6 +7,7 @@ import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.server.TEST_USER
 import io.rippledown.utils.defaultDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -125,7 +126,7 @@ class KBSelectCornerstoneTest {
 
     private fun createKB(kbInfo: KBInfo): KB {
         val newKb = KB(InMemoryKB(kbInfo))
-        rsm = KBSession(newKb).ruleSessionManager
+        rsm = KBSession(newKb).ruleSessionManagerFor(TEST_USER)
         return newKb
     }
 }

@@ -31,7 +31,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         val caseId = 1L
         val sessionStartRequest = SessionStartRequest(caseId, diff)
         val cornerstoneStatus = CornerstoneStatus()
-        every { kbEndpoint.startRuleSession(sessionStartRequest) } returns cornerstoneStatus
+        every { kbEndpoint.startRuleSession(sessionStartRequest, testUser) } returns cornerstoneStatus
 
         val result = httpClient.post(START_RULE_SESSION) {
             parameter(KB_ID, kbId)
@@ -40,7 +40,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
-        verify { kbEndpoint.startRuleSession(sessionStartRequest) }
+        verify { kbEndpoint.startRuleSession(sessionStartRequest, testUser) }
     }
 
     @Test
@@ -48,7 +48,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val request = UpdateCornerstoneRequest(CornerstoneStatus(), RuleConditionList())
         val cornerstoneStatus = CornerstoneStatus()
-        every { kbEndpoint.updateCornerstone(request) } returns cornerstoneStatus
+        every { kbEndpoint.updateCornerstone(request, testUser) } returns cornerstoneStatus
 
         val result = httpClient.post(UPDATE_CORNERSTONES) {
             parameter(KB_ID, kbId)
@@ -57,14 +57,14 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe OK
         result.body<CornerstoneStatus>() shouldBe cornerstoneStatus
-        verify { kbEndpoint.updateCornerstone(request) }
+        verify { kbEndpoint.updateCornerstone(request, testUser) }
     }
 
     @Test
     fun `should delegate exempting cornerstone to server application`() = testApplication {
         setupServer()
         val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), 42, 100)
-        every { kbEndpoint.exemptCornerstone(any()) } returns updatedCornerstoneStatus
+        every { kbEndpoint.exemptCornerstone(any(), any()) } returns updatedCornerstoneStatus
 
         val result = httpClient.post(EXEMPT_CORNERSTONE) {
             parameter(KB_ID, kbId)
@@ -73,7 +73,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe OK
         result.body<CornerstoneStatus>() shouldBe updatedCornerstoneStatus
-        verify { kbEndpoint.exemptCornerstone(42) }
+        verify { kbEndpoint.exemptCornerstone(42, testUser) }
     }
 
     @Test
@@ -82,7 +82,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val index = 42
         val updatedCornerstoneStatus = CornerstoneStatus(createViewableCase("Bondi"), index, 100)
-        every { kbEndpoint.selectCornerstone(any()) } returns updatedCornerstoneStatus
+        every { kbEndpoint.selectCornerstone(any(), any()) } returns updatedCornerstoneStatus
 
         // When
         val result = httpClient.get(SELECT_CORNERSTONE) {
@@ -94,7 +94,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         // Then
         result.status shouldBe OK
         result.body<CornerstoneStatus>() shouldBe updatedCornerstoneStatus
-        verify { kbEndpoint.selectCornerstone(index) }
+        verify { kbEndpoint.selectCornerstone(index, testUser) }
     }
 
     @Test
@@ -103,7 +103,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
         val ruleRequest = RuleRequest(1)
         val viewableCase = createViewableCase(CaseId(1, "Bondi"))
-        every { kbEndpoint.commitRuleSession(ruleRequest) } returns viewableCase
+        every { kbEndpoint.commitRuleSession(ruleRequest, testUser) } returns viewableCase
 
         val result = httpClient.post(COMMIT_RULE_SESSION) {
             parameter(KB_ID, kbId)
@@ -112,7 +112,7 @@ class InterpManagementTest : OpenRDRServerTestBase() {
         }
         result.status shouldBe OK
         result.body<ViewableCase>() shouldBe viewableCase
-        verify { kbEndpoint.commitRuleSession(ruleRequest) }
+        verify { kbEndpoint.commitRuleSession(ruleRequest, testUser) }
     }
 
 
@@ -128,6 +128,6 @@ class InterpManagementTest : OpenRDRServerTestBase() {
 
         // Then
         result.status shouldBe OK
-        verify { kbEndpoint.cancelRuleSession() }
+        verify { kbEndpoint.cancelRuleSession(testUser) }
     }
 }

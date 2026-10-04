@@ -14,6 +14,7 @@ import io.rippledown.main.Api
 import io.rippledown.model.KnowledgeBaseHeldException
 import io.rippledown.model.UserId
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
 
@@ -51,6 +52,14 @@ class ConcurrentUsersDefs {
 
         fun cancelRuleSession() = request { api.cancelRuleSession() }
 
+        fun commitRuleSession(kbName: String, caseName: String) = request {
+            api.commitSession(RuleRequest(caseIdIn(kbName, caseName)))
+        }
+
+        fun commentGivenTo(kbName: String, caseName: String): String = runBlocking {
+            requireNotNull(api.getCase(caseIdIn(kbName, caseName))) { "$caseName was not returned." }.latestText()
+        }
+
         private suspend fun caseIdIn(kbName: String, caseName: String): Long {
             api.selectKB(api.kbList().first { it.name == kbName }.id)
             return requireNotNull(api.waitingCasesInfo().caseIds.first { it.name == caseName }.id)
@@ -67,6 +76,10 @@ class ConcurrentUsersDefs {
     }
 
     private val users = mutableMapOf<String, ChatUser>()
+
+    // The case the most recently started rule session is about; committing needs its id.
+    private lateinit var ruleSessionKb: String
+    private lateinit var ruleSessionCase: String
 
     private fun user(name: String) = users.getOrPut(name) { ChatUser(name) }
 
@@ -100,6 +113,8 @@ class ConcurrentUsersDefs {
 
     @When("{word} starts a rule session on case {word} in the knowledge base {word}")
     fun startsRuleSession(userName: String, caseName: String, kbName: String) {
+        ruleSessionKb = kbName
+        ruleSessionCase = caseName
         user(userName).startRuleSession(kbName, caseName)
     }
 
@@ -111,6 +126,16 @@ class ConcurrentUsersDefs {
     @When("{word} cancels her rule session")
     fun cancelsRuleSession(userName: String) {
         user(userName).cancelRuleSession()
+    }
+
+    @When("{word} commits her rule session")
+    fun commitsRuleSession(userName: String) {
+        user(userName).commitRuleSession(ruleSessionKb, ruleSessionCase)
+    }
+
+    @Then("the comment given to case {word} in the knowledge base {word} is {string}")
+    fun commentGivenToCase(caseName: String, kbName: String, comment: String) {
+        user("Reader").commentGivenTo(kbName, caseName) shouldBe comment
     }
 
     @Then("{word}'s request succeeds")

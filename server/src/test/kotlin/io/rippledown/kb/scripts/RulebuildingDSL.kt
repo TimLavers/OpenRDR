@@ -12,6 +12,7 @@ import io.rippledown.model.Result
 import io.rippledown.model.condition.containsText
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.server.TEST_USER
 
 const val addedConditionBeforeSessionStarted = "Rule session not started."
 const val text = "Text"
@@ -27,7 +28,7 @@ class BuildTemplate {
     private val defaultDate = 1659752689505
     private val kb = KB(InMemoryKB(KBInfo("TestKB")))
     private val session = KBSession(kb)
-    private val rsm = session.ruleSessionManager
+    private val rsm = session.ruleSessionManagerFor(TEST_USER)
 
     fun cornerstoneCase(name: String, data: String) {
         val caseBuilder = RDRCaseBuilder()

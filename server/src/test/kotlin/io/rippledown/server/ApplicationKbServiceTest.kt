@@ -277,14 +277,14 @@ class ApplicationKbServiceTest {
         coEvery { webSocketManager.sendRuleSessionCompleted(alice) } just Runs
         val case = service.addDemonstrationCase()
         endpoint.session.hold(alice)
-        endpoint.startRuleSession(SessionStartRequest(requireNotNull(case.caseId.id), Addition("Go to Bondi.")))
+        endpoint.startRuleSession(SessionStartRequest(requireNotNull(case.caseId.id), Addition("Go to Bondi.")), alice)
 
         // When
         service.close()
 
         // Then
         endpoint.session.lease.holder().shouldBeNull()
-        endpoint.session.ruleSessionManager.isRuleSessionActive() shouldBe false
+        endpoint.session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
         endpoint.session.hold(bob)
     }
@@ -522,7 +522,7 @@ class ApplicationKbServiceTest {
         service.isRuleSessionActive() shouldBe false
 
         // When
-        endpoint.startRuleSession(SessionStartRequest(requireNotNull(case.caseId.id), Addition("Go to Bondi.")))
+        endpoint.startRuleSession(SessionStartRequest(requireNotNull(case.caseId.id), Addition("Go to Bondi.")), alice)
 
         // Then
         service.isRuleSessionActive() shouldBe true

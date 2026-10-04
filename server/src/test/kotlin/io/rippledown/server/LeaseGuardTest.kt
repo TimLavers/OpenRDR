@@ -47,7 +47,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
         // Given
         setupServer()
         val request = SessionStartRequest(1L, Addition("Go."))
-        every { kbEndpoint.startRuleSession(request) } returns status
+        every { kbEndpoint.startRuleSession(request, testUser) } returns status
 
         // When
         val result = httpClient.post(START_RULE_SESSION) {
@@ -77,7 +77,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
 
         // Then
         result.shouldBeRefusedByAlice()
-        verify(exactly = 0) { kbEndpoint.startRuleSession(any()) }
+        verify(exactly = 0) { kbEndpoint.startRuleSession(any(), any()) }
     }
 
     @Test
@@ -85,7 +85,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
         // Given
         setupServer()
         val request = RuleRequest(1L, RuleConditionList())
-        every { kbEndpoint.commitRuleSession(request) } returns mockk<ViewableCase>()
+        every { kbEndpoint.commitRuleSession(request, testUser) } returns mockk<ViewableCase>()
 
         // When
         httpClient.post(COMMIT_RULE_SESSION) {
@@ -102,7 +102,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
     fun `cancelling a rule session takes the lease`() = testApplication {
         // Given
         setupServer()
-        every { kbEndpoint.cancelRuleSession() } returns Unit
+        every { kbEndpoint.cancelRuleSession(testUser) } returns Unit
 
         // When
         val result = httpClient.post(CANCEL_RULE_SESSION) { parameter(KB_ID, kbId) }
@@ -117,7 +117,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
         // Given
         setupServer()
         val request = UpdateCornerstoneRequest(status, RuleConditionList())
-        every { kbEndpoint.updateCornerstone(request) } returns status
+        every { kbEndpoint.updateCornerstone(request, testUser) } returns status
 
         // When
         val result = httpClient.post(UPDATE_CORNERSTONES) {
@@ -135,7 +135,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
     fun `exempting a cornerstone takes the lease`() = testApplication {
         // Given
         setupServer()
-        every { kbEndpoint.exemptCornerstone(2) } returns status
+        every { kbEndpoint.exemptCornerstone(2, testUser) } returns status
 
         // When
         val result = httpClient.post(EXEMPT_CORNERSTONE) {
@@ -153,7 +153,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
     fun `selecting a cornerstone takes the lease`() = testApplication {
         // Given
         setupServer()
-        every { kbEndpoint.selectCornerstone(1) } returns status
+        every { kbEndpoint.selectCornerstone(1, testUser) } returns status
 
         // When
         val result = httpClient.get(SELECT_CORNERSTONE) {
@@ -172,7 +172,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
         // Given
         setupServer()
         val request = BuildRuleRequest("Case1", Addition("Go."), emptyList())
-        every { kbEndpoint.buildRule(request) } returns Unit
+        every { kbEndpoint.buildRule(request, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
 
         // When
@@ -191,7 +191,7 @@ class LeaseGuardTest : OpenRDRServerTestBase() {
     fun `undoing the last rule takes the lease`() = testApplication {
         // Given
         setupServer()
-        every { kbEndpoint.undoLastRule() } returns Unit
+        every { kbEndpoint.undoLastRule(testUser) } returns Unit
 
         // When
         val result = httpClient.delete(LAST_RULE_DESCRIPTION) { parameter(KB_ID, kbId) }
