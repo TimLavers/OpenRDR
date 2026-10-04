@@ -203,7 +203,8 @@ wrong question). Not scheduled; revisit if refusal messages prove confusing in u
 
 Several users in the same project; concurrency resolved by serialising mutations, not by merging them.
 Implementation plans: [concurrent_users_write_lock.md](concurrent_users_write_lock.md) (first increment),
-[concurrent_users_per_user_sessions.md](concurrent_users_per_user_sessions.md) (second).
+[concurrent_users_per_user_sessions.md](concurrent_users_per_user_sessions.md) (second),
+[concurrent_users_revalidation.md](concurrent_users_revalidation.md) (third).
 
 - **Per-user rule sessions.** The session state (`ruleSession`, `currentChange`, cornerstone cursor, translator
   conversation) is held per `(userId, kbId)`; the engine operations act on the shared `KB`. Rule-session routes
