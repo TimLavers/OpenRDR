@@ -75,6 +75,22 @@ class ApiTest {
     }
 
     @Test
+    fun `a commit refused because the rule session went stale throws with the server's sentence`() = runTest {
+        // Given
+        val config = config {}
+        val api = apiWithKb(config)
+        config.refusedBecauseStale = interpretationChangedMessage("Case1")
+
+        // When
+        val refusal = shouldThrow<StaleRuleSessionException> {
+            api.commitSession(RuleRequest(1L))
+        }
+
+        // Then
+        refusal.message shouldBe interpretationChangedMessage("Case1")
+    }
+
+    @Test
     fun kbDescriptionTest() = runTest {
         val config = config {}
         apiWithKb(config).kbDescription() shouldBe config.returnedKbDescription

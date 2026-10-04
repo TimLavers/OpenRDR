@@ -217,9 +217,11 @@ Implementation plans: [concurrent_users_write_lock.md](concurrent_users_write_lo
 - **Commit-time revalidation.** The RDR-specific problem: user A's in-progress session was started against an
   interpretation that user B's committed rule may have changed. At commit, the server re-interprets the session case
   and checks the session's diff still applies; if not, the commit is rejected with "the case's interpretation changed
-  while you were building this rule" and the session restarts against the fresh interpretation. Cornerstone sets are
-  recomputed at commit under the lock, so a rule never commits against a stale cornerstone review. This is optimistic
-  concurrency, and conflicts should be rare (two users building rules for the same comment on overlapping cases).
+  while you were building this rule" and the session is cancelled. Cornerstone sets are recomputed at commit under
+  the lock, so a rule never commits against a stale cornerstone review. This is optimistic concurrency, and conflicts
+  should be rare (two users building rules for the same comment on overlapping cases). *Done* — the session is
+  cancelled rather than restarted (restarting is not well-defined once the change no longer applies); see the plan
+  linked above. The lease is still in place, so nothing is visible yet; lifting it is the next increment.
 - **Broadcast invalidation.** When a rule commits, every user subscribed to the KB gets the existing
   `casesInfo` / `rule session completed` style pushes plus a new "KB changed" event; their clients re-fetch the current
   case. Users with an in-progress session get a warning that the KB changed under them.

@@ -6,9 +6,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import io.rippledown.constants.api.*
-import io.rippledown.constants.server.CASE_ID
-import io.rippledown.constants.server.EXPRESSION
-import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
@@ -62,6 +60,7 @@ class EngineConfig {
     var sampleKB: SampleKB? = null
     var lastRequestHeaders: Headers? = null
     var refusedBecauseHeld: String? = null
+    var refusedBecauseStale: String? = null
 
     var undoRuleDescription: UndoRuleDescription = UndoRuleDescription("It was a great rule, but it has to go.", true)
     var lastRuleUndoCalled = false
@@ -76,15 +75,16 @@ private class EngineBuilder(private val config: EngineConfig) {
         allowStructuredMapKeys = true
     }
 
+    private fun MockRequestHandleScope.refusal(message: String, kind: String) = respond(
+        content = ByteReadChannel(message),
+        status = HttpStatusCode.Conflict,
+        headers = headersOf(HttpHeaders.ContentType to listOf("text/plain"), REFUSAL_HEADER to listOf(kind))
+    )
+
     fun build() = MockEngine { request ->
         config.lastRequestHeaders = request.headers
-        config.refusedBecauseHeld?.let { message ->
-            return@MockEngine respond(
-                content = ByteReadChannel(message),
-                status = HttpStatusCode.Conflict,
-                headers = headersOf(HttpHeaders.ContentType, "text/plain")
-            )
-        }
+        config.refusedBecauseHeld?.let { message -> return@MockEngine refusal(message, REFUSAL_HELD) }
+        config.refusedBecauseStale?.let { message -> return@MockEngine refusal(message, REFUSAL_STALE) }
         when (request.url.encodedPath) {
             WAITING_CASES -> {
                 httpResponseData(json.encodeToString(config.returnCasesInfo))

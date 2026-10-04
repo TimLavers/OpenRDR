@@ -15,10 +15,7 @@ import io.rippledown.kb.chat.RuleConversation.Companion.CURRENT_CORNERSTONE_STAT
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.lease.ProjectHeldException
-import io.rippledown.model.Attribute
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.UserId
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KnowledgeBaseListing
@@ -426,6 +423,22 @@ class ChatManagerTest {
         // Then
         response shouldBe ChatResponse(projectHeldChatMessage("Thyroids", "alice"))
         coVerify(exactly = 0) { ruleService.sendRuleSessionCompleted() }
+    }
+
+    @Test
+    fun `a commit refused because the rule session went stale is answered with the server's sentence`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns ""
+        chatManager.startConversation(viewableCase)
+        coEvery { conversationService.response(any()) } returns ActionComment(action = COMMIT_RULE).toJsonString()
+        val message = interpretationChangedMessage("Case1")
+        every { ruleService.commitCurrentRuleSession() } throws StaleRuleSessionException(message)
+
+        // When
+        val response = chatManager.response("commit")
+
+        // Then
+        response shouldBe ChatResponse(message)
     }
 
     @Test

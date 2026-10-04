@@ -14,6 +14,7 @@ import io.rippledown.kb.chat.action.ListCapabilities
 import io.rippledown.kb.chat.action.UserAction
 import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.log.lazyLogger
+import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 
@@ -58,6 +59,8 @@ class ChatManager(
         respond(message)
     } catch (held: ProjectHeldException) {
         refused(held)
+    } catch (stale: StaleRuleSessionException) {
+        refused(stale)
     }
 
     private suspend fun respond(message: String): ChatResponse {
@@ -105,6 +108,8 @@ class ChatManager(
         else processActionComment(json.sanitizeLlmJson().fromJsonString<ActionComment>())
     } catch (held: ProjectHeldException) {
         refused(held)
+    } catch (stale: StaleRuleSessionException) {
+        refused(stale)
     } catch (e: Exception) {
         val context = if (opening) "start-conversation ActionComment" else "ActionComment"
         logger.error("Failed to process $context: $response", e)
@@ -114,6 +119,11 @@ class ChatManager(
     private fun refused(held: ProjectHeldException): ChatResponse {
         logger.info("Refused: ${held.message}")
         return ChatResponse(projectHeldChatMessage(held.kbName, held.holder.value))
+    }
+
+    private fun refused(stale: StaleRuleSessionException): ChatResponse {
+        logger.info("Refused: ${stale.message}")
+        return ChatResponse(stale.message)
     }
 
     companion object {

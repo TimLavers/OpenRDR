@@ -767,6 +767,12 @@ class RuleSessionManager(
                 "Cannot commit rule session: ${cycleMessageFor(condition)}"
             }
         }
+        if (!session.action.isApplicable(kb.ruleTree, session.case)) {
+            refuseStaleCommit(interpretationChangedMessage(session.case.name))
+        }
+        if (hasUnreviewedConflictingCornerstone(session)) {
+            refuseStaleCommit(cornerstonesChangedMessage())
+        }
         val rulesAdded = session.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
@@ -776,6 +782,31 @@ class RuleSessionManager(
         diffAttribute = null
         replacedDiffAttribute = null
         sendCasesInfo()
+    }
+
+    /**
+     * Another user's commit changed what this session was built against, so
+     * its rule can no longer be added as the user reviewed it. The session is
+     * cancelled and its user told, as when a lease is lost. See
+     * documentation/design/concurrent_users_revalidation.md.
+     */
+    private fun refuseStaleCommit(message: String): Nothing {
+        cancelRuleSession()
+        sendRuleSessionCompleted()
+        throw StaleRuleSessionException(message)
+    }
+
+    /**
+     * Whether the rule, as it would be committed now, disturbs a cornerstone that
+     * was not conflicting when the session started. Such a cornerstone was added
+     * or changed by another user's commit, so the user has not reviewed it.
+     */
+    private fun hasUnreviewedConflictingCornerstone(session: RuleBuildingSession): Boolean {
+        val now = RuleBuildingSession(
+            kb.ruleManager, kb.ruleTree, session.case, session.action, kb.allCornerstoneCases(), kb.definitionResolver
+        )
+        session.conditions.forEach { now.addCondition(it) }
+        return now.cornerstoneCases().any { it.name !in session.namesOfConflictingCornerstonesAtStart }
     }
 
     override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)

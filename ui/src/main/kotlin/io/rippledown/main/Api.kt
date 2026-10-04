@@ -15,10 +15,7 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.ContentType.Text.Plain
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
-import io.rippledown.constants.server.CASE_ID
-import io.rippledown.constants.server.EXPRESSION
-import io.rippledown.constants.server.KB_ID
-import io.rippledown.constants.server.USER_ID_HEADER
+import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -62,7 +59,10 @@ class Api(
         }
         HttpResponseValidator {
             validateResponse { response ->
-                if (response.status == HttpStatusCode.Conflict) throw KnowledgeBaseHeldException(response.bodyAsText())
+                if (response.status != HttpStatusCode.Conflict) return@validateResponse
+                val message = response.bodyAsText()
+                if (response.headers[REFUSAL_HEADER] == REFUSAL_STALE) throw StaleRuleSessionException(message)
+                throw KnowledgeBaseHeldException(message)
             }
         }
     }

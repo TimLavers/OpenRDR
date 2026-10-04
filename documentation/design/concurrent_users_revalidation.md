@@ -39,8 +39,10 @@ cornerstones and tree; if it contains a case the user was never shown (one that 
 set), the commit is rejected and the session cancelled with a message saying the cornerstones changed. A case that *was*
 in the original set and is still conflicting was reviewed (or exempted) and is fine; one that has dropped out
 is fine too. Recomputing is a second `RuleBuildingSession` constructed with the same case, action and conditions
-against `kb.allCornerstoneCases()` now; its `cornerstoneCases()` is compared with the original's
-`cornerstoneCases()` plus the exemptions. This reuses the existing conflict logic rather than duplicating it.
+against `kb.allCornerstoneCases()` now; its `cornerstoneCases()` is compared with the set the original session found
+conflicting when it started (`RuleBuildingSession.namesOfConflictingCornerstonesAtStart`, which includes cases later
+exempted or excluded by a condition — all of which the user considered). This reuses the existing conflict logic
+rather than duplicating it. Comparison is by case name, since cornerstones from a store are fresh instances.
 
 Both checks run inside `commitCurrentRuleSession`, which already runs under `KBSession.locked` at every entry, so
 nothing can change between the check and `session.commit()`.
@@ -66,20 +68,27 @@ nothing can change between the check and `session.commit()`.
 
 In order; each keeps the suites green.
 
-1. **`StaleRuleSessionException` and messages** in `common`. Serialisation is not needed (plain-text body).
-2. **Applicability check** in `RuleSessionManager.commitCurrentRuleSession`: before `session.commit()`,
+1. **Done. `StaleRuleSessionException` and messages** in `common`. Serialisation is not needed (plain-text body).
+2. **Done. Applicability check** in `RuleSessionManager.commitCurrentRuleSession`: before `session.commit()`,
    `if (!session.action.isApplicable(kb.ruleTree, session.case))` cancel the session, push `RULE_SESSION_COMPLETED`
-   to the session's user, throw. Unit tests on two `RuleSessionManager`s from one `KBSession` (alice and bob): bob's
-   addition of the same comment makes alice's addition stale; bob's removal makes alice's removal stale; bob's
-   unrelated rule leaves alice's commit untouched; the KB has no half-added rule after a rejection.
-3. **Cornerstone recheck**, same place: a new conflicting cornerstone that alice never saw rejects her commit; a
-   cornerstone she exempted does not; a cornerstone that stopped conflicting does not.
-4. **REST.** `StatusPages` handler and the `X-Refusal` header; `Api` validator throws `StaleRuleSessionException`
-   for `stale`. `ApiTest` with the mock engine for both headers.
-5. **Chat.** `ChatManager` catches and answers. Test alongside the existing refusal test.
+   to the session's user, throw. Unit tests on two `RuleSessionManager`s from one `KBSession` (alice and bob) in
+   `StaleRuleSessionTest`: bob's addition of the same comment makes alice's addition stale; bob's removal makes
+   alice's removal stale; bob's unrelated rule leaves alice's commit untouched; the KB has no half-added rule after
+   a rejection.
+3. **Done. Cornerstone recheck**, same place: a new conflicting cornerstone that alice never saw rejects her commit;
+   a cornerstone she exempted does not; a cornerstone that stopped conflicting does not.
+4. **Done. REST.** `StatusPages` handler (`LeaseRefusals.kt`) and the `X-Refusal` header (constants `REFUSAL_HEADER`,
+   `REFUSAL_HELD`, `REFUSAL_STALE` in `common`); `Api` validator throws `StaleRuleSessionException` for `stale`.
+   `StaleCommitRefusalTest` on the server, `ApiTest` with the mock engine on the client.
+5. **Done. Chat.** `ChatManager` catches and answers with the exception's message. Test alongside the existing
+   refusal test.
 6. **Acceptance.** This cannot be shown end to end while the lease still admits one editor per KB, so the scenario
-   is written against the lease lift. A REST unit-level `KBEndpoint` test with two users on one `KBSession` covers
-   the server path meanwhile.
+   waits for the lease lift. The planned `KBEndpoint` two-user test was not written: `StaleRuleSessionTest` already
+   drives two users through one `KBSession`, and `KBEndpoint`'s per-user delegation and the route's 409 are each
+   tested on their own, so it would have pinned nothing new.
+
+The GUI never commits over REST (commits go through the chat), so the only client-side handling needed is the
+`Api` validator; the existing `moveAttribute` catch for `KnowledgeBaseHeldException` is unaffected.
 
 ## Out of scope
 
