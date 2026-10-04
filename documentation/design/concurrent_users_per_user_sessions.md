@@ -83,7 +83,7 @@ In order; each keeps the suites green.
 4. **Done. Chat resolves per user.** `ChatManagerFactory` builds `LeasedRuleService` on
    `ruleSessionManagerFor(userId)`; `ApplicationKbService.isRuleSessionActive` reads the user's own instance.
    `ChatCoordinator.close` needed no change: releasing the lease cancels the session via `leaseLostBy`.
-5. **Written, not yet run. Acceptance.** `requirements/kb/Concurrent Users.feature`, "A refused editor does not
+5. **Done. Acceptance.** `requirements/kb/Concurrent Users.feature`, "A refused editor does not
    disturb the rule session of the user who holds the knowledge base": alice starts a rule session, bob is refused
    by the lease (unchanged), alice commits and the case carries her comment. This pins that the per-user split did
    not change Stage 2 behaviour. The real two-editor scenarios come with the lease lift.

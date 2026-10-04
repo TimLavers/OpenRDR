@@ -202,12 +202,13 @@ wrong question). Not scheduled; revisit if refusal messages prove confusing in u
 ## Stage 3 — shared project, single writer at the engine level
 
 Several users in the same project; concurrency resolved by serialising mutations, not by merging them.
-Implementation plan for the first increment: [concurrent_users_write_lock.md](concurrent_users_write_lock.md).
+Implementation plans: [concurrent_users_write_lock.md](concurrent_users_write_lock.md) (first increment),
+[concurrent_users_per_user_sessions.md](concurrent_users_per_user_sessions.md) (second).
 
-- **Per-user rule sessions.** `RuleSessionManager` splits in two: the stateless engine operations stay per-KB; the
-  session state (`ruleSession`, `currentChange`, cornerstone cursor, translator conversation) moves into a
-  `RuleBuildingSessionState` held per `(userId, kbId)`. Rule-session routes resolve the caller's session from the
-  authenticated user — no wire-format change beyond the identity header.
+- **Per-user rule sessions.** The session state (`ruleSession`, `currentChange`, cornerstone cursor, translator
+  conversation) is held per `(userId, kbId)`; the engine operations act on the shared `KB`. Rule-session routes
+  resolve the caller's session from the authenticated user — no wire-format change beyond the identity header. *Done* —
+  as one `RuleSessionManager` instance per user rather than a class split; see the plan linked above.
 - **KB write lock.** Every KB access (reads included: interpreting a case writes into it) runs under one per-KB
   `ReentrantLock` owned by `KBSession`, taken at each surface's entry (`KBEndpoint`, `LeasedRuleService`). Accesses
   are short; users never wait noticeably. This fixes the unsynchronised-object-graph hazard without touching the
