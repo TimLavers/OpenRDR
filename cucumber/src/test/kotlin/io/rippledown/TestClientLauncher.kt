@@ -14,6 +14,7 @@ import io.rippledown.constants.main.TITLE
 import io.rippledown.files.FileKitKbFileDialogs
 import io.rippledown.files.KbFileDialogs
 import io.rippledown.main.*
+import io.rippledown.model.UserId
 import io.rippledown.voice.VoiceRecognition
 import kotlinx.coroutines.Dispatchers.Unconfined
 import java.awt.event.WindowEvent
@@ -57,8 +58,12 @@ class TestClientLauncher {
     private lateinit var composeWindow: ComposeWindow
     private lateinit var thread: Thread
 
-    fun launchClient(voiceRecognition: VoiceRecognition? = null, fileDialogs: KbFileDialogs? = null): ComposeWindow {
-        val api = Api(clientCIO)
+    fun launchClient(
+        voiceRecognition: VoiceRecognition? = null,
+        fileDialogs: KbFileDialogs? = null,
+        userId: UserId = defaultUserId()
+    ): ComposeWindow {
+        val api = Api(clientCIO, userId = userId)
         installComposeDisposalExceptionFilter()
         thread = Thread {
             application(exitProcessOnExit = false) {

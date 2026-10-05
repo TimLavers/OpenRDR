@@ -98,6 +98,16 @@ class ConcurrentUsersDefs {
 
     private fun user(name: String) = users.getOrPut(name) { ChatUser(name) }
 
+    @Given("{word} starts the client application")
+    fun startsTheClientApplication(userName: String) {
+        StepsInfrastructure.startClientFor(userName)
+    }
+
+    @When("I switch to {word}'s window")
+    fun switchToWindowOf(userName: String) {
+        StepsInfrastructure.switchToClientOf(userName)
+    }
+
     @Given("{word} starts a conversation about the knowledge base {word}")
     fun startConversationAboutKb(userName: String, kbName: String) {
         user(userName).startConversation(kbName)

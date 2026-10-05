@@ -196,8 +196,16 @@ Revisit if refusals prove confusing in use.
 Multi-user acceptance is REST-first (`requirements/kb/Concurrent Users.feature`, `ConcurrentUsersDefs.kt`): several
 `Api` instances with different user ids against one server, the chat reached through `sendUserMessage`. Everything
 above — identity keying, per-user conversations and pushes, two editors in one KB, the stale-commit refusal, the delete
-refusal — is observable that way, so no scenario needs two GUI windows. Conditions in those scenarios are built in
-the step definitions rather than translated, so no LLM is involved.
+refusal — is observable that way. Conditions in those scenarios are built in the step definitions rather than
+translated, so no LLM is involved.
+
+What a REST client cannot see is what another user's *window* does with the frames it was or was not sent. One
+two-window scenario covers that (`requirements/kb/Concurrent Users with windows.feature`): Alice builds a rule with a
+cornerstone in her window while Bob, on the same KB, sees no cornerstone and no change to his case until he reselects
+it. `StepsInfrastructure` keeps one `LaunchedClient` per named user and a current one that the page objects address;
+"I switch to Alice's window" redirects them and brings her window to the front, since Robot clicks land on whichever
+window is on top. Both chats are driven by the real model, so this is the slowest scenario in the suite and there is
+deliberately only one.
 
 Server-level: `KBSessionTest` (lock, per-user managers, `usersEditing`, cancellation), `StaleRuleSessionTest` (two
 users through one `KBSession`), `KBEndpointConcurrencyTest` (the lab feed against a user), `RefusalsTest` (the two

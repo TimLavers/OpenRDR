@@ -3,12 +3,14 @@ package steps
 import io.rippledown.TestClientLauncher
 import io.rippledown.integration.FakeVoiceRecognition
 import io.rippledown.integration.pageobjects.RippleDownUIOperator
+import io.rippledown.main.defaultUserId
+import io.rippledown.model.UserId
 import java.awt.Robot
 import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
 
-class LaunchedClient {
+class LaunchedClient(userId: UserId = defaultUserId()) {
     private val testClientLauncher = TestClientLauncher()
 
     /**
@@ -23,7 +25,8 @@ class LaunchedClient {
      */
     private val fakeVoiceRecognition: FakeVoiceRecognition? =
         if (StepsInfrastructure.useFakeVoice) FakeVoiceRecognition() else null
-    private val composeWindow = testClientLauncher.launchClient(fakeVoiceRecognition, StepsInfrastructure.fileDialogs)
+    private val composeWindow =
+        testClientLauncher.launchClient(fakeVoiceRecognition, StepsInfrastructure.fileDialogs, userId)
     private val rdUiOperator = RippleDownUIOperator(composeWindow)
 
     fun voiceRecognition(): FakeVoiceRecognition = fakeVoiceRecognition

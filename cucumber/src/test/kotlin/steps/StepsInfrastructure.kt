@@ -3,6 +3,7 @@ package steps
 import io.cucumber.java.Scenario
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.files.ScriptedKbFileDialogs
+import io.rippledown.model.UserId
 import steps.StepsInfrastructure.client
 import steps.StepsInfrastructure.uiTestBase
 import java.io.File
@@ -10,8 +11,13 @@ import java.io.File
 object StepsInfrastructure {
     lateinit var uiTestBase: UITestBase
 
-    /** The running client, or null when none has been started or the last one has been stopped. */
-    private var launchedClient: LaunchedClient? = null
+    /**
+     * The running clients by user name, and the one the page objects address.
+     * The single-user scenarios use one unnamed client; the two-window
+     * scenarios start one per user and switch between them.
+     */
+    private val launchedClients = mutableMapOf<String?, LaunchedClient>()
+    private var currentClient: LaunchedClient? = null
 
     /**
      * Per-scenario flag set by the `@voice-is-fake` cucumber tag. When
@@ -51,14 +57,38 @@ object StepsInfrastructure {
         // window running and overlapping the second: the page objects address the
         // new window's accessibility tree while native focus, and so every Robot
         // keystroke, can go to the old one.
-        launchedClient?.stopClient()
-        launchedClient = LaunchedClient()
+        stopClients()
+        startClient(null, LaunchedClient())
     }
 
-    fun client() = launchedClient ?: error("The client application has not been started.")
+    fun startClientFor(userName: String) {
+        launchedClients[userName]?.stopClient()
+        startClient(userName, LaunchedClient(UserId(userName)))
+    }
+
+    private fun startClient(userName: String?, client: LaunchedClient) {
+        launchedClients[userName] = client
+        currentClient = client
+    }
+
+    // Windows overlap, and Robot clicks land on whichever is in front, so
+    // switching brings the window forward as well as redirecting the page objects.
+    fun switchToClientOf(userName: String) {
+        val client = launchedClients[userName] ?: error("$userName has not started the client application.")
+        currentClient = client
+        client.bringToFront()
+    }
+
+    fun client() = currentClient ?: error("The client application has not been started.")
+
+    private fun stopClients() {
+        launchedClients.values.forEach { it.stopClient() }
+        launchedClients.clear()
+        currentClient = null
+    }
 
     fun screenshotOnFailure(scenario: Scenario) {
-        val running = launchedClient
+        val running = currentClient
         if (scenario.isFailed && running != null) {
             val file = File(failureDir(scenario), "screenshot.png")
             println("Scenario failed - saving screenshot to ${file.absolutePath}")
@@ -96,8 +126,7 @@ object StepsInfrastructure {
     }
 
     fun cleanup() {
-        launchedClient?.stopClient()
-        launchedClient = null
+        stopClients()
         uiTestBase.serverProxy.shutdown()
         useFakeVoice = false
         fileDialogs = null
