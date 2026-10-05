@@ -121,9 +121,14 @@ flowchart TD
    question is sent with the next reply as context, since the model's own history may hold a different question.
 4. **Cornerstones.** Each change to the conditions re-evaluates the cornerstones to the fixpoint; the panel shows the
    first survivor. "Allow" is recognised on the server and exempts it; a new reason that is false for it excludes it.
-   Every user message during a session is prefixed with the current cornerstone status, so the model cannot drift on
-   the count. When the count reaches zero and the user has declined more reasons, `CornerstoneReviewMessage` appends
-   an imperative to commit, because without it the model loops back to offering suggestions.
+   The model asks the allow question, but the server knows when it is pending — after a decline of more reasons with
+   cornerstones left, and after an exempt or a step that leaves some (`State.AwaitingCornerstoneAllowance`) — so a
+   plain "yes" then exempts the cornerstone without consulting the model. Left to the model, a "y" to that question
+   once became a call to `selectSuggestedCondition(0)`. A "no" to it is a refusal of the allowance, not of more
+   reasons, so it does not re-arm the question. Every user message during a session is prefixed with the current
+   cornerstone status, so the model cannot drift on the count. When the count reaches zero and the user has declined
+   more reasons, `CornerstoneReviewMessage` appends an imperative to commit, because without it the model loops back
+   to offering suggestions.
 5. **Commit.** `CommitRule` adds the rule and the case becomes a cornerstone. `CancelRule` discards the session;
    `UndoLastRule` (after `ShowLastRuleForUndo`) removes the last committed rule.
 

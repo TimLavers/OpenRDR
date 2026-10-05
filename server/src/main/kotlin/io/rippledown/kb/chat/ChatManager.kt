@@ -84,6 +84,7 @@ class ChatManager(
     suspend fun processActionComment(actionComment: ActionComment): ChatResponse {
         val response = executeAction(actionComment)
         rules.reasonsAppliedAtStart(actionComment)
+        rules.reviewAdvanced(actionComment)
         rules.rememberOffer(actionComment)
         return responses.enrich(actionComment, response, currentCase)
     }

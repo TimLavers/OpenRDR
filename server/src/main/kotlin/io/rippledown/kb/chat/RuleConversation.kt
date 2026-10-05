@@ -1,9 +1,7 @@
 package io.rippledown.kb.chat
 
 import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
-import io.rippledown.constants.chat.ASSIGN_DERIVED_VALUE
-import io.rippledown.constants.chat.EXEMPT_CORNERSTONE
-import io.rippledown.constants.chat.USER_ACTION
+import io.rippledown.constants.chat.*
 
 /**
  * Owns the server's rule-building dialogue decisions: accepting corrected assignment offers, recognising
@@ -17,9 +15,10 @@ class RuleConversation(private val service: RuleService?) {
         data object Ready : State
         data class OfferedAssignment(val action: ActionComment) : State
         data object AwaitingReasonReply : State
+        data object AwaitingCornerstoneAllowance : State
     }
 
-    data class Turn(val message: String, val conditionsBefore: Set<String>)
+    data class Turn(val message: String, val conditionsBefore: Set<String>, val declined: Boolean = false)
 
     var state: State = State.Ready
         private set
@@ -28,11 +27,14 @@ class RuleConversation(private val service: RuleService?) {
         state = State.Ready
     }
 
-    fun cornerstoneAction(message: String): ActionComment? =
-        if (service != null && service.isRuleSessionActive()
-            && ReasonTransformHandler.isAllowConfirmation(message)
-            && service.cornerstoneStatus().numberOfCornerstones > 0
-        ) ActionComment(EXEMPT_CORNERSTONE) else null
+    // A plain "yes" is an allowance only while the allow question is the one pending; "allow" always is.
+    fun cornerstoneAction(message: String): ActionComment? {
+        if (service == null || !service.isRuleSessionActive()) return null
+        val allowing = ReasonTransformHandler.isAllowConfirmation(message) ||
+                (state == State.AwaitingCornerstoneAllowance && isAcceptance(message))
+        if (!allowing || service.cornerstoneStatus().numberOfCornerstones == 0) return null
+        return ActionComment(EXEMPT_CORNERSTONE)
+    }
 
     fun assignmentAction(message: String): ActionComment? {
         val pending = state as? State.OfferedAssignment ?: return null
@@ -47,14 +49,21 @@ class RuleConversation(private val service: RuleService?) {
         } else message
         val contextualised = if (status == null) question
         else "$CURRENT_CORNERSTONE_STATUS_PREFIX${status.summary()}]\n$question"
-        return Turn(contextualised, service?.currentRuleSessionConditionTexts().orEmpty().toSet())
+        // A "no" to the allow question declines the allowance, not further reasons.
+        val declined = status != null && state != State.AwaitingCornerstoneAllowance &&
+                ReasonTransformHandler.isDecline(message)
+        return Turn(contextualised, service?.currentRuleSessionConditionTexts().orEmpty().toSet(), declined)
     }
 
     fun completeTurn(turn: Turn, acknowledgements: Map<String, String> = emptyMap()): ActionComment? {
         reset()
         if (service == null || !service.isRuleSessionActive()) return null
         val addedConditions = service.currentRuleSessionConditionTexts().filterNot { it in turn.conditionsBefore }
-        if (addedConditions.isEmpty()) return null
+        if (addedConditions.isEmpty()) {
+            // The instructions have the model answer a decline with the allow question when cornerstones remain.
+            if (turn.declined) awaitAllowanceIfCornerstonesRemain()
+            return null
+        }
         val acknowledgement = if (addedConditions.any { it in acknowledgements }) {
             addedConditions.joinToString("\n") { acknowledgements[it] ?: TRANSFORMATION_MESSAGE.format(it) }
         } else {
@@ -79,6 +88,17 @@ class RuleConversation(private val service: RuleService?) {
         state = State.AwaitingReasonReply
     }
 
+    // After a cornerstone is exempted or stepped past, the model asks about the next one, if any.
+    fun reviewAdvanced(action: ActionComment) {
+        if (action.action !in REVIEW_STEPS) return
+        awaitAllowanceIfCornerstonesRemain()
+    }
+
+    private fun awaitAllowanceIfCornerstonesRemain() {
+        if (service?.isRuleSessionActive() != true) return
+        if (service.cornerstoneStatus().numberOfCornerstones > 0) state = State.AwaitingCornerstoneAllowance
+    }
+
     fun rememberOffer(action: ActionComment) {
         if (action.action != ASSIGN_DERIVED_VALUE) return
         val name = action.attributeName ?: return
@@ -92,5 +112,6 @@ class RuleConversation(private val service: RuleService?) {
     companion object {
         const val CURRENT_CORNERSTONE_STATUS_PREFIX = "[Current cornerstone status: "
         const val MORE_REASONS_QUESTION = "Do you want to provide any more reasons?"
+        private val REVIEW_STEPS = setOf(EXEMPT_CORNERSTONE, NEXT_CORNERSTONE, PREVIOUS_CORNERSTONE)
     }
 }

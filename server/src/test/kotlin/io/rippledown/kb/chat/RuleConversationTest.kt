@@ -3,10 +3,7 @@ package io.rippledown.kb.chat
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.rippledown.constants.chat.ADD_COMMENT
-import io.rippledown.constants.chat.ASSIGN_DERIVED_VALUE
-import io.rippledown.constants.chat.EXEMPT_CORNERSTONE
-import io.rippledown.constants.chat.USER_ACTION
+import io.rippledown.constants.chat.*
 import io.rippledown.model.rule.CornerstoneStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -121,6 +118,123 @@ class RuleConversationTest {
         genericYes shouldBe null
         finished shouldBe null
         inactive shouldBe null
+    }
+
+    @Test
+    fun `declining more reasons while cornerstones remain leaves the allow question pending`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 1)
+        every { service.currentRuleSessionConditionTexts() } returns setOf("age is young")
+        val turn = conversation.prepareTurn("no")
+
+        // When
+        val action = conversation.completeTurn(turn)
+
+        // Then
+        action shouldBe null
+        conversation.state shouldBe RuleConversation.State.AwaitingCornerstoneAllowance
+    }
+
+    @Test
+    fun `declining more reasons with no cornerstones left leaves nothing pending`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus()
+        every { service.currentRuleSessionConditionTexts() } returns setOf("age is young")
+        val turn = conversation.prepareTurn("no")
+
+        // When
+        conversation.completeTurn(turn)
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.Ready
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["y", "yes", "Yes.", "ok", "allow"])
+    fun `an acceptance of the pending allow question exempts the cornerstone`(reply: String) {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 1)
+        every { service.currentRuleSessionConditionTexts() } returns emptySet()
+        conversation.completeTurn(conversation.prepareTurn("no"))
+
+        // When
+        val action = conversation.cornerstoneAction(reply)
+
+        // Then
+        action shouldBe ActionComment(EXEMPT_CORNERSTONE)
+    }
+
+    @Test
+    fun `a reply that is not an acceptance of the allow question goes to the model and clears the question`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 1)
+        every { service.currentRuleSessionConditionTexts() } returns emptySet()
+        conversation.completeTurn(conversation.prepareTurn("no"))
+
+        // When
+        val action = conversation.cornerstoneAction("no")
+        conversation.completeTurn(conversation.prepareTurn("no"))
+
+        // Then
+        action shouldBe null
+        conversation.state shouldBe RuleConversation.State.Ready
+    }
+
+    @Test
+    fun `a generic acceptance is not an allowance unless the allow question is pending`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 1)
+
+        // When
+        val action = conversation.cornerstoneAction("yes")
+
+        // Then
+        action shouldBe null
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [EXEMPT_CORNERSTONE, NEXT_CORNERSTONE])
+    fun `advancing the review with cornerstones remaining asks about the next one`(action: String) {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 2)
+
+        // When
+        conversation.reviewAdvanced(ActionComment(action))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.AwaitingCornerstoneAllowance
+    }
+
+    @Test
+    fun `advancing the review to its end leaves no allow question pending`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus()
+
+        // When
+        conversation.reviewAdvanced(ActionComment(EXEMPT_CORNERSTONE))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.Ready
+    }
+
+    @Test
+    fun `actions other than a review step do not raise the allow question`() {
+        // Given
+        every { service.isRuleSessionActive() } returns true
+        every { service.cornerstoneStatus() } returns CornerstoneStatus(numberOfCornerstones = 2)
+
+        // When
+        conversation.reviewAdvanced(ActionComment(USER_ACTION, message = "hi"))
+
+        // Then
+        conversation.state shouldBe RuleConversation.State.Ready
     }
 
     @Test
