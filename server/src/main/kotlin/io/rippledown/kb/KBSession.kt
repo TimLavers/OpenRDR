@@ -17,7 +17,7 @@ class KBSession(
     /**
      * The rule-building session of [userId] on this KB. Each user has their own
      * session state; the engine operations all act on the one [kb] under [locked].
-     * See documentation/design/concurrent_users_per_user_sessions.md.
+     * See documentation/design/concurrent_users.md.
      */
     fun ruleSessionManagerFor(userId: UserId): RuleSessionManager =
         ruleSessionManagers.computeIfAbsent(userId) { RuleSessionManager(kb, webSocketManager, lock, it) }
@@ -25,14 +25,14 @@ class KBSession(
     /**
      * Runs [block] as the only thread touching this KB. Reads are included: interpreting
      * a case writes into the stored case. The block cannot suspend, so the lock is never
-     * held across I/O. See documentation/design/concurrent_users_write_lock.md.
+     * held across I/O. See documentation/design/concurrent_users.md.
      */
     fun <T> locked(block: () -> T): T = lock.withLock(block)
 
     /**
      * The users with a rule session in progress on this KB. Deleting the KB
      * is refused while anyone else is among them.
-     * See documentation/design/concurrent_users_lease_lift.md.
+     * See documentation/design/concurrent_users.md.
      */
     fun usersEditing(): Set<UserId> =
         ruleSessionManagers.filterValues { it.isRuleSessionActive() }.keys

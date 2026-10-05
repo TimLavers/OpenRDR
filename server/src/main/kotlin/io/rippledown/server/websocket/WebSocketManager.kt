@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The connected clients, keyed by user. One user may have several windows,
- * hence a set of sessions per user. See documentation/design/concurrent_users_groundwork.md.
+ * hence a set of sessions per user. See documentation/design/concurrent_users.md.
  */
 class WebSocketManager {
 

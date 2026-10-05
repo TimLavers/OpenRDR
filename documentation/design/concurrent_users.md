@@ -1,283 +1,215 @@
 # Concurrent users
 
-Goal: several users work on projects (knowledge bases) at the same time. First milestone: at most one user may modify a
-given project at a time, but different users can work on different projects concurrently. Later milestone: several
-users modify the same project concurrently. Authentication is handled by a third-party system, not OpenRDR; the server
-only needs a trustworthy user identity per request. The unit of identity is the user, not the window: a user's second
-window shares their conversation and open KB (see the groundwork plan, step 1).
+Several users work on knowledge bases at the same time, including building rules in the same knowledge base at once.
+Authentication is a third-party system's job; OpenRDR consumes a trustworthy user identity per request. The unit of
+identity is the user, not the window: a user's second window shares their conversation and open KB.
 
-## Where the single-user assumptions live today
+The persistence layer is multi-project by construction (each KB has its own database, routes carry a `kbId`), so the
+design is about the server's in-memory state — connections, conversations, rule sessions, the KB object graph — and
+about what happens when two users' edits meet.
 
-The persistence layer is already multi-project safe (each KB has its own Postgres database, routes carry a `kbId`), so
-the work is almost entirely in the server's in-memory session state and the push channel.
+## Identity
 
-| Assumption                           | Where                                                                                                                                                                                                       |
-|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| One web-socket connection per server | `WebSocketManager` holds a single `connection: WebSocketSession`; every push goes to "the" client                                                                                                           |
-| One chat conversation per server     | `ChatCoordinator` holds one `chatManager` and one `context`; `responseToUserMessage` has no notion of who is asking                                                                                         |
-| One rule session per KB              | `RuleSessionManager.ruleSession` plus its sibling fields (`currentChange`, `selectedCornerstone`, `diffAttribute`, …) are per-KB singletons; `KBSession` creates one `RuleSessionManager` per KB at startup |
-| Rule-session routes are unaddressed  | `RuleSessions.kt` routes (`commit`, `cancel`, `exemptCornerstone`, …) act on "the" session of the KB with no session id                                                                                     |
-| One "open KB" per server             | `ServerApplication.openChatEndpoint()` / `ApplicationKbService.openKnowledgeBase()` derive a single open KB from the one chat context                                                                       |
-| Unsynchronised KB object graph       | `KB`'s managers (attributes, conditions, rules, cases, case view) mutate shared in-memory state with no locking; safe only because one request at a time mutates it                                         |
-| No user identity                     | No route reads a user id; nothing is keyed by user                                                                                                                                                          |
+- Every REST call and the web-socket handshake carry the user id in the `X-User-Id` header (`USER_ID_HEADER` in
+  `common`). `UserId` is a value class over `String`.
+- `RoutingContext.userId()` (`RoutingUtilities.kt`) reads it; the web-socket route reads it from the handshake. A
+  missing or blank header is an error (`MISSING_USER_ID`), handled like a missing `kbId`. There is **no fallback
+  identity**: behind a misconfigured gateway a default id would silently merge every user into one, with only a log
+  line to show for it. The laboratory system never hits a route that reads the id.
+- The desktop `Api` takes its `userId` from the `openrdr.userId` system property, else the OS user name (neither
+  available is an error), and installs it as a default request header, so every call and the handshake carry it
+  without touching call sites. Swapping to a gateway-injected header changes nothing on the server.
+- The cucumber `RESTClient`'s raw `HttpClient` sends the same header as its `Api`, so the GUI and the test client
+  present one identity.
 
-## Stage 1 — common groundwork
+## Connections and pushes
 
-Implementation plan: [concurrent_users_groundwork.md](concurrent_users_groundwork.md).
+`WebSocketManager` keeps `ConcurrentHashMap<UserId, MutableSet<WebSocketSession>>` — a set because one user may run
+two windows. Two push shapes:
 
-1. **User identity.** The third-party system authenticates; OpenRDR consumes an identity. Simplest contract: the server
-   sits behind a reverse proxy / gateway that validates the token and forwards a `userId` header (or the server
-   validates a JWT signature itself — validation only, no user management). Every REST call and the web-socket
-   handshake carry it. A `RoutingContext.userId()` helper reads the header; a missing header is an error. There is
-   no fallback identity — every user is authenticated by assumption, and a default id would silently merge users
-   behind a misconfigured gateway and defeat the Stage 2 lease. *Done.*
-2. **Connection registry.** Replace the single field in `WebSocketManager` with a registry: `userId → connection(s)`.
-   Push methods take an addressee: one user (`sendKbInfo` / `sendKbClosed` when *their* chat opens or closes a KB)
-   or everyone (`broadcast`). Per-KB addressing of `sendStatus`, `sendCasesInfo` and `sendRuleSessionCompleted` was
-   planned here but is deferred to Stage 2: the chat context is the only record of a user's open KB, and the client
-   does not start the conversation until its case list has arrived, so a push in that window would reach nobody.
-   Stage 2 addresses them by lease holder instead (see the contract below). *Done.*
-3. **Per-user chat.** `ChatCoordinator` becomes a registry `userId → (ChatManager, ChatContext)`. The `Mutex` guarding
-   "one turn at a time" becomes per-user. The conversation is cheap state (prompt + history), so this is mechanical.
-   *Done.*
-4. **Per-user "open KB".** The notion of the open KB moves from the server singleton into the per-user chat context,
-   which is where it really lives already — `openChatEndpoint()` just needs a user to look it up for. *Done.*
+- `sendToUser(userId, message)` for pushes that belong to one user's activity: `KB_INFO` / `KB_CLOSED` when *their*
+  chat opens, creates, renames or closes a KB (opening a KB in my chat must not switch your window); cornerstone status
+  and `RULE_SESSION_COMPLETED`, addressed to the user whose rule session they concern.
+- `broadcast(message)` for `casesInfo`: case ingestion is not a user action and the client already filters by KB
+  name.
 
-With the groundwork done, the remaining question is how writes to one KB are coordinated. The following stages
-answer it in increasing order of ambition; each builds on the one before.
+Per-KB addressing ("everyone with this KB open") was considered and rejected: the client starts its conversation only
+once its context has settled (after the case list for a newly opened KB has arrived), so for a round-trip or two the
+server does not know the user is on the KB, and a push for a case posted in that window would reach nobody.
 
-## Stage 2 — exclusive project lock (the first milestone)
+A dead connection never fails the request that triggered the push: `send` logs and swallows.
 
-One user per project at a time, enforced server-side.
+## Per-user conversation and open KB
 
-- Each `KBSession` owns a `ProjectLease` holding `(userId, lastActivity)` or nothing. The lease is taken lazily, on the
-  user's first
-  knowledge-editing action, not on opening the KB: opening is just `START_CONVERSATION` with a `kbId`, there is no
-  read-only versus edit open, and a user merely reading a KB must not block an editor. Reads are allowed to anyone.
-- Which operations need the lease: knowledge editing — starting and driving a rule session, committing, renaming or
-  reordering attributes, editing definitions, renaming or describing the KB. KB metadata is included deliberately:
-  it does not touch the rule session, but one rule with no exceptions is simpler to state, test and explain in the
-  chat, and a rename under the holder would contradict their prompt and app bar. Case ingestion (`Interpreter.kt`,
-  `CaseManagement.kt`) mutates the KB too, but it comes from the laboratory system, not a user, and is never
-  lease-guarded. Deleting or renaming a KB that another user holds is refused with the holder's id.
-- The lease is a lease, not a lock: it expires on inactivity, so a crashed client cannot strand a project. It does *not*
-  expire on web-socket disconnect — the client has no reconnect loop and the ping timeout is 15 s, so a network
-  blip would hand the project to someone else mid rule session (the same reasoning that rejected conversation eviction
-  on disconnect in the groundwork plan).
-- Expiry or release of the lease cancels the KB's rule session. `RuleSessionManager` is still one per KB in this
-  stage, so without this the next holder would inherit a half-built rule (`ruleSession`, `currentChange`, cornerstone
-  cursor).
-- `KBSession` / `RuleSessionManager` are otherwise untouched: the lease guarantees the existing one-session-per-KB
-  state is only ever driven by one user, so no internal synchronisation is needed.
-- A second user's editing action is refused; the chat, as the primary surface, says who holds the project. An
-  app-bar "read-only — locked by X" indicator was considered and dropped: the client learns of the lease only from a
-  refused action, and nothing tells it when the lease is released, so the indicator would go stale.
+`ChatCoordinator` owns one `Conversation(chatManager, context, oneTurnAtATime: Mutex)` per user. "One turn at a
+time" is per user; two users' turns interleave freely. The user's open KB lives in their `ChatContext` — there is no
+server-wide open KB. `ServerApplication.openChatEndpoint(userId)` looks it up.
 
-Cheap, correct, and almost all of it survives into the later stages (the lease becomes a finer-grained lock). The
-drawback is purely the product constraint it encodes.
+Closing and deleting are different events:
 
-### Lease contract
+- `knowledgeBaseClosed(userId)` resets only the caller's conversation and pushes `KB_CLOSED` to them.
+- `knowledgeBaseDeleted(kbId)` resets every conversation on that KB — another user may be mid-conversation on it, and
+  the deleter need not have had it open — and pushes `KB_CLOSED` to each of them.
 
-The decisions a test can be written against. Each item is a commitment, not a design sketch; the implementation
-plan follows from them.
+`ApplicationKbService` is constructed per user (`ServerApplication.kbServiceFor(userId)`) with the `userId` and an
+`OpenKnowledgeBases` (`openEndpointFor`, `knowledgeBaseClosed`, `knowledgeBaseDeleted`) that `ChatCoordinator`
+implements; the interface breaks the construction cycle coordinator → factory → service → coordinator.
 
-1. **One holder per KB.** Each `KBSession` owns a `ProjectLease` ("lease" chosen over "lock" to match the
-   semantics) holding `(userId, lastActivity)` or nothing. One object per KB rather than a `kbId → lease` map: a
-   KB has at most one holder, a user may hold several KBs, and deleting the KB discards its lease for free.
-2. **Taken on first guarded action, renewed on every one.** Opening a KB (`START_CONVERSATION`) and every read take
-   no lease. The first guarded action by a user on an unheld KB takes it; each later guarded action by the holder
-   moves `lastActivity`. If the KB is held by someone else, the action is refused and nothing else happens.
-3. **Guarded actions** are exactly the KB mutations a *user* initiates:
-    - rule building: start session, add/remove condition, select cornerstone, exempt cornerstone, commit, cancel;
-    - attribute edits: rename, reorder, add/edit a derived attribute;
-    - comment edits outside a rule session (rename a comment);
-    - changes to the set of cases a user makes: deleting a case (REST `DELETE_CASE_WITH_NAME` and the chat's
-      `DeleteCaseFromList`), copying a case to a list;
-    - KB metadata: rename, describe, delete.
+Conversations are **never evicted** while the server runs. Evicting when the user's last web socket closes was
+rejected: the client has no reconnect loop and the ping timeout is 15 s, so a network blip or a laptop sleep would
+delete the conversation and the server-side open KB while the window still shows them. A conversation is a prompt and
+a history — negligible at the expected user counts.
 
-   Not guarded: case ingestion from the laboratory system (`Interpreter.kt`, `CaseManagement.kt` posts) — new cases
-   arriving take nothing away from the holder — favourites and views (per-user presentation), exporting, and every
-   read. Creating a KB is unguarded (nothing to hold yet).
+## The KB set
 
-   Guarding case deletion is what protects an in-progress rule session's case: today nothing stops a case being
-   deleted while a rule is being built on it, and the session would carry on against a case that no longer exists
-   and copy it back in as a cornerstone at commit. With one user this never happens in practice; with two it is the
-   first thing that would.
+Two users can both create, delete, rename or import KBs. `ServerApplication.idToKBEndpoint` is a `ConcurrentHashMap`
+and the KB-set mutations (`createKB`, `createKBFromSample`, `importKBFromZip`, `deleteKB`, `renameKB`) run under one
+`kbSetLock`. This guards the *set* of KBs; each KB's contents have their own lock, below.
 
-   Describing the KB is in the set for a different reason. It is a one-shot overwrite with no session: two users
-   composing in their chat text areas and pressing Enter a second apart would silently lose the first text. The
-   lease is the only thing that turns that into a refusal, so the weakest-looking member of the set is the one
-   with no other protection.
+## The per-KB lock
 
-   The consequence, accepted deliberately: a one-shot action such as a description edit takes the lease and holds it
-   like any other, so a user who only tweaked the description blocks other editors until they close the KB or the
-   lease expires. A lighter policy for one-shot actions ("check, don't take") would bring the silent overwrite back,
-   and "release when the rule session ends" has the same hole. One policy, no exceptions; the refusal message tells
-   the other user that closing the KB hands it over.
-4. **One primitive, applied at each surface's entry.** The chat does not go through `KBEndpoint`: its rule actions
-   drive `RuleSessionManager` directly as `RuleService`, and its KB-management actions go through
-   `ApplicationKbService` to `ServerApplication`. So the single primitive is `KBSession.hold(userId)` (take or renew,
-   else throw `ProjectHeldException`), and it is called from three places, each of which is the only way in for its
-   surface:
-    - REST: each guarded route resolves its endpoint through `heldKbEndpoint()` (`RoutingUtilities.kt`), which reads
-      the identity header and calls `hold` before the route body runs; `KBEndpoint` itself is unchanged.
-    - Chat rule actions: `ChatManagerFactory` wraps the KB's `RuleSessionManager` in a per-user `LeasedRuleService`
-      whose guarded methods call `hold` and delegate; the actions and function-call handlers are untouched.
-    - KB metadata: `ServerApplication.renameKB` / `deleteKB` take a `userId` and call `hold`, so the REST
-      `KbManagement` routes and `ApplicationKbService` cannot differ; `setDescription` goes through `KBEndpoint`.
+Ktor runs each request as its own coroutine on a thread pool, so two requests for the same KB can be inside `KB` at
+the same instant, and nothing in `io.rippledown.kb` is synchronised. Case ingestion from the laboratory is the one
+writer that is always running: `processCase` creates attributes while a user reorders them, interprets the new case
+while a commit adds a tree node, and two lab posts with the same new attribute name both see `byName == null`. Reads
+are not pure either: `KBEndpoint.case(id)` calls `kb.interpret(case)`, which writes the interpretation into the
+stored `RDRCase`. A read/write lock would therefore protect nothing an exclusive lock does not, and every KB access
+is ms-scale, so one exclusive lock is the honest choice.
 
-   This closes the pre-existing gap where `DELETE_KB` / `RENAME_KB` over REST bypassed `KnowledgeBaseService` —
-   they still bypass the *service*, but not the *lease*.
-5. **What the loser gets.** Over REST: `409 Conflict`, body `"<kbName> is being edited by <holderId>."`. In the chat:
-   the same sentence, followed by what the user can still do (read the cases, open another KB). The chat never
-   retries or queues the action. A 409 to a GUI action (today only attribute reordering) is shown as a warning row in
-   the chat — warning icon, "The attribute order was not changed: <sentence>" — and the case is re-fetched so the
-   table reverts the optimistic reorder; it adds no control (chat-UI guidelines).
-6. **Expiry.** A lease with no activity for **10 minutes** is expired; the next guarded action by anyone (including
-   the old holder) treats the KB as unheld. There is no background timer: expiry is checked on access, so a server
-   with no traffic does nothing. Disconnecting the web-socket does not release the lease (reasoning above).
+1. **Primitive.** A `ReentrantLock` per `KBSession`, exposed as `fun <T> locked(block: () -> T): T`. The engine is
+   non-suspend by design (CPU-bound, in-memory), so a coroutine `Mutex` would fit nothing that calls it, and `Mutex`
+   is not reentrant. `locked` takes a plain lambda, so suspending while holding the lock is impossible at compile
+   time. Reentrancy is needed: `KBEndpoint.commitRuleSession` → `RuleSessionManager.commitRuleSession` →
+   `kb.interpret`.
+2. **Applied at the entry of each surface.**
+    - REST and ingestion: every public method of `KBEndpoint` runs its body in `session.locked { }`. REST routes, the
+      lab's posts and the sample-KB builders all go through `KBEndpoint`, a thin adapter, so wrapping it changes no
+      engine code.
+    - Chat: the chat's rule actions drive `RuleSessionManager` directly as `RuleService`, not through `KBEndpoint`, so
+      `ChatManagerFactory` wraps the user's manager in `LockedRuleService`, which runs every call under the lock.
+    - `deleteKB` takes the doomed KB's lock (inside `kbSetLock`) so an in-flight mutation finishes before the KB
+      goes.
+3. **Never held across I/O.** One engine entry calls the LLM synchronously: `RuleSessionManager.conditionForExpression`
+   via `ConditionGenerator.conditionFor`. Holding the KB lock across that call would make a lab post wait up to the
+   LLM timeout, so the entry wrappers do *not* lock `conditionForExpression`; `RuleSessionManager` holds the lock
+   itself only around what touches the KB (the attribute lookups the translator is handed, and the validation
+   afterwards). `KBSession` passes its lock to the managers it creates for this. `buildRule` uses the deterministic
+   `ConditionExpressionParser` and is locked like everything else. `KBEndpoint.caseReport` reads the viewable case
+   under the lock and generates the report outside it.
+4. **Pushes stay inside.** `RuleSessionManager` sends web-socket frames with `runBlocking` from inside commit and
+   cornerstone paths. That is I/O under the lock, but to a local, buffered socket, so the stall is short and bounded.
+   Extracting pushes as results the caller sends after unlocking would widen the `RuleService` surface for no
+   observed benefit.
 
-   The figure is bounded below by the longest natural pause inside a rule session (reading a cornerstone, thinking
-   about a condition, a phone call) because expiry cancels the session and loses the half-built rule; it is bounded
-   above by how long an abandoned client blocks the project. Ten minutes is a constant, not configuration, and is
-   cheap to change once someone is bitten in either direction. `ProjectLease` takes an injected clock
-   (`() -> Long`, as `ApplicationKbService` already does), so expiry is unit-tested by advancing a fake clock; the
-   cucumber acceptance uses close-to-release and never waits on expiry.
-7. **Release.** The holder releases by closing the KB in the chat, by deleting it, or by expiry. There is no explicit
-   "release" verb to learn; closing is the natural one. Release of any kind cancels the KB's rule session if one is in
-   progress and the holder's client is told via `RULE_SESSION_COMPLETED`-style push so it drops its session state.
-8. **Deleting or renaming a held KB** by a non-holder is refused as in 5. By the holder, delete releases the lease and
-   resets every user's conversation on that KB (groundwork step 4); rename keeps the lease.
-9. **Pushes go to the holder.** `sendStatus` (cornerstone status) and `sendRuleSessionCompleted` are addressed to
-   the lease holder of the KB — a rule session exists only under a lease, so the addressee is always defined and
-   needs no settled chat context. `sendCasesInfo` stays `broadcast` (ingestion is not a user action; the client
-   filters by KB name). This resolves the item deferred from the groundwork.
-10. **Identity in the test suite.** The GUI's `Api` sends the OS user name; the cucumber `RESTClient` keeps a raw
-    `HttpClient` for some calls that sends no header. Today none of those calls reads the id, so nothing fails;
-    once the guard lands on `KBEndpoint`, every guarded route reads it and those calls are refused outright. Before
-    the guard lands, the `RESTClient` must present the same identity as the GUI (route everything through its `Api`,
-    or give the raw client the same default header). This is a prerequisite task, not a test fix.
+The lock makes the managers' internal synchronisation unnecessary; they stay as they are. `KBEndpointConcurrencyTest`
+drives the lab feed and a user against one `KBEndpoint` from several threads; with the lock removed by hand it fails
+on the first run.
 
-### Stage 2 implementation plan
+## Per-user rule sessions
 
-In order; each step keeps the suites green.
+`RuleSessionManager` holds engine operations on the shared `KB` (which are stateless with respect to the manager) and
+one user's session state (`ruleSession`, `currentChange`, cornerstone cursor, the translator's conversation and
+parser). So the per-user unit is simply **one `RuleSessionManager` instance per user**: `KBSession` keeps
+`ConcurrentHashMap<UserId, RuleSessionManager>` behind `ruleSessionManagerFor(userId)`, each built with the same `kb`,
+`webSocketManager` and lock, and with its own user as push addressee. KB-wide operations that happen to live on the
+manager (`undoLastRuleSession`, `renameAttribute`, `moveAttributeTo`, …) act on `kb`, so calling them through any
+user's instance is correct. A class split into "engine" and "session state" was rejected as a ~1,100-line re-threading
+of `kb` for no gain.
 
-1. **Test-suite identity.** The cucumber `RESTClient`'s raw `HttpClient` sends the same `X-User-Id` as its `Api`.
-   *Done.*
-2. **`ProjectLease`** (`kb.lease`): `hold(userId)` takes, renews or throws; `release()`; `holder()`; expiry
-   `LEASE_EXPIRY_MS` checked on access; injected clock. `KBSession` owns one and adds `hold(userId)` /
-   `release()`, which also cancel a rule session that loses its lease and push `RULE_SESSION_COMPLETED` to its
-   holder. *Done.*
-3. **409 over REST.** A `StatusPages` handler maps `ProjectHeldException` to `409 Conflict` with the message;
-   installed in `module()` and the server test base. *Done.*
-4. **REST guard.** Guarded routes resolve their endpoint through `heldKbEndpoint()`. Guarded: start/commit/
-   cancel session, update/select/exempt cornerstone, add condition, build rule, undo, delete case, move attribute,
-   set attribute order, set description. `ServerApplication.renameKB` / `deleteKB` take `userId`. *Done.*
-5. **Chat guard.** `LeasedRuleService`; `ChatManager.response` turns `ProjectHeldException` into the chat sentence.
-   `ApplicationKbService.rename` / `delete` / `setDescription` pass their user. `close()` releases. *Done.*
-6. **Pushes to the holder.** `RuleSessionManager` sends cornerstone status and `RULE_SESSION_COMPLETED` to
-   `lease.holder()` instead of broadcasting. *Done.*
-7. **Acceptance.** The REST-only two-user scenarios in `requirements/kb/Concurrent Users.feature`, one per contract
-   point: refused while held, other KBs unaffected, reads unguarded, close releases, chat names the holder on a
-   refused delete. *Done.*
-8. **Client refusal.** `Api` turns a 409 into `KnowledgeBaseHeldException`; `OpenRDRUI.swapAttributes` posts a
-   `WarningMessage` to the chat and refreshes the case. Acceptance: "Attributes cannot be re-ordered while another
-   user is editing the knowledge base" in `requirements/attributes/Attribute ordering.feature` (one GUI user plus a
-   REST user). *Done.*
+- **REST.** `KBEndpoint`'s rule-session methods take a `userId` and call `session.ruleSessionManagerFor(userId)`; the
+  routes pass `userId()`. No wire-format change beyond the identity header. Sample builders and tests pass a fixed
+  user.
+- **Chat.** `ChatManagerFactory.create(userId, context)` builds `LockedRuleService(session,
+  session.ruleSessionManagerFor(userId))`.
+- **Lifecycle.** Instances are created on first use and never removed while the server runs; one with no session in
+  progress is a few fields. `KBSession.usersEditing()` is the set of users whose instance has a session in progress.
+  `KBSession.cancelRuleSessionOf(userId)` cancels that user's session, if any, and pushes `RULE_SESSION_COMPLETED`
+  to them; `ApplicationKbService.close()` calls it, since a user who closes the KB has walked away from it.
 
-The holder's own client shows nothing: single-user behaviour stays byte-for-byte, and the message is for the *other*
-user.
+## Commit-time revalidation
 
-### Possible follow-up: a "held by" indicator
+Alice starts a rule session on case C to add comment X. Before she commits, Bob commits a rule that changes C's
+interpretation. Alice's `RuleBuildingSession` holds the *live* `kb.ruleTree`, so her commit would walk a tree that no
+longer gives C the interpretation her session was started against — throwing from deep inside the changer or adding a
+rule under the wrong parent. Separately, her conflicting-cornerstone set was computed at session start; Bob's commit
+adds a cornerstone and may change which cornerstones her rule disturbs.
 
-The app-bar indicator was dropped on staleness, not on principle (it is a display, not a control, so the chat-UI
-guidelines allow it). Now that the per-user chat context records each user's open KB, the server could push
-`lease taken` / `lease released` to everyone with that KB open, which removes the staleness on take and release.
-Expiry would still be invisible until someone's next guarded action, so the indicator would have to show when the
-lease was taken ("held by Alice since 14:02") to be honest. Considered and rejected along the way: letting users
-name themselves in the chat (an asserted identity defeats the lease, and arrives after the conversation it would
-name), and a server-wide "who is logged on" count (presence is per server, the lease is per KB, so it answers the
-wrong question). Not scheduled; revisit if refusal messages prove confusing in use.
+**Decision: re-check applicability at commit; reject and cancel on failure.** Of the candidate checks — the case's
+whole interpretation is unchanged, or the change the session makes still applies — the second is what the diff
+semantically depends on, and it tolerates unrelated rules landing in the meantime. The predicate already exists:
+`RuleTreeChange.isApplicable(tree, case)` is what `startRuleSession` checks before creating a session. Cornerstones
+are handled the same way: a second `RuleBuildingSession` with the same case, action and conditions is constructed
+against `kb.allCornerstoneCases()` now, and if its conflicting set contains a case the user was never shown (not in
+`RuleBuildingSession.namesOfConflictingCornerstonesAtStart`, compared by name since stored cornerstones are fresh
+instances), the commit is rejected. A cornerstone the user reviewed or exempted, or one that stopped conflicting, is
+fine. Both checks run inside `commitCurrentRuleSession`, under the lock, so nothing changes between check and
+`session.commit()`.
 
-## Stage 3 — shared project, single writer at the engine level
+A failed check cancels the session rather than restarting it against the fresh interpretation: if the comment Alice
+wanted to add is now already given, or the one she wanted to remove is gone, there is nothing left to do — she has to
+look at the case again. Conflicts need two users building rules for the same comment on overlapping cases within the
+same minutes, so the lost work is rare and small.
 
-Several users in the same project; concurrency resolved by serialising mutations, not by merging them.
-Implementation plans: [concurrent_users_write_lock.md](concurrent_users_write_lock.md) (first increment),
-[concurrent_users_per_user_sessions.md](concurrent_users_per_user_sessions.md) (second),
-[concurrent_users_revalidation.md](concurrent_users_revalidation.md) (third),
-[concurrent_users_lease_lift.md](concurrent_users_lease_lift.md) (fourth).
+Surfaces:
 
-- **Per-user rule sessions.** The session state (`ruleSession`, `currentChange`, cornerstone cursor, translator
-  conversation) is held per `(userId, kbId)`; the engine operations act on the shared `KB`. Rule-session routes
-  resolve the caller's session from the authenticated user — no wire-format change beyond the identity header. *Done* —
-  as one `RuleSessionManager` instance per user rather than a class split; see the plan linked above.
-- **KB write lock.** Every KB access (reads included: interpreting a case writes into it) runs under one per-KB
-  `ReentrantLock` owned by `KBSession`, taken at each surface's entry (`KBEndpoint`, `LockedRuleService`). Accesses
-  are short; users never wait noticeably. This fixes the unsynchronised-object-graph hazard without touching the
-  managers. *Done* — see the plan linked above.
-- **Commit-time revalidation.** The RDR-specific problem: user A's in-progress session was started against an
-  interpretation that user B's committed rule may have changed. At commit, the server re-interprets the session case
-  and checks the session's diff still applies; if not, the commit is rejected with "the case's interpretation changed
-  while you were building this rule" and the session is cancelled. Cornerstone sets are recomputed at commit under
-  the lock, so a rule never commits against a stale cornerstone review. This is optimistic concurrency, and conflicts
-  should be rare (two users building rules for the same comment on overlapping cases). *Done* — the session is
-  cancelled rather than restarted (restarting is not well-defined once the change no longer applies); see the plan
-  linked above.
-- **Lifting the lease.** With the three above in place the Stage 2 lease is removed: two users can build rules in
-  the one KB at once. One refusal survives — deleting a KB that another user has a rule session on — and keeps the
-  Stage 2 sentence, `ProjectHeldException` and the `held` 409. Renaming, describing and deleting a case another
-  user is working on are allowed. *Done* — see the plan linked above.
-- **Broadcast invalidation.** When a rule commits, every user subscribed to the KB gets the existing
-  `casesInfo` / `rule session completed` style pushes plus a new "KB changed" event; their clients re-fetch the current
-  case. Users with an in-progress session get a warning that the KB changed under them.
+- `StaleRuleSessionException(message)` in `common` (`io.rippledown.model`), with two messages: "The interpretation of
+  <case> changed while you were building this rule. The rule session has been cancelled; please look at the case
+  again." and the same for "The cornerstones changed …".
+- REST: `StatusPages` (`Refusals.kt`) maps it to `409 Conflict` with the message as a plain-text body and the header
+  `X-Refusal: stale`.
+- Chat: `ChatManager.response` answers with the exception's message.
+- Push: the session's owner gets `RULE_SESSION_COMPLETED`, so the client drops its session state.
 
-This is the natural end state for a single-server deployment; the lease from Stage 2 has degraded into the per-KB
-write lock, and only broadcast invalidation remains.
+## Deleting a knowledge base someone is editing
 
-## Stage 4 — stateless server, database as the coordination point
+Two users' edits otherwise meet only through the lock and revalidation. The one refusal is deleting a KB on which a
+user *other than the caller* has a rule session in progress: `ServerApplication.deleteKB(id, userId)` checks
+`session.usersEditing() - userId` under the KB's lock and throws `ProjectHeldException(kbName, holder)`, naming one of
+them. Deleting pulls a half-built rule's KB out from under its user; nothing else does.
 
-Multiple server instances; all shared state (locks, rule-session state, chat history) lives in Postgres or a shared
-cache, KB object graphs are rebuilt or refreshed from the store, and web-socket fan-out needs a pub/sub layer.
+| Situation                                  | Outcome                                                                                                                                                                      |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| B deletes the KB while A is mid-rule       | refused: "<KB> is being edited by <A>."                                                                                                                                      |
+| B deletes the case A is building a rule on | allowed. A's session holds the case; her commit still adds a sound rule and keeps her case as a cornerstone. Refusing would need a per-case ownership table for a rare event |
+| Two users overwrite the KB description     | allowed, last write wins. A one-shot overwrite of prose, with no session behind it                                                                                           |
+| B renames the KB while A is editing        | allowed; nothing in a session depends on the KB name                                                                                                                         |
+| A closes the KB in the chat                | A's own session is cancelled; nobody else is affected                                                                                                                        |
+| A abandons a session                       | nothing to release; a few fields in memory until A cancels or the server restarts                                                                                            |
 
-Listed for completeness. It buys horizontal scalability that nothing currently demands, and it forfeits the "one
-instance per object within a KB" invariant (see [architecture.md](architecture.md)) that the rule engine relies on.
-Not recommended until a deployment actually needs more than one server process.
+The refusal reaches the user as: over REST, `409 Conflict`, body "<kbName> is being edited by <holderId>.", header
+`X-Refusal: held`; in the chat, `projectHeldChatMessage` — the KB cannot be deleted right now, try again when the
+other user has finished their rule.
 
-## Recommended path
+## Client
 
-1. Stage 1: identity plumbing, connection registry, per-user chat and per-user open-KB (no behaviour change for a
-   single user).
-2. Stage 2: project lease — delivers the first milestone.
-3. Stage 3 incrementally: first the per-KB write lock (safety), then per-user rule sessions and commit-time
-   revalidation (lifts the one-user-per-project constraint).
+`Api`'s response validator turns a 409 into `StaleRuleSessionException` or `KnowledgeBaseHeldException` according to
+the `X-Refusal` header. The GUI never commits over REST (commits go through the chat), and no GUI action can be
+refused as held, so the GUI has no special handling: a user's own client behaves exactly as with a single user, and
+the chat is where refusals are read.
 
-Stage 4 is not planned.
+Not built: a "who is editing" indicator. It would be a display, not a control, so the chat-UI guidelines allow it, but
+it needs a push on session start and end to avoid going stale, and the delete refusal already names the other user.
+Revisit if refusals prove confusing in use.
 
 ## Testing
 
-Multi-user acceptance tests are REST-first; full UI clients are used only where client behaviour is what is under
-test.
+Multi-user acceptance is REST-first (`requirements/kb/Concurrent Users.feature`, `ConcurrentUsersDefs.kt`): several
+`Api` instances with different user ids against one server, the chat reached through `sendUserMessage`. Everything
+above — identity keying, per-user conversations and pushes, two editors in one KB, the stale-commit refusal, the delete
+refusal — is observable that way, so no scenario needs two GUI windows. Conditions in those scenarios are built in
+the step definitions rather than translated, so no LLM is involved.
 
-- **REST clients cover the server.** Everything the stages change — identity keying, per-user conversations, per-KB
-  pushes, the lease, commit-time revalidation — is observable through `Api` plus a web-socket listener. Two `Api`
-  instances with different user ids against one in-memory server cover every assertion in the groundwork plan, and the
-  chat is reachable the same way (`sendUserMessage` returns the `ChatResponse`), so "the second user is told who holds
-  the project" needs no window. Cucumber step defs address users by name (`user "alice" opens KB "X"`); the current
-  `RESTClient` wraps one `Api` with one `currentKB`, so it becomes one instance per named user, each with its own
-  `userId` and its own `WebSocketApi` listener for push assertions.
-- **UI clients cover what REST cannot see.** That user B's window does *not* switch KB when A opens one, does *not*
-  show A's cornerstone status, and shows A's lease as a warning in the chat when B's edit is refused — these are
-  client reactions to frames that were or were not sent, and a REST client can only observe the frame. One scenario
-  per stage of the shape "two users, two windows, A edits, B is refused and is unaffected by A's pushes" is enough.
-- **Multi-UI scenarios are kept rare.** A UI run takes over the desktop; two Compose windows double the a11y-tree
-  flakiness, both chat panels drive the LLM, and the page objects (`ChatPO`, `InterpretationPO`, …) are singletons that
-  need a window parameter. Tag them `@multi-user`, put them in their own feature folder so routine folder runs exclude
-  them, and schedule them like the other long UI tests. The second window (a second `TestClientLauncher` plus
-  window-scoped page objects) is deferred to Stage 2, when there is first UI behaviour to test; the groundwork needs
-  none.
+Server-level: `KBSessionTest` (lock, per-user managers, `usersEditing`, cancellation), `StaleRuleSessionTest` (two
+users through one `KBSession`), `KBEndpointConcurrencyTest` (the lab feed against a user), `RefusalsTest` (the two
+409s and their header), `ChatCoordinatorTest` and `ApplicationKbServiceTest` (per-user conversations and pushes),
+`WebSocketManagerTest`.
 
 ## Out of scope
 
 - User management, login, roles, permissions — the third-party system's job. OpenRDR sees an opaque `userId`.
-- Cross-server deployment (Stage 4).
+- Broadcast invalidation: a "KB changed" push so other clients re-fetch the current case. Without it a user's
+  *displayed* interpretation can be stale until their next fetch; their *commit* cannot be, thanks to revalidation.
+- A stateless, multi-instance server with the database as coordination point. It buys horizontal scalability nothing
+  demands and forfeits the "one instance per object within a KB" invariant (see [architecture.md](architecture.md))
+  that the rule engine relies on.
 - Merging two users' concurrent edits to the *same* rule session — a session belongs to one user.

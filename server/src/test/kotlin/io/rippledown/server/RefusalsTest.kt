@@ -24,7 +24,7 @@ import kotlin.test.Test
 /**
  * The two kinds of 409 the server sends are told apart by a header, so that the
  * client can raise the right exception for each.
- * See documentation/design/concurrent_users_revalidation.md and concurrent_users_lease_lift.md.
+ * See documentation/design/concurrent_users.md.
  */
 class RefusalsTest : OpenRDRServerTestBase() {
 

@@ -16,7 +16,7 @@ import kotlin.test.Test
 /**
  * Two users with their own sessions on one knowledge base. Alice's commit is
  * checked against what Bob committed in the meantime.
- * See documentation/design/concurrent_users_revalidation.md.
+ * See documentation/design/concurrent_users.md.
  */
 class StaleRuleSessionTest {
     private lateinit var kb: KB

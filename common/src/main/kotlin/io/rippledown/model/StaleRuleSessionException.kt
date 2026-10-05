@@ -11,6 +11,6 @@ fun cornerstonesChangedMessage() = "The cornerstones changed while you were buil
  * A rule session's commit was refused because another user's commit changed what
  * the session was built against. The session has been cancelled. Thrown by the
  * server and, over REST, reconstructed by the client from a 409 response.
- * See documentation/design/concurrent_users_revalidation.md.
+ * See documentation/design/concurrent_users.md.
  */
 class StaleRuleSessionException(override val message: String) : RuntimeException(message)

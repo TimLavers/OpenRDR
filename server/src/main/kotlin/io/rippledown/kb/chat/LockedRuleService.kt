@@ -13,7 +13,7 @@ import io.rippledown.model.rule.UndoRuleDescription
 
 /**
  * The chat's view of a KB's [RuleService]: every call runs under the KB's lock.
- * See documentation/design/concurrent_users_write_lock.md.
+ * See documentation/design/concurrent_users.md.
  */
 class LockedRuleService(
     private val session: KBSession,

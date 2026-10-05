@@ -787,8 +787,7 @@ class RuleSessionManager(
     /**
      * Another user's commit changed what this session was built against, so
      * its rule can no longer be added as the user reviewed it. The session is
-     * cancelled and its user told, as when a lease is lost. See
-     * documentation/design/concurrent_users_revalidation.md.
+     * cancelled and its user told. See documentation/design/concurrent_users.md.
      */
     private fun refuseStaleCommit(message: String): Nothing {
         cancelRuleSession()

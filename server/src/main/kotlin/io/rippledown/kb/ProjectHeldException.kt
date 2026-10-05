@@ -6,7 +6,7 @@ fun projectHeldMessage(kbName: String, editor: UserId) = "$kbName is being edite
 
 /**
  * Deleting a knowledge base was refused because another user has a rule
- * session in progress on it. See documentation/design/concurrent_users_lease_lift.md.
+ * session in progress on it. See documentation/design/concurrent_users.md.
  */
 class ProjectHeldException(val kbName: String, val holder: UserId) :
     RuntimeException(projectHeldMessage(kbName, holder))

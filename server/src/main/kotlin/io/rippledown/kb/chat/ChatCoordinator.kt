@@ -13,8 +13,8 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Owns one conversation per user. The client starts a conversation whenever
  * its context changes (a KB is opened or closed, a case is selected); the
- * server never starts one on its own. Conversations are never evicted in this
- * stage; see documentation/design/concurrent_users_groundwork.md, step 3.
+ * server never starts one on its own. Conversations are never evicted;
+ * see documentation/design/concurrent_users.md.
  */
 class ChatCoordinator(
     private val factory: ChatManagerFactory,

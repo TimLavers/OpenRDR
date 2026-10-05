@@ -24,7 +24,7 @@ import kotlin.test.Test
  * The lab feed and a user edit the one KB from different threads. Without the
  * per-KB lock this corrupts the shared object graph (duplicate attributes,
  * ConcurrentModificationException while a case is interpreted during a commit).
- * See documentation/design/concurrent_users_write_lock.md.
+ * See documentation/design/concurrent_users.md.
  */
 class KBEndpointConcurrencyTest {
     private lateinit var kb: KB
