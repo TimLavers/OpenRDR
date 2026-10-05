@@ -6,7 +6,6 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.CapabilityListMessage
-import io.rippledown.chat.ChatTestHook
 import io.rippledown.constants.chat.*
 import io.rippledown.constants.rule.UNDERSTAND
 import org.awaitility.Awaitility.await
@@ -606,7 +605,7 @@ class ChatDefs {
     @Then("the capabilities are shown in a formatted card")
     fun capabilityCardIsShown() {
         await().atMost(ofSeconds(90)).until {
-            ChatTestHook.snapshot().messageList.lastOrNull() is CapabilityListMessage
+            chatPO().snapshot().messageList.lastOrNull() is CapabilityListMessage
         }
     }
 

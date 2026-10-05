@@ -7,6 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
+import io.rippledown.main.defaultUserId
 
 fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
     expected.forEachIndexed { idx, message ->
@@ -27,7 +28,7 @@ fun ComposeTestRule.requireChatMessagesShowing(expected: List<ChatMessage>) {
         waitUntilAtLeastOneExists(hasContentDescription(expectedLabel))
         if (message is KbChoiceListMessage) {
             onNodeWithContentDescription(expectedLabel).assertExists()
-            runOnIdle { ChatTestHook.snapshot().messageList[idx] shouldBe message }
+            runOnIdle { ChatTestHook.snapshot(defaultUserId()).messageList[idx] shouldBe message }
         } else if (message.text.isEmpty()) {
             onNodeWithContentDescription(expectedLabel).assertExists()
         } else {

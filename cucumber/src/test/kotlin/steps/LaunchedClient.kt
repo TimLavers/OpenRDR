@@ -27,7 +27,7 @@ class LaunchedClient(userId: UserId = defaultUserId()) {
         if (StepsInfrastructure.useFakeVoice) FakeVoiceRecognition() else null
     private val composeWindow =
         testClientLauncher.launchClient(fakeVoiceRecognition, StepsInfrastructure.fileDialogs, userId)
-    private val rdUiOperator = RippleDownUIOperator(composeWindow)
+    private val rdUiOperator = RippleDownUIOperator(composeWindow, userId)
 
     fun voiceRecognition(): FakeVoiceRecognition = fakeVoiceRecognition
         ?: error("voiceRecognition() requested but the scenario is not tagged @voice-is-fake")

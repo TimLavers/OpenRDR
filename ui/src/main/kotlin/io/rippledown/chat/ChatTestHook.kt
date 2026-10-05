@@ -1,7 +1,8 @@
 package io.rippledown.chat
 
-import io.rippledown.chat.ChatTestHook.snapshotRef
-import java.util.concurrent.atomic.AtomicReference
+import io.rippledown.chat.ChatTestHook.snapshots
+import io.rippledown.model.UserId
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Test-only observation surface for the live state of [ChatPanel].
@@ -21,8 +22,12 @@ import java.util.concurrent.atomic.AtomicReference
  * never reads this object; it is effectively free when no test is
  * observing (one atomic reference write per chat recomposition).
  *
- * Thread-safety: [snapshotRef] is atomic; reads and writes can come from
- * any thread. Readers always see a self-consistent [Snapshot].
+ * Keyed by the window's user: a two-window scenario runs two clients in the
+ * one JVM, and each page object must read the state of its own window.
+ *
+ * Thread-safety: [snapshots] is a concurrent map of immutable values; reads
+ * and writes can come from any thread. Readers always see a self-consistent
+ * [Snapshot].
  */
 object ChatTestHook {
 
@@ -51,13 +56,13 @@ object ChatTestHook {
         }
     }
 
-    private val snapshotRef = AtomicReference(Snapshot.EMPTY)
+    private val snapshots = ConcurrentHashMap<UserId, Snapshot>()
 
     /**
-     * Publish a new snapshot derived from [messages]. Intended to be
-     * called from a Compose `SideEffect` inside [ChatPanel].
+     * Publish a new snapshot of [userId]'s chat derived from [messages].
+     * Intended to be called from a Compose `SideEffect` inside [ChatPanel].
      */
-    fun update(messages: List<ChatMessage>, sendIsEnabled: Boolean) {
+    fun update(userId: UserId, messages: List<ChatMessage>, sendIsEnabled: Boolean) {
         val mostRecentBot = messages.lastOrNull {
             it is BotMessage || it is WarningMessage || it is KbChoiceListMessage || it is CapabilityListMessage
         }?.text
@@ -73,20 +78,18 @@ object ChatTestHook {
             (messages.lastOrNull { it is KbChoiceListMessage } as? KbChoiceListMessage)?.listing?.let {
                 it.storedNames.filterNot { name -> name == it.openName } + it.demonstrationNames
             }
-        snapshotRef.set(
-            Snapshot(
-                messageList = messages,
-                suggestionRowCount = suggestionRowCount,
-                mostRecentBotText = mostRecentBot,
-                mostRecentSuggestionText = mostRecentSuggestion,
-                mostRecentTipText = mostRecentTip,
-                mostRecentKbChoices = mostRecentKbChoices,
-                sendIsEnabled = sendIsEnabled
-            )
+        snapshots[userId] = Snapshot(
+            messageList = messages,
+            suggestionRowCount = suggestionRowCount,
+            mostRecentBotText = mostRecentBot,
+            mostRecentSuggestionText = mostRecentSuggestion,
+            mostRecentTipText = mostRecentTip,
+            mostRecentKbChoices = mostRecentKbChoices,
+            sendIsEnabled = sendIsEnabled
         )
     }
 
-    fun snapshot(): Snapshot = snapshotRef.get()
+    fun snapshot(userId: UserId): Snapshot = snapshots[userId] ?: Snapshot.EMPTY
 
     /**
      * Reset to an empty snapshot. Useful between cucumber scenarios when
@@ -95,6 +98,6 @@ object ChatTestHook {
      * the next scenario's first poll.
      */
     fun reset() {
-        snapshotRef.set(Snapshot.EMPTY)
+        snapshots.clear()
     }
 }

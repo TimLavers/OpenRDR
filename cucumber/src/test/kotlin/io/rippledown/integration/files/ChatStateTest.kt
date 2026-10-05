@@ -3,6 +3,7 @@ package io.rippledown.integration.files
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
+import io.rippledown.model.UserId
 import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KbFileDialogRequest
@@ -19,11 +20,12 @@ class ChatStateTest {
         )
 
         // When
-        ChatTestHook.update(listOf(BotMessage("Welcome"), card), sendIsEnabled = true)
+        val user = UserId("alice")
+        ChatTestHook.update(user, listOf(BotMessage("Welcome"), card), sendIsEnabled = true)
 
         // Then
         try {
-            ChatTestHook.snapshot().mostRecentBotText shouldBe card.text
+            ChatTestHook.snapshot(user).mostRecentBotText shouldBe card.text
         } finally {
             ChatTestHook.reset()
         }

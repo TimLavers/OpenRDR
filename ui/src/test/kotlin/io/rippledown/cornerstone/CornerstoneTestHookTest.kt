@@ -1,6 +1,7 @@
 package io.rippledown.cornerstone
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.UserId
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.utils.createViewableCase
 import org.junit.Before
@@ -19,6 +20,28 @@ import java.util.concurrent.atomic.AtomicInteger
  * caller in `CornerstonePO` that depends on it.
  */
 class CornerstoneTestHookTest {
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
+
+    @Test
+    fun `each user's window is observed separately`() {
+        // Given
+        CornerstoneTestHook.update(
+            alice,
+            CornerstoneStatus(
+                cornerstoneToReview = createViewableCase("Planck", 42),
+                indexOfCornerstoneToReview = 0,
+                numberOfCornerstones = 1
+            )
+        )
+
+        // When
+        CornerstoneTestHook.update(bob, null)
+
+        // Then
+        CornerstoneTestHook.snapshot(alice).cornerstoneCaseName shouldBe "Planck"
+        CornerstoneTestHook.snapshot(bob).isShowing shouldBe false
+    }
 
     @Before
     fun resetHook() {
@@ -45,7 +68,7 @@ class CornerstoneTestHookTest {
 
     @Test
     fun `snapshot returns EMPTY before any update`() {
-        CornerstoneTestHook.snapshot() shouldBe CornerstoneTestHook.Snapshot.EMPTY
+        CornerstoneTestHook.snapshot(alice) shouldBe CornerstoneTestHook.Snapshot.EMPTY
     }
 
     // -------- update() — populated status --------
@@ -58,9 +81,9 @@ class CornerstoneTestHookTest {
             numberOfCornerstones = 3
         )
 
-        CornerstoneTestHook.update(status)
+        CornerstoneTestHook.update(alice, status)
 
-        val s = CornerstoneTestHook.snapshot()
+        val s = CornerstoneTestHook.snapshot(alice)
         s.cornerstoneCaseName shouldBe "Planck"
         s.indexOfCornerstoneToReview shouldBe 0
         s.numberOfCornerstones shouldBe 3
@@ -69,6 +92,7 @@ class CornerstoneTestHookTest {
     @Test
     fun `update with a populated status reports isShowing=true`() {
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = createViewableCase("Einstein", 1),
                 indexOfCornerstoneToReview = 1,
@@ -76,12 +100,13 @@ class CornerstoneTestHookTest {
             )
         )
 
-        CornerstoneTestHook.snapshot().isShowing shouldBe true
+        CornerstoneTestHook.snapshot(alice).isShowing shouldBe true
     }
 
     @Test
     fun `update with a different status overwrites all snapshot fields`() {
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = createViewableCase("Planck", 42),
                 indexOfCornerstoneToReview = 0,
@@ -89,6 +114,7 @@ class CornerstoneTestHookTest {
             )
         )
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = createViewableCase("Einstein", 1),
                 indexOfCornerstoneToReview = 2,
@@ -96,7 +122,7 @@ class CornerstoneTestHookTest {
             )
         )
 
-        val s = CornerstoneTestHook.snapshot()
+        val s = CornerstoneTestHook.snapshot(alice)
         s.cornerstoneCaseName shouldBe "Einstein"
         s.indexOfCornerstoneToReview shouldBe 2
         s.numberOfCornerstones shouldBe 5
@@ -107,6 +133,7 @@ class CornerstoneTestHookTest {
     @Test
     fun `update with null status resets to EMPTY`() {
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = createViewableCase("Planck", 42),
                 indexOfCornerstoneToReview = 0,
@@ -114,16 +141,17 @@ class CornerstoneTestHookTest {
             )
         )
 
-        CornerstoneTestHook.update(null)
+        CornerstoneTestHook.update(alice, null)
 
         // Null status models "no rule session in progress" — the cuke
         // `requireNoCornerstoneCases` check must observe isShowing=false.
-        CornerstoneTestHook.snapshot() shouldBe CornerstoneTestHook.Snapshot.EMPTY
+        CornerstoneTestHook.snapshot(alice) shouldBe CornerstoneTestHook.Snapshot.EMPTY
     }
 
     @Test
     fun `update with a status that has no cornerstoneToReview resets to EMPTY`() {
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = createViewableCase("Planck", 42),
                 indexOfCornerstoneToReview = 0,
@@ -134,6 +162,7 @@ class CornerstoneTestHookTest {
         // Rule session ended: server pushes a status with no case to
         // review (and zero remaining cornerstones).
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = null,
                 indexOfCornerstoneToReview = -1,
@@ -141,7 +170,7 @@ class CornerstoneTestHookTest {
             )
         )
 
-        CornerstoneTestHook.snapshot() shouldBe CornerstoneTestHook.Snapshot.EMPTY
+        CornerstoneTestHook.snapshot(alice) shouldBe CornerstoneTestHook.Snapshot.EMPTY
     }
 
     // -------- reset --------
@@ -149,6 +178,7 @@ class CornerstoneTestHookTest {
     @Test
     fun `reset returns to EMPTY regardless of prior state`() {
         CornerstoneTestHook.update(
+            alice,
             CornerstoneStatus(
                 cornerstoneToReview = createViewableCase("Planck", 42),
                 indexOfCornerstoneToReview = 0,
@@ -158,7 +188,7 @@ class CornerstoneTestHookTest {
 
         CornerstoneTestHook.reset()
 
-        CornerstoneTestHook.snapshot() shouldBe CornerstoneTestHook.Snapshot.EMPTY
+        CornerstoneTestHook.snapshot(alice) shouldBe CornerstoneTestHook.Snapshot.EMPTY
     }
 
     // -------- thread safety --------
@@ -183,10 +213,10 @@ class CornerstoneTestHookTest {
                 try {
                     repeat(iterationsPerThread) { i ->
                         when ((t + i) % 3) {
-                            0 -> CornerstoneTestHook.update(populated)
-                            1 -> CornerstoneTestHook.update(null)
+                            0 -> CornerstoneTestHook.update(alice, populated)
+                            1 -> CornerstoneTestHook.update(alice, null)
                             2 -> {
-                                val s = CornerstoneTestHook.snapshot()
+                                val s = CornerstoneTestHook.snapshot(alice)
                                 // Invariant: a non-null case name <=>
                                 // isShowing==true. Any other combination
                                 // means we observed a torn snapshot.

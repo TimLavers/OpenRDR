@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.verify
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
+import io.rippledown.main.defaultUserId
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KnowledgeBaseListing
 import kotlinx.coroutines.delay
@@ -192,8 +193,8 @@ class ChatControllerTest {
                 KbChoiceListMessage(botResponse, listing)
             )
             runOnIdle {
-                ChatTestHook.snapshot().messageList shouldBe expected
-                ChatTestHook.snapshot().mostRecentBotText shouldBe botResponse
+                ChatTestHook.snapshot(defaultUserId()).messageList shouldBe expected
+                ChatTestHook.snapshot(defaultUserId()).mostRecentBotText shouldBe botResponse
             }
             onAllNodesWithText("Glucose").assertCountEquals(1)
             onNodeWithContentDescription("${KB_CHOICE_ITEM}Zoo Animals").performClick()

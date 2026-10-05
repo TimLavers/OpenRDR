@@ -204,8 +204,10 @@ two-window scenario covers that (`requirements/kb/Concurrent Users with windows.
 cornerstone in her window while Bob, on the same KB, sees no cornerstone and no change to his case until he reselects
 it. `StepsInfrastructure` keeps one `LaunchedClient` per named user and a current one that the page objects address;
 "I switch to Alice's window" redirects them and brings her window to the front, since Robot clicks land on whichever
-window is on top. Both chats are driven by the real model, so this is the slowest scenario in the suite and there is
-deliberately only one.
+window is on top. The in-JVM observation hooks (`ChatTestHook`, `CornerstoneTestHook`) are keyed by `UserId`, each
+window publishing under its own `Api.userId`, so a page object reads the state of its own window and not whichever
+window recomposed last. Both chats are driven by the real model, so this is the slowest scenario in the suite and
+there is deliberately only one.
 
 Server-level: `KBSessionTest` (lock, per-user managers, `usersEditing`, cancellation), `StaleRuleSessionTest` (two
 users through one `KBSession`), `KBEndpointConcurrencyTest` (the lab feed against a user), `RefusalsTest` (the two

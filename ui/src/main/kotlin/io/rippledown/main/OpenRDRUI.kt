@@ -120,7 +120,7 @@ fun OpenRDRUI(
     // class docs for why the accessibility bridge is unusable on a
     // window containing a large case table.
     SideEffect {
-        CornerstoneTestHook.update(cornerstoneStatus)
+        CornerstoneTestHook.update(api.userId, cornerstoneStatus)
     }
 
     handler.setWindowSize(isShowingCornerstone)
@@ -376,7 +376,8 @@ fun OpenRDRUI(
                         scope.launch(start = CoroutineStart.UNDISPATCHED) {
                             checkNotNull(fileTransfers) { "File dialogs have not been configured." }.handle(request)
                         }
-                    }
+                    },
+                    userId = api.userId
                 )
             }
             LaunchedEffect(pendingConversationResponse) {

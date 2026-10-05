@@ -40,6 +40,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.main.defaultUserId
+import io.rippledown.model.UserId
 import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.voice.RecordingIndicator
@@ -120,7 +122,8 @@ fun ChatPanel(
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
     voiceRecognitionService: VoiceRecognition? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    userId: UserId = defaultUserId()
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
     var partialSuffixLength by remember { mutableStateOf(0) }
@@ -135,7 +138,7 @@ fun ChatPanel(
     // after every successful composition, so the hook is always in sync
     // with what this Composable was asked to render.
     SideEffect {
-        ChatTestHook.update(messages = messages, sendIsEnabled = sendIsEnabled)
+        ChatTestHook.update(userId, messages = messages, sendIsEnabled = sendIsEnabled)
     }
 
     LaunchedEffect(messages) {

@@ -2,8 +2,9 @@ package io.rippledown.integration.pageobjects
 
 import androidx.compose.ui.awt.ComposeWindow
 import io.rippledown.integration.utils.waitForWindowToShow
+import io.rippledown.model.UserId
 
-class RippleDownUIOperator(private val window: ComposeWindow) {
+class RippleDownUIOperator(private val window: ComposeWindow, private val userId: UserId) {
     init {
         window.waitForWindowToShow()
     }
@@ -53,7 +54,7 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
-    fun cornerstonePO() = CornerstonePO {
+    fun cornerstonePO() = CornerstonePO(userId) {
         context()
     }
 
@@ -61,11 +62,11 @@ class RippleDownUIOperator(private val window: ComposeWindow) {
         context()
     }
 
-    fun chatPO() = ChatPO {
+    fun chatPO() = ChatPO(userId) {
         context()
     }
 
-    fun reportPO() = ReportPO {
+    fun reportPO() = ReportPO(userId) {
         context()
     }
 

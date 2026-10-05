@@ -13,11 +13,14 @@ import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findAndClick
 import io.rippledown.integration.utils.renderedText
 import io.rippledown.integration.waitUntilAsserted
+import io.rippledown.model.UserId
 import org.assertj.swing.edt.GuiActionRunner.execute
 import javax.accessibility.AccessibleContext
 
 // ORD2
-class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
+class CornerstonePO(private val userId: UserId, private val contextProvider: () -> AccessibleContext) {
+
+    private fun snapshot() = CornerstoneTestHook.snapshot(userId)
 
     // The next four polling helpers read from [CornerstoneTestHook] —
     // an in-JVM observation surface populated by `OpenRDRUI` on every
@@ -29,25 +32,25 @@ class CornerstonePO(private val contextProvider: () -> AccessibleContext) {
     // `ChatTestHook` for full context.
     fun requireCornerstoneCase(expectedCaseName: String) {
         waitUntilAsserted {
-            CornerstoneTestHook.snapshot().cornerstoneCaseName shouldBe expectedCaseName
+            snapshot().cornerstoneCaseName shouldBe expectedCaseName
         }
     }
 
     fun requireNoCornerstoneCases() {
         waitUntilAsserted {
-            CornerstoneTestHook.snapshot().isShowing shouldBe false
+            snapshot().isShowing shouldBe false
         }
     }
 
     fun requireCornerstoneCaseNotToBeShowing(ccName: String) {
         waitUntilAsserted {
-            CornerstoneTestHook.snapshot().cornerstoneCaseName shouldNotBe ccName
+            snapshot().cornerstoneCaseName shouldNotBe ccName
         }
     }
 
     fun requireCornerstoneLabel(expectedLabel: String) {
         waitUntilAsserted {
-            val s = CornerstoneTestHook.snapshot()
+            val s = snapshot()
             // Mirror the formatting in `CornerstoneInspection`:
             //   total > 0 -> "Cornerstone ${index + 1} of $total"
             //   total == 0 -> just "Cornerstone"

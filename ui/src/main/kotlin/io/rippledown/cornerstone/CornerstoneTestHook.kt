@@ -1,7 +1,8 @@
 package io.rippledown.cornerstone
 
+import io.rippledown.model.UserId
 import io.rippledown.model.rule.CornerstoneStatus
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Test-only observation surface for the live state of the cornerstone
@@ -23,6 +24,9 @@ import java.util.concurrent.atomic.AtomicReference
  * with the most-recently-rendered frame. In production this is one
  * atomic reference write per OpenRDRUI recomposition; when no test is
  * reading there is no behavioural consequence.
+ *
+ * Keyed by the window's user, as `ChatTestHook` is, so that two windows in
+ * the one JVM are observed separately.
  */
 object CornerstoneTestHook {
 
@@ -42,25 +46,23 @@ object CornerstoneTestHook {
         }
     }
 
-    private val snapshotRef = AtomicReference(Snapshot.EMPTY)
+    private val snapshots = ConcurrentHashMap<UserId, Snapshot>()
 
-    fun update(status: CornerstoneStatus?) {
-        if (status == null || status.cornerstoneToReview == null) {
-            snapshotRef.set(Snapshot.EMPTY)
+    fun update(userId: UserId, status: CornerstoneStatus?) {
+        snapshots[userId] = if (status == null || status.cornerstoneToReview == null) {
+            Snapshot.EMPTY
         } else {
-            snapshotRef.set(
-                Snapshot(
-                    cornerstoneCaseName = status.cornerstoneToReview?.case?.name,
-                    indexOfCornerstoneToReview = status.indexOfCornerstoneToReview,
-                    numberOfCornerstones = status.numberOfCornerstones
-                )
+            Snapshot(
+                cornerstoneCaseName = status.cornerstoneToReview?.case?.name,
+                indexOfCornerstoneToReview = status.indexOfCornerstoneToReview,
+                numberOfCornerstones = status.numberOfCornerstones
             )
         }
     }
 
-    fun snapshot(): Snapshot = snapshotRef.get()
+    fun snapshot(userId: UserId): Snapshot = snapshots[userId] ?: Snapshot.EMPTY
 
     fun reset() {
-        snapshotRef.set(Snapshot.EMPTY)
+        snapshots.clear()
     }
 }
