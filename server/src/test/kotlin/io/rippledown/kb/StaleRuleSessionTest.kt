@@ -7,6 +7,7 @@ import io.mockk.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.lessThanOrEqualTo
+import io.rippledown.model.rule.ByDefinition
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
@@ -38,6 +39,8 @@ class StaleRuleSessionTest {
     }
 
     private fun glucose(): Attribute = kb.attributeManager.getOrCreate("Glucose")
+
+    private fun derived(name: String): Attribute = kb.attributeManager.getOrCreate(name, AttributeKind.DERIVED)
 
     private fun createCase(name: String, value: String = "1.0"): RDRCase {
         val builder = RDRCaseBuilder()
@@ -143,6 +146,130 @@ class StaleRuleSessionTest {
         // Then
         kb.commentsFor(case) shouldBe setOf("Go to Bondi.")
         coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @Test
+    fun `alice's commit is stale when bob's commit made a same-named cornerstone she never saw conflict with her rule`() {
+        // Given
+        kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(createCase("Case2"))
+        val case = createCase("Case1")
+        alice.startRuleSessionToAddComment(case, "Go to Bondi.")
+        alice.conflictingCasesInCurrentRuleSession().map { it.name } shouldBe listOf("Case2")
+        alice.exemptCornerstone(0)
+        bob.startRuleSessionToAddComment(createCase("Case2", "2.0"), "Go to Manly.")
+        bob.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose(), 2.0))
+        bob.commitCurrentRuleSession()
+        val rulesBefore = kb.ruleTree.rules().size
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe cornerstonesChangedMessage()
+        alice.isRuleSessionActive() shouldBe false
+        kb.ruleTree.rules() shouldHaveSize rulesBefore
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
+    }
+
+    @Test
+    fun `alice's commit is stale when bob's commit would make her assignment part of a dependency cycle`() {
+        // Given
+        val a = derived("A")
+        val b = derived("B")
+        val case = createCase("Case1")
+        alice.startRuleSessionToAssignValue(case, "A", "B + 1")
+        alice.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.5))
+        bob.startRuleSessionToAssignValue(createCase("Case2", "2.0"), "B", "A + 1")
+        bob.commitCurrentRuleSession()
+        val rulesBefore = kb.ruleTree.rules().size
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe dependencyCycleMessage()
+        alice.isRuleSessionActive() shouldBe false
+        kb.ruleTree.rules() shouldHaveSize rulesBefore
+        kb.ruleTree.rulesMatching { it.assignment?.attribute == a } shouldHaveSize 0
+        kb.ruleTree.rulesMatching { it.assignment?.attribute == b } shouldHaveSize 1
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
+    }
+
+    @Test
+    fun `alice's commit is stale when a condition she added no longer holds because bob changed a definition`() {
+        // Given
+        val d = derived("D")
+        alice.startRuleSessionToAssignValue(createCase("Case0"), "D", "Glucose * 2")
+        alice.commitCurrentRuleSession()
+        val case = createCase("Case1")
+        alice.startRuleSessionToAddComment(case, "Go to Bondi.")
+        alice.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, d, 2.5))
+        bob.editDerivedAttributeDefinition("D", "Glucose * 10")
+        val rulesBefore = kb.ruleTree.rules().size
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe interpretationChangedMessage("Case1")
+        alice.isRuleSessionActive() shouldBe false
+        kb.ruleTree.rules() shouldHaveSize rulesBefore
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
+    }
+
+    @Test
+    fun `bob starting and cancelling an assignment of the same attribute does not change the formula alice commits`() {
+        // Given
+        val case = createCase("Case1")
+        alice.startRuleSessionToAssignValue(case, "Score", "Glucose * 2")
+        bob.startRuleSessionToAssignValue(createCase("Case2", "2.0"), "Score", "Glucose * 3")
+        bob.cancelRuleSession()
+
+        // When
+        alice.commitCurrentRuleSession()
+
+        // Then
+        val score = kb.attributeManager.byName("Score")!!
+        kb.derivedDefinitionManager.definitionFor(score.id)!!.asText() shouldBe "Glucose * 2"
+        kb.ruleTree.rulesMatching { it.assignment?.attribute == score }
+            .single().assignment!!.expression shouldBe ByDefinition
+        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @Test
+    fun `a pending definition is not visible to other users until it is committed`() {
+        // Given
+        val case = createCase("Case1")
+
+        // When
+        alice.startRuleSessionToAssignValue(case, "Score", "Glucose * 2")
+
+        // Then
+        val score = kb.attributeManager.byName("Score")!!
+        kb.derivedDefinitionManager.definitionFor(score.id) shouldBe null
+        alice.cancelRuleSession()
+        kb.derivedDefinitionManager.definitionFor(score.id) shouldBe null
+    }
+
+    @Test
+    fun `alice's assignment is stale when bob committed a different definition of the attribute meanwhile`() {
+        // Given
+        val case = createCase("Case1")
+        alice.startRuleSessionToAssignValue(case, "Score", "Glucose * 2")
+        bob.startRuleSessionToAssignValue(createCase("Case2", "2.0"), "Score", "Glucose * 3")
+        bob.commitCurrentRuleSession()
+        val rulesBefore = kb.ruleTree.rules().size
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe definitionChangedMessage("Score")
+        alice.isRuleSessionActive() shouldBe false
+        kb.ruleTree.rules() shouldHaveSize rulesBefore
+        val score = kb.attributeManager.byName("Score")!!
+        kb.derivedDefinitionManager.definitionFor(score.id)!!.asText() shouldBe "Glucose * 3"
+        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
@@ -25,6 +26,7 @@ class ChatCoordinatorTest {
     private lateinit var kbService: KnowledgeBaseService
     private lateinit var chatManager: ChatManager
     private lateinit var coordinator: ChatCoordinator
+    private val contextChanges = mutableListOf<Pair<UserId, ChatContext>>()
     private val thyroids = KBInfo("thyroids_1", "Thyroids")
     private val glucose = KBInfo("glucose_1", "Glucose")
     private val alice = UserId("alice")
@@ -35,7 +37,7 @@ class ChatCoordinatorTest {
         factory = mockk()
         kbService = mockk()
         chatManager = mockk()
-        coordinator = ChatCoordinator(factory) { kbService }
+        coordinator = ChatCoordinator(factory, { kbService }) { userId, context -> contextChanges += userId to context }
     }
 
     private fun endpointFor(kbInfo: KBInfo): KBEndpoint {
@@ -350,6 +352,50 @@ class ChatCoordinatorTest {
         alicesTurn.isCompleted shouldBe false
         aliceFinished.complete(ChatResponse("Finally"))
         alicesTurn.await() shouldBe ChatResponse("Finally")
+    }
+
+    @Test
+    fun `starting a conversation reports the new context for the user's windows to follow`() = runTest {
+        // Given
+        val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        every { factory.create(alice, context) } returns chatManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+
+        // When
+        coordinator.startConversation(alice, context)
+
+        // Then
+        contextChanges shouldBe listOf(alice to context)
+    }
+
+    @Test
+    fun `a start that fails reports no context change`() = runTest {
+        // Given
+        val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        every { factory.create(alice, context) } throws IllegalStateException("no model")
+
+        // When
+        shouldThrow<IllegalStateException> { coordinator.startConversation(alice, context) }
+
+        // Then
+        contextChanges shouldBe emptyList()
+    }
+
+    @Test
+    fun `a user has a conversation once one has been started, whatever its context`() = runTest {
+        // Given
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
+        every { factory.create(alice, ChatContext.NoKnowledgeBase) } returns chatManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coordinator.hasConversation(alice) shouldBe false
+
+        // When
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+
+        // Then
+        coordinator.hasConversation(alice) shouldBe true
+        coordinator.hasConversation(bob) shouldBe false
     }
 
     @Test

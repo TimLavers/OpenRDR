@@ -2,6 +2,7 @@ package io.rippledown.kb.chat
 
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.server.KBEndpoint
 
 /**
@@ -24,4 +25,6 @@ sealed class ChatContext {
     val kbInfoOrNull: KBInfo? get() = endpointOrNull?.kbInfo()
 
     val caseOrNull: ViewableCase? get() = (this as? CaseInKnowledgeBase)?.viewableCase
+
+    fun info() = ChatContextInfo(kbInfoOrNull, caseOrNull?.case?.id)
 }

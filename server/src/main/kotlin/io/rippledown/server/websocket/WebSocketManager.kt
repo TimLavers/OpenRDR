@@ -1,14 +1,12 @@
 package io.rippledown.server.websocket
 
 import io.ktor.websocket.*
-import io.rippledown.constants.chat.CASES_INFO_PREFIX
-import io.rippledown.constants.chat.KB_CLOSED
-import io.rippledown.constants.chat.KB_INFO_PREFIX
-import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
+import io.rippledown.constants.chat.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.UserId
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
 import java.util.concurrent.ConcurrentHashMap
@@ -23,7 +21,11 @@ class WebSocketManager {
     private val logger = lazyLogger
 
     suspend fun setSession(userId: UserId, session: WebSocketSession) {
-        connections.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }.add(session)
+        // One atomic step: a set returned by computeIfAbsent could be removed by a
+        // disconnecting window's compute (below) before the add, orphaning this session.
+        connections.compute(userId) { _, sessions ->
+            (sessions ?: ConcurrentHashMap.newKeySet()).apply { add(session) }
+        }
         try {
             // Keep the session open until the client disconnects
             for (frame in session.incoming) {
@@ -57,6 +59,10 @@ class WebSocketManager {
 
     suspend fun sendKbClosed(userId: UserId) {
         sendToUser(userId, KB_CLOSED)
+    }
+
+    suspend fun sendChatContext(userId: UserId, context: ChatContextInfo) {
+        sendToUser(userId, CHAT_CONTEXT_PREFIX + context.toJsonString<ChatContextInfo>())
     }
 
     suspend fun sendToUser(userId: UserId, message: String) {

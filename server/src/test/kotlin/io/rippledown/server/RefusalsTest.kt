@@ -6,7 +6,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.Conflict
 import io.ktor.server.testing.*
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.mockk
 import io.rippledown.constants.api.COMMIT_RULE_SESSION
 import io.rippledown.constants.api.DELETE_KB
 import io.rippledown.constants.server.KB_ID
@@ -14,6 +16,8 @@ import io.rippledown.constants.server.REFUSAL_HEADER
 import io.rippledown.constants.server.REFUSAL_HELD
 import io.rippledown.constants.server.REFUSAL_STALE
 import io.rippledown.kb.ProjectHeldException
+import io.rippledown.kb.chat.KnowledgeBaseService
+import io.rippledown.model.KBInfo
 import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.UserId
 import io.rippledown.model.condition.RuleConditionList
@@ -53,7 +57,11 @@ class RefusalsTest : OpenRDRServerTestBase() {
     fun `deleting a KB someone else is editing is refused with 409 and the held refusal header`() = testApplication {
         // Given
         setupServer()
-        every { serverApplication.deleteKB(kbId, testUser) } throws ProjectHeldException(kbName, UserId("alice"))
+        val doomed = KBInfo(kbId, kbName)
+        every { kbEndpoint.kbInfo() } returns doomed
+        val kbService = mockk<KnowledgeBaseService>()
+        every { serverApplication.kbServiceFor(testUser) } returns kbService
+        coEvery { kbService.delete(doomed) } throws ProjectHeldException(kbName, UserId("alice"))
 
         // When
         val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }

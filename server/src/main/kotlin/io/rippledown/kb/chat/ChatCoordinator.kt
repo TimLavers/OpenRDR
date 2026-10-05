@@ -13,12 +13,15 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Owns one conversation per user. The client starts a conversation whenever
  * its context changes (a KB is opened or closed, a case is selected); the
- * server never starts one on its own. Conversations are never evicted;
+ * server never starts one on its own. A user's windows share the one
+ * conversation, so [contextChanged] is called after each start for them to
+ * be told. Conversations are never evicted;
  * see documentation/design/concurrent_users.md.
  */
 class ChatCoordinator(
     private val factory: ChatManagerFactory,
     private val kbServiceFor: (UserId) -> KnowledgeBaseService,
+    private val contextChanged: suspend (UserId, ChatContext) -> Unit = { _, _ -> },
 ) : OpenKnowledgeBases {
     private val logger = lazyLogger
 
@@ -43,20 +46,24 @@ class ChatCoordinator(
 
     fun contextFor(userId: UserId): ChatContext = conversations[userId]?.context ?: ChatContext.NoKnowledgeBase
 
+    fun hasConversation(userId: UserId): Boolean = conversations.containsKey(userId)
+
     override fun openEndpointFor(userId: UserId): KBEndpoint? = contextFor(userId).endpointOrNull
 
-    fun usersOn(kbId: String): Set<UserId> = conversationsOn(kbId).keys
+    override fun usersOn(kbId: String): Set<UserId> = conversationsOn(kbId).keys
 
     private fun conversationsOn(kbId: String) = conversations.filterValues { it.context.kbInfoOrNull?.id == kbId }
 
     suspend fun startConversation(userId: UserId, context: ChatContext): ChatResponse {
         val conversation = conversationFor(userId)
         return conversation.oneTurnAtATime.withLock {
-            conversation.context = context
             logger.info("Starting conversation for user '$userId' in context ${context::class.simpleName}")
             val manager = factory.create(userId, context)
+            conversation.context = context
             conversation.chatManager = manager
-            manager.startConversation(context.caseOrNull, greetingFor(userId, context))
+            val response = manager.startConversation(context.caseOrNull, greetingFor(userId, context))
+            contextChanged(userId, context)
+            response
         }
     }
 

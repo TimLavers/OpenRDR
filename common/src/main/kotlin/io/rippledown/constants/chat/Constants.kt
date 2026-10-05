@@ -88,6 +88,9 @@ const val DELETE_CASE_FROM_LIST = "DeleteCaseFromList"
 const val KB_INFO_PREFIX = "KbInfo:"
 const val KB_CLOSED = "KbClosed"
 
+// Pushed to every window of a user when their conversation's context changes. See concurrent_users.md.
+const val CHAT_CONTEXT_PREFIX = "ChatContext:"
+
 const val LIST_KNOWLEDGE_BASES = "ListKnowledgeBases"
 const val OPEN_KNOWLEDGE_BASE = "OpenKnowledgeBase"
 const val CREATE_KNOWLEDGE_BASE = "CreateKnowledgeBase"

@@ -73,13 +73,14 @@ class ApplicationKbService(
         webSocketManager.sendKbClosed(userId)
     }
 
-    override suspend fun delete(kbInfo: KBInfo) {
-        application.deleteKB(kbInfo.id, userId)
+    override suspend fun delete(kbInfo: KBInfo): KBInfo? {
+        val remaining = application.deleteKB(kbInfo.id, userId)
         val affected = openKnowledgeBases.knowledgeBaseDeleted(kbInfo.id)
         if (affected.isNotEmpty()) {
             logger.info("KB '${kbInfo.name}' deleted; closing it for users $affected.")
         }
         affected.forEach { webSocketManager.sendKbClosed(it) }
+        return remaining
     }
 
     override suspend fun addDemonstrationCase(): RDRCase {
@@ -92,7 +93,8 @@ class ApplicationKbService(
     override suspend fun rename(newName: String): KBInfo {
         val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
         val renamed = application.renameKB(endpoint.kbInfo().id, newName, userId)
-        webSocketManager.sendKbInfo(userId, renamed)
+        // Every window on the KB filters casesInfo by KB name, so each must learn the new one.
+        (openKnowledgeBases.usersOn(renamed.id) + userId).forEach { webSocketManager.sendKbInfo(it, renamed) }
         return renamed
     }
 

@@ -16,4 +16,6 @@ interface OpenKnowledgeBases {
 
     /** Resets every conversation on the KB and returns the users affected. */
     fun knowledgeBaseDeleted(kbId: String): Set<UserId>
+
+    fun usersOn(kbId: String): Set<UserId>
 }

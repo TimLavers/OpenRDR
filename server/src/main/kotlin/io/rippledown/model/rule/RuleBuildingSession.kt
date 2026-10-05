@@ -19,9 +19,10 @@ class RuleBuildingSession(
     /**
      * The cornerstones found conflicting when the session started, whether or
      * not they were later exempted or excluded by a condition. Anything outside
-     * this set was never before the user.
+     * this set was never before the user. Ids, not names: two stored cornerstones
+     * can share a name.
      */
-    val namesOfConflictingCornerstonesAtStart: Set<String>
+    val idsOfConflictingCornerstonesAtStart: Set<Long?>
 
     /**
      * The session case and cornerstones with their derived values written
@@ -59,7 +60,7 @@ class RuleBuildingSession(
                 }
             }
         materialisedCase = tree.materialise(case, resolver)
-        namesOfConflictingCornerstonesAtStart = cornerstonesNotExempted.map { it.name }.toSet()
+        idsOfConflictingCornerstonesAtStart = cornerstonesNotExempted.map { it.id }.toSet()
     }
 
     fun cornerstoneCases(): List<RDRCase> {

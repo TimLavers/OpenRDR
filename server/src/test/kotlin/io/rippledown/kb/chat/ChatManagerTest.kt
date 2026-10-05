@@ -597,7 +597,7 @@ class ChatManagerTest {
         chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
         val scratch = KBInfo("s1", "Scratch")
         every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
-        coEvery { kbService.delete(scratch) } just Runs
+        coEvery { kbService.delete(scratch) } returns null
         coEvery { conversationService.response("Delete Scratch") } returns
                 ActionComment(action = DELETE_KNOWLEDGE_BASE, kbName = "Scratch").toJsonString()
 

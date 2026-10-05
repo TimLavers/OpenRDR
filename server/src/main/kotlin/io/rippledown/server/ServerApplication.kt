@@ -34,7 +34,9 @@ class ServerApplication(
     // Users on different KBs do not contend, but they all share the set of KBs,
     // so its mutations are serialised here.
     private val kbSetLock = Any()
-    val chatCoordinator = ChatCoordinator(ChatManagerFactory(::kbServiceFor), ::kbServiceFor)
+    val chatCoordinator = ChatCoordinator(ChatManagerFactory(::kbServiceFor), ::kbServiceFor) { userId, context ->
+        webSocketManager.sendChatContext(userId, context.info())
+    }
 
     fun kbServiceFor(userId: UserId): KnowledgeBaseService =
         ApplicationKbService(this, webSocketManager, userId, chatCoordinator)

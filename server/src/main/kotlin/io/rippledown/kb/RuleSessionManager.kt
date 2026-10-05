@@ -115,6 +115,23 @@ class RuleSessionManager(
      */
     private var replacedDiffAttribute: Attribute? = null
 
+    /**
+     * The definition an assign-by-definition session will give its attribute.
+     * Held here rather than stored when the session starts, because the store is
+     * shared: two users assigning the same attribute would otherwise overwrite
+     * each other's formula while one of them was still reviewing it. The session
+     * evaluates with the definition overlaid (see [sessionResolver]); it is
+     * stored only when the session commits, and only if nobody else stored a
+     * definition for the attribute meanwhile.
+     */
+    private class PendingDefinition(
+        val attribute: Attribute,
+        val expression: ValueExpression,
+        val definitionAtStart: ValueExpression?
+    )
+
+    private var pendingDefinition: PendingDefinition? = null
+
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
@@ -138,10 +155,18 @@ class RuleSessionManager(
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         checkActionExpressionIsAcyclic(action)
         ruleSession = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), kb.definitionResolver
+            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), sessionResolver()
         )
         logger.info("Rule session created")
         return cornerstoneStatus(null)
+    }
+
+    /**
+     * The KB's definitions with the pending one, if any, overlaid.
+     */
+    private fun sessionResolver(): DefinitionResolver {
+        val pending = pendingDefinition ?: return kb.definitionResolver
+        return { if (it.id == pending.attribute.id) pending.expression else kb.definitionResolver(it) }
     }
 
     override fun startRuleSessionToAddComment(
@@ -313,13 +338,19 @@ class RuleSessionManager(
         cycleForDefinition(attribute, expression)?.let {
             error("This value cannot be assigned: ${cycleMessage(it)}.")
         }
-        kb.derivedDefinitionManager.store(attribute.id, expression)
+        pendingDefinition =
+            PendingDefinition(attribute, expression, kb.derivedDefinitionManager.definitionFor(attribute.id))
         val assignment = AssignValue(attribute, ByDefinition)
-        return startAssignmentSession(
-            case,
-            DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
-            ChangeTreeToAddAssignment(assignment)
-        )
+        return try {
+            startAssignmentSession(
+                case,
+                DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
+                ChangeTreeToAddAssignment(assignment)
+            )
+        } catch (e: Throwable) {
+            pendingDefinition = null
+            throw e
+        }
     }
 
     fun startRuleSessionToRemoveAssignment(case: RDRCase, attributeName: String): CornerstoneStatus {
@@ -428,7 +459,7 @@ class RuleSessionManager(
     }
 
     private fun dependencyGraph() =
-        DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), kb.definitionResolver)
+        DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), sessionResolver())
 
     /**
      * The message explaining why the given condition cannot be added to the
@@ -729,6 +760,7 @@ class RuleSessionManager(
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
         currentChange = null
+        pendingDefinition = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
@@ -760,24 +792,36 @@ class RuleSessionManager(
 
     override fun commitCurrentRuleSession() {
         val session = activeRuleSession()
-        // Internal invariant: the entry points refuse cycle-creating
-        // conditions, so this should never fire.
-        session.conditions.forEach { condition ->
-            check(cycleMessageFor(condition) == null) {
-                "Cannot commit rule session: ${cycleMessageFor(condition)}"
+        // Each check below passed when the session started or the condition was
+        // added; another user's commit since then can make any of them fail.
+        if (createsDependencyCycle(session)) {
+            refuseStaleCommit(dependencyCycleMessage())
+        }
+        pendingDefinition?.let { pending ->
+            if (kb.derivedDefinitionManager.definitionFor(pending.attribute.id) != pending.definitionAtStart) {
+                refuseStaleCommit(definitionChangedMessage(pending.attribute.name))
             }
         }
         if (!session.action.isApplicable(kb.ruleTree, session.case)) {
             refuseStaleCommit(interpretationChangedMessage(session.case.name))
         }
-        if (hasUnreviewedConflictingCornerstone(session)) {
+        val now = RuleBuildingSession(
+            kb.ruleManager, kb.ruleTree, session.case, session.action, kb.allCornerstoneCases(), sessionResolver()
+        )
+        if (session.conditions.any { !it.holds(now.materialisedCase) }) {
+            refuseStaleCommit(interpretationChangedMessage(session.case.name))
+        }
+        session.conditions.forEach { now.addCondition(it) }
+        if (now.cornerstoneCases().any { it.id !in session.idsOfConflictingCornerstonesAtStart }) {
             refuseStaleCommit(cornerstonesChangedMessage())
         }
+        pendingDefinition?.let { kb.derivedDefinitionManager.store(it.attribute.id, it.expression) }
         val rulesAdded = session.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
         ruleSession = null
         currentChange = null
+        pendingDefinition = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
@@ -796,16 +840,14 @@ class RuleSessionManager(
     }
 
     /**
-     * Whether the rule, as it would be committed now, disturbs a cornerstone that
-     * was not conflicting when the session started. Such a cornerstone was added
-     * or changed by another user's commit, so the user has not reviewed it.
+     * Whether the rule, as it would be committed now, would make a derived
+     * attribute depend on itself. Its action and each condition were acyclic
+     * when accepted, but a rule committed since can have closed the loop.
      */
-    private fun hasUnreviewedConflictingCornerstone(session: RuleBuildingSession): Boolean {
-        val now = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, session.case, session.action, kb.allCornerstoneCases(), kb.definitionResolver
-        )
-        session.conditions.forEach { now.addCondition(it) }
-        return now.cornerstoneCases().any { it.name !in session.namesOfConflictingCornerstonesAtStart }
+    private fun createsDependencyCycle(session: RuleBuildingSession): Boolean {
+        val graph = dependencyGraph()
+        return graph.cycleCreatedBy(session.action, null) != null ||
+                session.conditions.any { graph.cycleCreatedBy(session.action, it) != null }
     }
 
     override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)

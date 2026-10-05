@@ -5,10 +5,12 @@ import io.kotest.matchers.string.shouldStartWith
 import io.ktor.websocket.*
 import io.mockk.*
 import io.rippledown.constants.chat.CASES_INFO_PREFIX
+import io.rippledown.constants.chat.CHAT_CONTEXT_PREFIX
 import io.rippledown.constants.chat.KB_CLOSED
 import io.rippledown.constants.chat.KB_INFO_PREFIX
 import io.rippledown.fromJsonString
 import io.rippledown.model.*
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.toJsonString
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -78,6 +80,20 @@ class WebSocketManagerTest {
 
         //Then
         sent shouldBe listOf(KB_CLOSED)
+    }
+
+    @Test
+    fun `sendChatContext sends the prefix followed by the context as JSON`() = withConnectedManager { manager, sent ->
+        //Given
+        val context = ChatContextInfo(KBInfo("glucose_123", "Glucose"), 42L)
+
+        //When
+        manager.sendChatContext(carol, context)
+
+        //Then
+        sent.size shouldBe 1
+        sent[0] shouldStartWith CHAT_CONTEXT_PREFIX
+        sent[0].removePrefix(CHAT_CONTEXT_PREFIX).fromJsonString<ChatContextInfo>() shouldBe context
     }
 
     @Test

@@ -47,10 +47,12 @@ class ApplicationKbServiceTest {
 
         override fun knowledgeBaseDeleted(kbId: String): Set<UserId> {
             deleted += kbId
-            val affected = open.filterValues { it.kbInfo().id == kbId }.keys.toSet()
+            val affected = usersOn(kbId)
             affected.forEach { open.remove(it) }
             return affected
         }
+
+        override fun usersOn(kbId: String): Set<UserId> = open.filterValues { it.kbInfo().id == kbId }.keys.toSet()
     }
 
     private var openEndpoint: KBEndpoint?
@@ -462,6 +464,26 @@ class ApplicationKbServiceTest {
         app.kbList() shouldBe listOf(renamed)
         pushed.captured shouldBe renamed
         pushed.captured.name shouldBe "Thyroid Function"
+    }
+
+    @Test
+    fun `rename pushes the renamed KBInfo to every user with the KB open and to nobody else`() = runBlocking<Unit> {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        val glucose = app.createKB("Glucose", false)
+        val carol = UserId("carol")
+        openKnowledgeBases.open[alice] = app.kbForId(thyroids.id)
+        openKnowledgeBases.open[bob] = app.kbForId(thyroids.id)
+        openKnowledgeBases.open[carol] = app.kbForId(glucose.id)
+        coEvery { webSocketManager.sendKbInfo(any(), any()) } just Runs
+
+        // When
+        val renamed = service.rename("Thyroid Function")
+
+        // Then
+        coVerify(exactly = 1) { webSocketManager.sendKbInfo(alice, renamed) }
+        coVerify(exactly = 1) { webSocketManager.sendKbInfo(bob, renamed) }
+        coVerify(exactly = 0) { webSocketManager.sendKbInfo(carol, any()) }
     }
 
     @Test

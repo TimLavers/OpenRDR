@@ -28,8 +28,11 @@ about what happens when two users' edits meet.
 two windows. Two push shapes:
 
 - `sendToUser(userId, message)` for pushes that belong to one user's activity: `KB_INFO` / `KB_CLOSED` when *their*
-  chat opens, creates, renames or closes a KB (opening a KB in my chat must not switch your window); cornerstone status
-  and `RULE_SESSION_COMPLETED`, addressed to the user whose rule session they concern.
+  chat opens, creates or closes a KB (opening a KB in my chat must not switch your window); cornerstone status
+  and `RULE_SESSION_COMPLETED`, addressed to the user whose rule session they concern. A rename is the exception:
+  every window filters `casesInfo` by KB *name*, so the renamed `KB_INFO` goes to every user whose conversation is on
+  the KB (`OpenKnowledgeBases.usersOn`), or their case lists would silently stop updating. `CHAT_CONTEXT` goes to
+  all of one user's windows after each conversation start (see "One conversation, several windows").
 - `broadcast(message)` for `casesInfo`: case ingestion is not a user action and the client already filters by KB
   name.
 
@@ -49,11 +52,33 @@ Closing and deleting are different events:
 
 - `knowledgeBaseClosed(userId)` resets only the caller's conversation and pushes `KB_CLOSED` to them.
 - `knowledgeBaseDeleted(kbId)` resets every conversation on that KB — another user may be mid-conversation on it, and
-  the deleter need not have had it open — and pushes `KB_CLOSED` to each of them.
+  the deleter need not have had it open — and pushes `KB_CLOSED` to each of them. This lives in
+  `ApplicationKbService.delete`, and the REST `DELETE_KB` route goes through the caller's service rather than
+  `ServerApplication.deleteKB` directly, so both entry points invalidate the same way.
 
 `ApplicationKbService` is constructed per user (`ServerApplication.kbServiceFor(userId)`) with the `userId` and an
 `OpenKnowledgeBases` (`openEndpointFor`, `knowledgeBaseClosed`, `knowledgeBaseDeleted`) that `ChatCoordinator`
 implements; the interface breaks the construction cycle coordinator → factory → service → coordinator.
+
+### One conversation, several windows
+
+The client starts a conversation whenever its context settles (a KB opened or closed, a case selected), and each start
+replaces the user's `ChatManager`. With two windows this used to be a trap: the second window opened the *first* KB
+on startup and started a conversation about it, silently retargeting the first window's chat — rules the user then
+asked for in window one were built on the wrong KB. So the windows now follow the conversation rather than each
+owning one:
+
+- `GET CHAT_CONTEXT` returns the user's `ChatContextInfo(kbInfo, caseId)` (204 if they have no conversation yet). A
+  new window adopts it instead of opening the first KB, and does not start a conversation of its own.
+- After every `startConversation` the coordinator reports the new context (`ChatCoordinator.contextChanged`) and the
+  server pushes `CHAT_CONTEXT` to all of the user's windows. A window whose KB or case differs adopts the pushed
+  context — switches KB, reloads the case list, selects the case — but does not restart the conversation
+  (`OpenRDRUI.adoptedContext`), or it would reset the chat the other window is in the middle of. A push that matches
+  what the window already shows is the echo of its own start and is ignored, as is any push arriving while its own
+  start is in flight, since the response to that start settles the context.
+
+The windows do not share chat *history*: a window shows the turns it took part in. That is enough for the
+problem at hand; the point is that whatever window the user types in, the chat acts on the KB and case they can see.
 
 Conversations are **never evicted** while the server runs. Evicting when the user's last web socket closes was
 rejected: the client has no reconnect loop and the ping timeout is 15 s, so a network blip or a laptop sleep would
@@ -64,7 +89,9 @@ a history — negligible at the expected user counts.
 
 Two users can both create, delete, rename or import KBs. `ServerApplication.idToKBEndpoint` is a `ConcurrentHashMap`
 and the KB-set mutations (`createKB`, `createKBFromSample`, `importKBFromZip`, `deleteKB`, `renameKB`) run under one
-`kbSetLock`. This guards the *set* of KBs; each KB's contents have their own lock, below.
+`kbSetLock`. Readers (`kbList`, `kbForName`) do not take it, so `KBManager`'s collections are concurrent ones, which
+iterate without `ConcurrentModificationException`. This guards the *set* of KBs; each KB's contents have their own
+lock, below.
 
 ## The per-KB lock
 
@@ -134,16 +161,35 @@ longer gives C the interpretation her session was started against — throwing f
 rule under the wrong parent. Separately, her conflicting-cornerstone set was computed at session start; Bob's commit
 adds a cornerstone and may change which cornerstones her rule disturbs.
 
-**Decision: re-check applicability at commit; reject and cancel on failure.** Of the candidate checks — the case's
-whole interpretation is unchanged, or the change the session makes still applies — the second is what the diff
-semantically depends on, and it tolerates unrelated rules landing in the meantime. The predicate already exists:
-`RuleTreeChange.isApplicable(tree, case)` is what `startRuleSession` checks before creating a session. Cornerstones
-are handled the same way: a second `RuleBuildingSession` with the same case, action and conditions is constructed
-against `kb.allCornerstoneCases()` now, and if its conflicting set contains a case the user was never shown (not in
-`RuleBuildingSession.namesOfConflictingCornerstonesAtStart`, compared by name since stored cornerstones are fresh
-instances), the commit is rejected. A cornerstone the user reviewed or exempted, or one that stopped conflicting, is
-fine. Both checks run inside `commitCurrentRuleSession`, under the lock, so nothing changes between check and
+**Decision: re-check at commit everything that was checked when the session started or a condition was added;
+reject and cancel on failure.** Of the candidate checks — the case's whole interpretation is unchanged, or the change
+the session makes still applies — the second is what the diff semantically depends on, and it tolerates unrelated
+rules landing in the meantime. The predicate already exists: `RuleTreeChange.isApplicable(tree, case)` is what
+`startRuleSession` checks before creating a session. Cornerstones are handled the same way: a second
+`RuleBuildingSession` with the same case, action and conditions is constructed against `kb.allCornerstoneCases()` now,
+and if its conflicting set contains a case the user was never shown (not in
+`RuleBuildingSession.idsOfConflictingCornerstonesAtStart` — by id, because two stored cornerstones can share a name),
+the commit is rejected. A cornerstone the user reviewed or exempted, or one that stopped conflicting, is fine.
+
+Two more things another user's commit can invalidate are checked the same way, in `commitCurrentRuleSession`:
+
+- **Dependency cycles.** The action's expression and each condition were acyclic when accepted, but a rule committed
+  since can close the loop (Alice assigns `A = B + 1`, Bob assigns `B = A + 1`, both individually fine). The
+  dependency graph is rebuilt from the current tree and the session's action and conditions rechecked.
+- **Conditions that no longer hold.** A condition on a derived attribute can become false for the session case when
+  someone edits that attribute's definition. Rebuilding the session would throw from `addCondition`; instead the
+  conditions are tested against the freshly materialised case first and a failure is a stale refusal.
+
+All checks run inside `commitCurrentRuleSession`, under the lock, so nothing changes between check and
 `session.commit()`.
+
+**Assign-by-definition sessions stage their definition.** Comment attributes are keyed by their text, so two users
+adding the same comment share one attribute and neither overwrites the other. A derived attribute is keyed by name,
+and storing its definition when the session *starts* let a second user's session overwrite the formula the first
+user was still reviewing — her committed rule would then compute his formula. The definition is therefore held in the
+`RuleSessionManager` (`pendingDefinition`), overlaid on `kb.definitionResolver` for the session's own evaluation
+(`sessionResolver`), and stored at commit — but only if the stored definition is still what it was when the session
+started; otherwise the commit is refused as stale ("The definition of <attribute> changed …").
 
 A failed check cancels the session rather than restarting it against the fresh interpretation: if the comment Alice
 wanted to add is now already given, or the one she wanted to remove is gone, there is nothing left to do — she has to
@@ -152,9 +198,10 @@ same minutes, so the lost work is rare and small.
 
 Surfaces:
 
-- `StaleRuleSessionException(message)` in `common` (`io.rippledown.model`), with two messages: "The interpretation of
+- `StaleRuleSessionException(message)` in `common` (`io.rippledown.model`), with four messages: "The interpretation of
   <case> changed while you were building this rule. The rule session has been cancelled; please look at the case
-  again." and the same for "The cornerstones changed …".
+  again." and the same for "The cornerstones changed …", "The definition of <attribute> changed …" and "A rule added
+  while you were building this rule means yours would make a derived attribute depend on itself. …".
 - REST: `StatusPages` (`Refusals.kt`) maps it to `409 Conflict` with the message as a plain-text body and the header
   `X-Refusal: stale`.
 - Chat: `ChatManager.response` answers with the exception's message.

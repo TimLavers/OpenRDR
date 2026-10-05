@@ -11,6 +11,7 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -57,6 +58,7 @@ class EngineConfig {
     var newKbName: String? = null
     var deletedKbId: String? = null
     var kbRemainingAfterDeletion: KBInfo? = null
+    var returnChatContext: ChatContextInfo? = null
     var sampleKB: SampleKB? = null
     var lastRequestHeaders: Headers? = null
     var refusedBecauseHeld: String? = null
@@ -178,6 +180,19 @@ private class EngineBuilder(private val config: EngineConfig) {
                     )
                 } else {
                     httpResponseData(json.encodeToString(remaining))
+                }
+            }
+
+            CHAT_CONTEXT -> {
+                val context = config.returnChatContext
+                if (context == null) {
+                    respond(
+                        content = ByteReadChannel(""),
+                        status = HttpStatusCode.NoContent,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    httpResponseData(json.encodeToString(context))
                 }
             }
 

@@ -5,10 +5,13 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.util.EntityRetrieval
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
 class KBManager(private val persistenceProvider: PersistenceProvider) {
-    private val kbInfos = mutableSetOf<KBInfo>()
-    private val openKbs = mutableMapOf<String, KB>()
+    // Read without the KB-set lock by kbList and kbForName while another user creates,
+    // deletes or renames, so iteration must not throw on concurrent mutation.
+    private val kbInfos: MutableSet<KBInfo> = ConcurrentHashMap.newKeySet()
+    private val openKbs = ConcurrentHashMap<String, KB>()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java.name)
 
     init {

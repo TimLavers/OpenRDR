@@ -19,6 +19,7 @@ import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -80,7 +81,8 @@ class Api(
         ruleSessionCompleted: () -> Unit,
         updateCasesInfo: (CasesInfo) -> Unit = {},
         kbInfoUpdated: (KBInfo) -> Unit = {},
-        kbClosed: () -> Unit = {}
+        kbClosed: () -> Unit = {},
+        chatContextChanged: (ChatContextInfo) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -95,6 +97,10 @@ class Api(
             kbClosed = {
                 currentKB = null
                 kbClosed()
+            },
+            chatContextChanged = {
+                currentKB = it.kbInfo
+                chatContextChanged(it)
             }
         )
     }
@@ -370,6 +376,16 @@ class Api(
     } catch (_: Throwable) {
         // Stale kb id during a KB switch, or case not in current kb, etc.
         ChatResponse("")
+    }
+
+    /**
+     * The context of this user's conversation, or null if they have none yet.
+     * A new window adopts it instead of opening a KB of its own.
+     */
+    suspend fun chatContext(): ChatContextInfo? {
+        val response = client.get("$API_URL$CHAT_CONTEXT")
+        if (response.status == HttpStatusCode.NoContent) return null
+        return response.body<ChatContextInfo>().also { currentKB = it.kbInfo }
     }
 
     suspend fun sendUserMessage(message: String): ChatResponse = try {

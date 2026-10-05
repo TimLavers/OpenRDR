@@ -80,7 +80,10 @@ fun Application.kbManagement(application: ServerApplication) {
         }
 
         delete(DELETE_KB) {
-            val kbInfo = application.deleteKB(kbId(), userId())
+            // Through the user's service, not ServerApplication directly, so that the
+            // conversations on the KB are reset and their windows told, as from the chat.
+            val doomed = application.kbForId(kbId()).kbInfo()
+            val kbInfo = application.kbServiceFor(userId()).delete(doomed)
             if (kbInfo == null) {
                 call.respond(HttpStatusCode.NoContent)
             } else {
