@@ -9,9 +9,9 @@ import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.kb.KB
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
-import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
@@ -340,28 +340,27 @@ internal class ServerApplicationTest {
         app.kbList() shouldBe listOf(renamed)
         endpoint.kbInfo() shouldBe renamed
         app.kbForId(original.id) shouldBe endpoint
-        endpoint.session.lease.holder() shouldBe alice
     }
 
     @Test
-    fun `renaming a KB held by someone else is refused and changes nothing`() {
+    fun `a KB can be renamed while someone else is editing it`() {
         // Given
         val original = app.createKB("Thyroids", false)
-        app.kbForId(original.id).session.hold(alice)
+        startRuleSession(original, alice)
 
         // When
-        val refusal = shouldThrow<ProjectHeldException> { app.renameKB(original.id, "Thyroid Function", bob) }
+        val renamed = app.renameKB(original.id, "Thyroid Function", bob)
 
         // Then
-        refusal.message shouldBe "Thyroids is being edited by alice."
-        app.kbList() shouldBe listOf(original)
+        app.kbList() shouldBe listOf(renamed)
+        app.kbForId(original.id).session.usersEditing() shouldBe setOf(alice)
     }
 
     @Test
-    fun `deleting a KB held by someone else is refused and changes nothing`() {
+    fun `deleting a KB someone else is editing is refused and changes nothing`() {
         // Given
         val thyroids = app.createKB("Thyroids", false)
-        app.kbForId(thyroids.id).session.hold(alice)
+        startRuleSession(thyroids, alice)
 
         // When
         val refusal = shouldThrow<ProjectHeldException> { app.deleteKB(thyroids.id, bob) }
@@ -373,16 +372,21 @@ internal class ServerApplicationTest {
     }
 
     @Test
-    fun `the holder can delete the KB they hold`() {
+    fun `a user can delete the KB they are editing themselves`() {
         // Given
         val thyroids = app.createKB("Thyroids", false)
-        app.kbForId(thyroids.id).session.hold(alice)
+        startRuleSession(thyroids, alice)
 
         // When
         app.deleteKB(thyroids.id, alice)
 
         // Then
         app.kbList() shouldBe emptyList()
+    }
+
+    private fun startRuleSession(kbInfo: KBInfo, userId: UserId) {
+        app.kbForId(kbInfo.id).session.ruleSessionManagerFor(userId)
+            .startRuleSessionToAddComment(createCase("Case1"), "Go.")
     }
 
     @Test

@@ -1,14 +1,10 @@
 package io.rippledown.kb.chat
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.kb.KBSession
-import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
-import io.rippledown.model.UserId
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -18,12 +14,10 @@ import io.rippledown.model.rule.UndoRuleDescription
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class LeasedRuleServiceTest {
-    private val alice = UserId("alice")
-    private val bob = UserId("bob")
+class LockedRuleServiceTest {
     private lateinit var session: KBSession
     private lateinit var delegate: RuleService
-    private lateinit var service: LeasedRuleService
+    private lateinit var service: LockedRuleService
     private val viewableCase = mockk<ViewableCase>()
     private val case = mockk<RDRCase>()
     private val condition = mockk<Condition>()
@@ -34,10 +28,10 @@ class LeasedRuleServiceTest {
         session = mockk()
         every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         delegate = mockk()
-        service = LeasedRuleService(alice, session, delegate)
+        service = LockedRuleService(session, delegate)
     }
 
-    private fun stubGuardedCalls() {
+    private fun stubEditingCalls() {
         every { delegate.startRuleSessionToAddComment(viewableCase, "Go.", emptyList()) } returns status
         every { delegate.startRuleSessionToRemoveComment(viewableCase, "Go.") } returns status
         every { delegate.startRuleSessionToReplaceComment(viewableCase, "Go.", "Stop.", emptyList()) } returns status
@@ -60,7 +54,7 @@ class LeasedRuleServiceTest {
         every { delegate.deleteCaseFromUserList(viewableCase) } just Runs
     }
 
-    private val guardedCalls: List<Pair<String, RuleService.() -> Any?>> = listOf(
+    private val editingCalls: List<Pair<String, RuleService.() -> Any?>> = listOf(
         "startRuleSessionToAddComment" to { startRuleSessionToAddComment(viewableCase, "Go.") },
         "startRuleSessionToRemoveComment" to { startRuleSessionToRemoveComment(viewableCase, "Go.") },
         "startRuleSessionToReplaceComment" to { startRuleSessionToReplaceComment(viewableCase, "Go.", "Stop.") },
@@ -90,40 +84,22 @@ class LeasedRuleServiceTest {
     )
 
     @Test
-    fun `each guarded call takes the lease for the user and then delegates`() {
+    fun `each editing call runs under the KB lock and delegates`() {
         // Given
-        stubGuardedCalls()
-        every { session.hold(alice) } just Runs
+        stubEditingCalls()
 
         // When
-        guardedCalls.forEach { (_, call) -> service.call() }
+        editingCalls.forEach { (_, call) -> service.call() }
 
         // Then
-        verify(exactly = guardedCalls.size) { session.hold(alice) }
-        verify(exactly = guardedCalls.size) { session.locked(any<() -> Any?>()) }
+        verify(exactly = editingCalls.size) { session.locked(any<() -> Any?>()) }
         verify(exactly = 1) { delegate.startRuleSessionToAddComment(viewableCase, "Go.", emptyList()) }
         verify(exactly = 1) { delegate.commitCurrentRuleSession() }
         verify(exactly = 1) { delegate.deleteCaseFromUserList(viewableCase) }
     }
 
     @Test
-    fun `a refused lease stops each guarded call before it reaches the delegate`() {
-        // Given
-        every { session.hold(alice) } throws ProjectHeldException("Thyroids", bob)
-
-        // When
-        guardedCalls.forEach { (name, call) ->
-            val refusal = shouldThrow<ProjectHeldException> { service.call() }
-
-            // Then
-            refusal.holder shouldBe bob
-            withClue(name) { refusal.kbName shouldBe "Thyroids" }
-        }
-        confirmVerified(delegate)
-    }
-
-    @Test
-    fun `reads and pushes run under the KB lock without touching the lease`() {
+    fun `reads and pushes run under the KB lock`() {
         // Given
         every { delegate.nameOfCommentAttributeInSession() } returns "C1"
         every { delegate.offeredValueExpressionFor("x") } returns null
@@ -157,7 +133,6 @@ class LeasedRuleServiceTest {
         service.allAttributes() shouldBe setOf(Attribute(1, "x"))
 
         // Then every call but the LLM-translating one ran under the lock
-        verify(exactly = 0) { session.hold(any()) }
         verify(exactly = 13) { session.locked(any<() -> Any?>()) }
     }
 

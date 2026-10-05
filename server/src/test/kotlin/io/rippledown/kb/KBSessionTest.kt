@@ -1,7 +1,6 @@
 package io.rippledown.kb
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -9,11 +8,10 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.rippledown.kb.lease.LEASE_EXPIRY_MS
-import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
+import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.diff.Addition
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.websocket.WebSocketManager
@@ -31,7 +29,6 @@ class KBSessionTest {
     private lateinit var webSocketManager: WebSocketManager
     private val alice = UserId("alice")
     private val bob = UserId("bob")
-    private var now = 5_000_000L
 
     @BeforeTest
     fun setup() {
@@ -39,7 +36,7 @@ class KBSessionTest {
         kb = KB(InMemoryKB(kbInfo))
         webSocketManager = mockk()
         coEvery { webSocketManager.sendRuleSessionCompleted(any()) } returns Unit
-        session = KBSession(kb, webSocketManager) { now }
+        session = KBSession(kb, webSocketManager)
     }
 
     private fun glucose() = kb.attributeManager.getOrCreate("Glucose")
@@ -131,58 +128,55 @@ class KBSessionTest {
     }
 
     @Test
-    fun `the lease is named after the KB`() {
+    fun `two users can have rule sessions on the one KB at once`() {
         // Given
-        session.hold(alice)
+        val case1 = createCase("Case1", "1.0")
+        val case2 = createCase("Case2", "2.0")
+        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(case1, "Go.")
+        session.ruleSessionManagerFor(alice).addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.5))
+        session.ruleSessionManagerFor(bob).startRuleSessionToAddComment(case2, "Stop.")
+        session.ruleSessionManagerFor(bob).addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, glucose(), 1.5))
 
         // When
-        val refusal = shouldThrow<ProjectHeldException> { session.hold(bob) }
+        session.ruleSessionManagerFor(alice).commitCurrentRuleSession()
+        session.ruleSessionManagerFor(bob).commitCurrentRuleSession()
 
         // Then
-        refusal.message shouldBe "TestKB is being edited by alice."
+        kb.ruleTree.size() shouldBe 3
+        kb.interpret(case1)
+        kb.interpret(case2)
+        kb.commentsFor(case1) shouldBe setOf("Go.")
+        kb.commentsFor(case2) shouldBe setOf("Stop.")
     }
 
     @Test
-    fun `a refused hold leaves the holder's rule session untouched`() {
+    fun `the users editing are those with an active rule session`() {
         // Given
-        session.hold(alice)
         session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        session.ruleSessionManagerFor(bob)
 
-        // When
-        shouldThrow<ProjectHeldException> { session.hold(bob) }
-
-        // Then
-        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe true
-        session.lease.holder() shouldBe alice
-        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+        // When / Then
+        session.usersEditing() shouldBe setOf(alice)
     }
 
     @Test
-    fun `taking an expired lease cancels the old holder's rule session and tells them`() {
+    fun `nobody is editing a KB with no rule sessions`() {
         // Given
-        session.hold(alice)
         session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
-        now += LEASE_EXPIRY_MS
+        session.ruleSessionManagerFor(alice).cancelRuleSession()
 
-        // When
-        session.hold(bob)
-
-        // Then
-        session.lease.holder() shouldBe bob
-        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
-        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
+        // When / Then
+        session.usersEditing() shouldBe emptySet()
     }
 
     @Test
-    fun `losing the lease cancels only the loser's rule session`() {
-        // Given alice holds the lease with a session, and bob has a session too (he will be able to once the lease is lifted)
-        session.hold(alice)
+    fun `cancelling a user's rule session cancels only theirs and tells them`() {
+        // Given
         session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
         session.ruleSessionManagerFor(bob).startRuleSessionToAddComment(createCase("Case2"), "Stop.")
-        now += LEASE_EXPIRY_MS
 
         // When
-        session.hold(bob)
+        session.cancelRuleSessionOf(alice)
 
         // Then
         session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
@@ -192,56 +186,15 @@ class KBSessionTest {
     }
 
     @Test
-    fun `taking an expired lease with no rule session pushes nothing`() {
+    fun `cancelling for a user with no rule session pushes nothing`() {
         // Given
-        session.hold(alice)
-        now += LEASE_EXPIRY_MS
+        session.ruleSessionManagerFor(alice)
 
         // When
-        session.hold(bob)
+        session.cancelRuleSessionOf(alice)
+        session.cancelRuleSessionOf(bob)
 
         // Then
-        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
-    }
-
-    @Test
-    fun `the holder releasing cancels their rule session and tells them`() {
-        // Given
-        session.hold(alice)
-        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
-
-        // When
-        session.release(alice)
-
-        // Then
-        session.lease.holder().shouldBeNull()
-        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe false
-        coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(alice) }
-        session.hold(bob)
-    }
-
-    @Test
-    fun `a non-holder releasing changes nothing`() {
-        // Given
-        session.hold(alice)
-        session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
-
-        // When
-        session.release(bob)
-
-        // Then
-        session.lease.holder() shouldBe alice
-        session.ruleSessionManagerFor(alice).isRuleSessionActive() shouldBe true
-        coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
-    }
-
-    @Test
-    fun `releasing an unheld lease changes nothing`() {
-        // When
-        session.release(alice)
-
-        // Then
-        session.lease.holder().shouldBeNull()
         coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
     }
 
@@ -249,7 +202,6 @@ class KBSessionTest {
     fun `a rule session's pushes go to its user`() {
         // Given
         coEvery { webSocketManager.sendStatus(any(), any()) } returns Unit
-        session.hold(alice)
         session.ruleSessionManagerFor(alice).startRuleSessionToAddComment(createCase("Case1"), "Go.")
 
         // When

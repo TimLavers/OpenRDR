@@ -35,48 +35,48 @@ Feature: Several users share one server, each with their own chat and open knowl
     Then the chat response to Alice contains the following terms:
       | No conversation has been started | open a knowledge base |
 
-  Scenario: A knowledge base being edited by one user is refused to another
+  Scenario: Two users build rules in the one knowledge base at the same time
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |
-    When Alice starts a rule session on case Case1 in the knowledge base Thyroids
-    Then Alice's request succeeds
-    When Bob starts a rule session on case Case1 in the knowledge base Thyroids
-    Then Bob's request is refused with "Thyroids is being edited by Alice."
+    And case Case2 for KB Thyroids is provided having data:
+      | TSH | 12.5 |
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids to add "Go to Bondi."
+    And Bob starts a rule session on case Case2 in the knowledge base Thyroids to add "Go to Manly."
+    When Alice commits her rule session with the condition "TSH ≤ 1.0"
+    And Bob commits his rule session with the condition "TSH ≥ 10.0"
+    Then the comment given to case Case1 in the knowledge base Thyroids is "Go to Bondi."
+    And the comment given to case Case2 in the knowledge base Thyroids is "Go to Manly."
 
-  Scenario: A refused editor does not disturb the rule session of the user who holds the knowledge base
+  Scenario: A rule committed against an interpretation another user has changed is refused
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |
-    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
-    When Bob starts a rule session on case Case1 in the knowledge base Thyroids
-    And Alice commits her rule session
-    Then Alice's request succeeds
+    And case Case2 for KB Thyroids is provided having data:
+      | TSH | 12.5 |
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids to add "Go to Bondi."
+    And Bob starts a rule session on case Case2 in the knowledge base Thyroids to add "Go to Bondi."
+    When Bob commits his rule session with no conditions
+    And Alice commits her rule session with the condition "TSH ≤ 1.0"
+    Then Alice's commit is refused because the interpretation of Case1 changed
     And the comment given to case Case1 in the knowledge base Thyroids is "Go to Bondi."
-
-  Scenario: Editing one knowledge base does not affect another
-    Given case Case1 for KB Thyroids is provided having data:
-      | TSH | 0.67 |
-    And case Case2 for KB Glucose is provided having data:
-      | Glucose | 5.1 |
-    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
-    When Bob starts a rule session on case Case2 in the knowledge base Glucose
-    Then Bob's request succeeds
 
   Scenario: A knowledge base being edited by one user can still be read by another
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |
     And Alice starts a rule session on case Case1 in the knowledge base Thyroids
     When Bob reads case Case1 in the knowledge base Thyroids
-    Then Bob's request succeeds
+    Then Bob sees the TSH value 0.67 for case Case1
 
-  Scenario: Closing a knowledge base lets another user edit it
+  Scenario: Closing a knowledge base does not disturb another user's rule session
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |
+    And case Case2 for KB Thyroids is provided having data:
+      | TSH | 12.5 |
     And Alice starts a conversation about the knowledge base Thyroids
-    And Alice starts a rule session on case Case1 in the knowledge base Thyroids
-    When Alice cancels her rule session
-    And Alice asks the chat to close the knowledge base
-    And Bob starts a rule session on case Case1 in the knowledge base Thyroids
-    Then Bob's request succeeds
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids to add "Go to Bondi."
+    And Bob starts a rule session on case Case2 in the knowledge base Thyroids to add "Go to Manly."
+    When Alice asks the chat to close the knowledge base
+    And Bob commits his rule session with the condition "TSH ≥ 10.0"
+    Then the comment given to case Case2 in the knowledge base Thyroids is "Go to Manly."
 
   Scenario: The chat tells a user who is editing the knowledge base they want to delete
     Given case Case1 for KB Thyroids is provided having data:

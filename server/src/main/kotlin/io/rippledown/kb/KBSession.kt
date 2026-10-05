@@ -1,6 +1,5 @@
 package io.rippledown.kb
 
-import io.rippledown.kb.lease.ProjectLease
 import io.rippledown.model.UserId
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.coroutines.runBlocking
@@ -10,11 +9,9 @@ import kotlin.concurrent.withLock
 
 class KBSession(
     val kb: KB,
-    private val webSocketManager: WebSocketManager? = null,
-    clock: () -> Long = System::currentTimeMillis
+    private val webSocketManager: WebSocketManager? = null
 ) {
     private val lock = ReentrantLock()
-    val lease = ProjectLease({ kb.kbInfo.name }, clock)
     private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
 
     /**
@@ -33,21 +30,21 @@ class KBSession(
     fun <T> locked(block: () -> T): T = lock.withLock(block)
 
     /**
-     * Takes or renews the lease for [userId], or throws [io.rippledown.kb.lease.ProjectHeldException].
-     * A holder who lost an expired lease to this call loses their rule session too.
+     * The users with a rule session in progress on this KB. Deleting the KB
+     * is refused while anyone else is among them.
+     * See documentation/design/concurrent_users_lease_lift.md.
      */
-    fun hold(userId: UserId) {
-        lease.hold(userId)?.let { leaseLostBy(it) }
-    }
+    fun usersEditing(): Set<UserId> =
+        ruleSessionManagers.filterValues { it.isRuleSessionActive() }.keys
 
-    fun release(userId: UserId) {
-        if (lease.releaseIfHeldBy(userId)) leaseLostBy(userId)
-    }
-
-    private fun leaseLostBy(holder: UserId) {
-        val ruleSessionManager = ruleSessionManagers[holder] ?: return
+    /**
+     * Cancels [userId]'s rule session, if any, and tells them, so their client
+     * drops its session state. Used when the user closes the KB.
+     */
+    fun cancelRuleSessionOf(userId: UserId) {
+        val ruleSessionManager = ruleSessionManagers[userId] ?: return
         if (!ruleSessionManager.isRuleSessionActive()) return
         ruleSessionManager.cancelRuleSession()
-        runBlocking { webSocketManager?.sendRuleSessionCompleted(holder) }
+        runBlocking { webSocketManager?.sendRuleSessionCompleted(userId) }
     }
 }

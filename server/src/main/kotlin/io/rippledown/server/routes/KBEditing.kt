@@ -22,7 +22,7 @@ fun Application.kbEditing(application: ServerApplication) {
 
         post(KB_DESCRIPTION) {
             val newDescription = call.receive<String>()
-            heldKbEndpoint(application).setDescription(newDescription)
+            kbEndpoint(application).setDescription(newDescription)
             call.respond(OK)
         }
 
@@ -31,7 +31,7 @@ fun Application.kbEditing(application: ServerApplication) {
         }
 
         delete(LAST_RULE_DESCRIPTION){
-            heldKbEndpoint(application).undoLastRule(userId())
+            kbEndpoint(application).undoLastRule(userId())
             call.respond(OK)
         }
     }

@@ -8,11 +8,11 @@ import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
 import io.rippledown.constants.chat.projectHeldChatMessage
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.chat.action.ChatAction
 import io.rippledown.kb.chat.action.KbManagementAction
 import io.rippledown.kb.chat.action.ListCapabilities
 import io.rippledown.kb.chat.action.UserAction
-import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.caseview.ViewableCase

@@ -5,15 +5,19 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.assertions.withClue
-import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.rippledown.main.Api
-import io.rippledown.model.KnowledgeBaseHeldException
+import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.UserId
+import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.RuleConditionList
+import io.rippledown.model.condition.greaterThanOrEqualTo
+import io.rippledown.model.condition.lessThanOrEqualTo
 import io.rippledown.model.diff.Addition
+import io.rippledown.model.interpretationChangedMessage
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
@@ -28,9 +32,14 @@ class ConcurrentUsersDefs {
     private class ChatUser(name: String) {
         private val api = Api(userId = UserId(name))
         var lastResponse: String = ""
+        var lastCaseRead: ViewableCase? = null
 
-        // The outcome of the last REST request: null if it succeeded, else the server's refusal.
-        var lastRefusal: String? = null
+        // Null if the last commit went through, else the server's sentence refusing it as stale.
+        var lastCommitRefusal: String? = null
+
+        // The case this user's rule session is about; committing needs its id.
+        private lateinit var ruleSessionKb: String
+        private lateinit var ruleSessionCase: String
 
         fun startConversation(kbName: String?) = runBlocking {
             val kbId = kbName?.let { name -> api.kbList().first { it.name == name }.id }
@@ -42,18 +51,37 @@ class ConcurrentUsersDefs {
             lastResponse
         }
 
-        fun startRuleSession(kbName: String, caseName: String) = request {
-            api.startRuleSession(SessionStartRequest(caseIdIn(kbName, caseName), Addition("Go to Bondi.")))
+        fun startRuleSession(kbName: String, caseName: String, comment: String) = runBlocking {
+            ruleSessionKb = kbName
+            ruleSessionCase = caseName
+            api.startRuleSession(SessionStartRequest(caseIdIn(kbName, caseName), Addition(comment)))
         }
 
-        fun readCase(kbName: String, caseName: String) = request {
-            requireNotNull(api.getCase(caseIdIn(kbName, caseName))) { "$caseName was not returned." }
+        fun readCase(kbName: String, caseName: String) = runBlocking {
+            lastCaseRead = requireNotNull(api.getCase(caseIdIn(kbName, caseName))) { "$caseName was not returned." }
         }
 
-        fun cancelRuleSession() = request { api.cancelRuleSession() }
+        fun commitRuleSession(conditionExpression: String?) = runBlocking {
+            val caseId = caseIdIn(ruleSessionKb, ruleSessionCase)
+            val conditions = listOfNotNull(conditionExpression?.let { conditionFor(caseId, it) })
+            lastCommitRefusal = try {
+                api.commitSession(RuleRequest(caseId, RuleConditionList(conditions)))
+                null
+            } catch (stale: StaleRuleSessionException) {
+                stale.message
+            }
+        }
 
-        fun commitRuleSession(kbName: String, caseName: String) = request {
-            api.commitSession(RuleRequest(caseIdIn(kbName, caseName)))
+        // "TSH ≤ 1.0" or "TSH ≥ 10.0", built here rather than translated, so no LLM is involved.
+        private suspend fun conditionFor(caseId: Long, expression: String): Condition {
+            val (attributeName, operator, value) = expression.split(" ")
+            val case = requireNotNull(api.getCase(caseId)) { "Case $caseId was not returned." }
+            val attribute = case.attributes().first { it.name == attributeName }
+            return when (operator) {
+                "≤" -> lessThanOrEqualTo(null, attribute, value.toDouble())
+                "≥" -> greaterThanOrEqualTo(null, attribute, value.toDouble())
+                else -> error("Unknown operator in '$expression'.")
+            }
         }
 
         fun commentGivenTo(kbName: String, caseName: String): String = runBlocking {
@@ -64,22 +92,9 @@ class ConcurrentUsersDefs {
             api.selectKB(api.kbList().first { it.name == kbName }.id)
             return requireNotNull(api.waitingCasesInfo().caseIds.first { it.name == caseName }.id)
         }
-
-        private fun request(block: suspend () -> Unit) = runBlocking {
-            lastRefusal = try {
-                block()
-                null
-            } catch (held: KnowledgeBaseHeldException) {
-                held.message
-            }
-        }
     }
 
     private val users = mutableMapOf<String, ChatUser>()
-
-    // The case the most recently started rule session is about; committing needs its id.
-    private lateinit var ruleSessionKb: String
-    private lateinit var ruleSessionCase: String
 
     private fun user(name: String) = users.getOrPut(name) { ChatUser(name) }
 
@@ -113,9 +128,12 @@ class ConcurrentUsersDefs {
 
     @When("{word} starts a rule session on case {word} in the knowledge base {word}")
     fun startsRuleSession(userName: String, caseName: String, kbName: String) {
-        ruleSessionKb = kbName
-        ruleSessionCase = caseName
-        user(userName).startRuleSession(kbName, caseName)
+        user(userName).startRuleSession(kbName, caseName, "Go to Bondi.")
+    }
+
+    @When("{word} starts a rule session on case {word} in the knowledge base {word} to add {string}")
+    fun startsRuleSessionToAdd(userName: String, caseName: String, kbName: String, comment: String) {
+        user(userName).startRuleSession(kbName, caseName, comment)
     }
 
     @When("{word} reads case {word} in the knowledge base {word}")
@@ -123,14 +141,19 @@ class ConcurrentUsersDefs {
         user(userName).readCase(kbName, caseName)
     }
 
-    @When("{word} cancels her rule session")
-    fun cancelsRuleSession(userName: String) {
-        user(userName).cancelRuleSession()
+    @When("{word} commits his/her rule session with the condition {string}")
+    fun commitsRuleSessionWithCondition(userName: String, conditionExpression: String) {
+        user(userName).commitRuleSession(conditionExpression)
     }
 
-    @When("{word} commits her rule session")
-    fun commitsRuleSession(userName: String) {
-        user(userName).commitRuleSession(ruleSessionKb, ruleSessionCase)
+    @When("{word} commits his/her rule session with no conditions")
+    fun commitsRuleSessionWithNoConditions(userName: String) {
+        user(userName).commitRuleSession(null)
+    }
+
+    @Then("{word}'s commit is refused because the interpretation of {word} changed")
+    fun commitRefusedAsStale(userName: String, caseName: String) {
+        user(userName).lastCommitRefusal shouldBe interpretationChangedMessage(caseName)
     }
 
     @Then("the comment given to case {word} in the knowledge base {word} is {string}")
@@ -138,16 +161,12 @@ class ConcurrentUsersDefs {
         user("Reader").commentGivenTo(kbName, caseName) shouldBe comment
     }
 
-    @Then("{word}'s request succeeds")
-    fun requestSucceeds(userName: String) {
-        withClue("$userName's last request") { user(userName).lastRefusal.shouldBeNull() }
-    }
-
-    @Then("{word}'s request is refused with {string}")
-    fun requestRefused(userName: String, refusal: String) {
-        val actual = user(userName).lastRefusal
-        withClue("$userName's last request") { actual.shouldNotBeNull() }
-        actual shouldBe refusal
+    @Then("{word} sees the {word} value {word} for case {word}")
+    fun seesValue(userName: String, attributeName: String, value: String, caseName: String) {
+        val case = requireNotNull(user(userName).lastCaseRead) { "$userName has not read a case." }
+        case.name shouldBe caseName
+        val attribute = case.attributes().first { it.name == attributeName }
+        case.case.getLatest(attribute)?.value?.text shouldBe value
     }
 
     @Then("the chat response to {word} contains the following terms:")

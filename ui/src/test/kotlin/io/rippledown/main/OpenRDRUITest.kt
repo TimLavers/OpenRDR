@@ -1,6 +1,5 @@
 package io.rippledown.main
 
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import io.mockk.coEvery
@@ -8,7 +7,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.rippledown.appbar.assertKbNameIs
 import io.rippledown.casecontrol.*
-import io.rippledown.caseview.center
 import io.rippledown.chat.*
 import io.rippledown.constants.caseview.NUMBER_OF_CASES_ID
 import io.rippledown.constants.interpretation.DERIVED_VALUE_ROW_PREFIX
@@ -301,44 +299,6 @@ class OpenRDRUITest {
             //Then the new name is shown
             waitUntilAtLeastOneExists(hasContentDescription("${DERIVED_VALUE_ROW_PREFIX}Body mass index"))
             onNodeWithContentDescription("${DERIVED_VALUE_VALUE_PREFIX}Body mass index").assertTextEquals("21.97")
-        }
-    }
-
-    @Test
-    fun `an attribute reorder refused because another user is editing the KB is reported in the chat`() = runTest {
-        // Given
-        val tsh = Attribute(1, "TSH")
-        val ft4 = Attribute(2, "FT4")
-        val caseId = CaseId(id = 1, name = "case a")
-        val builder = RDRCaseBuilder()
-        builder.addValue(tsh, defaultDate, "0.67")
-        builder.addValue(ft4, defaultDate, "12.5")
-        val case = ViewableCase(builder.build(caseId.name, caseId.id), CaseViewProperties(listOf(tsh, ft4)))
-        // Each fetch deserialises a new instance, equal in value to the last.
-        coEvery { api.getCase(1) } answers { case.copy() }
-        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
-        coEvery { api.moveAttribute(tsh.id, ft4.id) } throws KnowledgeBaseHeldException("KB is being edited by alice.")
-        with(composeTestRule) {
-            setContent {
-                OpenRDRUI(handler, dispatcher = Unconfined)
-            }
-            waitForCaseToBeShowing(caseId.name)
-            val tshBounds = onNodeWithText(tsh.name).getBoundsInRoot()
-            val ft4Bounds = onNodeWithText(ft4.name).getBoundsInRoot()
-
-            // When
-            onNodeWithText(tsh.name).performMouseInput {
-                dragAndDrop(Offset(0f, 0f), ft4Bounds.center(density) - tshBounds.center(density) + Offset(0f, 5f))
-            }
-
-            // Then
-            requireChatMessagesShowing(
-                listOf(WarningMessage("The attribute order was not changed: KB is being edited by alice."))
-            )
-            coVerify(exactly = 2) { api.getCase(1) }
-            waitUntil {
-                onNodeWithText(tsh.name).getBoundsInRoot().top < onNodeWithText(ft4.name).getBoundsInRoot().top
-            }
         }
     }
 

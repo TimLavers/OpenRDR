@@ -88,7 +88,7 @@ fun Application.module() {
     }
     webSocketManager = WebSocketManager()
     val application = ServerApplication(persistenceProvider, webSocketManager)
-    leaseRefusals()
+    refusals()
     serverManagement()
     kbManagement(application)
     kbEditing(application)

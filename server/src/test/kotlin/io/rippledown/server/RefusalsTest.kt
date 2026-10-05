@@ -8,27 +8,25 @@ import io.ktor.http.HttpStatusCode.Companion.Conflict
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.rippledown.constants.api.COMMIT_RULE_SESSION
-import io.rippledown.constants.api.START_RULE_SESSION
+import io.rippledown.constants.api.DELETE_KB
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.constants.server.REFUSAL_HEADER
 import io.rippledown.constants.server.REFUSAL_HELD
 import io.rippledown.constants.server.REFUSAL_STALE
-import io.rippledown.kb.lease.ProjectHeldException
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.UserId
 import io.rippledown.model.condition.RuleConditionList
-import io.rippledown.model.diff.Addition
 import io.rippledown.model.interpretationChangedMessage
 import io.rippledown.model.rule.RuleRequest
-import io.rippledown.model.rule.SessionStartRequest
 import kotlin.test.Test
 
 /**
  * The two kinds of 409 the server sends are told apart by a header, so that the
  * client can raise the right exception for each.
- * See documentation/design/concurrent_users_revalidation.md.
+ * See documentation/design/concurrent_users_revalidation.md and concurrent_users_lease_lift.md.
  */
-class StaleCommitRefusalTest : OpenRDRServerTestBase() {
+class RefusalsTest : OpenRDRServerTestBase() {
 
     @Test
     fun `a stale commit is refused with 409 and the stale refusal header`() = testApplication {
@@ -52,20 +50,17 @@ class StaleCommitRefusalTest : OpenRDRServerTestBase() {
     }
 
     @Test
-    fun `a request refused because the KB is held carries the held refusal header`() = testApplication {
+    fun `deleting a KB someone else is editing is refused with 409 and the held refusal header`() = testApplication {
         // Given
         setupServer()
-        every { kbSession.hold(testUser) } throws ProjectHeldException(kbName, UserId("alice"))
+        every { serverApplication.deleteKB(kbId, testUser) } throws ProjectHeldException(kbName, UserId("alice"))
 
         // When
-        val result = httpClient.post(START_RULE_SESSION) {
-            contentType(ContentType.Application.Json)
-            setBody(SessionStartRequest(1L, Addition("Go.")))
-            parameter(KB_ID, kbId)
-        }
+        val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
 
         // Then
         result.status shouldBe Conflict
         result.headers[REFUSAL_HEADER] shouldBe REFUSAL_HELD
+        result.bodyAsText() shouldBe "$kbName is being edited by alice."
     }
 }

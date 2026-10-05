@@ -3,6 +3,7 @@ package io.rippledown.server
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBManager
 import io.rippledown.kb.KBSession
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.chat.ChatCoordinator
 import io.rippledown.kb.chat.ChatManagerFactory
 import io.rippledown.kb.chat.KnowledgeBaseService
@@ -69,7 +70,9 @@ class ServerApplication(
         val endpoint = kbForId(id)
         // Under the KB's own lock too, so a mutation in flight finishes before the KB goes.
         endpoint.session.locked {
-            endpoint.session.hold(userId)
+            (endpoint.session.usersEditing() - userId).firstOrNull()?.let { editor ->
+                throw ProjectHeldException(endpoint.kbInfo().name, editor)
+            }
             logger.info("User '$userId' deleting KB with name: '${endpoint.kbInfo().name}' and id: '$id'.")
             val remaining = kbManager.deleteKB(endpoint.kbInfo())
             idToKBEndpoint.remove(id)
@@ -78,7 +81,7 @@ class ServerApplication(
     }
 
     fun renameKB(id: String, newName: String, userId: UserId): KBInfo = synchronized(kbSetLock) {
-        kbForId(id).session.hold(userId)
+        logger.info("User '$userId' renaming KB with id: '$id' to '$newName'.")
         kbManager.renameKB(id, newName)
     }
 

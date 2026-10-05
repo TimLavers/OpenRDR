@@ -204,14 +204,15 @@ wrong question). Not scheduled; revisit if refusal messages prove confusing in u
 Several users in the same project; concurrency resolved by serialising mutations, not by merging them.
 Implementation plans: [concurrent_users_write_lock.md](concurrent_users_write_lock.md) (first increment),
 [concurrent_users_per_user_sessions.md](concurrent_users_per_user_sessions.md) (second),
-[concurrent_users_revalidation.md](concurrent_users_revalidation.md) (third).
+[concurrent_users_revalidation.md](concurrent_users_revalidation.md) (third),
+[concurrent_users_lease_lift.md](concurrent_users_lease_lift.md) (fourth).
 
 - **Per-user rule sessions.** The session state (`ruleSession`, `currentChange`, cornerstone cursor, translator
   conversation) is held per `(userId, kbId)`; the engine operations act on the shared `KB`. Rule-session routes
   resolve the caller's session from the authenticated user — no wire-format change beyond the identity header. *Done* —
   as one `RuleSessionManager` instance per user rather than a class split; see the plan linked above.
 - **KB write lock.** Every KB access (reads included: interpreting a case writes into it) runs under one per-KB
-  `ReentrantLock` owned by `KBSession`, taken at each surface's entry (`KBEndpoint`, `LeasedRuleService`). Accesses
+  `ReentrantLock` owned by `KBSession`, taken at each surface's entry (`KBEndpoint`, `LockedRuleService`). Accesses
   are short; users never wait noticeably. This fixes the unsynchronised-object-graph hazard without touching the
   managers. *Done* — see the plan linked above.
 - **Commit-time revalidation.** The RDR-specific problem: user A's in-progress session was started against an
@@ -221,13 +222,17 @@ Implementation plans: [concurrent_users_write_lock.md](concurrent_users_write_lo
   the lock, so a rule never commits against a stale cornerstone review. This is optimistic concurrency, and conflicts
   should be rare (two users building rules for the same comment on overlapping cases). *Done* — the session is
   cancelled rather than restarted (restarting is not well-defined once the change no longer applies); see the plan
-  linked above. The lease is still in place, so nothing is visible yet; lifting it is the next increment.
+  linked above.
+- **Lifting the lease.** With the three above in place the Stage 2 lease is removed: two users can build rules in
+  the one KB at once. One refusal survives — deleting a KB that another user has a rule session on — and keeps the
+  Stage 2 sentence, `ProjectHeldException` and the `held` 409. Renaming, describing and deleting a case another
+  user is working on are allowed. *Done* — see the plan linked above.
 - **Broadcast invalidation.** When a rule commits, every user subscribed to the KB gets the existing
   `casesInfo` / `rule session completed` style pushes plus a new "KB changed" event; their clients re-fetch the current
   case. Users with an in-progress session get a warning that the KB changed under them.
 
-This is the natural end state for a single-server deployment and the lease from Stage 2 degrades gracefully into the
-per-KB write lock.
+This is the natural end state for a single-server deployment; the lease from Stage 2 has degraded into the per-KB
+write lock, and only broadcast invalidation remains.
 
 ## Stage 4 — stateless server, database as the coordination point
 

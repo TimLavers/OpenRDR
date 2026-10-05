@@ -2088,7 +2088,6 @@ class KBTest {
         persistentKB = InMemoryKB(kbInfo)
         val newKb = KB(persistentKB)
         session = KBSession(newKb, webSocketManager)
-        session.hold(alice)
         rsm = session.ruleSessionManagerFor(alice)
         return newKb
     }

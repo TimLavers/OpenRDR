@@ -8,13 +8,13 @@ import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatResponseEnricher.Companion.commentVariableTip
 import io.rippledown.kb.chat.RuleConversation.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
-import io.rippledown.kb.lease.ProjectHeldException
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse

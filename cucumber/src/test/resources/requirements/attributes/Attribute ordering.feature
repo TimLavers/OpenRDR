@@ -46,26 +46,6 @@
       | B | b |  |
       | A | a |  |
 
-  Scenario: Attributes cannot be re-ordered while another user is editing the knowledge base
-    Given I start the client application
-    And case CaseABC is provided having data:
-      | A | a |
-      | B | b |
-      | C | c |
-    And I see these case values:
-      | A | a |  |
-      | B | b |  |
-      | C | c |  |
-    And the chatbot has asked if I would like to add a comment
-    And Alice starts a rule session on case CaseABC in the knowledge base Thyroids
-    When I try to move attribute C below attribute A
-    Then the chatbot response contains the following terms:
-      | The attribute order was not changed | Thyroids is being edited by Alice |
-    And I see these case values:
-      | A | a |  |
-      | B | b |  |
-      | C | c |  |
-
   Scenario: New Attributes can be created after an Attribute re-ordering
     Given I start the client application
     And the initial Attribute order is A, B, C

@@ -68,7 +68,7 @@ class ApplicationKbService(
 
     override suspend fun close() {
         logger.info("User '$userId' closing KB '${openKnowledgeBase()?.name}'.")
-        openEndpoint()?.session?.release(userId)
+        openEndpoint()?.session?.cancelRuleSessionOf(userId)
         openKnowledgeBases.knowledgeBaseClosed(userId)
         webSocketManager.sendKbClosed(userId)
     }
@@ -99,9 +99,7 @@ class ApplicationKbService(
     override fun description(kbInfo: KBInfo): String = application.kbFor(kbInfo).description()
 
     override fun setDescription(kbInfo: KBInfo, text: String) {
-        val endpoint = application.kbFor(kbInfo)
-        endpoint.session.hold(userId)
-        endpoint.setDescription(text)
+        application.kbFor(kbInfo).setDescription(text)
     }
 
     override fun isRuleSessionActive() =

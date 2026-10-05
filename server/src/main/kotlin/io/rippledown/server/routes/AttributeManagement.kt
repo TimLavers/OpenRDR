@@ -15,7 +15,7 @@ import io.rippledown.server.ServerApplication
 fun Application.attributeManagement(application: ServerApplication) {
     routing {
         post(MOVE_ATTRIBUTE) {
-            val kbEndpoint = heldKbEndpoint(application)
+            val kbEndpoint = kbEndpoint(application)
             val attributeIdPair = call.receive<Pair<Int, Int>>()
             kbEndpoint.moveAttribute(attributeIdPair.first, attributeIdPair.second)
             call.respond(OK, OperationResult("Attribute moved"))
@@ -27,7 +27,7 @@ fun Application.attributeManagement(application: ServerApplication) {
             call.respond(OK, result)
         }
         post(SET_ATTRIBUTE_ORDER) {
-            val kbEndpoint = heldKbEndpoint(application)
+            val kbEndpoint = kbEndpoint(application)
             val attributesInOrder = call.receive<List<Attribute>>()
             kbEndpoint.setAttributeOrder(attributesInOrder)
             call.respond(OK, OperationResult("Attribute order set"))

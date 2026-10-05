@@ -7,7 +7,9 @@ import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.chat.ChatCoordinator
@@ -43,7 +45,6 @@ open class OpenRDRServerTestBase {
         kbEndpoint = mockk<KBEndpoint>()
         kbSession = mockk<KBSession>()
         every { kbEndpoint.session } returns kbSession
-        every { kbSession.hold(any()) } just Runs
         serverApplication = mockk<ServerApplication>()
         webSocketManager = mockk<WebSocketManager>()
         chatCoordinator = mockk<ChatCoordinator>()
@@ -57,7 +58,7 @@ open class OpenRDRServerTestBase {
             install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
                 json()
             }
-            leaseRefusals()
+            refusals()
             serverManagement()
             kbManagement(serverApplication)
             kbEditing(serverApplication)
