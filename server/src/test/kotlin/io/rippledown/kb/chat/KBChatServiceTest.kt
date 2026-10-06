@@ -20,6 +20,21 @@ import kotlin.test.Test
 
 class KBChatServiceTest {
     @Test
+    fun `blank report prompt requires the exact opening question`() {
+        // Given
+        val case = createCaseWithInterpretation("Test Case")
+
+        // When
+        val openingInstructions = KBChatService.systemPrompt(case)
+            .substringAfter("## Step 1: Ask the user if they want to change the comments for the case:")
+            .substringBefore("## Step 2:")
+
+        // Then
+        openingInstructions shouldContain
+                "If there are no comments, set the message to exactly: \"Would you like to add a comment to the report?\"."
+    }
+
+    @Test
     fun `condition rename instructions include the action and its parameters`() {
         // Given
         val case = createCaseWithInterpretation("Test Case")

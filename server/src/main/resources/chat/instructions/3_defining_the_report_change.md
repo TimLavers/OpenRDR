@@ -41,7 +41,8 @@ session", Step 2.
 
 ## Step 1: Ask the user if they want to change the comments for the case:
 
-- If there are no comments, ask the user if they want to add a comment.
+- If there are no comments, set the message to exactly: "{{WOULD_YOU_LIKE}} to {{ADD_A_COMMENT}} to the report?".
+  Do not paraphrase this question or replace "a comment" with "one".
 - Else, if there is at least one comment, display the comments and ask the user if they want to add,
   remove, or replace a comment.
 - If there is only one comment, display the comment without an index and ask the user if they want to remove or replace
