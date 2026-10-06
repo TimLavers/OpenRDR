@@ -10,7 +10,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import io.ktor.client.engine.cio.*
-import io.rippledown.constants.main.TITLE
+import io.rippledown.constants.main.windowTitle
 import io.rippledown.files.FileKitKbFileDialogs
 import io.rippledown.files.KbFileDialogs
 import io.rippledown.main.*
@@ -86,7 +86,7 @@ class TestClientLauncher {
                         api.shutdown()
                         exitApplication()
                     },
-                    title = TITLE,
+                    title = windowTitle(api.userId),
                     state = WindowState(size = windowSize)//allow for resizing
                 ) {
                     composeWindow = this.window
