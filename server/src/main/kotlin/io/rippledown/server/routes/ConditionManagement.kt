@@ -17,7 +17,7 @@ fun Application.conditionManagement(application: ServerApplication) {
     routing {
         get(CONDITION_HINTS) {
             val kbEndpoint = kbEndpoint(application)
-            val conditionHints = kbEndpoint.conditionHintsForCase(caseId())
+            val conditionHints = kbEndpoint.conditionHintsForCase(caseId(), userId())
             try {
                 Json.encodeToString(conditionHints)
             } catch (e: Exception) {

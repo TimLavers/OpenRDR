@@ -27,6 +27,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.report.CaseReport
 import io.rippledown.model.rule.CornerstoneStatus
@@ -73,6 +74,16 @@ fun OpenRDRUI(
     var casesInfoKbId by remember { mutableStateOf<String?>(null) }
     var conversationStarted by remember { mutableStateOf(false) }
     var kbImportRevision by remember { mutableIntStateOf(0) }
+    // A user's windows share one conversation. A context this window took from
+    // another window is shown but not started again, or it would reset the chat
+    // the other window is in the middle of. See concurrent_users.md.
+    var adoptedContext by remember { mutableStateOf<Pair<String?, Long?>?>(null) }
+    var adoptedCaseId by remember { mutableStateOf<Long?>(null) }
+    val adopt: (ChatContextInfo) -> Unit = { context ->
+        adoptedContext = context.kbInfo?.id to context.caseId
+        if (context.kbInfo?.id == kbInfo?.id) currentCaseId = context.caseId else adoptedCaseId = context.caseId
+        kbInfo = context.kbInfo
+    }
     var kbDescription by remember(api, kbInfo?.id, kbImportRevision) { mutableStateOf<String?>(null) }
     LaunchedEffect(api, kbInfo?.id, chatId, kbImportRevision) {
         val open = kbInfo ?: return@LaunchedEffect
@@ -120,7 +131,7 @@ fun OpenRDRUI(
     // class docs for why the accessibility bridge is unusable on a
     // window containing a large case table.
     SideEffect {
-        CornerstoneTestHook.update(cornerstoneStatus)
+        CornerstoneTestHook.update(api.userId, cornerstoneStatus)
     }
 
     handler.setWindowSize(isShowingCornerstone)
@@ -149,10 +160,15 @@ fun OpenRDRUI(
 
     LaunchedEffect(Unit) {
         withContext(dispatcher) {
-            // Explicit selection sets Api.currentKB to the KB displayed by the UI.
-            // Reading kbList() alone leaves it unset, so subsequent KB-scoped
-            // requests would fail because no knowledge base is open.
-            kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
+            val existing = api.chatContext()
+            if (existing != null) {
+                adopt(existing)
+            } else {
+                // Explicit selection sets Api.currentKB to the KB displayed by the UI.
+                // Reading kbList() alone leaves it unset, so subsequent KB-scoped
+                // requests would fail because no knowledge base is open.
+                kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
+            }
             kbListRead = true
         }
     }
@@ -163,7 +179,8 @@ fun OpenRDRUI(
             if (open?.id != casesInfoKbId) {
                 // Case ids are per KB, so a case of the new KB can share the id of the
                 // one showing; drop it so the new KB's case is fetched.
-                currentCaseId = null
+                currentCaseId = adoptedCaseId
+                adoptedCaseId = null
                 currentCase = null
                 cornerstoneStatus = null
             }
@@ -230,6 +247,12 @@ fun OpenRDRUI(
 
     LaunchedEffect(chatContext, kbImportRevision) {
         val (kbId, caseId) = chatContext ?: return@LaunchedEffect
+        if (chatContext == adoptedContext) {
+            adoptedContext = null
+            ++chatId
+            conversationStarted = true
+            return@LaunchedEffect
+        }
         conversationStarted = false
         withContext(dispatcher) {
             try {
@@ -292,7 +315,13 @@ fun OpenRDRUI(
                     }
                 },
                 kbInfoUpdated = { kbInfo = it },
-                kbClosed = { kbInfo = null }
+                kbClosed = { kbInfo = null },
+                chatContextChanged = { context ->
+                    // While this window's own start is in flight the push is its echo, or is
+                    // about to be superseded by it; either way the response settles the context.
+                    val differs = context.kbInfo?.id != kbInfo?.id || context.caseId != currentCaseId
+                    if (differs && conversationStarted) adopt(context)
+                }
             )
         }
     }
@@ -376,7 +405,8 @@ fun OpenRDRUI(
                         scope.launch(start = CoroutineStart.UNDISPATCHED) {
                             checkNotNull(fileTransfers) { "File dialogs have not been configured." }.handle(request)
                         }
-                    }
+                    },
+                    userId = api.userId
                 )
             }
             LaunchedEffect(pendingConversationResponse) {

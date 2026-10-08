@@ -62,6 +62,7 @@ ktor-server-compression = { module = "io.ktor:ktor-server-compression", version.
 ktor-server-core-jvm = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktorClientCore = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -104,6 +105,7 @@ ktor = [
     "ktor-server-core-jvm",
     "ktor-server-cors",
     "ktor-server-netty",
+    "ktor-server-status-pages",
     "ktorClientCio",
     "ktorClientContentNegotiation",
     "ktorClientCore",

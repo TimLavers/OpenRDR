@@ -18,6 +18,7 @@ import io.rippledown.interpretation.requireInterpretation
 import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KbFileDialogRequest
 import io.rippledown.model.diff.Addition
@@ -121,13 +122,14 @@ class OpenRDRUITest {
     fun setUp() {
         api = mockk<Api>()
         coEvery { api.cornerstoneStatus() } returns null
+        coEvery { api.chatContext() } returns null
         coEvery { api.kbList() } returns listOf(defaultKb)
         coEvery { api.selectKB(defaultKb.id) } returns defaultKb
         coEvery { api.waitingCasesInfo() } returns CasesInfo()
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
         coEvery { api.sendUserMessage(any()) } returns ChatResponse("OK")
         coEvery { api.kbDescription(any()) } returns ""
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } returns Unit
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } returns Unit
         handler = mockk<Handler>()
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
@@ -148,7 +150,8 @@ class OpenRDRUITest {
                     ruleSessionCompleted = any(),
                     updateCasesInfo = any(),
                     kbInfoUpdated = any(),
-                    kbClosed = any()
+                    kbClosed = any(),
+                    chatContextChanged = any()
                 )
             }
         }
@@ -210,6 +213,95 @@ class OpenRDRUITest {
                 OpenRDRUI(handler, dispatcher = Unconfined)
             }
             coVerify(exactly = 0) { api.selectKB(any()) }
+        }
+    }
+
+    @Test
+    fun `a new window of a user with a conversation adopts its context instead of opening the first KB`() = runTest {
+        // Given the user's other window has Malabar open on case 2, and Bondi is the first KB
+        val bondi = KBInfo("id_bondi", "Bondi")
+        val malabar = KBInfo("id_malabar", "Malabar")
+        coEvery { api.chatContext() } returns ChatContextInfo(malabar, 2L)
+        coEvery { api.kbList() } returns listOf(bondi, malabar)
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(CaseId(1, "case A"), CaseId(2, "case B")))
+        coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("case B", 2)
+
+        with(composeTestRule) {
+            // When
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+
+            // Then the window shows the user's KB and case, and leaves the shared conversation alone
+            assertKbNameIs("Malabar")
+            waitForCaseToBeShowing("case B")
+            coVerify(exactly = 0) { api.selectKB(any()) }
+            coVerify(exactly = 0) { api.startConversation(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `a window follows a context change made in the user's other window without restarting the conversation`() =
+        runTest {
+            // Given this window is on KB_A's case 1
+            val kbA = KBInfo("id_a", "KB_A")
+            val kbB = KBInfo("id_b", "KB_B")
+            coEvery { api.kbList() } returns listOf(kbA, kbB)
+            coEvery { api.selectKB("id_a") } returns kbA
+            var chatContextChanged: (ChatContextInfo) -> Unit = {}
+            coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
+                chatContextChanged = arg(5)
+            }
+            var casesForCurrentKb = CasesInfo(listOf(CaseId(1, "case A")))
+            coEvery { api.waitingCasesInfo() } coAnswers { casesForCurrentKb }
+            coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+            coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("case B", 2)
+
+            with(composeTestRule) {
+                setContent {
+                    OpenRDRUI(handler, dispatcher = Unconfined)
+                }
+                waitForCaseToBeShowing("case A")
+                coVerify(exactly = 1) { api.startConversation("id_a", 1L) }
+
+                // When the user's other window moves the conversation to KB_B's case 2
+                casesForCurrentKb = CasesInfo(listOf(CaseId(2, "case B")))
+                chatContextChanged(ChatContextInfo(kbB, 2L))
+
+                // Then this window follows, and does not start the conversation again
+                assertKbNameIs("KB_B")
+                waitForCaseToBeShowing("case B")
+                coVerify(exactly = 1) { api.startConversation(any(), any()) }
+            }
+        }
+
+    @Test
+    fun `the echo of this window's own context is ignored`() = runTest {
+        // Given this window is on KB_A's case 1
+        val kbA = KBInfo("id_a", "KB_A")
+        coEvery { api.kbList() } returns listOf(kbA)
+        coEvery { api.selectKB("id_a") } returns kbA
+        var chatContextChanged: (ChatContextInfo) -> Unit = {}
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
+            chatContextChanged = arg(5)
+        }
+        coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(CaseId(1, "case A")))
+        coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
+
+        with(composeTestRule) {
+            setContent {
+                OpenRDRUI(handler, dispatcher = Unconfined)
+            }
+            waitForCaseToBeShowing("case A")
+            coVerify(exactly = 1) { api.waitingCasesInfo() }
+
+            // When the server echoes the context this window started
+            chatContextChanged(ChatContextInfo(kbA, 1L))
+            waitForIdle()
+
+            // Then nothing is reloaded or restarted
+            coVerify(exactly = 1) { api.waitingCasesInfo() }
+            coVerify(exactly = 1) { api.startConversation(any(), any()) }
         }
     }
 
@@ -722,7 +814,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -751,7 +843,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1, listOf(bondiComment))
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -783,7 +875,7 @@ class OpenRDRUITest {
             coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
             coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1, listOf(bondiComment))
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-            coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+            coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -815,7 +907,7 @@ class OpenRDRUITest {
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
         var ruleSessionCompleted: (() -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
             ruleSessionCompleted = secondArg()
         }
@@ -849,7 +941,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCornerstoneStatus: ((CornerstoneStatus) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCornerstoneStatus = firstArg()
         }
 
@@ -897,7 +989,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseIdA))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
         }
 
@@ -927,7 +1019,7 @@ class OpenRDRUITest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo(listOf(caseId))
         coEvery { api.getCase(1) } returns createViewableCaseWithInterpretation("case A", 1)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
         }
 
@@ -972,7 +1064,7 @@ class OpenRDRUITest {
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
         var kbInfoUpdated: (KBInfo) -> Unit = {}
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             kbInfoUpdated = arg(3)
         }
         coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
@@ -1011,7 +1103,7 @@ class OpenRDRUITest {
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
         var kbInfoUpdated: (KBInfo) -> Unit = {}
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             kbInfoUpdated = arg(3)
         }
         coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
@@ -1050,7 +1142,7 @@ class OpenRDRUITest {
         coEvery { api.kbList() } returns listOf(kbA, kbB)
         coEvery { api.selectKB("id_a") } returns kbA
         var kbInfoUpdated: (KBInfo) -> Unit = {}
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             kbInfoUpdated = arg(3)
         }
         coEvery { api.sendUserMessage("Open KB_B") } coAnswers {
@@ -1114,7 +1206,7 @@ class OpenRDRUITest {
         coEvery { api.getCase(2) } returns createViewableCase(caseB)
         coEvery { api.getCase(3) } returns createViewableCase(caseC)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
         }
 
@@ -1145,7 +1237,7 @@ class OpenRDRUITest {
         coEvery { api.getCase(1) } returns createViewableCase(caseA)
         coEvery { api.getCase(2) } returns createViewableCase(caseB)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
         }
 
@@ -1208,7 +1300,7 @@ class OpenRDRUITest {
         coEvery { api.getCase(2) } returns createViewableCase(goodA)
         coEvery { api.getCase(3) } returns createViewableCase(goodB)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
         }
 
@@ -1247,7 +1339,7 @@ class OpenRDRUITest {
         coEvery { api.getCase(1) } returns createViewableCase(processed)
         coEvery { api.getCase(2) } returns createViewableCase(goodCase)
         var updateCasesInfo: ((CasesInfo) -> Unit)? = null
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } coAnswers {
             updateCasesInfo = thirdArg()
         }
 
@@ -1347,7 +1439,8 @@ class OpenRDRUITest {
                 ruleSessionCompleted = any(),
                 updateCasesInfo = any(),
                 kbInfoUpdated = any(),
-                kbClosed = any()
+                kbClosed = any(),
+                chatContextChanged = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -1395,6 +1488,7 @@ fun main() {
     coEvery { handler.isClosing() } returns false
     coEvery { api.waitingCasesInfo() } returns CasesInfo(caseIds)
     coEvery { api.cornerstoneStatus() } returns null
+    coEvery { api.chatContext() } returns null
     coEvery { api.getCase(any()) } returns createViewableCaseWithInterpretation("case A", 1, listOf("Go to Bondi"))
     coEvery { api.sendUserMessage(any()) } returns ChatResponse("The answer is 42")
 

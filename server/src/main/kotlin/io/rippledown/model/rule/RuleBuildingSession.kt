@@ -17,6 +17,14 @@ class RuleBuildingSession(
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
     /**
+     * The cornerstones found conflicting when the session started, whether or
+     * not they were later exempted or excluded by a condition. Anything outside
+     * this set was never before the user. Ids, not names: two stored cornerstones
+     * can share a name.
+     */
+    val idsOfConflictingCornerstonesAtStart: Set<Long?>
+
+    /**
      * The session case and cornerstones with their derived values written
      * by the current tree, so that conditions on derived attributes can be
      * evaluated during rule building.
@@ -52,6 +60,7 @@ class RuleBuildingSession(
                 }
             }
         materialisedCase = tree.materialise(case, resolver)
+        idsOfConflictingCornerstonesAtStart = cornerstonesNotExempted.map { it.id }.toSet()
     }
 
     fun cornerstoneCases(): List<RDRCase> {

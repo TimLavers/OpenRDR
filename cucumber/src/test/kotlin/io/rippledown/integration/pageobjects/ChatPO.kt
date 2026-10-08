@@ -3,12 +3,12 @@ package io.rippledown.integration.pageobjects
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
-import io.rippledown.chat.ChatTestHook.snapshot
 import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
 import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findExact
 import io.rippledown.integration.utils.renderedText
+import io.rippledown.model.UserId
 import io.rippledown.voice.CHAT_MIC_BUTTON
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -17,7 +17,9 @@ import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleEditableText
 
 // ORD2
-class ChatPO(private val contextProvider: () -> AccessibleContext) {
+class ChatPO(private val userId: UserId, private val contextProvider: () -> AccessibleContext) {
+
+    fun snapshot() = ChatTestHook.snapshot(userId)
 
     /**
      * Cached reference to the chat-panel root accessibility node (the

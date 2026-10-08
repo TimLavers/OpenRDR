@@ -11,7 +11,7 @@ fun Application.webSockets(webSocketManager: WebSocketManager) {
     routing {
         webSocket(path = WEB_SOCKET) {
             try {
-                webSocketManager.setSession(this)
+                webSocketManager.setSession(call.request.headers.userId(), this)
             } catch (e: Exception) {
                 // Handle any connection errors
                 close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, "Error in WebSocket connection: ${e.message}"))

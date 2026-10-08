@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import io.rippledown.constants.main.TITLE
+import io.rippledown.constants.main.windowTitle
 import io.rippledown.files.FileKitKbFileDialogs
 
 val DEFAULT_WINDOW_SIZE = DpSize(1_000.dp, 800.dp)
@@ -45,17 +45,18 @@ fun main() = application {
     fun resizeWindow(newSize: DpSize) {
         windowSize = newSize
     }
+    val handler = rememberMainHandler(isClosing = { closing }, resizeWindow = ::resizeWindow)
     Window(
         onCloseRequest = {
             exitApplication()
             closing = true
         },
-        title = TITLE,
+        title = windowTitle(handler.api.userId),
         state = WindowState(size = windowSize)//allow for resizing
     ) {
         applyAppIcon(window)
         OpenRDRUI(
-            rememberMainHandler(isClosing = { closing }, resizeWindow = ::resizeWindow),
+            handler,
             fileDialogs = remember(window) { FileKitKbFileDialogs(window) }
         )
     }

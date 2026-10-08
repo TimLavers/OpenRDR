@@ -21,7 +21,7 @@ interface KnowledgeBaseService {
     suspend fun create(name: String): KBInfo
     suspend fun createFromSample(name: String, sample: SampleKB): KBInfo
     suspend fun close()
-    suspend fun delete(kbInfo: KBInfo)
+    suspend fun delete(kbInfo: KBInfo): KBInfo?
     suspend fun addDemonstrationCase(): RDRCase
     suspend fun rename(newName: String): KBInfo
     fun description(kbInfo: KBInfo): String

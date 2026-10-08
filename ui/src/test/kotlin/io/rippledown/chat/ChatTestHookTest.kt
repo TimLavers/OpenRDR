@@ -1,6 +1,7 @@
 package io.rippledown.chat
 
 import io.kotest.matchers.shouldBe
+import io.rippledown.model.UserId
 import io.rippledown.model.chat.KnowledgeBaseListing
 import org.junit.Before
 import org.junit.Test
@@ -19,6 +20,32 @@ import java.util.concurrent.atomic.AtomicInteger
  * matching change in `ChatPO`.
  */
 class ChatTestHookTest {
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
+
+    @Test
+    fun `each user's window is observed separately`() {
+        // Given
+        ChatTestHook.update(alice, listOf(BotMessage("For Alice")), sendIsEnabled = true)
+
+        // When
+        ChatTestHook.update(bob, listOf(BotMessage("For Bob")), sendIsEnabled = false)
+
+        // Then
+        ChatTestHook.snapshot(alice).mostRecentBotText shouldBe "For Alice"
+        ChatTestHook.snapshot(alice).sendIsEnabled shouldBe true
+        ChatTestHook.snapshot(bob).mostRecentBotText shouldBe "For Bob"
+        ChatTestHook.snapshot(bob).sendIsEnabled shouldBe false
+    }
+
+    @Test
+    fun `a user whose window has not published is EMPTY`() {
+        // Given
+        ChatTestHook.update(alice, listOf(BotMessage("For Alice")), sendIsEnabled = true)
+
+        // Then
+        ChatTestHook.snapshot(bob) shouldBe ChatTestHook.Snapshot.EMPTY
+    }
 
     @Test
     fun `listing exposes its response text and available rows without a duplicate bot message`() {
@@ -29,12 +56,12 @@ class ChatTestHookTest {
         )
 
         // When
-        ChatTestHook.update(listOf(BotMessage("Earlier reply"), listing), sendIsEnabled = true)
+        ChatTestHook.update(alice, listOf(BotMessage("Earlier reply"), listing), sendIsEnabled = true)
 
         // Then
-        ChatTestHook.snapshot().mostRecentBotText shouldBe listing.text
-        ChatTestHook.snapshot().mostRecentKbChoices shouldBe listOf("Lipids", "Zoo Animals")
-        ChatTestHook.snapshot().messageList.size shouldBe 2
+        ChatTestHook.snapshot(alice).mostRecentBotText shouldBe listing.text
+        ChatTestHook.snapshot(alice).mostRecentKbChoices shouldBe listOf("Lipids", "Zoo Animals")
+        ChatTestHook.snapshot(alice).messageList.size shouldBe 2
     }
 
     @Test
@@ -46,11 +73,11 @@ class ChatTestHookTest {
         )
 
         // When
-        ChatTestHook.update(listOf(listing, UserMessage("Open Zoo Animals"), BotMessage("Name your copy")), true)
+        ChatTestHook.update(alice, listOf(listing, UserMessage("Open Zoo Animals"), BotMessage("Name your copy")), true)
 
         // Then
-        ChatTestHook.snapshot().mostRecentBotText shouldBe "Name your copy"
-        ChatTestHook.snapshot().mostRecentKbChoices shouldBe listOf("Zoo Animals")
+        ChatTestHook.snapshot(alice).mostRecentBotText shouldBe "Name your copy"
+        ChatTestHook.snapshot(alice).mostRecentKbChoices shouldBe listOf("Zoo Animals")
     }
 
     @Before
@@ -82,16 +109,16 @@ class ChatTestHookTest {
 
     @Test
     fun `snapshot returns EMPTY before any update`() {
-        ChatTestHook.snapshot() shouldBe ChatTestHook.Snapshot.EMPTY
+        ChatTestHook.snapshot(alice) shouldBe ChatTestHook.Snapshot.EMPTY
     }
 
     // -------- update() basic propagation --------
 
     @Test
     fun `update with empty messages publishes zero counts and null texts`() {
-        ChatTestHook.update(messages = emptyList(), sendIsEnabled = true)
+        ChatTestHook.update(alice, messages = emptyList(), sendIsEnabled = true)
 
-        val s = ChatTestHook.snapshot()
+        val s = ChatTestHook.snapshot(alice)
         s.messageList.size shouldBe 0
         s.suggestionRowCount shouldBe 0
         s.mostRecentBotText shouldBe null
@@ -102,6 +129,7 @@ class ChatTestHookTest {
     @Test
     fun `messageCount equals total messages including all kinds`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(
                 BotMessage("hello"),
                 UserMessage("hi"),
@@ -111,7 +139,7 @@ class ChatTestHookTest {
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().messageList.size shouldBe 4
+        ChatTestHook.snapshot(alice).messageList.size shouldBe 4
     }
 
     @Test
@@ -122,14 +150,15 @@ class ChatTestHookTest {
             BotMessage("how can I help"),
             SuggestionListMessage(listOf("a", "b"))
         )
-        ChatTestHook.update(messages = messages, sendIsEnabled = true)
+        ChatTestHook.update(alice, messages = messages, sendIsEnabled = true)
 
-        ChatTestHook.snapshot().messageList shouldBe messages
+        ChatTestHook.snapshot(alice).messageList shouldBe messages
     }
 
     @Test
     fun `mostRecentBotText is taken from the latest BotMessage even when followed by other kinds`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(
                 BotMessage("first bot"),
                 UserMessage("user reply"),
@@ -141,17 +170,18 @@ class ChatTestHookTest {
 
         // The suggestion list comes after the bot, but it is not a
         // BotMessage. Most recent BotMessage is "second bot".
-        ChatTestHook.snapshot().mostRecentBotText shouldBe "second bot"
+        ChatTestHook.snapshot(alice).mostRecentBotText shouldBe "second bot"
     }
 
     @Test
     fun `mostRecentBotText is null when no BotMessage has been seen yet`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(UserMessage("just me")),
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().mostRecentBotText shouldBe null
+        ChatTestHook.snapshot(alice).mostRecentBotText shouldBe null
     }
 
     // -------- suggestion row counting --------
@@ -159,6 +189,7 @@ class ChatTestHookTest {
     @Test
     fun `suggestionRowCount counts every SuggestionListMessage in history`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(
                 BotMessage("question 1"),
                 SuggestionListMessage(listOf("a")),
@@ -171,17 +202,18 @@ class ChatTestHookTest {
 
         // The cuke depends on this counting up monotonically as new
         // suggestion rounds arrive — see `ChatDefs.provideTheseReasons`.
-        ChatTestHook.snapshot().suggestionRowCount shouldBe 2
+        ChatTestHook.snapshot(alice).suggestionRowCount shouldBe 2
     }
 
     @Test
     fun `suggestionRowCount is zero when no suggestions have been emitted`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(BotMessage("just text"), UserMessage("ok")),
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().suggestionRowCount shouldBe 0
+        ChatTestHook.snapshot(alice).suggestionRowCount shouldBe 0
     }
 
     // -------- mostRecentSuggestionText formatting --------
@@ -189,6 +221,7 @@ class ChatTestHookTest {
     @Test
     fun `mostRecentSuggestionText numbers the latest suggestion list one-based`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(
                 BotMessage("q"),
                 SuggestionListMessage(listOf("alpha", "beta", "gamma"))
@@ -198,12 +231,13 @@ class ChatTestHookTest {
 
         // ChatPO.mostRecentSuggestionRowContainsTerms relies on the
         // numbered prefix to find a specific suggestion by index.
-        ChatTestHook.snapshot().mostRecentSuggestionText shouldBe "1. alpha\n2. beta\n3. gamma"
+        ChatTestHook.snapshot(alice).mostRecentSuggestionText shouldBe "1. alpha\n2. beta\n3. gamma"
     }
 
     @Test
     fun `mostRecentSuggestionText strips the EDITABLE_MARKER suffix from each suggestion`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(
                 SuggestionListMessage(listOf("plain", "with value$EDITABLE_MARKER"))
             ),
@@ -212,12 +246,13 @@ class ChatTestHookTest {
 
         // The marker is an internal flag for the click handler; it must
         // not leak into the test-visible text.
-        ChatTestHook.snapshot().mostRecentSuggestionText shouldBe "1. plain\n2. with value"
+        ChatTestHook.snapshot(alice).mostRecentSuggestionText shouldBe "1. plain\n2. with value"
     }
 
     @Test
     fun `mostRecentSuggestionText is taken from the LAST SuggestionListMessage when there are several`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(
                 SuggestionListMessage(listOf("old1", "old2")),
                 BotMessage("between"),
@@ -226,17 +261,18 @@ class ChatTestHookTest {
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().mostRecentSuggestionText shouldBe "1. new1\n2. new2"
+        ChatTestHook.snapshot(alice).mostRecentSuggestionText shouldBe "1. new1\n2. new2"
     }
 
     @Test
     fun `mostRecentSuggestionText is null when no SuggestionListMessage has been emitted`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(BotMessage("hi"), UserMessage("hello")),
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().mostRecentSuggestionText shouldBe null
+        ChatTestHook.snapshot(alice).mostRecentSuggestionText shouldBe null
     }
 
     @Test
@@ -244,37 +280,40 @@ class ChatTestHookTest {
         // Defensive: an empty list shouldn't crash and shouldn't be
         // confused with "no suggestion list at all" (which is null).
         ChatTestHook.update(
+            alice,
             messages = listOf(SuggestionListMessage(emptyList())),
             sendIsEnabled = true
         )
 
-        ChatTestHook.snapshot().mostRecentSuggestionText shouldBe ""
-        ChatTestHook.snapshot().suggestionRowCount shouldBe 1
+        ChatTestHook.snapshot(alice).mostRecentSuggestionText shouldBe ""
+        ChatTestHook.snapshot(alice).suggestionRowCount shouldBe 1
     }
 
     // -------- sendIsEnabled propagation --------
 
     @Test
     fun `sendIsEnabled value is published verbatim`() {
-        ChatTestHook.update(messages = emptyList(), sendIsEnabled = true)
-        ChatTestHook.snapshot().sendIsEnabled shouldBe true
+        ChatTestHook.update(alice, messages = emptyList(), sendIsEnabled = true)
+        ChatTestHook.snapshot(alice).sendIsEnabled shouldBe true
 
-        ChatTestHook.update(messages = emptyList(), sendIsEnabled = false)
-        ChatTestHook.snapshot().sendIsEnabled shouldBe false
+        ChatTestHook.update(alice, messages = emptyList(), sendIsEnabled = false)
+        ChatTestHook.snapshot(alice).sendIsEnabled shouldBe false
     }
 
     @Test
     fun `update overwrites every snapshot field, not just changed ones`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(BotMessage("first"), SuggestionListMessage(listOf("a"))),
             sendIsEnabled = true
         )
         ChatTestHook.update(
+            alice,
             messages = listOf(UserMessage("only me")),
             sendIsEnabled = false
         )
 
-        val s = ChatTestHook.snapshot()
+        val s = ChatTestHook.snapshot(alice)
         s.messageList.size shouldBe 1
         s.suggestionRowCount shouldBe 0
         s.mostRecentBotText shouldBe null
@@ -287,13 +326,14 @@ class ChatTestHookTest {
     @Test
     fun `reset returns to EMPTY regardless of prior state`() {
         ChatTestHook.update(
+            alice,
             messages = listOf(BotMessage("loud"), SuggestionListMessage(listOf("x"))),
             sendIsEnabled = true
         )
 
         ChatTestHook.reset()
 
-        ChatTestHook.snapshot() shouldBe ChatTestHook.Snapshot.EMPTY
+        ChatTestHook.snapshot(alice) shouldBe ChatTestHook.Snapshot.EMPTY
     }
 
     // -------- thread safety --------
@@ -320,11 +360,12 @@ class ChatTestHookTest {
                             // count we expect to read back.
                             val n = i + 1
                             ChatTestHook.update(
+                                alice,
                                 messages = List(n) { BotMessage("b$it") },
                                 sendIsEnabled = (i % 2 == 0)
                             )
                         } else {
-                            val s = ChatTestHook.snapshot()
+                            val s = ChatTestHook.snapshot(alice)
                             // If messageCount > 0 then mostRecentBotText
                             // must be non-null (since every update we
                             // post above contains at least one BotMessage).

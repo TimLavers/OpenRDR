@@ -3,6 +3,7 @@ package io.rippledown.integration.restclient
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -38,6 +39,9 @@ class RESTClient(private val api: Api = Api()) {
     private val endpoint = "http://localhost:$PORT"
 
     private val client = HttpClient(CIO) {
+        defaultRequest {
+            header(USER_ID_HEADER, api.userId.value)
+        }
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true

@@ -19,8 +19,9 @@ class CaseViewStepDefs {
 
     @Then("I (should )see these attributes:")
     fun requireAttributes(dataTable: DataTable) {
-        val expectedNames = dataTable.asList()
-        caseViewPO().attributeNames() shouldBe expectedNames
+        waitAtMost(10, SECONDS).untilAsserted {
+            caseViewPO().attributeNames() shouldBe dataTable.asList()
+        }
     }
 
     @Then("I (should )see these values for {string}:")
@@ -74,13 +75,8 @@ class CaseViewStepDefs {
 
     @Then("the case should show the attributes in order:")
     fun requireAttributesInOrder(dataTable: DataTable) {
-        val caseViewPO = caseViewPO()
-        val valuesShown = caseViewPO.attributeNames()
-        // Check the number of rows is correct.
-        valuesShown.size shouldBe dataTable.height()
-        val expectedAttributes = dataTable.column(0)
-        valuesShown.forEachIndexed { row, attribute ->
-            attribute shouldBe expectedAttributes[row]
+        waitAtMost(10, SECONDS).untilAsserted {
+            caseViewPO().attributeNames() shouldBe dataTable.column(0)
         }
     }
 }

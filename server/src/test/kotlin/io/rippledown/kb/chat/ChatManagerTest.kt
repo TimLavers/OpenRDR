@@ -8,15 +8,14 @@ import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatResponseEnricher.Companion.commentVariableTip
 import io.rippledown.kb.chat.RuleConversation.Companion.CURRENT_CORNERSTONE_STATUS_PREFIX
 import io.rippledown.kb.chat.SuggestedConditionsHandler.Companion.EDITABLE_SUFFIX
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
-import io.rippledown.model.Attribute
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KnowledgeBaseListing
@@ -413,6 +412,54 @@ class ChatManagerTest {
     }
 
     @Test
+    fun `a rule action refused by the lease is answered with who is editing the KB`() = runTest {
+        // Given
+        coEvery { conversationService.response(any()) } returns """{"action":"$CANCEL_RULE"}"""
+        every { ruleService.cancelCurrentRuleSession() } throws ProjectHeldException("Thyroids", UserId("alice"))
+
+        // When
+        val response = chatManager.response("cancel")
+
+        // Then
+        response shouldBe ChatResponse(projectHeldChatMessage("Thyroids", "alice"))
+        coVerify(exactly = 0) { ruleService.sendRuleSessionCompleted() }
+    }
+
+    @Test
+    fun `a commit refused because the rule session went stale is answered with the server's sentence`() = runTest {
+        // Given
+        coEvery { conversationService.startConversation() } returns ""
+        chatManager.startConversation(viewableCase)
+        coEvery { conversationService.response(any()) } returns ActionComment(action = COMMIT_RULE).toJsonString()
+        val message = interpretationChangedMessage("Case1")
+        every { ruleService.commitCurrentRuleSession() } throws StaleRuleSessionException(message)
+
+        // When
+        val response = chatManager.response("commit")
+
+        // Then
+        response shouldBe ChatResponse(message)
+    }
+
+    @Test
+    fun `a KB action refused by the lease is answered with who is editing the KB`() = runTest {
+        // Given
+        val thyroids = KBInfo("t1", "Thyroids")
+        every { kbService.resolve("Thyroids") } returns KbResolution.Exact(thyroids)
+        every { kbService.openKnowledgeBase() } returns null
+        coEvery { conversationService.response(any()) } returns
+                """{"action":"$DELETE_KNOWLEDGE_BASE","kbName":"Thyroids"}"""
+        coEvery { kbService.delete(thyroids) } throws ProjectHeldException("Thyroids", UserId("alice"))
+
+        // When
+        chatManager.response("delete Thyroids")
+        val response = chatManager.response("yes")
+
+        // Then
+        response shouldBe ChatResponse(projectHeldChatMessage("Thyroids", "alice"))
+    }
+
+    @Test
     fun `a fixed greeting is returned after the chat is started, without consulting the model`() = runTest {
         // Given
         coEvery { conversationService.startConversation() } returns ""
@@ -550,7 +597,7 @@ class ChatManagerTest {
         chatManager = ChatManager(conversationService, null, kbService, suggestionsBuffer)
         val scratch = KBInfo("s1", "Scratch")
         every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
-        coEvery { kbService.delete(scratch) } just Runs
+        coEvery { kbService.delete(scratch) } returns null
         coEvery { conversationService.response("Delete Scratch") } returns
                 ActionComment(action = DELETE_KNOWLEDGE_BASE, kbName = "Scratch").toJsonString()
 

@@ -46,7 +46,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
                 NonEditableSuggestedCondition(isLow(2, Attribute(2, "SeaTemp")))
             )
         )
-        every { kbEndpoint.conditionHintsForCase(caseId) } returns conditionList
+        every { kbEndpoint.conditionHintsForCase(caseId, testUser) } returns conditionList
 
         val result = httpClient.get(CONDITION_HINTS) {
             parameter(KB_ID, kbId)
@@ -55,6 +55,6 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
 
         result.status shouldBe HttpStatusCode.OK
         result.body<ConditionList>() shouldBe conditionList
-        verify { kbEndpoint.conditionHintsForCase(caseId) }
+        verify { kbEndpoint.conditionHintsForCase(caseId, testUser) }
     }
  }

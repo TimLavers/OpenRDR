@@ -40,6 +40,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
+import io.rippledown.main.defaultUserId
+import io.rippledown.model.UserId
 import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.voice.RecordingIndicator
@@ -77,6 +79,12 @@ data class TipMessage(
     override val isUser: Boolean = false
 }
 
+data class WarningMessage(
+    override val text: String
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
+
 data class KbChoiceListMessage(
     override val text: String,
     val listing: KnowledgeBaseListing
@@ -103,6 +111,7 @@ const val SUGGESTION_LIST = "SUGGESTION_LIST_"
 const val SUGGESTION_ITEM = "SUGGESTION_ITEM_"
 const val EDITABLE_MARKER = " [editable]"
 const val TIP = "TIP_"
+const val WARNING = "WARNING_"
 const val KB_CHOICE_LIST = "KB_CHOICE_LIST_"
 const val KB_CHOICE_ITEM = "KB_CHOICE_ITEM_"
 
@@ -113,7 +122,8 @@ fun ChatPanel(
     messages: List<ChatMessage> = emptyList(),
     onMessageSent: OnMessageSent = {},
     voiceRecognitionService: VoiceRecognition? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    userId: UserId = defaultUserId()
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue()) }
     var partialSuffixLength by remember { mutableStateOf(0) }
@@ -128,7 +138,7 @@ fun ChatPanel(
     // after every successful composition, so the hook is always in sync
     // with what this Composable was asked to render.
     SideEffect {
-        ChatTestHook.update(messages = messages, sendIsEnabled = sendIsEnabled)
+        ChatTestHook.update(userId, messages = messages, sendIsEnabled = sendIsEnabled)
     }
 
     LaunchedEffect(messages) {
@@ -166,6 +176,7 @@ fun ChatPanel(
                         is CapabilityListMessage -> CapabilityCard(message, index, capabilityHeight)
                         is UserMessage -> UserRow(message.text, index)
                         is TipMessage -> TipRow(message.text, index)
+                        is WarningMessage -> WarningRow(message.text, index)
                         is SuggestionListMessage -> SuggestionListRow(
                             message.suggestions, index
                         ) { suggestion, isEditable ->

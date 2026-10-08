@@ -4,7 +4,6 @@ import io.cucumber.java.Before
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.kotest.matchers.shouldBe
-import io.rippledown.chat.ChatTestHook
 import io.rippledown.files.FileSelection
 import io.rippledown.integration.files.ScriptedKbFileDialogs
 import io.rippledown.integration.proxy.ConfiguredTestData
@@ -71,8 +70,8 @@ class KbFileStepDefs {
     @Then("the chat history contains {string}")
     fun requireCompletion(text: String) {
         waitUntilAsserted(90) {
-            ChatTestHook.snapshot().messageList.any { !it.isUser && it.text.contains(text) } shouldBe true
+            chatPO().snapshot().messageList.any { !it.isUser && it.text.contains(text) } shouldBe true
         }
-        waitUntilAsserted(90) { ChatTestHook.snapshot().sendIsEnabled shouldBe true }
+        waitUntilAsserted(90) { chatPO().snapshot().sendIsEnabled shouldBe true }
     }
 }

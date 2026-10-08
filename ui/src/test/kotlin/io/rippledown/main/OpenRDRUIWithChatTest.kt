@@ -41,13 +41,14 @@ class OpenRDRUIWithChatTest {
         api = mockk<Api>()
         handler = mockk<Handler>()
         coEvery { api.cornerstoneStatus() } returns null
+        coEvery { api.chatContext() } returns null
         coEvery { api.kbList() } returns listOf(defaultKb)
         coEvery { api.selectKB(defaultKb.id) } returns defaultKb
         coEvery { api.waitingCasesInfo() } returns CasesInfo()
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
         coEvery { api.sendUserMessage(any()) } returns ChatResponse("OK")
         coEvery { api.kbDescription(any()) } returns ""
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any()) } returns Unit
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } returns Unit
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }
@@ -61,7 +62,8 @@ class OpenRDRUIWithChatTest {
                 ruleSessionCompleted = any(),
                 updateCasesInfo = any(),
                 kbInfoUpdated = any(),
-                kbClosed = any()
+                kbClosed = any(),
+                chatContextChanged = any()
             )
         } coAnswers {
             kbInfoUpdated = arg(3)

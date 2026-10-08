@@ -6,17 +6,18 @@ import io.rippledown.constants.interpretation.REPORT_TOGGLE
 import io.rippledown.cornerstone.CornerstoneTestHook
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.performAccessibleClick
+import io.rippledown.model.UserId
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 import javax.accessibility.AccessibleContext
 
-class ReportPO(private val contextProvider: () -> AccessibleContext) {
+class ReportPO(private val userId: UserId, private val contextProvider: () -> AccessibleContext) {
 
     fun clickReportToggle() {
         // Wait for any rule session to complete (no cornerstone showing)
         await().atMost(ofSeconds(30)).until {
-            execute<Boolean> { !CornerstoneTestHook.snapshot().isShowing }
+            execute<Boolean> { !CornerstoneTestHook.snapshot(userId).isShowing }
         }
         await().atMost(ofSeconds(15)).until {
             execute<AccessibleContext?> { contextProvider().find(REPORT_TOGGLE) } != null

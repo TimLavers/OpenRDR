@@ -2,10 +2,12 @@ package io.rippledown.main
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.rippledown.constants.server.USER_ID_HEADER
 import io.rippledown.mocks.EngineConfig
 import io.rippledown.mocks.config
 import io.rippledown.mocks.mock
 import io.rippledown.model.*
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.*
 import io.rippledown.model.condition.edit.NonEditableSuggestedCondition
@@ -28,6 +30,65 @@ class ApiTest {
         val api = Api(mock(config))
         api.createKB("Test")
         return api
+    }
+
+    @Test
+    fun `every request carries the user id header`() = runTest {
+        // Given
+        val config = config {}
+        val api = Api(mock(config), userId = UserId("alice"))
+
+        // When
+        api.kbList()
+
+        // Then
+        config.lastRequestHeaders?.get(USER_ID_HEADER) shouldBe "alice"
+    }
+
+    @Test
+    fun `the user id defaults to the local identity`() = runTest {
+        // Given
+        val config = config {}
+        val api = Api(mock(config))
+
+        // When
+        api.kbList()
+
+        // Then
+        api.userId shouldBe defaultUserId()
+        config.lastRequestHeaders?.get(USER_ID_HEADER) shouldBe defaultUserId().value
+    }
+
+    @Test
+    fun `a request refused because the KB is held throws with the server's sentence`() = runTest {
+        // Given
+        val config = config {}
+        val api = apiWithKb(config)
+        config.refusedBecauseHeld = "Thyroids is being edited by alice."
+
+        // When
+        val refusal = shouldThrow<KnowledgeBaseHeldException> {
+            api.startRuleSession(SessionStartRequest(1L, Addition("Go.")))
+        }
+
+        // Then
+        refusal.message shouldBe "Thyroids is being edited by alice."
+    }
+
+    @Test
+    fun `a commit refused because the rule session went stale throws with the server's sentence`() = runTest {
+        // Given
+        val config = config {}
+        val api = apiWithKb(config)
+        config.refusedBecauseStale = interpretationChangedMessage("Case1")
+
+        // When
+        val refusal = shouldThrow<StaleRuleSessionException> {
+            api.commitSession(RuleRequest(1L))
+        }
+
+        // Then
+        refusal.message shouldBe interpretationChangedMessage("Case1")
     }
 
     @Test
@@ -335,6 +396,49 @@ class ApiTest {
         }
         val response = Api(mock(config)).sendUserMessage(userMessage)
         response shouldBe config.returnResponse
+    }
+
+    @Test
+    fun `chatContext is null when the user has no conversation yet`() = runTest {
+        // Given
+        val config = config { returnChatContext = null }
+        val api = Api(mock(config))
+
+        // When
+        val context = api.chatContext()
+
+        // Then
+        context shouldBe null
+        shouldThrow<IllegalStateException> { api.kbInfo() }
+    }
+
+    @Test
+    fun `chatContext returns the user's context and makes its KB the current one`() = runTest {
+        // Given
+        val glucose = KBInfo("glucose_1", "Glucose")
+        val config = config { returnChatContext = ChatContextInfo(glucose, 7L) }
+        val api = Api(mock(config))
+
+        // When
+        val context = api.chatContext()
+
+        // Then
+        context shouldBe ChatContextInfo(glucose, 7L)
+        api.kbInfo() shouldBe glucose
+    }
+
+    @Test
+    fun `a context without a KB clears the current KB`() = runTest {
+        // Given
+        val config = config { returnChatContext = ChatContextInfo() }
+        val api = apiWithKb(config)
+
+        // When
+        val context = api.chatContext()
+
+        // Then
+        context shouldBe ChatContextInfo()
+        shouldThrow<IllegalStateException> { api.kbInfo() }
     }
 
     @Test

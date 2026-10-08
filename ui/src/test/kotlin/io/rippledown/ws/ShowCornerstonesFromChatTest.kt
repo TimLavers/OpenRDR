@@ -33,6 +33,7 @@ class ShowCornerstonesFromChatTest {
         api = mockk<Api>()
         handler = mockk<Handler>()
         coEvery { api.cornerstoneStatus() } returns null
+        coEvery { api.chatContext() } returns null
         val kb = KBInfo("kb_id", "KB")
         coEvery { api.kbList() } returns listOf(kb)
         coEvery { api.selectKB(kb.id) } returns kb
@@ -65,7 +66,8 @@ class ShowCornerstonesFromChatTest {
                 ruleSessionCompleted = any(),
                 updateCasesInfo = any(),
                 kbInfoUpdated = any(),
-                kbClosed = any()
+                kbClosed = any(),
+                chatContextChanged = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -110,7 +112,8 @@ class ShowCornerstonesFromChatTest {
                 ruleSessionCompleted = any(),
                 updateCasesInfo = any(),
                 kbInfoUpdated = any(),
-                kbClosed = any()
+                kbClosed = any(),
+                chatContextChanged = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()

@@ -20,6 +20,7 @@ import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
+import io.rippledown.server.TEST_USER
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.io.File
@@ -187,7 +188,7 @@ class KBImporterTest : ExporterTestBase() {
         kb.copyCaseToList(addedCase2.id!!, userDefinedCaseListName, "CopiedCase2")
 
         // Add a rule.
-        val rsm = KBSession(kb).ruleSessionManager
+        val rsm = KBSession(kb).ruleSessionManagerFor(TEST_USER)
         rsm.startRuleSessionToAddComment(case1, "Glucose ok.")
         val condition = EpisodicCondition(null, glucose, LessThanOrEquals(4.1), Current, userExpression)
         rsm.addConditionToCurrentRuleSession(condition)

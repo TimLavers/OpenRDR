@@ -1,5 +1,6 @@
 package io.rippledown.ws
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -12,6 +13,7 @@ import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.toJsonString
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -63,6 +65,21 @@ fun startServerAndSendFrames(vararg frames: String): TestServerInfo {
         routing {
             webSocket(WEB_SOCKET) {
                 frames.forEach { send(Frame.Text(it)) }
+                delay(100)
+                close(CloseReason(CloseReason.Codes.NORMAL, "Test Complete"))
+            }
+        }
+    }.start(wait = false)
+    val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
+    return TestServerInfo(server, actualPort)
+}
+
+fun startServerRecordingHandshakeHeaders(headers: CompletableDeferred<Headers>): TestServerInfo {
+    val server = embeddedServer(Netty, port = 0) {
+        install(WebSockets)
+        routing {
+            webSocket(WEB_SOCKET) {
+                headers.complete(call.request.headers)
                 delay(100)
                 close(CloseReason(CloseReason.Codes.NORMAL, "Test Complete"))
             }

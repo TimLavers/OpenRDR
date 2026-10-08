@@ -51,7 +51,7 @@ internal class KBEndpointTest {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity
         conditionParser = mockk()
         val session = KBSession(kb)
-        session.ruleSessionManager.setConditionParser(conditionParser)
+        session.ruleSessionManagerFor(TEST_USER).setConditionParser(conditionParser)
         endpoint = KBEndpoint(session)
 //        FileUtils.cleanDirectory(endpoint.casesDir)
 //        FileUtils.cleanDirectory(endpoint.interpretationsDir)
@@ -76,17 +76,21 @@ internal class KBEndpointTest {
         val rsm = mockk<RuleSessionManager>()
         every { rsm.descriptionOfMostRecentRule() } returns undoDescription
         val session = mockk<KBSession>()
-        every { session.ruleSessionManager } returns rsm
-        KBEndpoint(session).descriptionOfMostRecentRule() shouldBe undoDescription
+        every { session.ruleSessionManagerFor(TEST_USER) } returns rsm
+        every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
+        KBEndpoint(session).descriptionOfMostRecentRule(TEST_USER) shouldBe undoDescription
+        verify(exactly = 1) { session.locked(any<() -> Any?>()) }
     }
 
     @Test
     fun undoLastRuleTest() {
         val rsm = mockk<RuleSessionManager>()
         val session = mockk<KBSession>()
-        every { session.ruleSessionManager } returns rsm
-        KBEndpoint(session).undoLastRule()
+        every { session.ruleSessionManagerFor(TEST_USER) } returns rsm
+        every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
+        KBEndpoint(session).undoLastRule(TEST_USER)
         verify { rsm.undoLastRuleSession() }
+        verify(exactly = 1) { session.locked(any<() -> Any?>()) }
     }
 
     @Test
@@ -96,12 +100,12 @@ internal class KBEndpointTest {
         val condition = mockk<Condition>()
         every { rsm.conditionForExpression(any<String>()) } returns ConditionParsingResult(condition)
         val session = mockk<KBSession>()
-        every { session.ruleSessionManager } returns rsm
+        every { session.ruleSessionManagerFor(TEST_USER) } returns rsm
         val endpoint = KBEndpoint(session)
         val userExpression = "TSH is depressed"
 
         // When
-        val parsed = endpoint.conditionForExpression(userExpression).condition
+        val parsed = endpoint.conditionForExpression(userExpression, TEST_USER).condition
 
         // Then
         verify { rsm.conditionForExpression(userExpression) }
@@ -120,10 +124,11 @@ internal class KBEndpointTest {
         retrieved.interpretation.assignments().size shouldBe 0
         // Add a rule.
         val comment = "ABC ok."
-        endpoint.session.ruleSessionManager.startRuleSessionToAddComment(retrieved, comment)
+        endpoint.session.ruleSessionManagerFor(TEST_USER).startRuleSessionToAddComment(retrieved, comment)
         val abc = retrieved.getAttribute("ABC")
-        endpoint.session.ruleSessionManager.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
-        endpoint.session.ruleSessionManager.commitCurrentRuleSession()
+        endpoint.session.ruleSessionManagerFor(TEST_USER)
+            .addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
+        endpoint.session.ruleSessionManagerFor(TEST_USER).commitCurrentRuleSession()
         endpoint.commentsForCase(caseId.id!!) shouldBe setOf(comment)
     }
 
@@ -145,8 +150,8 @@ internal class KBEndpointTest {
     fun `should return condition hints for a case`() {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         val case = endpoint.case(id)
-        val hintConditions = endpoint.conditionHintsForCase(id)
-        hintConditions shouldBe endpoint.session.ruleSessionManager.conditionHintsForCase(case)
+        val hintConditions = endpoint.conditionHintsForCase(id, TEST_USER)
+        hintConditions shouldBe endpoint.session.ruleSessionManagerFor(TEST_USER).conditionHintsForCase(case)
     }
 
     @Test
@@ -231,10 +236,11 @@ internal class KBEndpointTest {
         retrieved.viewableInterpretation.interpretation.assignments().size shouldBe 0
         // Add a rule.
         val comment = "ABC ok."
-        endpoint.session.ruleSessionManager.startRuleSessionToAddComment(retrieved.case, comment)
+        endpoint.session.ruleSessionManagerFor(TEST_USER).startRuleSessionToAddComment(retrieved.case, comment)
         val abc = retrieved.case.getAttribute("ABC")
-        endpoint.session.ruleSessionManager.addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
-        endpoint.session.ruleSessionManager.commitCurrentRuleSession()
+        endpoint.session.ruleSessionManagerFor(TEST_USER)
+            .addConditionToCurrentRuleSession(greaterThanOrEqualTo(null, abc, 5.0))
+        endpoint.session.ruleSessionManagerFor(TEST_USER).commitCurrentRuleSession()
         val retrievedAgain = endpoint.viewableCase(id)
         retrievedAgain.viewableInterpretation.renderedComments.map { it.text } shouldBe listOf(comment)
     }
@@ -309,7 +315,7 @@ internal class KBEndpointTest {
         retrievedAfter.attributes()[3] shouldBe attributesBefore[0]
 
         // Commit the rule session.
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(case1Id) shouldBe setOf("Whatever")
 
         // Get the case again and check that the order has been applied.
@@ -340,7 +346,7 @@ internal class KBEndpointTest {
         attributesAfterMove[3] shouldBe attributesBefore[0]
 
         // Commit the rule session.
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(caseId) shouldBe setOf("Whatever")
 
         // The comment given by the rule is a comment attribute whose value is
@@ -380,7 +386,7 @@ internal class KBEndpointTest {
         endpoint.waitingCasesInfo().cornerstoneCaseIds shouldHaveSize 0
 
         endpoint.startRuleSessionToAddComment(id, "Whatever")
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
 
         val info = endpoint.waitingCasesInfo()
         info.cornerstoneCaseIds shouldHaveSize 1
@@ -398,7 +404,7 @@ internal class KBEndpointTest {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         endpoint.commentsForCase(id) shouldBe emptySet()
         endpoint.startRuleSessionToAddComment(id, "Whatever")
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(id) shouldBe setOf("Whatever")
     }
 
@@ -408,10 +414,10 @@ internal class KBEndpointTest {
         val id = caseId.id!!
         val comment1 = "Whatever"
         endpoint.startRuleSessionToAddComment(id, comment1)
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(id) shouldBe setOf(comment1)
         endpoint.startRuleSessionToRemoveComment(id, comment1)
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(id) shouldBe emptySet()
     }
 
@@ -421,11 +427,11 @@ internal class KBEndpointTest {
         val id = caseId.id!!
         val comment1 = "Whatever"
         endpoint.startRuleSessionToAddComment(id, comment1)
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(id) shouldBe setOf(comment1)
         val comment2 = "Blah"
         endpoint.startRuleSessionToReplaceComment(id, comment1, comment2)
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(id) shouldBe setOf(comment2)
     }
 
@@ -436,11 +442,11 @@ internal class KBEndpointTest {
         endpoint.startRuleSessionToAddComment(id, "Whatever")
 
         //When
-        endpoint.cancelRuleSession()
+        endpoint.cancelRuleSession(TEST_USER)
 
         //Then
         shouldThrow<IllegalStateException> {
-            endpoint.session.ruleSessionManager.conflictingCasesInCurrentRuleSession()
+            endpoint.session.ruleSessionManagerFor(TEST_USER).conflictingCasesInCurrentRuleSession()
         }.message shouldBe "Rule session not started."
     }
 
@@ -449,7 +455,7 @@ internal class KBEndpointTest {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
         endpoint.kb.allCornerstoneCases() shouldHaveSize 0
         endpoint.startRuleSessionToAddComment(id, "Whatever")
-        endpoint.commitCurrentRuleSession()
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.kb.allCornerstoneCases() shouldHaveSize 1
     }
 
@@ -464,18 +470,18 @@ internal class KBEndpointTest {
         with(endpoint) {
             kb.allCornerstoneCases() shouldHaveSize 0
             startRuleSessionToAddComment(id1, comment1)
-            commitCurrentRuleSession()
+            commitCurrentRuleSession(TEST_USER)
             kb.allCornerstoneCases() shouldHaveSize 1
 
             val viewableCase1 = endpoint.viewableCase(kb.allCornerstoneCases().first().id!!)
             startRuleSessionToAddComment(id2, comment2)
-            selectCornerstone(0).cornerstoneToReview shouldBe viewableCase1
-            commitCurrentRuleSession()
+            selectCornerstone(0, TEST_USER).cornerstoneToReview shouldBe viewableCase1
+            commitCurrentRuleSession(TEST_USER)
             kb.allCornerstoneCases() shouldHaveSize 2
 
             val viewableCase2 = endpoint.viewableCase(kb.allCornerstoneCases()[1].id!!)
             startRuleSessionToAddComment(id3, comment3)
-            selectCornerstone(1).cornerstoneToReview shouldBe viewableCase2
+            selectCornerstone(1, TEST_USER).cornerstoneToReview shouldBe viewableCase2
         }
     }
 
@@ -487,8 +493,8 @@ internal class KBEndpointTest {
         val tsh = endpoint.kb.attributeManager.getOrCreate("TSH")
         endpoint.startRuleSessionToAddComment(id, comment1)
         val tshCondition = greaterThanOrEqualTo(null, tsh, 0.6)
-        endpoint.addConditionToCurrentRuleBuildingSession(tshCondition)
-        endpoint.commitCurrentRuleSession()
+        endpoint.addConditionToCurrentRuleBuildingSession(tshCondition, TEST_USER)
+        endpoint.commitCurrentRuleSession(TEST_USER)
         endpoint.commentsForCase(id) shouldBe setOf(comment1)
 
         // Get the exported KB.
@@ -517,10 +523,10 @@ internal class KBEndpointTest {
         val sessionStartRequest = SessionStartRequest(id, diff)
 
         //When
-        endpoint.startRuleSession(sessionStartRequest)
+        endpoint.startRuleSession(sessionStartRequest, TEST_USER)
 
         //Then the recorded change names the comment attribute the server minted
-        endpoint.session.ruleSessionManager.currentDiff shouldBe diff.copy(
+        endpoint.session.ruleSessionManagerFor(TEST_USER).currentDiff shouldBe diff.copy(
             attributeName = "C1",
             attributeId = endpoint.kb.attributeManager.byName("C1")?.id
         )
@@ -530,17 +536,17 @@ internal class KBEndpointTest {
     fun `should set currentDiff to Replacement when starting a rule session via SessionStartRequest`() {
         //Given
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
-        endpoint.startRuleSession(SessionStartRequest(id, Addition("Go to Bondi.")))
-        endpoint.commitCurrentRuleSession()
+        endpoint.startRuleSession(SessionStartRequest(id, Addition("Go to Bondi.")), TEST_USER)
+        endpoint.commitCurrentRuleSession(TEST_USER)
         val diff = Replacement("Go to Bondi.", "Go to Maroubra.")
         val sessionStartRequest = SessionStartRequest(id, diff)
 
         //When
-        endpoint.startRuleSession(sessionStartRequest)
+        endpoint.startRuleSession(sessionStartRequest, TEST_USER)
 
         //Then the replacing comment is a new comment attribute, so it is auto-named C2,
         //and the change names the attribute being replaced
-        endpoint.session.ruleSessionManager.currentDiff shouldBe
+        endpoint.session.ruleSessionManagerFor(TEST_USER).currentDiff shouldBe
                 diff.copy(attributeName = "C2", replacedAttributeName = "C1")
     }
 
@@ -552,7 +558,7 @@ internal class KBEndpointTest {
         val sessionStartRequest = SessionStartRequest(id, diff)
 
         //When
-        val status = endpoint.startRuleSession(sessionStartRequest)
+        val status = endpoint.startRuleSession(sessionStartRequest, TEST_USER)
 
         //Then
         status.commentDiff shouldBe diff.copy(
@@ -572,7 +578,7 @@ internal class KBEndpointTest {
         )
 
         // When
-        endpoint.buildRule(request)
+        endpoint.buildRule(request, TEST_USER)
 
         // Then
         commentsForCase(case1.caseId.id!!) shouldBe listOf("TSH ok.")
@@ -585,13 +591,13 @@ internal class KBEndpointTest {
         val id = case1.caseId.id!!
         // First add a comment
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667"""")), TEST_USER
         )
         commentsForCase(id) shouldBe listOf("TSH ok.")
 
         // When - remove it
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Removal("TSH ok."), listOf("""ABC is "6.7""""))
+            BuildRuleRequest("Case1", Removal("TSH ok."), listOf("""ABC is "6.7"""")), TEST_USER
         )
 
         // Then
@@ -605,7 +611,7 @@ internal class KBEndpointTest {
         val id = case1.caseId.id!!
         // First add a comment
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667"""")), TEST_USER
         )
         commentsForCase(id) shouldBe listOf("TSH ok.")
 
@@ -615,7 +621,7 @@ internal class KBEndpointTest {
                 "Case1",
                 Replacement("TSH ok.", "TSH normal."),
                 listOf("""ABC is "6.7"""")
-            )
+            ), TEST_USER
         )
 
         // Then
@@ -629,7 +635,7 @@ internal class KBEndpointTest {
 
         // When
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667""""))
+            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667"""")), TEST_USER
         )
 
         // Then
@@ -642,13 +648,13 @@ internal class KBEndpointTest {
         val case1 = supplyCaseFromFile("Case1", endpoint)
         val id = case1.caseId.id!!
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667""""))
+            BuildRuleRequest("Case1", Addition("TSH is {TSH}."), listOf("""TSH is "0.667"""")), TEST_USER
         )
         commentsForCase(id) shouldBe listOf("TSH is 0.667.")
 
         // When
         endpoint.buildRule(
-            BuildRuleRequest("Case1", Removal("TSH is {TSH}."), listOf("""ABC is "6.7""""))
+            BuildRuleRequest("Case1", Removal("TSH is {TSH}."), listOf("""ABC is "6.7"""")), TEST_USER
         )
 
         // Then
@@ -661,8 +667,8 @@ internal class KBEndpointTest {
         val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
 
         // When
-        endpoint.startRuleSession(SessionStartRequest(id, Addition("TSH is {TSH}.")))
-        endpoint.commitCurrentRuleSession()
+        endpoint.startRuleSession(SessionStartRequest(id, Addition("TSH is {TSH}.")), TEST_USER)
+        endpoint.commitCurrentRuleSession(TEST_USER)
 
         // Then
         commentsForCase(id) shouldBe listOf("TSH is 0.667.")
@@ -682,7 +688,7 @@ internal class KBEndpointTest {
         )
 
         // When
-        endpoint.buildRule(request)
+        endpoint.buildRule(request, TEST_USER)
 
         // Then
         commentsForCase(case1.caseId.id!!) shouldBe listOf("Both ok.")
@@ -701,7 +707,8 @@ internal class KBEndpointTest {
         val case1 = supplyCaseFromFile("Case1", endpointWithMock)
         val id = case1.caseId.id!!
         endpointWithMock.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667"""")),
+            TEST_USER
         )
 
         // When
@@ -722,7 +729,8 @@ internal class KBEndpointTest {
         val case1 = supplyCaseFromFile("Case1", endpointWithMock)
         val id = case1.caseId.id!!
         endpointWithMock.buildRule(
-            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667""""))
+            BuildRuleRequest("Case1", Addition("TSH ok."), listOf("""TSH is "0.667"""")),
+            TEST_USER
         )
 
         // When - first call then second call

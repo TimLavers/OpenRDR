@@ -29,6 +29,8 @@ import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.suggestions.ConditionSuggester
 import io.rippledown.suggestions.SuggestionContext
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * The name a comment variable's marker is rendered with when the variable names
@@ -44,7 +46,9 @@ private val FORMULA_OPERATORS = Regex("""[+\-*/()^]""")
 
 class RuleSessionManager(
     private val kb: KB,
-    private val webSocketManager: WebSocketManager? = null
+    private val webSocketManager: WebSocketManager? = null,
+    private val kbLock: ReentrantLock = ReentrantLock(),
+    private val userId: UserId? = null
 ) : RuleService {
     val logger = lazyLogger
 
@@ -111,14 +115,33 @@ class RuleSessionManager(
      */
     private var replacedDiffAttribute: Attribute? = null
 
+    /**
+     * The definition an assign-by-definition session will give its attribute.
+     * Held here rather than stored when the session starts, because the store is
+     * shared: two users assigning the same attribute would otherwise overwrite
+     * each other's formula while one of them was still reviewing it. The session
+     * evaluates with the definition overlaid (see [sessionResolver]); it is
+     * stored only when the session commits, and only if nobody else stored a
+     * definition for the attribute meanwhile.
+     */
+    private class PendingDefinition(
+        val attribute: Attribute,
+        val expression: ValueExpression,
+        val definitionAtStart: ValueExpression?
+    )
+
+    private var pendingDefinition: PendingDefinition? = null
+
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
     private var conditionParser: ConditionParser
 
     init {
         conditionParser = object : ConditionParser {
-            override fun parse(expression: String, attributeFor: AttributeFor) =
-                ConditionGenerator(attributeFor, conditionChatService, kb.attributeNames()).conditionFor(expression)
+            override fun parse(expression: String, attributeFor: AttributeFor): Condition? {
+                val attributeNames = kbLock.withLock { kb.attributeNames() }
+                return ConditionGenerator(attributeFor, conditionChatService, attributeNames).conditionFor(expression)
+            }
         }
     }
 
@@ -132,10 +155,18 @@ class RuleSessionManager(
         check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
         checkActionExpressionIsAcyclic(action)
         ruleSession = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), kb.definitionResolver
+            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), sessionResolver()
         )
         logger.info("Rule session created")
         return cornerstoneStatus(null)
+    }
+
+    /**
+     * The KB's definitions with the pending one, if any, overlaid.
+     */
+    private fun sessionResolver(): DefinitionResolver {
+        val pending = pendingDefinition ?: return kb.definitionResolver
+        return { if (it.id == pending.attribute.id) pending.expression else kb.definitionResolver(it) }
     }
 
     override fun startRuleSessionToAddComment(
@@ -307,13 +338,19 @@ class RuleSessionManager(
         cycleForDefinition(attribute, expression)?.let {
             error("This value cannot be assigned: ${cycleMessage(it)}.")
         }
-        kb.derivedDefinitionManager.store(attribute.id, expression)
+        pendingDefinition =
+            PendingDefinition(attribute, expression, kb.derivedDefinitionManager.definitionFor(attribute.id))
         val assignment = AssignValue(attribute, ByDefinition)
-        return startAssignmentSession(
-            case,
-            DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
-            ChangeTreeToAddAssignment(assignment)
-        )
+        return try {
+            startAssignmentSession(
+                case,
+                DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
+                ChangeTreeToAddAssignment(assignment)
+            )
+        } catch (e: Throwable) {
+            pendingDefinition = null
+            throw e
+        }
     }
 
     fun startRuleSessionToRemoveAssignment(case: RDRCase, attributeName: String): CornerstoneStatus {
@@ -422,7 +459,7 @@ class RuleSessionManager(
     }
 
     private fun dependencyGraph() =
-        DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), kb.definitionResolver)
+        DerivedAttributeDependencyGraph(kb.ruleTree, kb.attributeManager.all(), sessionResolver())
 
     /**
      * The message explaining why the given condition cannot be added to the
@@ -694,12 +731,15 @@ class RuleSessionManager(
 
     override fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-        runBlocking { webSocketManager?.sendStatus(cornerstoneStatus) }
+        runBlocking { webSocketManager?.sendStatus(addressee(), cornerstoneStatus) }
     }
 
     override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted() }
+        runBlocking { webSocketManager?.sendRuleSessionCompleted(addressee()) }
     }
+
+    // A session that pushes belongs to a user; only test fixtures build one without.
+    private fun addressee() = checkNotNull(userId) { "A rule session push with no user." }
 
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
         val session = activeRuleSession("No rule session in progress.")
@@ -720,6 +760,7 @@ class RuleSessionManager(
         check(ruleSession != null) { "No rule session in progress." }
         ruleSession = null
         currentChange = null
+        pendingDefinition = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
@@ -751,22 +792,62 @@ class RuleSessionManager(
 
     override fun commitCurrentRuleSession() {
         val session = activeRuleSession()
-        // Internal invariant: the entry points refuse cycle-creating
-        // conditions, so this should never fire.
-        session.conditions.forEach { condition ->
-            check(cycleMessageFor(condition) == null) {
-                "Cannot commit rule session: ${cycleMessageFor(condition)}"
+        // Each check below passed when the session started or the condition was
+        // added; another user's commit since then can make any of them fail.
+        if (createsDependencyCycle(session)) {
+            refuseStaleCommit(dependencyCycleMessage())
+        }
+        pendingDefinition?.let { pending ->
+            if (kb.derivedDefinitionManager.definitionFor(pending.attribute.id) != pending.definitionAtStart) {
+                refuseStaleCommit(definitionChangedMessage(pending.attribute.name))
             }
         }
+        if (!session.action.isApplicable(kb.ruleTree, session.case)) {
+            refuseStaleCommit(interpretationChangedMessage(session.case.name))
+        }
+        val now = RuleBuildingSession(
+            kb.ruleManager, kb.ruleTree, session.case, session.action, kb.allCornerstoneCases(), sessionResolver()
+        )
+        if (session.conditions.any { !it.holds(now.materialisedCase) }) {
+            refuseStaleCommit(interpretationChangedMessage(session.case.name))
+        }
+        session.conditions.forEach { now.addCondition(it) }
+        if (now.cornerstoneCases().any { it.id !in session.idsOfConflictingCornerstonesAtStart }) {
+            refuseStaleCommit(cornerstonesChangedMessage())
+        }
+        pendingDefinition?.let { kb.derivedDefinitionManager.store(it.attribute.id, it.expression) }
         val rulesAdded = session.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
         ruleSession = null
         currentChange = null
+        pendingDefinition = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
         sendCasesInfo()
+    }
+
+    /**
+     * Another user's commit changed what this session was built against, so
+     * its rule can no longer be added as the user reviewed it. The session is
+     * cancelled and its user told. See documentation/design/concurrent_users.md.
+     */
+    private fun refuseStaleCommit(message: String): Nothing {
+        cancelRuleSession()
+        sendRuleSessionCompleted()
+        throw StaleRuleSessionException(message)
+    }
+
+    /**
+     * Whether the rule, as it would be committed now, would make a derived
+     * attribute depend on itself. Its action and each condition were acyclic
+     * when accepted, but a rule committed since can have closed the loop.
+     */
+    private fun createsDependencyCycle(session: RuleBuildingSession): Boolean {
+        val graph = dependencyGraph()
+        return graph.cycleCreatedBy(session.action, null) != null ||
+                session.conditions.any { graph.cycleCreatedBy(session.action, it) != null }
     }
 
     override fun exemptCornerstoneCase() = exemptCornerstone(cornerstoneStatus().indexOfCornerstoneToReview)
@@ -920,10 +1001,12 @@ class RuleSessionManager(
         conditionParser = parser
     }
 
+    // Translating the expression may call the LLM, so the KB lock is held only
+    // around the attribute lookups and the validation, never across the call.
     override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult {
-        val attributeFor: AttributeFor = { kb.attributeManager.getOrCreate(it) }
+        val attributeFor: AttributeFor = { kbLock.withLock { kb.attributeManager.getOrCreate(it) } }
         val condition = conditionParser.parse(expression, attributeFor)
-        return validated(condition, case, expression)
+        return kbLock.withLock { validated(condition, case, expression) }
     }
 
     override fun conditionForEditedSuggestion(

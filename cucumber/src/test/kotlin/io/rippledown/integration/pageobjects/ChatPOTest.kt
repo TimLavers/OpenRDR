@@ -6,6 +6,7 @@ import io.mockk.verify
 import io.rippledown.chat.ChatTestHook
 import io.rippledown.chat.KB_CHOICE_ITEM
 import io.rippledown.chat.NUMBER_OF_CHAT_MESSAGES_
+import io.rippledown.model.UserId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -33,8 +34,9 @@ class ChatPOTest {
         every { chip.accessibleDescription } returns "${KB_CHOICE_ITEM}Zoo Animals"
         every { chip.accessibleAction } returns action
         every { action.doAccessibleAction(0) } returnsMany listOf(firstClickSucceeds, true)
-        ChatTestHook.update(emptyList(), sendIsEnabled = true)
-        val page = ChatPO { root }
+        val user = UserId("alice")
+        ChatTestHook.update(user, emptyList(), sendIsEnabled = true)
+        val page = ChatPO(user) { root }
 
         // When
         page.clickKbChoice("Zoo Animals")

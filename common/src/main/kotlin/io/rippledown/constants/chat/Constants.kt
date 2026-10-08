@@ -88,6 +88,9 @@ const val DELETE_CASE_FROM_LIST = "DeleteCaseFromList"
 const val KB_INFO_PREFIX = "KbInfo:"
 const val KB_CLOSED = "KbClosed"
 
+// Pushed to every window of a user when their conversation's context changes. See concurrent_users.md.
+const val CHAT_CONTEXT_PREFIX = "ChatContext:"
+
 const val LIST_KNOWLEDGE_BASES = "ListKnowledgeBases"
 const val OPEN_KNOWLEDGE_BASE = "OpenKnowledgeBase"
 const val CREATE_KNOWLEDGE_BASE = "CreateKnowledgeBase"
@@ -104,6 +107,9 @@ const val KB_IMPORT_FILE_DIALOG_MESSAGE = "Choose a knowledge base ZIP file to i
 fun kbExportFileDialogMessage(name: String) = "Choose where to save \"$name\" as a ZIP file."
 
 const val NO_KB_OPEN_MESSAGE = "No knowledge base is open. Do you want to see the list, or open or create one."
+fun projectHeldChatMessage(kbName: String, holder: String) =
+    "$kbName is being edited by $holder, so it cannot be deleted right now. " +
+            "Try again when $holder has finished their rule."
 const val KB_ACTION_DURING_RULE_MESSAGE =
     "Please finish or cancel the current rule before opening, creating, closing, deleting, importing or exporting a knowledge base."
 const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."

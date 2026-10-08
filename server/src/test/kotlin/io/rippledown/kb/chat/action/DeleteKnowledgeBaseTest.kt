@@ -1,7 +1,9 @@
 package io.rippledown.kb.chat.action
 
 import io.kotest.matchers.shouldBe
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.model.chat.ChatResponse
@@ -43,7 +45,7 @@ class DeleteKnowledgeBaseTest : KbActionTestBase() {
     fun `an exact match still asks, and deletes on acceptance`() = runTest {
         // Given
         every { kbService.resolve("Scratch") } returns KbResolution.Exact(scratch)
-        coEvery { kbService.delete(scratch) } just Runs
+        coEvery { kbService.delete(scratch) } returns null
 
         // When
         val ask = DeleteKnowledgeBase("Scratch").doIt(kbService).asAsk()

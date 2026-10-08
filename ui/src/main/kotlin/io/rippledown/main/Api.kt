@@ -15,14 +15,11 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.ContentType.Text.Plain
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
-import io.rippledown.constants.server.CASE_ID
-import io.rippledown.constants.server.EXPRESSION
-import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
-import io.rippledown.model.CasesInfo
-import io.rippledown.model.KBInfo
-import io.rippledown.model.OperationResult
+import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -36,7 +33,8 @@ import java.io.IOException
 
 class Api(
     engine: HttpClientEngine = CIO.create(),
-    private val webSocketPort: Int = PORT
+    private val webSocketPort: Int = PORT,
+    val userId: UserId = defaultUserId()
 ) {
     // @Volatile ensures that writes to `currentKB` from coroutines resumed on
     // background I/O threads (e.g. inside [createKBFromSample]) are visible to
@@ -57,6 +55,17 @@ class Api(
             socketTimeoutMillis = 120_000
         }
         install(WebSockets)
+        defaultRequest {
+            header(USER_ID_HEADER, userId.value)
+        }
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (response.status != HttpStatusCode.Conflict) return@validateResponse
+                val message = response.bodyAsText()
+                if (response.headers[REFUSAL_HEADER] == REFUSAL_STALE) throw StaleRuleSessionException(message)
+                throw KnowledgeBaseHeldException(message)
+            }
+        }
     }
 
     private val logger = lazyLogger
@@ -72,7 +81,8 @@ class Api(
         ruleSessionCompleted: () -> Unit,
         updateCasesInfo: (CasesInfo) -> Unit = {},
         kbInfoUpdated: (KBInfo) -> Unit = {},
-        kbClosed: () -> Unit = {}
+        kbClosed: () -> Unit = {},
+        chatContextChanged: (ChatContextInfo) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -87,6 +97,10 @@ class Api(
             kbClosed = {
                 currentKB = null
                 kbClosed()
+            },
+            chatContextChanged = {
+                currentKB = it.kbInfo
+                chatContextChanged(it)
             }
         )
     }
@@ -362,6 +376,16 @@ class Api(
     } catch (_: Throwable) {
         // Stale kb id during a KB switch, or case not in current kb, etc.
         ChatResponse("")
+    }
+
+    /**
+     * The context of this user's conversation, or null if they have none yet.
+     * A new window adopts it instead of opening a KB of its own.
+     */
+    suspend fun chatContext(): ChatContextInfo? {
+        val response = client.get("$API_URL$CHAT_CONTEXT")
+        if (response.status == HttpStatusCode.NoContent) return null
+        return response.body<ChatContextInfo>().also { currentKB = it.kbInfo }
     }
 
     suspend fun sendUserMessage(message: String): ChatResponse = try {

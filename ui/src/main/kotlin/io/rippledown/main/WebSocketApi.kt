@@ -7,14 +7,12 @@ import io.ktor.websocket.*
 import io.rippledown.constants.api.HOST
 import io.rippledown.constants.api.PORT
 import io.rippledown.constants.api.WEB_SOCKET
-import io.rippledown.constants.chat.CASES_INFO_PREFIX
-import io.rippledown.constants.chat.KB_CLOSED
-import io.rippledown.constants.chat.KB_INFO_PREFIX
-import io.rippledown.constants.chat.RULE_SESSION_COMPLETED
+import io.rippledown.constants.chat.*
 import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -27,7 +25,8 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
         ruleSessionCompleted: () -> Unit,
         updateCasesInfo: (CasesInfo) -> Unit = {},
         kbInfoUpdated: (KBInfo) -> Unit = {},
-        kbClosed: () -> Unit = {}
+        kbClosed: () -> Unit = {},
+        chatContextChanged: (ChatContextInfo) -> Unit = {}
     ) {
         client.webSocket(
             method = HttpMethod.Get,
@@ -52,6 +51,9 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
                             receivedText == KB_CLOSED -> kbClosed()
 
                             receivedText.startsWith(KB_INFO_PREFIX) -> handleKbInfo(receivedText, kbInfoUpdated)
+
+                            receivedText.startsWith(CHAT_CONTEXT_PREFIX) ->
+                                handleChatContext(receivedText, chatContextChanged)
 
                             else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                         }
@@ -84,6 +86,14 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
             kbInfoUpdated(message.removePrefix(KB_INFO_PREFIX).fromJsonString<KBInfo>())
         } catch (e: Exception) {
             logger.error("Error parsing kb info", e)
+        }
+    }
+
+    private fun handleChatContext(message: String, chatContextChanged: (ChatContextInfo) -> Unit) {
+        try {
+            chatContextChanged(message.removePrefix(CHAT_CONTEXT_PREFIX).fromJsonString<ChatContextInfo>())
+        } catch (e: Exception) {
+            logger.error("Error parsing chat context", e)
         }
     }
 

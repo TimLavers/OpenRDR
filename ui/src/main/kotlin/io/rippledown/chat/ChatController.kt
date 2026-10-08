@@ -3,6 +3,8 @@ package io.rippledown.chat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import io.rippledown.main.defaultUserId
+import io.rippledown.model.UserId
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KbFileDialogRequest
 import io.rippledown.voice.VoiceRecognition
@@ -24,7 +26,8 @@ fun ChatController(
     modifier: Modifier = Modifier,
     state: ChatState = remember { ChatState() },
     fileTransferInProgress: Boolean = false,
-    onFileDialogRequested: (KbFileDialogRequest) -> Unit = {}
+    onFileDialogRequested: (KbFileDialogRequest) -> Unit = {},
+    userId: UserId = defaultUserId()
 ) {
     handler.onBotMessageReceived = { response ->
         state.receive(response, onFileDialogRequested)
@@ -37,5 +40,6 @@ fun ChatController(
         onMessageSent = { userMessage ->
             state.userMessage(userMessage)
         handler.sendUserMessage(userMessage.text)
-    }, voiceRecognitionService, modifier)
+        }, voiceRecognitionService, modifier, userId
+    )
 }

@@ -7,7 +7,9 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.*
+import io.rippledown.constants.api.KB_DESCRIPTION
+import io.rippledown.constants.api.KB_INFO
+import io.rippledown.constants.api.LAST_RULE_DESCRIPTION
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.model.KBInfo
 import io.rippledown.model.rule.UndoRuleDescription
@@ -80,13 +82,13 @@ class KBEditingTest: OpenRDRServerTestBase() {
             rule that can be undone!
         """.trimIndent()
         val undoRuleDescription = UndoRuleDescription(description, true)
-        every { kbEndpoint.descriptionOfMostRecentRule() } returns undoRuleDescription
+        every { kbEndpoint.descriptionOfMostRecentRule(testUser) } returns undoRuleDescription
         val result = httpClient.get(LAST_RULE_DESCRIPTION){
             parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
         result.body<UndoRuleDescription>() shouldBe undoRuleDescription
-        verify { kbEndpoint.descriptionOfMostRecentRule() }
+        verify { kbEndpoint.descriptionOfMostRecentRule(testUser) }
     }
 
     @Test
@@ -96,6 +98,6 @@ class KBEditingTest: OpenRDRServerTestBase() {
             parameter(KB_ID, kbId)
         }
         result.status shouldBe HttpStatusCode.OK
-        verify { kbEndpoint.undoLastRule() }
+        verify { kbEndpoint.undoLastRule(testUser) }
     }
  }

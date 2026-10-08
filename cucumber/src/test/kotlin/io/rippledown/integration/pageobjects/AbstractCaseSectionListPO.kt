@@ -44,10 +44,14 @@ abstract class AbstractCaseSectionListPO(private val contextProvider: () -> Acce
     }
 
     fun select(caseName: String) {
-        waitForCaseListToContain(caseName)
-        val caseNameContext = caseNameContext(caseName)!!
-        execute {
-            caseNameContext.accessibleAction.doAccessibleAction(0)
+        // Resolve and act in one poll: the list can recompose between a lookup
+        // and the action while the window is still settling after start-up.
+        waitUntilAsserted {
+            val caseNameContext = caseNameContext(caseName)
+            caseNameContext shouldNotBe null
+            execute {
+                caseNameContext!!.accessibleAction.doAccessibleAction(0)
+            }
         }
     }
 

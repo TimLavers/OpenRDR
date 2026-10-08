@@ -7,10 +7,10 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.mockk.every
-import io.mockk.verify
+import io.mockk.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.kb.chat.KnowledgeBaseService
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
 import java.io.File
@@ -119,7 +119,11 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // Given
         setupServer()
         val remaining = KBInfo("10", "Glucose")
-        every { serverApplication.deleteKB(kbId) } returns remaining
+        val doomed = KBInfo(kbId, kbName)
+        every { kbEndpoint.kbInfo() } returns doomed
+        val kbService = mockk<KnowledgeBaseService>()
+        every { serverApplication.kbServiceFor(testUser) } returns kbService
+        coEvery { kbService.delete(doomed) } returns remaining
 
         // When
         val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
@@ -127,14 +131,18 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // Then
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe remaining
-        verify { serverApplication.deleteKB(kbId) }
+        coVerify { kbService.delete(doomed) }
     }
 
     @Test
     fun `deleting the only KB should respond with no content`() = testApplication {
         // Given
         setupServer()
-        every { serverApplication.deleteKB(kbId) } returns null
+        val doomed = KBInfo(kbId, kbName)
+        every { kbEndpoint.kbInfo() } returns doomed
+        val kbService = mockk<KnowledgeBaseService>()
+        every { serverApplication.kbServiceFor(testUser) } returns kbService
+        coEvery { kbService.delete(doomed) } returns null
 
         // When
         val result = httpClient.delete(DELETE_KB) { parameter(KB_ID, kbId) }
@@ -142,7 +150,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // Then
         result.status shouldBe HttpStatusCode.NoContent
         result.bodyAsText() shouldBe ""
-        verify { serverApplication.deleteKB(kbId) }
+        coVerify { kbService.delete(doomed) }
     }
 
     @Test
@@ -150,7 +158,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // given
         setupServer()
         val renamed = KBInfo(kbId, "New wisdom")
-        every { serverApplication.renameKB(kbId, renamed.name) } returns renamed
+        every { serverApplication.renameKB(kbId, renamed.name, testUser) } returns renamed
 
         // when
         val result = httpClient.post(RENAME_KB) {
@@ -162,7 +170,7 @@ class KBManagementTest: OpenRDRServerTestBase() {
         // then
         result.status shouldBe HttpStatusCode.OK
         result.body<KBInfo>() shouldBe renamed
-        verify { serverApplication.renameKB(kbId, renamed.name) }
+        verify { serverApplication.renameKB(kbId, renamed.name, testUser) }
     }
 
     @Test

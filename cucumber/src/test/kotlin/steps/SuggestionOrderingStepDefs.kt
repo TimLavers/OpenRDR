@@ -3,12 +3,11 @@ package steps
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.kotest.matchers.collections.shouldNotContain
-import io.rippledown.chat.ChatTestHook
 import org.awaitility.Awaitility.await
 import java.time.Duration.ofSeconds
 
 private fun snapshotDiagnostic(): String {
-    val s = ChatTestHook.snapshot()
+    val s = chatPO().snapshot()
     return "ChatTestHook{messageCount=${s.messageList.size}, suggestionRowCount=${s.suggestionRowCount}, " +
             "mostRecentBotText=${s.mostRecentBotText?.take(120)}, " +
             "mostRecentSuggestionText=${s.mostRecentSuggestionText?.take(200)}, " +

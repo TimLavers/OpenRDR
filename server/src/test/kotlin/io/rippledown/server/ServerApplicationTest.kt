@@ -9,12 +9,10 @@ import io.mockk.mockk
 import io.rippledown.CaseTestUtils
 import io.rippledown.constants.chat.kbNameReservedMessage
 import io.rippledown.kb.KB
+import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
-import io.rippledown.model.Attribute
-import io.rippledown.model.KBInfo
-import io.rippledown.model.RDRCase
-import io.rippledown.model.Result
+import io.rippledown.model.*
 import io.rippledown.persistence.PersistenceProvider
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -39,6 +37,8 @@ internal class ServerApplicationTest {
 
     private lateinit var persistenceProvider: PersistenceProvider
     private lateinit var app: ServerApplication
+    private val alice = UserId("alice")
+    private val bob = UserId("bob")
 
     @BeforeEach
     fun setup() {
@@ -63,7 +63,7 @@ internal class ServerApplicationTest {
             when (operation) {
                 "create" -> app.createKB(name, true)
                 "sample" -> app.createKBFromSample(name, SampleKB.TSH_CASES)
-                "rename" -> app.renameKB(original.id, name)
+                "rename" -> app.renameKB(original.id, name, alice)
                 "import" -> app.importKBFromZip(zip)
                 else -> error("Unknown operation $operation")
             }
@@ -72,8 +72,8 @@ internal class ServerApplicationTest {
         // Then
         error.message shouldBe kbNameReservedMessage(name)
         app.kbList().map { it.name } shouldBe listOf("MyCopy")
-        app.kbService.knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
-        app.openChatEndpoint() shouldBe null
+        app.kbServiceFor(UserId("carol")).knowledgeBases().map { it.name } shouldBe listOf("MyCopy")
+        app.openChatEndpoint(UserId("carol")) shouldBe null
         app.kbForId(original.id).kbInfo().name shouldBe "MyCopy"
         persistenceProvider.idStore().data().keys shouldBe setOf(original.id)
         persistenceProvider.kbPersistence(original.id).kbInfo().name shouldBe "MyCopy"
@@ -290,7 +290,7 @@ internal class ServerApplicationTest {
         app.kbList() shouldBe listOf(glucose, thyroids)
 
         // When
-        app.deleteKB(glucose.id)
+        app.deleteKB(glucose.id, alice)
 
         // Then
         app.kbList() shouldBe listOf(thyroids)
@@ -307,7 +307,7 @@ internal class ServerApplicationTest {
         val only = app.createKB("Only", false)
 
         // When
-        app.deleteKB(only.id)
+        app.deleteKB(only.id, alice)
 
         // Then
         app.kbList() shouldBe emptyList()
@@ -320,7 +320,7 @@ internal class ServerApplicationTest {
 
         // When / Then
         shouldThrow<IllegalArgumentException> {
-            app.deleteKB("Unknown")
+            app.deleteKB("Unknown", alice)
         }.message shouldBe "Unknown kb id: Unknown"
         app.kbList().map { it.name } shouldBe listOf("Glucose")
     }
@@ -332,7 +332,7 @@ internal class ServerApplicationTest {
         val endpoint = app.kbForId(original.id)
 
         // when
-        val renamed = app.renameKB(original.id, "Thyroid Function")
+        val renamed = app.renameKB(original.id, "Thyroid Function", alice)
 
         // then
         renamed shouldBe KBInfo(original.id, "Thyroid Function")
@@ -340,6 +340,53 @@ internal class ServerApplicationTest {
         app.kbList() shouldBe listOf(renamed)
         endpoint.kbInfo() shouldBe renamed
         app.kbForId(original.id) shouldBe endpoint
+    }
+
+    @Test
+    fun `a KB can be renamed while someone else is editing it`() {
+        // Given
+        val original = app.createKB("Thyroids", false)
+        startRuleSession(original, alice)
+
+        // When
+        val renamed = app.renameKB(original.id, "Thyroid Function", bob)
+
+        // Then
+        app.kbList() shouldBe listOf(renamed)
+        app.kbForId(original.id).session.usersEditing() shouldBe setOf(alice)
+    }
+
+    @Test
+    fun `deleting a KB someone else is editing is refused and changes nothing`() {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        startRuleSession(thyroids, alice)
+
+        // When
+        val refusal = shouldThrow<ProjectHeldException> { app.deleteKB(thyroids.id, bob) }
+
+        // Then
+        refusal.message shouldBe "Thyroids is being edited by alice."
+        app.kbList() shouldBe listOf(thyroids)
+        app.kbForId(thyroids.id).kbInfo() shouldBe thyroids
+    }
+
+    @Test
+    fun `a user can delete the KB they are editing themselves`() {
+        // Given
+        val thyroids = app.createKB("Thyroids", false)
+        startRuleSession(thyroids, alice)
+
+        // When
+        app.deleteKB(thyroids.id, alice)
+
+        // Then
+        app.kbList() shouldBe emptyList()
+    }
+
+    private fun startRuleSession(kbInfo: KBInfo, userId: UserId) {
+        app.kbForId(kbInfo.id).session.ruleSessionManagerFor(userId)
+            .startRuleSessionToAddComment(createCase("Case1"), "Go.")
     }
 
     @Test
@@ -378,7 +425,7 @@ internal class ServerApplicationTest {
         app.kbForId(stored.id).kb.addCornerstoneCase(createCase("Case1"))
         KBExporter(directory, app.kbForId(stored.id).kb).export()
         val zip = Zipper(directory).zip()
-        app.deleteKB(stored.id)
+        app.deleteKB(stored.id, alice)
 
         // When
         val imported = app.importKBFromZip(zip)
