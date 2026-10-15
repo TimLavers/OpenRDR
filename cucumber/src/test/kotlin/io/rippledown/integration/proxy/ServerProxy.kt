@@ -66,6 +66,9 @@ class ServerProxy {
 
     fun tempDir() = dirProxy.tempDir()
 
+    fun geminiCallsSoFar(): Int =
+        if (logProxy.logFile.exists()) geminiCallsLogged(logProxy.logFile.readLines()) else 0
+
     fun shutdown() {
         restClient.shutdown()
         await().atMost(Duration.ofSeconds(10)).until {

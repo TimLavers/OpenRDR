@@ -37,12 +37,25 @@ object StepsInfrastructure {
     fun startServerWithInMemoryDatabase() {
         setup()
         uiTestBase.serverProxy.start()
+        markScenarioStart()
     }
 
     fun startServerWithPostgresDatabase() {
         setup()
         uiTestBase.serverProxy.startWithPostgres()
+        markScenarioStart()
     }
+
+    // The log is wiped when a server is started for a scenario, so this reading is normally 0;
+    // taking it rather than assuming it is what lets a shared server be measured the same way.
+    private var geminiCallsAtScenarioStart = 0
+
+    private fun markScenarioStart() {
+        geminiCallsAtScenarioStart = uiTestBase.serverProxy.geminiCallsSoFar()
+    }
+
+    fun geminiCallsThisScenario(): Int =
+        if (::uiTestBase.isInitialized) uiTestBase.serverProxy.geminiCallsSoFar() - geminiCallsAtScenarioStart else 0
 
     fun reStartWithPostgres() {
         uiTestBase.serverProxy.reStartWithPostgres()

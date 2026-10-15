@@ -171,7 +171,8 @@ fun noSafetySettings(): List<SafetySetting> =
  */
 fun <T> callWithTimeout(timeoutMs: Long = 90_000, block: () -> T): T {
     val callNumber = geminiApiCallCount.incrementAndGet()
-    LoggerFactory.getLogger("Gemini").info("Gemini API call #$callNumber (timeout=${timeoutMs}ms)")
+    // Named under io.rippledown so that logback routes it to the server log, where the cukes count the calls.
+    LoggerFactory.getLogger("io.rippledown.llm.Gemini").info("Gemini API call #$callNumber (timeout=${timeoutMs}ms)")
     val future = CompletableFuture.supplyAsync { block() }
     return try {
         future.get(timeoutMs, TimeUnit.MILLISECONDS)
