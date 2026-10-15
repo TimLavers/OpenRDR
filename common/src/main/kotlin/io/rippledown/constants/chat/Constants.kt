@@ -211,3 +211,12 @@ fun noKbGreeting(available: List<String>, demonstrations: List<String> = emptyLi
 fun emptyKbGreeting(kbName: String) =
     "The $kbName knowledge base $HAS_NO_CASES. Cases are normally provided by an $EXTERNAL_INFORMATION_SYSTEM. " +
             "Would you like to see a demonstration case?"
+
+fun caseGreeting(comments: List<String>) = when (comments.size) {
+    0 -> "$WOULD_YOU_LIKE to $ADD_A_COMMENT to the report?"
+    1 -> "This case has the following comment:\n\"${comments.single()}\"\n" +
+            "$WOULD_YOU_LIKE to $ADD another one, or $REPLACE or $REMOVE this one?"
+
+    else -> "This case has the following comments:\n${comments.joinToString("\n") { "\"$it\"" }}\n" +
+            "$WOULD_YOU_LIKE to $ADD another one, or $REPLACE or $REMOVE one of these?"
+}

@@ -12,6 +12,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.chat.Conversation.Companion.CONTINUE_NUDGE
+import io.rippledown.chat.Conversation.Companion.OPENING_PROMPT
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import kotlinx.coroutines.test.runTest
@@ -67,40 +68,11 @@ class ConversationTest {
     }
 
     @Test
-    fun `starting a conversation should delegate to the chat service`() =
-        runTest {
-            // Given
-            val expectedResponse = mockResponse(text = "Hello, how can I assist you today?")
-            val mockChatService = MockChatService(listOf(expectedResponse))
-            val conversation = Conversation(mockChatService, functionCallHandlers)
-
-            // When
-            val response = conversation.startConversation()
-
-            // Then
-            response shouldBe "Hello, how can I assist you today?"
-        }
-
-    @Test
-    fun `the opening message is sent to the model when the conversation starts`() =
-        runTest {
-            // Given
-            val mockChatService = MockChatService(listOf(mockResponse(text = "Hi")))
-            val conversation = Conversation(mockChatService, functionCallHandlers, openingMessage = "Tell me a joke.")
-
-            // When
-            conversation.startConversation()
-
-            // Then
-            mockChatService.sentMessages shouldBe listOf("Tell me a joke.")
-        }
-
-    @Test
-    fun `with no opening message the chat is started but nothing is sent`() =
+    fun `starting a conversation starts the chat and sends nothing to the model`() =
         runTest {
             // Given
             val mockChatService = MockChatService(listOf(mockResponse(text = "should not be requested")))
-            val conversation = Conversation(mockChatService, functionCallHandlers, openingMessage = null)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
 
             // When
             val response = conversation.startConversation()
@@ -108,15 +80,16 @@ class ConversationTest {
             // Then
             response shouldBe ""
             mockChatService.sentMessages shouldBe emptyList()
+            mockChatService.sentContents shouldBe emptyList()
             mockChatService.chatStarted shouldBe true
         }
 
     @Test
-    fun `a conversation with no opening message still answers subsequent messages`() =
+    fun `with no opening turn the first message is sent alone`() =
         runTest {
             // Given
             val mockChatService = MockChatService(listOf(mockResponse(text = "Answer")))
-            val conversation = Conversation(mockChatService, functionCallHandlers, openingMessage = null)
+            val conversation = Conversation(mockChatService, functionCallHandlers)
             conversation.startConversation()
 
             // When
@@ -125,18 +98,64 @@ class ConversationTest {
             // Then
             response shouldBe "Answer"
             mockChatService.sentMessages shouldBe listOf("Question")
+            mockChatService.sentContents shouldBe emptyList()
+        }
+
+    @Test
+    fun `the opening turn goes ahead of the first user message as the model's own turn, and only once`() =
+        runTest {
+            // Given
+            val mockChatService = MockChatService(listOf(mockResponse(text = "First"), mockResponse(text = "Second")))
+            val conversation = Conversation(mockChatService, functionCallHandlers)
+            conversation.startConversation(openingTurn = "Would you like to add a comment?")
+
+            // When
+            val first = conversation.response("Yes")
+            val second = conversation.response("Add \"Surf.\"")
+
+            // Then
+            first shouldBe "First"
+            second shouldBe "Second"
+            mockChatService.sentContents.size shouldBe 1
+            val contents = mockChatService.sentContents.single()
+            contents.map { it.role().get() } shouldBe listOf("user", "model", "user")
+            contents.map { it.singleText() } shouldBe listOf(OPENING_PROMPT, "Would you like to add a comment?", "Yes")
+            mockChatService.sentMessages shouldBe listOf("Add \"Surf.\"")
+        }
+
+    @Test
+    fun `the opening turn is still sent if the first send fails before reaching the model`() =
+        runTest {
+            // Given
+            val contents = mutableListOf<List<Content>>()
+            val chat = mockk<Chat>()
+            every { chat.sendMessage(capture(contents)) } answers {
+                if (contents.size == 1) throw NoSuchElementException("No value present")
+                mockResponse(text = "Recovered")
+            }
+            val conversation = Conversation(object : ChatService {
+                override fun startChat() = chat
+            }, functionCallHandlers)
+            conversation.startConversation(openingTurn = "Greeting")
+
+            // When
+            val response = conversation.response("Hello")
+
+            // Then
+            response shouldBe "Recovered"
+            contents.size shouldBe 2
+            contents.last().map { it.role().get() } shouldBe listOf("user", "model", "user")
+            contents.last().last().singleText() shouldContain CONTINUE_NUDGE
         }
 
     @Test
     fun `requesting a response should delegate to the chat service`() =
         runTest {
             // Given
-            val response1 = mockResponse(text = "Hello, how can I assist you today?")
-            val response2 = mockResponse(text = "Hello again, how can I help you further?")
-            val mockChatService = MockChatService(listOf(response1, response2))
+            val mockChatService =
+                MockChatService(listOf(mockResponse(text = "Hello again, how can I help you further?")))
             val conversation = Conversation(mockChatService, functionCallHandlers)
-            val responseForStartConversation = conversation.startConversation() // Initialize the chat session
-            responseForStartConversation shouldBe "Hello, how can I assist you today?"
+            conversation.startConversation()
 
             // When
             val response = conversation.response("Hello, bot!")
@@ -149,7 +168,6 @@ class ConversationTest {
     fun `should handle a function call in a response`() =
         runTest {
             // Given
-            val response1 = mockResponse(text = "Hello, how can I assist you today?")
             val response2 = mockResponse(
                 text = "Your expression was valid",
                 functionCalls = listOf(
@@ -157,10 +175,9 @@ class ConversationTest {
                 )
             )
             val response3 = mockResponse(text = "A beautiful condition was added to the case.")
-            val mockChatService = MockChatService(listOf(response1, response2, response3))
+            val mockChatService = MockChatService(listOf(response2, response3))
             val conversation = Conversation(mockChatService, functionCallHandlers)
-            val responseForStartConversation = conversation.startConversation() // Initialize the chat session
-            responseForStartConversation shouldBe "Hello, how can I assist you today?"
+            conversation.startConversation()
 
             // When
             val response = conversation.response("Add the condition 'x > 0'.")
@@ -174,7 +191,6 @@ class ConversationTest {
         val userExpression = "x is greater than 0"
         runTest {
             // Given
-            val response1 = mockResponse(text = "Hello, how can I assist you today?")
             val response2 = mockResponse(
                 text = "Your expression was valid",
                 functionCalls = listOf(
@@ -182,10 +198,9 @@ class ConversationTest {
                 )
             )
             val response3 = mockResponse(text = "A beautiful condition was added to the case.")
-            val mockChatService = MockChatService(listOf(response1, response2, response3))
+            val mockChatService = MockChatService(listOf(response2, response3))
             val conversation = Conversation(mockChatService, functionCallHandlers)
-            val responseForStartConversation = conversation.startConversation() // Initialize the chat session
-            responseForStartConversation shouldBe "Hello, how can I assist you today?"
+            conversation.startConversation()
 
             // When
             conversation.response("Add the condition '$userExpression'.")
@@ -198,17 +213,15 @@ class ConversationTest {
     @Test
     fun `should recover when the SDK returns a malformed function call by retrying with a nudge`() =
         runTest {
-            // Given the start succeeds, then the next send returns a response whose finish reason
-            // causes google-genai's checkFinishReason to throw IllegalArgumentException
-            // (MALFORMED_FUNCTION_CALL). The nudged retry then succeeds.
-            val startResponse = mockResponse(text = "Hello, how can I assist you today?")
+            // Given the first send returns a response whose finish reason causes google-genai's
+            // checkFinishReason to throw IllegalArgumentException (MALFORMED_FUNCTION_CALL).
+            // The nudged retry then succeeds.
             val recovered = mockResponse(text = "The comment was added.")
             val messages = mutableListOf<String>()
             val chat = mockk<Chat>()
             every { chat.sendMessage(capture(messages)) } answers {
                 when (messages.size) {
-                    1 -> startResponse
-                    2 -> malformedFunctionCallResponse()
+                    1 -> malformedFunctionCallResponse()
                     else -> recovered
                 }
             }
@@ -228,16 +241,14 @@ class ConversationTest {
     @Test
     fun `should recover when the SDK throws on an empty candidate by retrying with a nudge`() =
         runTest {
-            // Given the start succeeds, then the next send throws the google-genai SDK's
-            // NoSuchElementException (a candidate with no content), and the nudged retry succeeds.
-            val startResponse = mockResponse(text = "Hello, how can I assist you today?")
+            // Given the first send throws the google-genai SDK's NoSuchElementException
+            // (a candidate with no content), and the nudged retry succeeds.
             val recovered = mockResponse(text = "The comment was replaced.")
             val messages = mutableListOf<String>()
             val chat = mockk<Chat>()
             every { chat.sendMessage(capture(messages)) } answers {
                 when (messages.size) {
-                    1 -> startResponse // startConversation
-                    2 -> throw NoSuchElementException("No value present") // empty candidate content
+                    1 -> throw NoSuchElementException("No value present") // empty candidate content
                     else -> recovered // nudged retry
                 }
             }
@@ -260,7 +271,6 @@ class ConversationTest {
             // Given
             val firstExpression = "hite > 1"
             val secondExpression = "height > 1"
-            val response1 = mockResponse(text = "Hello, how can I assist you today?")
             val response2 = mockResponse(
                 functionCalls = listOf(
                     functionCall(TRANSFORM_REASON, mapOf(REASON_PARAMETER to firstExpression))
@@ -272,7 +282,7 @@ class ConversationTest {
                 )
             )
             val response4 = mockResponse(text = "The condition was added.")
-            val mockChatService = MockChatService(listOf(response1, response2, response3, response4))
+            val mockChatService = MockChatService(listOf(response2, response3, response4))
             val conversation = Conversation(mockChatService, functionCallHandlers)
             conversation.startConversation()
 
@@ -286,16 +296,20 @@ class ConversationTest {
         }
 }
 
+private fun Content.singleText() = parts().get().single().text().get()
+
 private class MockChatService(private val responses: List<GenerateContentResponse>) : ChatService {
     private var index = 0
     val sentMessages = mutableListOf<String>()
+    val sentContents = mutableListOf<List<Content>>()
     var chatStarted = false
     val chat = mockk<Chat>().apply {
         every { sendMessage(any<String>()) } answers {
             sentMessages.add(firstArg())
             responses[index++]
         }
-        every { sendMessage(any<Content>()) } answers {
+        every { sendMessage(any<List<Content>>()) } answers {
+            sentContents.add(firstArg())
             responses[index++]
         }
     }

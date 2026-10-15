@@ -462,20 +462,21 @@ class ChatManagerTest {
     @Test
     fun `a fixed greeting is returned after the chat is started, without consulting the model`() = runTest {
         // Given
-        coEvery { conversationService.startConversation() } returns ""
+        val openingTurn = ActionComment(action = USER_ACTION, message = "Hello there.").toJsonString()
+        coEvery { conversationService.startConversation(openingTurn) } returns ""
 
         // When
         val response = chatManager.startConversation(null, greeting = "Hello there.")
 
         // Then
         response shouldBe ChatResponse("Hello there.")
-        coVerify(exactly = 1) { conversationService.startConversation() }
+        coVerify(exactly = 1) { conversationService.startConversation(openingTurn) }
     }
 
     @Test
     fun `the AI unavailable message replaces the greeting when the chat cannot start`() = runTest {
         // Given
-        coEvery { conversationService.startConversation() } throws RuntimeException("no network")
+        coEvery { conversationService.startConversation(any()) } throws RuntimeException("no network")
 
         // When
         val response = chatManager.startConversation(null, greeting = "Hello there.")
