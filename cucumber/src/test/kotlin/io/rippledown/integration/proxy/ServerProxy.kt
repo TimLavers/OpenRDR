@@ -2,38 +2,34 @@ package io.rippledown.integration.proxy
 
 import io.rippledown.constants.server.IN_MEMORY
 import io.rippledown.constants.server.STARTING_SERVER
+import io.rippledown.constants.server.TEST_RESET_FLAG
 import io.rippledown.integration.restclient.RESTClient
 import org.awaitility.Awaitility.await
 import java.io.File
 import java.nio.file.Paths
 import java.time.Duration
+import java.util.concurrent.TimeUnit.SECONDS
 
-class ServerProxy {
-    private lateinit var process: Process
+class ServerProxy(
+    private val dirProxy: DirProxy = DirProxy(),
+    private val restClient: RESTClient = RESTClient(),
+    private val launch: (ProcessBuilder) -> Process = { it.start() }
+) {
+    private var process: Process? = null
+    private var closed = false
     private lateinit var jarFile: File
-    private val systemOutputFile: File
-    private val dirProxy = DirProxy()
+    private val systemOutputFile = File(dirProxy.tempDir(), "output.txt")
     private val logProxy = LogProxy(dirProxy.logDir())
-    private val restClient = RESTClient()
-
-    init {
-        systemOutputFile = File(dirProxy.tempDir(), "output.txt").apply { createNewFile() }
-        dirProxy.createAndCleanManagedDirectories()
-    }
 
     fun start() = start(true)
 
     fun startWithPostgres() = start(false)
 
-    fun reStartWithPostgres() = start(false, cleanup = false)
-
-    fun start(inMemory: Boolean, cleanup: Boolean = true) {
+    @Synchronized
+    fun start(inMemory: Boolean) {
+        check(!closed && process == null) { "Use a new ServerProxy for a replacement process" }
         findJar()
-        if (cleanup) {
-            dirProxy.createAndCleanManagedDirectories()
-            logProxy.deleteLogfiles()
-        }
-        val dbFlag = if (inMemory) IN_MEMORY else ""
+        dirProxy.createAndCleanManagedDirectories()
         val tempDir = dirProxy.tempDir().absolutePath
         val command = listOf(
             "java",
@@ -41,20 +37,22 @@ class ServerProxy {
             "-Xmx24G",
             "--enable-native-access=ALL-UNNAMED",
             "-jar",
-            jarFile.absolutePath,
-            dbFlag
-        )
-        process = ProcessBuilder(command)
+            jarFile.absolutePath
+        ) + if (inMemory) listOf(IN_MEMORY, TEST_RESET_FLAG) else emptyList()
+        process = launch(
+            ProcessBuilder(command)
             .redirectErrorStream(true)
             .redirectOutput(systemOutputFile)
-            .directory(dirProxy.tempDir())
-            .start()
+                .directory(dirProxy.tempDir())
+        )
         waitForServerToStart()
     }
     private fun findJar() {
         val rootDirectory = dirProxy.userDir()
         val serverLibsDir = Paths.get(rootDirectory.path, "server", "build", "libs").toFile()
-        jarFile = serverLibsDir.listFiles { it -> it.name == "server-all.jar" }!![0]
+        jarFile = checkNotNull(serverLibsDir.listFiles { it -> it.name == "server-all.jar" }?.singleOrNull()) {
+            "Build :server:shadowJar first; server-all.jar is missing from $serverLibsDir"
+        }
 //        println("jar: ${jarFile.absolutePath}, modified: ${Date(jarFile.lastModified())}")
     }
 
@@ -69,13 +67,24 @@ class ServerProxy {
     fun geminiCallsSoFar(): Int =
         if (logProxy.logFile.exists()) geminiCallsLogged(logProxy.logFile.readLines()) else 0
 
+    fun isRunning() = process?.isAlive == true && restClient.serverIsRunning()
+
+    @Synchronized
     fun shutdown() {
-        restClient.shutdown()
-        await().atMost(Duration.ofSeconds(10)).until {
-            !restClient.serverIsRunning()
-        }
-        if ( this::process.isInitialized) {
-            process.destroyForcibly().waitFor()
+        if (closed) return
+        val running = process
+        try {
+            if (running?.isAlive == true) restClient.shutdown()
+        } finally {
+            try {
+                if (running != null) {
+                    if (running.isAlive) running.destroyForcibly()
+                    check(running.waitFor(10, SECONDS)) { "Server process did not exit; refusing to start another" }
+                }
+                closed = true
+            } finally {
+                restClient.close()
+            }
         }
     }
     fun restClient() = restClient

@@ -60,7 +60,8 @@ class ScenarioProgress : ConcurrentEventListener {
                     scenario = event.testCase.name,
                     status = event.result.status.toString(),
                     seconds = seconds,
-                    geminiCalls = geminiCalls
+                    geminiCalls = geminiCalls,
+                    serverStartSeconds = StepsInfrastructure.serverStartSeconds
                 )
             )
         }

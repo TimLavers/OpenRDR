@@ -13,13 +13,22 @@ data class ScenarioTiming(
     val scenario: String,
     val status: String,
     val seconds: Long,
-    val geminiCalls: Int
+    val geminiCalls: Int,
+    val serverStartSeconds: Double = 0.0
 ) {
-    fun csvLine() = listOf(folder, feature, scenario, status, seconds.toString(), geminiCalls.toString())
+    fun csvLine() = listOf(
+        folder,
+        feature,
+        scenario,
+        status,
+        seconds.toString(),
+        geminiCalls.toString(),
+        serverStartSeconds.toString()
+    )
         .joinToString(",") { "\"${it.replace("\"", "\"\"")}\"" }
 
     companion object {
-        const val CSV_HEADER = "folder,feature,scenario,status,seconds,geminiCalls"
+        const val CSV_HEADER = "folder,feature,scenario,status,seconds,geminiCalls,serverStartSeconds"
     }
 }
 

@@ -33,7 +33,7 @@ class ScenarioTimingsTest {
         val timing = ScenarioTiming("kb", "KB Management", "Export, then \"import\"", "PASSED", 12, 3)
 
         // When / Then
-        timing.csvLine() shouldBe "\"kb\",\"KB Management\",\"Export, then \"\"import\"\"\",\"PASSED\",\"12\",\"3\""
+        timing.csvLine() shouldBe "\"kb\",\"KB Management\",\"Export, then \"\"import\"\"\",\"PASSED\",\"12\",\"3\",\"0.0\""
     }
 
     @Test
@@ -48,8 +48,8 @@ class ScenarioTimingsTest {
         // Then
         File(dir, "chat.csv").readLines() shouldBe listOf(
             ScenarioTiming.CSV_HEADER,
-            "\"chat\",\"A\",\"one\",\"PASSED\",\"1\",\"0\"",
-            "\"chat\",\"A\",\"two\",\"FAILED\",\"2\",\"5\""
+            "\"chat\",\"A\",\"one\",\"PASSED\",\"1\",\"0\",\"0.0\"",
+            "\"chat\",\"A\",\"two\",\"FAILED\",\"2\",\"5\",\"0.0\""
         )
     }
 }

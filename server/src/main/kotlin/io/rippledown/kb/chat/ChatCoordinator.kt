@@ -49,6 +49,9 @@ class ChatCoordinator(
 
     fun hasConversation(userId: UserId): Boolean = conversations.containsKey(userId)
 
+    /** The test reset caller must first stop admission and drain all conversation turns. */
+    fun reset() = conversations.clear()
+
     override fun openEndpointFor(userId: UserId): KBEndpoint? = contextFor(userId).endpointOrNull
 
     override fun usersOn(kbId: String): Set<UserId> = conversationsOn(kbId).keys

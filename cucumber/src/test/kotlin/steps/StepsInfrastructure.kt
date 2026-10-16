@@ -3,13 +3,30 @@ package steps
 import io.cucumber.java.Scenario
 import io.rippledown.integration.UITestBase
 import io.rippledown.integration.files.ScriptedKbFileDialogs
+import io.rippledown.integration.proxy.copyLogTail
 import io.rippledown.model.UserId
 import steps.StepsInfrastructure.client
 import steps.StepsInfrastructure.uiTestBase
 import java.io.File
 
 object StepsInfrastructure {
-    lateinit var uiTestBase: UITestBase
+    private var scenarioLogOffset = 0L
+    private var resetLogOffset = 0L
+    private var scenarioFailureDirectory = File("build/failures/setup")
+    private val serverLifecycle = FeatureServerLifecycle(reportResetFailure = { base, error ->
+        println("Replacing server after reset failed: ${error.message}")
+        val directory = File(scenarioFailureDirectory, "reset").apply { mkdirs() }
+        File(directory, "reason.txt").writeText(error.stackTraceToString())
+        saveLogs(base, directory, resetLogOffset)
+    })
+    val uiTestBase: UITestBase get() = checkNotNull(serverLifecycle.current) { "The server has not been started" }
+    val serverStartSeconds: Double get() = serverLifecycle.serverStartSeconds
+
+    init {
+        Runtime.getRuntime().addShutdownHook(Thread({
+            runCatching { stopServer() }.onFailure { System.err.println("Server shutdown failed: ${it.message}") }
+        }, "cucumber-server-cleanup"))
+    }
 
     /**
      * The running clients by user name, and the one the page objects address.
@@ -30,19 +47,13 @@ object StepsInfrastructure {
     var useFakeVoice: Boolean = false
     var fileDialogs: ScriptedKbFileDialogs? = null
 
-    private fun setup() {
-        uiTestBase = UITestBase()
-    }
-
-    fun startServerWithInMemoryDatabase() {
-        setup()
-        uiTestBase.serverProxy.start()
-        markScenarioStart()
-    }
-
-    fun startServerWithPostgresDatabase() {
-        setup()
-        uiTestBase.serverProxy.startWithPostgres()
+    fun prepareScenario(scenario: Scenario, postgres: Boolean = false) {
+        stopClients() // retries any client whose previous teardown failed
+        scenarioFailureDirectory = failureDir(scenario)
+        scenarioLogOffset = 0
+        geminiCallsAtScenarioStart = 0
+        resetLogOffset = serverLifecycle.current?.let { logFile(it).length() } ?: 0
+        serverLifecycle.prepare(scenario.uri, postgres)
         markScenarioStart()
     }
 
@@ -52,17 +63,14 @@ object StepsInfrastructure {
 
     private fun markScenarioStart() {
         geminiCallsAtScenarioStart = uiTestBase.serverProxy.geminiCallsSoFar()
+        scenarioLogOffset = logFile(uiTestBase).length()
     }
 
     fun geminiCallsThisScenario(): Int =
-        if (::uiTestBase.isInitialized) uiTestBase.serverProxy.geminiCallsSoFar() - geminiCallsAtScenarioStart else 0
-
-    fun reStartWithPostgres() {
-        uiTestBase.serverProxy.reStartWithPostgres()
-    }
+        serverLifecycle.current?.let { it.serverProxy.geminiCallsSoFar() - geminiCallsAtScenarioStart } ?: 0
 
     fun stopServer() {
-        uiTestBase.serverProxy.shutdown()
+        serverLifecycle.stop()
     }
 
     fun startClient() {
@@ -95,9 +103,18 @@ object StepsInfrastructure {
     fun client() = currentClient ?: error("The client application has not been started.")
 
     private fun stopClients() {
-        launchedClients.values.forEach { it.stopClient() }
-        launchedClients.clear()
-        currentClient = null
+        var failure: Exception? = null
+        launchedClients.toMap().forEach { (name, client) ->
+            try {
+                client.stopClient()
+                launchedClients.remove(name)
+                if (currentClient === client) currentClient = null
+            } catch (e: Exception) {
+                val previous = failure
+                if (previous == null) failure = e else previous.addSuppressed(e)
+            }
+        }
+        failure?.let { serverLifecycle.invalidate(); throw it }
     }
 
     fun screenshotOnFailure(scenario: Scenario) {
@@ -114,18 +131,25 @@ object StepsInfrastructure {
     }
 
     fun saveServerLogsOnFailure(scenario: Scenario) {
-        if (!scenario.isFailed || !::uiTestBase.isInitialized) return
-        val tempDir = uiTestBase.serverProxy.tempDir()
+        if (!scenario.isFailed) return
+        val base = serverLifecycle.current ?: return
+        saveLogs(base, failureDir(scenario), scenarioLogOffset)
+    }
+
+    private fun logFile(base: UITestBase) = File(base.serverProxy.tempDir(), "logs/server.log")
+
+    private fun saveLogs(base: UITestBase, targetDir: File, logOffset: Long) {
+        val tempDir = base.serverProxy.tempDir()
         val sources = listOf(
             File(tempDir, "logs/server.log"),
             File(tempDir, "output.txt")
         )
-        val targetDir = failureDir(scenario)
         sources.forEach { src ->
             if (!src.exists()) return@forEach
             try {
                 val dst = File(targetDir, src.name)
-                src.copyTo(dst, overwrite = true)
+                if (src.name == "server.log") copyLogTail(src, dst, logOffset)
+                else src.copyTo(dst, overwrite = true)
                 println("Scenario failed - saved ${src.name} to ${dst.absolutePath}")
             } catch (e: Exception) {
                 println("Failed to copy ${src.name}: ${e.message}")
@@ -139,10 +163,13 @@ object StepsInfrastructure {
     }
 
     fun cleanup() {
-        stopClients()
-        uiTestBase.serverProxy.shutdown()
-        useFakeVoice = false
-        fileDialogs = null
+        try {
+            stopClients()
+        } finally {
+            useFakeVoice = false
+            fileDialogs = null
+            serverLifecycle.afterScenario()
+        }
     }
 }
 
