@@ -40,8 +40,9 @@ actions make sense, and the greeting. Every greeting is fixed server text (`noKb
 should not vary run to run, and writing it on the server saves a model call on every case selection. So that the model
 still knows what the user's first message is answering, `Conversation` seeds the greeting into the chat history as the
 model's own opening turn (in the `UserAction` JSON it would have written), sent together with the first user message;
-Gemini requires the history to start with a user turn, so a fixed prompt precedes it. The prompt text and examples are
-unchanged: from the model's point of view the transcript looks exactly as it did when it wrote the greeting itself.
+Gemini requires the history to start with a user turn, so a fixed prompt precedes it (`ChatManager.CASE_OPENING_PROMPT`,
+the request the model used to be sent, or `CASELESS_OPENING_PROMPT`). The prompt files and examples are unchanged: from
+the model's point of view the transcript looks exactly as it did when it wrote the greeting itself.
 Telling the model about the greeting in the system prompt instead was tried and failed: on the first turn it treated
 "Remove the comment" as a reason and called the condition transformer.
 

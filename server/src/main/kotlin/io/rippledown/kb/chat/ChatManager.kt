@@ -2,6 +2,7 @@ package io.rippledown.kb.chat
 
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
+import io.rippledown.chat.OpeningExchange
 import io.rippledown.constants.chat.*
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
@@ -43,7 +44,7 @@ class ChatManager(
         reasonAcknowledgements.clear()
         responses.reset()
         val response = try {
-            conversationService.startConversation(greeting?.let { openingTurnFor(it) })
+            conversationService.startConversation(greeting?.let { openingExchangeFor(viewableCase, it) })
         } catch (e: Exception) {
             logger.error("Failed to start conversation", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
@@ -126,10 +127,14 @@ class ChatManager(
     }
 
     // The model sees the greeting in the form it would have written it, so the transcript stays in its own protocol.
-    private fun openingTurnFor(greeting: String) =
-        ActionComment(action = USER_ACTION, message = greeting).toJsonString()
+    private fun openingExchangeFor(viewableCase: ViewableCase?, greeting: String) = OpeningExchange(
+        prompt = if (viewableCase == null) CASELESS_OPENING_PROMPT else CASE_OPENING_PROMPT,
+        reply = ActionComment(action = USER_ACTION, message = greeting).toJsonString()
+    )
 
     companion object {
+        const val CASE_OPENING_PROMPT = "Please assist me with the report for this case."
+        const val CASELESS_OPENING_PROMPT = "Please assist me."
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"

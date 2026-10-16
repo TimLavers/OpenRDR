@@ -27,7 +27,7 @@
     And case Bondi is provided having data:
       | Wave | poor |
     And I select case Bondi
-    And  the interpretation report should be is empty
+    And  the interpretation should contain the text "Go to Bondi."
 
   Scenario: The conditions shown for a comment that is a replacement should include the conditions for the comment that has been replaced
     Given case Beach is provided having data:

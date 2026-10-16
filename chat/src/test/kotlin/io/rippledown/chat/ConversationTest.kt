@@ -12,7 +12,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.rippledown.chat.Conversation.Companion.CONTINUE_NUDGE
-import io.rippledown.chat.Conversation.Companion.OPENING_PROMPT
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
 import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import kotlinx.coroutines.test.runTest
@@ -107,7 +106,12 @@ class ConversationTest {
             // Given
             val mockChatService = MockChatService(listOf(mockResponse(text = "First"), mockResponse(text = "Second")))
             val conversation = Conversation(mockChatService, functionCallHandlers)
-            conversation.startConversation(openingTurn = "Would you like to add a comment?")
+            conversation.startConversation(
+                OpeningExchange(
+                    "Help me with this case.",
+                    "Would you like to add a comment?"
+                )
+            )
 
             // When
             val first = conversation.response("Yes")
@@ -119,7 +123,8 @@ class ConversationTest {
             mockChatService.sentContents.size shouldBe 1
             val contents = mockChatService.sentContents.single()
             contents.map { it.role().get() } shouldBe listOf("user", "model", "user")
-            contents.map { it.singleText() } shouldBe listOf(OPENING_PROMPT, "Would you like to add a comment?", "Yes")
+            contents.map { it.singleText() } shouldBe
+                    listOf("Help me with this case.", "Would you like to add a comment?", "Yes")
             mockChatService.sentMessages shouldBe listOf("Add \"Surf.\"")
         }
 
@@ -136,7 +141,7 @@ class ConversationTest {
             val conversation = Conversation(object : ChatService {
                 override fun startChat() = chat
             }, functionCallHandlers)
-            conversation.startConversation(openingTurn = "Greeting")
+            conversation.startConversation(OpeningExchange("Help me.", "Greeting"))
 
             // When
             val response = conversation.response("Hello")

@@ -12,13 +12,17 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
 import java.util.concurrent.TimeoutException
 
+/**
+ * The exchange the server has already had on the model's behalf: a request for
+ * help, and the greeting the server showed in reply. Recorded as the first two
+ * turns of the history, so the model sees the question the user's first message
+ * is answering without a call being made to produce it. Gemini insists that a
+ * history starts with the user, hence the prompt.
+ */
+data class OpeningExchange(val prompt: String, val reply: String)
+
 interface ConversationService {
-    /**
-     * [openingTurn] is the greeting the server has already shown the user. It is
-     * recorded as the model's own first turn, so the model sees the question the
-     * user's first message is answering without a call being made to produce it.
-     */
-    suspend fun startConversation(openingTurn: String? = null): String = ""
+    suspend fun startConversation(opening: OpeningExchange? = null): String = ""
     suspend fun response(message: String): String = ""
 }
 
@@ -37,13 +41,13 @@ class Conversation(
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
-    private var pendingOpeningTurn: Content? = null
+    private var pendingOpening: OpeningExchange? = null
 
-    override suspend fun startConversation(openingTurn: String?): String {
+    override suspend fun startConversation(opening: OpeningExchange?): String {
         chat = retry {
             chatService.startChat()
         }
-        pendingOpeningTurn = openingTurn?.let { content("model", it) }
+        pendingOpening = opening
         return ""
     }
 
@@ -104,13 +108,14 @@ class Conversation(
         throw lastException ?: RuntimeException("Unexpected: exhausted retries without exception")
     }
 
-    // The opening turn travels with the first message that reaches the model, so a failed send keeps it pending.
-    // Gemini insists the history starts with the user, hence the fixed prompt the opening turn answers.
+    // The opening exchange travels with the first message that reaches the model, so a failed send keeps it pending.
     private fun send(message: String): GenerateContentResponse {
-        val opening = pendingOpeningTurn
+        val opening = pendingOpening
         val response = if (opening == null) chat.sendMessage(message)
-        else chat.sendMessage(listOf(content("user", OPENING_PROMPT), opening, content("user", message)))
-        pendingOpeningTurn = null
+        else chat.sendMessage(
+            listOf(content("user", opening.prompt), content("model", opening.reply), content("user", message))
+        )
+        pendingOpening = null
         return response
     }
 
@@ -216,7 +221,6 @@ class Conversation(
         const val MAX_TIMEOUT_RETRIES = 1
         const val TIMEOUT_RETRY_DELAY_MS = 5_000L
         const val CONTINUE_NUDGE = "Please continue with the appropriate response."
-        const val OPENING_PROMPT = "Please assist me."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"
         const val SUGGESTION_NUMBER_PARAMETER = "suggestionNumber"
