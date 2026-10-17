@@ -41,8 +41,7 @@
     And I build a rule to replace the comment "Go to Bondi." by "Go to Manly." with the condition
       | "Sun is in case" |
     Then the interpretation should be "Go to Manly."
-#    Doesn't work on TL's computer, TODO fix
-    And the conditions showing for the comment "Go to Manly." are:
+    And the backdoor tooltip for the comment "Go to Manly." has conditions:
       | Wave is in case |
       | Sun is in case  |
 

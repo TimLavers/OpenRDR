@@ -13,7 +13,7 @@ Feature: Add comments with conditions
     When I provide only the following reason:
       | wave height is more than 0.5 |
     Then the report should be "Let's surf."
-    And the condition showing for the comment "Let's surf." is:
+    And the backdoor tooltip for the comment "Let's surf." has conditions:
       | wave height > 0.5 |
 
   Scenario: The user should be able to see the reason why their condition expression is invalid

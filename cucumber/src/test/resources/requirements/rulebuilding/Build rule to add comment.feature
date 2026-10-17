@@ -62,7 +62,7 @@
     And I build a rule to add the comment "Go to the beach." with condition
       | Sun is in case |
     Then  the interpretation should be "Go to the beach."
-    And the condition showing for the comment "Go to the beach." is:
+    And the backdoor tooltip for the comment "Go to the beach." has conditions:
       | Sun is in case |
 
   Scenario: The user should be able to build rules to add several comments
