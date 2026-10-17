@@ -35,8 +35,16 @@ were already in place; a second provider would buy little for the operator's tas
 
 A conversation is built for a `ChatContext`: no knowledge base, a knowledge base with no case, or a case in a knowledge
 base. The context selects the system-prompt sections, the functions the model may call (none without a case), which
-actions make sense, and the greeting. Without a case the greeting is fixed server text: it exists to tell the user
-exactly what they can do next, so it should not vary run to run.
+actions make sense, and the greeting. Every greeting is fixed server text (`noKbGreeting`, `emptyKbGreeting`,
+`caseGreeting` in `constants/chat/Constants.kt`): it exists to tell the user exactly what they can do next, so it
+should not vary run to run, and writing it on the server saves a model call on every case selection. So that the model
+still knows what the user's first message is answering, `Conversation` seeds the greeting into the chat history as the
+model's own opening turn (in the `UserAction` JSON it would have written), sent together with the first user message;
+Gemini requires the history to start with a user turn, so a fixed prompt precedes it (`ChatManager.CASE_OPENING_PROMPT`,
+the request the model used to be sent, or `CASELESS_OPENING_PROMPT`). The prompt files and examples are unchanged: from
+the model's point of view the transcript looks exactly as it did when it wrote the greeting itself.
+Telling the model about the greeting in the system prompt instead was tried and failed: on the first turn it treated
+"Remove the comment" as a reason and called the condition transformer.
 
 The **client** starts a conversation whenever its context changes (KB opened or closed, case selected); the server never
 does, because after an open or create the server only pushes state, and if it also restarted the conversation the

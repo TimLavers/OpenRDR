@@ -35,11 +35,10 @@
     And I start the client application
     And I should see the case Bondi as the current case
     And the interpretation should contain the text "Go to Bondi. Bring sunscreen."
-#    Doesn't work on TL's computer, TODO fix
-#    Then the condition showing for the comment "Go to Bondi" is:
-#      | Waves is in case |
-#    Then the condition showing for the comment "Bring sunscreen." is:
-#      | Sun is in case |
+    Then the backdoor tooltip for the comment "Go to Bondi." has conditions:
+      | Waves is in case |
+    And the backdoor tooltip for the comment "Bring sunscreen." has conditions:
+      | Sun is in case |
 
   Scenario: No conditions should be shown for a comment that is given with no conditions
     And case Bondi is provided having data:
@@ -49,9 +48,8 @@
     When I start the client application
     And I should see the case Bondi as the current case
     And the interpretation should contain the text "Go to Bondi."
-    And move pointer to the comment "Go to Bondi."
     And the interpretation should be "Go to Bondi."
-    Then no conditions should be showing for the comment "Go to Bondi."
+    Then the backdoor tooltip for the comment "Go to Bondi." has no conditions
 
   Scenario: No conditions should be shown after building a rule with no conditions to give a comment
     And case Bondi is provided having data:
@@ -60,7 +58,5 @@
     And I start the client application
     And I should see the case Bondi as the current case
     When I build a rule to add the comment "Go to Bondi."
-    And move pointer to the comment "Go to Bondi."
     And the interpretation should be "Go to Bondi."
-    Then no conditions should be showing for the comment "Go to Bondi."
-
+    Then the backdoor tooltip for the comment "Go to Bondi." has no conditions

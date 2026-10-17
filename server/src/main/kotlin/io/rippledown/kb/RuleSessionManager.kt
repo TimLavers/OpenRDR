@@ -357,7 +357,7 @@ class RuleSessionManager(
         val assignment = currentAssignmentFor(case, attributeName)
         return startAssignmentSession(
             case,
-            DerivedValueRemoval(attributeName),
+            DerivedValueRemoval(assignment.attribute.name),
             ChangeTreeToRemoveAssignment(assignment)
         )
     }
@@ -372,7 +372,10 @@ class RuleSessionManager(
         val replacement = AssignValue(toBeReplaced.attribute, replacementExpression)
         return startAssignmentSession(
             case,
-            DerivedValueReplacement(attributeName = attributeName, newFormula = replacementExpression.asText()),
+            DerivedValueReplacement(
+                attributeName = toBeReplaced.attribute.name,
+                newFormula = replacementExpression.asText()
+            ),
             ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
         )
     }
@@ -577,7 +580,7 @@ class RuleSessionManager(
     }
 
     private fun currentAssignmentFor(case: RDRCase, attributeName: String): AssignValue {
-        val attribute = kb.attributeManager.byName(attributeName)
+        val attribute = attributeNamedExactly(attributeName)
             ?: error("No attribute with name \"$attributeName\" exists.")
         kb.interpret(case)
         return case.interpretation.assignments().firstOrNull { it.attribute == attribute }

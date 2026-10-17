@@ -142,6 +142,10 @@ class Api(
 
     suspend fun kbInfo(): KBInfo = checkNotNull(currentKB) { "No knowledge base is open." }
 
+    fun clearKnowledgeBaseSelection() {
+        currentKB = null
+    }
+
     suspend fun kbList() = client.get("$API_URL$KB_LIST").body<List<KBInfo>>()
 
     suspend fun kbDescription(): String = kbDescription(kbInfo())

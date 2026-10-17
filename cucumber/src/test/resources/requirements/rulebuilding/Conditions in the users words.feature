@@ -14,9 +14,9 @@ Feature: Conditions are shown in the user's own words
     When I provide only the following reason:
       | elevated glucose |
     Then the report should be "Review glucose."
-    And the condition showing for the comment "Review glucose." is:
+    And the backdoor tooltip for the comment "Review glucose." has conditions:
       | Glucose is high |
-    And the condition phrases shown should be:
+    And the backdoor tooltip for the comment "Review glucose." has phrases:
       | elevated glucose |
 
   Scenario: Reusing a condition keeps its first phrase and tells the user
@@ -28,9 +28,9 @@ Feature: Conditions are shown in the user's own words
     When I provide only the following reason:
       | raised glucose |
     Then the chat history contains "previously called this 'elevated glucose'"
-    And the condition showing for the comment "Repeat glucose measurement." is:
+    And the backdoor tooltip for the comment "Repeat glucose measurement." has conditions:
       | Glucose is high |
-    And the condition phrases shown should be:
+    And the backdoor tooltip for the comment "Repeat glucose measurement." has phrases:
       | elevated glucose |
 
   Scenario: Renaming a shared condition updates both comment tooltips
@@ -42,24 +42,24 @@ Feature: Conditions are shown in the user's own words
     And I provide only the following reason:
       | raised glucose |
     And the chat history contains "previously called this 'elevated glucose'"
-    And the condition showing for the comment "Review glucose." is:
+    And the backdoor tooltip for the comment "Review glucose." has conditions:
       | Glucose is high |
-    And the condition phrases shown should be:
+    And the backdoor tooltip for the comment "Review glucose." has phrases:
       | elevated glucose |
-    And the condition showing for the comment "Repeat glucose measurement." is:
+    And the backdoor tooltip for the comment "Repeat glucose measurement." has conditions:
       | Glucose is high |
-    And the condition phrases shown should be:
+    And the backdoor tooltip for the comment "Repeat glucose measurement." has phrases:
       | elevated glucose |
     When I enter the following text into the chat panel:
       """
       call the condition "Glucose is high" "raised glucose"
       """
     Then the chatbot has completed the action
-    And the condition showing for the comment "Review glucose." is:
+    And the backdoor tooltip for the comment "Review glucose." has conditions:
       | Glucose is high |
-    And the condition phrases shown should be:
+    And the backdoor tooltip for the comment "Review glucose." has phrases:
       | raised glucose |
-    And the condition showing for the comment "Repeat glucose measurement." is:
+    And the backdoor tooltip for the comment "Repeat glucose measurement." has conditions:
       | Glucose is high |
-    And the condition phrases shown should be:
+    And the backdoor tooltip for the comment "Repeat glucose measurement." has phrases:
       | raised glucose |

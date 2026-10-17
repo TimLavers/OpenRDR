@@ -2,10 +2,8 @@ package io.rippledown.kb.chat
 
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
-import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
-import io.rippledown.constants.chat.NO_KB_OPEN_MESSAGE
-import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
-import io.rippledown.constants.chat.projectHeldChatMessage
+import io.rippledown.chat.OpeningExchange
+import io.rippledown.constants.chat.*
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.ProjectHeldException
@@ -17,6 +15,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
+import io.rippledown.toJsonString
 
 interface ModelResponder {
     suspend fun response(message: String): ChatResponse
@@ -45,7 +44,7 @@ class ChatManager(
         reasonAcknowledgements.clear()
         responses.reset()
         val response = try {
-            conversationService.startConversation()
+            conversationService.startConversation(greeting?.let { openingExchangeFor(viewableCase, it) })
         } catch (e: Exception) {
             logger.error("Failed to start conversation", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
@@ -127,7 +126,15 @@ class ChatManager(
         return ChatResponse(stale.message)
     }
 
+    // The model sees the greeting in the form it would have written it, so the transcript stays in its own protocol.
+    private fun openingExchangeFor(viewableCase: ViewableCase?, greeting: String) = OpeningExchange(
+        prompt = if (viewableCase == null) CASELESS_OPENING_PROMPT else CASE_OPENING_PROMPT,
+        reply = ActionComment(action = USER_ACTION, message = greeting).toJsonString()
+    )
+
     companion object {
+        const val CASE_OPENING_PROMPT = "Please assist me with the report for this case."
+        const val CASELESS_OPENING_PROMPT = "Please assist me."
         const val LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE = "Start conversation response:"
         const val LOG_PREFIX_FOR_CONVERSATION_RESPONSE = "Conversation response:"
         const val LOG_PREFIX_FOR_USER_MESSAGE = "User message:"
