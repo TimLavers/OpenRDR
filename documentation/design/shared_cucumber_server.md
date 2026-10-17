@@ -1,14 +1,19 @@
 # One server per feature file in the cucumber suite
 
+Implemented; checked against the code on **18 October 2026**. The latest full run passed **230/230 scenarios on
+their first attempt** in **29m 47.294s**, including one automatic server replacement after a reset timeout.
+See [latest validation](#latest-full-suite-validation-17-october-2026) and the
+[full run note](../tickets/cuke_green_run_2026-10-17.md).
+
 ## Why
 
 Previously, every cucumber scenario started its own server process and stopped it afterwards. The server is up in about
 0.7 s and the
 start-plus-shutdown round trip costs 1.8–2.3 s (measured 16 Oct 2026 by launching `server-all.jar` with `InMemory`
 three times and polling `/api/ping`; the `@Before` hook also waits for `STARTING_SERVER` to appear in the log, which
-adds a little). Over the 236 scenario runs of a full `cucumberTest` that is roughly 7–9 minutes of a 37-minute run.
+adds a little). Over the 236 scenario runs measured then, that was roughly 7–9 minutes of a 37-minute run.
 Reusing one server for all the scenarios of a feature file removes most of it: the suite has 55 feature files, so
-about 55 starts remain instead of 236 (plus one per rerun).
+about 55 starts remain, plus replacements after failed resets and starts in rerun JVMs.
 
 A feature file, rather than a folder or the whole JVM, is the unit because it is what a developer runs by hand
 (`cucumberSingleTest`, an IDE run of one `.feature`), so a reset gap shows up in the same run that caused it, and the
@@ -33,7 +38,7 @@ There is no file-system state apart from the log and the temp directories that e
 | Connected client windows                                          | `WebSocketManager.connections`                                                              | stop the clients, then wait for the server to observe their disconnects before deleting state                                                               |
 | `geminiApiCallCount`                                              | `io.rippledown.llm`, process-wide                                                           | monotonic. `ScenarioProgress` already diffs it against a reading taken at scenario start; nothing else reads it                                             |
 | `temp/logs/server.log`, `temp/output.txt`                         | files held open by the server                                                               | not reset. `saveServerLogsOnFailure` must copy only the tail written during the failed scenario                                                             |
-| `temp/`, `downloads/`                                             | `DirProxy` wipes both on construction                                                       | wipe only when a server is about to be started; on Windows the wipe fails while the server holds its log                                                    |
+| `temp/`, `downloads/`                                             | managed by `DirProxy`; construction does not delete files                                   | `ServerProxy.start()` calls `createAndCleanManagedDirectories()` only when starting a process, after the previous process has exited                        |
 | `ScriptedKbFileDialogs`, `useFakeVoice`                           | client side                                                                                 | already reset in `StepsInfrastructure.cleanup`                                                                                                              |
 
 Demonstration KBs are read from resources on each request (`SampleKB`), not cached; the user-defined case lists and
@@ -92,7 +97,7 @@ replacement.
    (`KBSession.cancelRuleSessionOf` for each `usersEditing()`), then `kbManager.deleteKB` and drop the endpoint. This
    is `deleteKB` without the project-held refusal and without the per-user web-socket notifications, which have nobody
    to go to once the clients are stopped.
-3. `chatCoordinator.reset()`: clear `conversations`. New method; `knowledgeBaseDeleted` is not enough because a
+3. `chatCoordinator.reset()`: clear `conversations`. `knowledgeBaseDeleted` is not enough because a
    conversation in the `NoKnowledgeBase` context has no KB id.
 4. Reopen request admission only after reset succeeds. There is nothing left to remove from `WebSocketManager`:
    the precondition established that its sessions were already gone.
@@ -116,10 +121,12 @@ measured. The existing `@database` tag is enough to select that behavior.
 
 ### Test side
 
-`StepsInfrastructure` keeps the `UITestBase` (and so the `ServerProxy`, `RESTClient`, `LabProxy`) across scenarios
-while the same process is reused, and remembers its feature URI and persistence mode. Every process replacement
-creates a new `UITestBase`: `ServerProxy.shutdown()` closes its `RESTClient` clients in `finally`, so those objects
-must not be reused.
+[StepsInfrastructure](../../cucumber/src/test/kotlin/steps/StepsInfrastructure.kt) delegates process ownership to
+[FeatureServerLifecycle](../../cucumber/src/test/kotlin/steps/FeatureServerLifecycle.kt). The latter keeps the
+`UITestBase` (and so the `ServerProxy`, `RESTClient`, `LabProxy`), feature URI, persistence mode and reuse eligibility.
+It owns only the current feature's process; returning to a previous feature starts another process. Every process
+replacement creates a new `UITestBase`: `ServerProxy.shutdown()` closes its `RESTClient` clients in `finally`, so
+those objects must not be reused. Lifecycle operations are synchronized, including both run-cleanup hooks.
 
 `Defs.before(scenario)`:
 
@@ -128,8 +135,9 @@ must not be reused.
   `downloads/` as part of starting the server, and record the feature and mode. `@database` always takes this
   fresh-start path. Windows directory deletion can briefly fail even after process exit; retry it for up to two
   seconds, then fail setup if the directory still cannot be deleted. Validate that both directories resolve
-  directly beneath the repository root before deleting either one.
-- Otherwise: call `restClient.reset()` (the new route), using a finite HTTP timeout longer than the server's drain
+  directly beneath the repository root before deleting either one. Readiness checks allow up to 30 seconds for the
+  startup log message and a successful ping.
+- Otherwise: call `restClient.reset()`, using a 15-second HTTP timeout, longer than the server's five-second drain
   deadline. On success clear the cached KB/case selection in `RESTClient` and its wrapped `Api` so no request can use
   a selection from the previous scenario.
 - On a reset rejection, error, or timeout, preserve the reset diagnostics and log tail before wiping files, report
@@ -150,9 +158,10 @@ Cucumber supports this hook; a top-level function supplies the required static J
 [Cucumber hook documentation](https://cucumber.io/docs/cucumber/api/#global-hooks).
 
 Register one JVM shutdown hook as a fallback for exits that bypass `@AfterAll`. Both hooks call the same idempotent
-cleanup, which also tolerates no server having started or startup having failed. Bound the graceful `SHUTDOWN`
-request and put forced process destruction in `finally`, with a bounded wait that verifies process exit. Coordinate
-the two callers so they cannot shut down or close the same resources concurrently. This cleanup also serves feature
+cleanup, which also tolerates no server having started or startup having failed. The graceful `SHUTDOWN` request
+has a two-second HTTP timeout. In `finally`, forcibly destroy any still-live process and wait up to ten seconds to
+verify its exit. Synchronization prevents the two callers from shutting down or closing resources concurrently.
+This cleanup also serves feature
 changes and reset recovery. The folder task's rerun JVM is a separate process and gets its own server.
 
 `saveServerLogsOnFailure` records `server.log`'s length at scenario start and writes only the bytes after it, so each
@@ -172,38 +181,33 @@ The folder task's rerun-on-failure runs the failed scenarios in a new JVM, so it
 fails in the main run and passes on rerun warrants an isolation check, although ordinary flakiness can also cause
 that pattern. `ScenarioProgress`'s CSV records both attempts, so this is visible after every run.
 
-## Implementation steps
+## Implementation and regression coverage
 
-Write failing Kotlin unit tests before each production change. Each step should leave the suite green.
+The reset route and gate are implemented in
+[TestServerReset](../../server/src/main/kotlin/io/rippledown/server/routes/TestServerReset.kt) and
+[TestRequestGate](../../server/src/main/kotlin/io/rippledown/server/TestRequestGate.kt).
+The harness uses `FeatureServerLifecycle`, `RESTClient.reset()`, the scenario hooks, and
+[RunCleanup](../../cucumber/src/test/kotlin/steps/RunCleanup.kt). `ScenarioProgress` writes `serverStartSeconds`
+alongside scenario duration and Gemini calls in `cucumber/build/timings/<folder>.csv`.
 
-1. **Measure.** Add `serverStartSeconds` to the timing CSV: the time the `@Before` hook spends in
-   `startServerWith…`. This is the number the change is meant to reduce, and it should be read back at the end.
-2. **Server: request gate, `ServerApplication.reset()`, and the route.** Install the gate and route only with
-   `--test-reset`; `main` passes that choice into `module()`, defaulting off. Add unit and route tests for:
+Headless regression coverage includes:
 
-    - No reset route for ordinary in-memory, demo, or Postgres launches; explicit test opt-in enables it independently
-      of persistence choice. Use test doubles where needed so route-configuration tests need no Postgres instance.
-    - KBs, persistence IDs, endpoints, rule sessions, and conversations (including no-KB conversations) cleared after
-      successful reset; repeated successful resets work on an empty server.
-    - A delayed disconnect completing within the deadline; a connection remaining beyond it rejects reset with KBs,
-      rule sessions, and conversations unchanged by reset.
-    - A chat request paused before a KB mutation: reset waits for the request to finish, then removes its result before
-      returning `200`. New requests and WebSocket registrations are rejected throughout the reset.
-    - A blocked request outlasting the deadline: no destructive reset occurs, admission stays closed, and another
-      reset cannot make the server reusable. Cover partial-reset failure and cancellation too.
+- [TestRequestGateTest](../../server/src/test/kotlin/io/rippledown/server/TestRequestGateTest.kt): admitted work,
+  delayed disconnects, drain timeout, cancellation, failed clearing, concurrent resets and stale WebSocket upgrades.
+- [ResetRoutesTest](../../server/src/test/kotlin/io/rippledown/server/ResetRoutesTest.kt): explicit opt-in for both
+  persistence choices, HTTP handler completion and exceptions, rejection during reset, and permanent closure after
+  drain failure. These tests use controlled work rather than live Gemini calls.
+- [ServerApplicationResetTest](../../server/src/test/kotlin/io/rippledown/server/ServerApplicationResetTest.kt):
+  clearing KBs, endpoints and conversations, cancelling every user's rule session, and preserving state when a
+  connected user prevents reset.
+- [FeatureServerLifecycleTest](../../cucumber/src/test/kotlin/steps/FeatureServerLifecycleTest.kt): same-feature
+  reuse, feature and persistence-mode changes, reset recovery and diagnostics, unhealthy servers, startup and
+  termination failures, Postgres isolation, and idempotent cleanup.
+- [ServerProxyTest](../../cucumber/src/test/kotlin/io/rippledown/integration/proxy/ServerProxyTest.kt): forced
+  destruction after failed graceful shutdown, refusing replacement before process exit, and closing HTTP clients.
 
-   Use controlled barriers and fake work for these tests, with no real UI, Gemini calls, or multi-second sleeps.
-
-3. **Test harness: per-feature server.** `StepsInfrastructure` changes above, `RESTClient.reset()`, `Defs.before`
-   logic, `@AfterAll` and fallback shutdown hook, log-tail saving, `DirProxy` wipe moved to server start. Add headless
-   lifecycle tests for reuse within a feature, feature/mode changes, reset rejection/error/timeout and replacement,
-   clearing client selection state, run cleanup, duplicate cleanup, failed startup, and failed graceful shutdown.
-   Verify the old process has exited before replacement and reset diagnostics survive directory cleanup.
-   With permission to run the UI suite, run the `kb` folder first: it creates, renames, deletes and switches KBs more
-   than any other and has the multi-user scenarios. Then `cases` (user lists), `rulebuilding` (rule sessions left by
-   failures), then the rest.
-4. **Compare.** Full `cucumberTest`; sum `serverStartSeconds` and the per-folder seconds against
-   `tickets/cuke_baseline_timings/`.
+The initial targeted tests and full-suite measurements are recorded below; subsequent full runs are recorded in the
+[run note](../tickets/cuke_green_run_2026-10-17.md).
 
 ## Decisions and open points
 
@@ -220,7 +224,31 @@ Write failing Kotlin unit tests before each production change. Each step should 
   in a fresh `ChatManager`; nothing about the previous scenario's chat survives `ChatCoordinator.reset()`.
 - **No `@fresh-server` annotation.** No scenario has demonstrated a need for it.
 
-## Implementation validation (17 October 2026)
+## Latest full-suite validation (17 October 2026)
+
+The repeat `gradlew cuT` run at revision `3cbd029c` passed **all 230 scenarios across 14 folders on their first
+attempt**, with **zero scenario failures or retries**. It ran from **20:06:01.974 to 20:35:49.269 AEDT**:
+**29m 47.294s** from Gradle wrapper start to exit. Gradle itself reported **29m 46s** and exited successfully.
+
+The timing CSVs record **56 server starts**, **174 successful reuses**, **39.540 seconds** spent starting servers,
+and **856 Gemini calls**. The 56 starts comprise 55 feature starts and one automatic replacement: before
+"The current cornerstone should remain selected if the user removes a condition", reset reached its five-second
+deadline with **one active request and no connected users**. The harness preserved diagnostics, replaced the server,
+and the scenario passed on that same attempt. This exercised the designed recovery path; the run was not free of
+reset timeouts. Completion checks found no remaining Cucumber or server process and no listener on port 8080.
+
+The earlier tooltip failures listed below were addressed by mouse-free tooltip assertions. French and Spanish
+feature expectations were also corrected to match the canonical `Age < 50.0` text. The intermittent empty-KB UI
+timeout did not recur in this repeat run; that does not establish its root cause.
+
+The [run note](../tickets/cuke_green_run_2026-10-17.md) contains per-folder results and distinguishes this run from
+the earlier **24m 6s** run, which became green after three retries. These wall-clock results are not a controlled
+performance comparison: Gemini calls, latency, machine load and retries vary between runs.
+
+Local evidence: [archived timing CSVs and run summary](../../build/cucumber-monitor-20261017-200601/) and
+[Gradle output, including reset recovery](../../build/cucumber-monitor-20261017-200601/daemon.log).
+
+## Initial implementation validation (17 October 2026)
 
 Implemented the opt-in reset route and request gate, per-feature in-memory server lifecycle, per-scenario Postgres
 lifecycle, reset recovery, bounded process cleanup, scenario log tails, and startup timing. No `@fresh-server` tag
@@ -255,24 +283,25 @@ difference cannot all be attributed to it.
 
 The table sums per-scenario whole-second CSV durations, including retries. Startup times retain fractional seconds.
 
-| Folder         | Attempts | Baseline scenario seconds | Current scenario seconds | Server starts | Startup seconds |
-|----------------|---------:|--------------------------:|-------------------------:|--------------:|----------------:|
-| attributes     |        5 |                        17 |                       17 |             3 |            2.08 |
-| cases          |       25 |                       133 |                       54 |             4 |            2.75 |
-| chat           |       44 |                       532 |                      381 |            14 |           10.21 |
-| comments       |       15 |                       151 |                      118 |             2 |            1.41 |
-| conditions     |       17 |                       159 |                      138 |             3 |            2.14 |
-| demo           |        1 |                        59 |                       41 |             1 |            0.72 |
-| inferencing    |       19 |                        99 |                       51 |             3 |            2.11 |
-| interpreter    |        3 |                        14 |                       11 |             1 |            0.71 |
-| kb             |       57 |                       332 |                      207 |             7 |            4.88 |
-| report         |        2 |                        49 |                       31 |             1 |            0.70 |
-| rulebuilding   |       35 |                       468 |                      359 |            10 |            7.31 |
-| samples        |        9 |                       385 |                       81 |             9 |            6.15 |
-| trial-matching |        1 |                        14 |                       12 |             1 |            0.71 |
-| voice          |        2 |                         7 |                        2 |             1 |            0.71 |
-| **Total**      |  **235** |                 **2,419** |                **1,503** |        **60** |       **42.57** |
+| Folder         | Attempts | Baseline scenario seconds | Initial run seconds | Server starts | Startup seconds |
+|----------------|---------:|--------------------------:|--------------------:|--------------:|----------------:|
+| attributes     |        5 |                        17 |                  17 |             3 |            2.08 |
+| cases          |       25 |                       133 |                  54 |             4 |            2.75 |
+| chat           |       44 |                       532 |                 381 |            14 |           10.21 |
+| comments       |       15 |                       151 |                 118 |             2 |            1.41 |
+| conditions     |       17 |                       159 |                 138 |             3 |            2.14 |
+| demo           |        1 |                        59 |                  41 |             1 |            0.72 |
+| inferencing    |       19 |                        99 |                  51 |             3 |            2.11 |
+| interpreter    |        3 |                        14 |                  11 |             1 |            0.71 |
+| kb             |       57 |                       332 |                 207 |             7 |            4.88 |
+| report         |        2 |                        49 |                  31 |             1 |            0.70 |
+| rulebuilding   |       35 |                       468 |                 359 |            10 |            7.31 |
+| samples        |        9 |                       385 |                  81 |             9 |            6.15 |
+| trial-matching |        1 |                        14 |                  12 |             1 |            0.71 |
+| voice          |        2 |                         7 |                   2 |             1 |            0.71 |
+| **Total**      |  **235** |                 **2,419** |           **1,503** |        **60** |       **42.57** |
 
-Local evidence: [full Cucumber output](../../build/shared-server-full-cucumber.log),
-[unit-test output](../../build/shared-server-regressions.log), and
-[timing CSVs](../../cucumber/build/timings/).
+Local evidence for the initial run: [full Cucumber output](../../build/shared-server-full-cucumber.log) and
+[unit-test output](../../build/shared-server-regressions.log). The live
+[timing directory](../../cucumber/build/timings/) is overwritten by later runs; it is not an archive of this initial
+run.
