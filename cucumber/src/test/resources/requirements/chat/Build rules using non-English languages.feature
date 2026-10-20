@@ -18,9 +18,9 @@ Feature: Build rules using non-English languages
       | Moins de 50 ans              |
       | pregnant est "Y"             |
     Then the report should be "La patiente présente un diabète gestationnel."
-    And the condition showing for the comment "La patiente présente un diabète gestationnel." is:
+    And the backdoor tooltip for the comment "La patiente présente un diabète gestationnel." has conditions:
       | Glucose is high |
-      | Age < 50        |
+      | Age < 50.0      |
       | Pregnant is "Y" |
 
   Scenario: The user should be able to use the chat to add a comment with a valid condition in Spanish
@@ -37,7 +37,7 @@ Feature: Build rules using non-English languages
       | Menos de 50 años            |
       | pregnant es "Y"             |
     Then the report should be "La paciente presenta diabetes gestacional."
-    And the condition showing for the comment "La paciente presenta diabetes gestacional." is:
+    And the backdoor tooltip for the comment "La paciente presenta diabetes gestacional." has conditions:
       | Glucose is high |
-      | Age < 50        |
+      | Age < 50.0      |
       | Pregnant is "Y" |

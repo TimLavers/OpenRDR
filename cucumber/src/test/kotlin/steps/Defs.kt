@@ -14,11 +14,10 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.integration.proxy.TestResultDetail
 import org.awaitility.Awaitility
 import steps.StepsInfrastructure.cleanup
+import steps.StepsInfrastructure.prepareScenario
 import steps.StepsInfrastructure.saveServerLogsOnFailure
 import steps.StepsInfrastructure.screenshotOnFailure
 import steps.StepsInfrastructure.startClient
-import steps.StepsInfrastructure.startServerWithInMemoryDatabase
-import steps.StepsInfrastructure.startServerWithPostgresDatabase
 import java.util.concurrent.TimeUnit.*
 
 class Defs {
@@ -29,15 +28,15 @@ class Defs {
     private var refocusLastSelectedCase: (() -> Unit)? = null
 
     @Before("not @database")
-    fun before() {
+    fun before(scenario: Scenario) {
         Awaitility.setDefaultPollInterval(10, MILLISECONDS)
-        startServerWithInMemoryDatabase()
+        prepareScenario(scenario)
     }
 
     @Before("@database")
-    fun beforeWithDatabase() {
+    fun beforeWithDatabase(scenario: Scenario) {
         Awaitility.setDefaultPollInterval(10, MILLISECONDS)
-        startServerWithPostgresDatabase()
+        prepareScenario(scenario, postgres = true)
     }
 
     // Scenarios tagged @voice-is-fake get a FakeVoiceRecognition wired
@@ -52,9 +51,12 @@ class Defs {
 
     @After
     fun after(scenario: Scenario) {
-        screenshotOnFailure(scenario)
-        saveServerLogsOnFailure(scenario)
-        cleanup()
+        try {
+            screenshotOnFailure(scenario)
+            saveServerLogsOnFailure(scenario)
+        } finally {
+            cleanup()
+        }
     }
 
     @After("@delay_after_cuke")

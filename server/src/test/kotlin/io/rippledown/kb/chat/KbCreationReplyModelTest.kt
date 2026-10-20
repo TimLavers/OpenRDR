@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.CsvSource
 @EnabledIfEnvironmentVariable(named = "API_KEY", matches = ".+")
 class KbCreationReplyModelTest {
     private fun conversation() = Conversation(
-        KBChatService.createKBChatService(null, null, emptyList()), emptyMap(), openingMessage = null
+        KBChatService.createKBChatService(null, null, emptyList()), emptyMap()
     )
 
     @ParameterizedTest

@@ -8,6 +8,7 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.UserId
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.rule.CornerstoneStatus
+import io.rippledown.server.TestRequestGate
 import io.rippledown.toJsonString
 import java.util.concurrent.ConcurrentHashMap
 
@@ -15,16 +16,24 @@ import java.util.concurrent.ConcurrentHashMap
  * The connected clients, keyed by user. One user may have several windows,
  * hence a set of sessions per user. See documentation/design/concurrent_users.md.
  */
-class WebSocketManager {
+class WebSocketManager(private val testRequestGate: TestRequestGate? = null) {
 
     private val connections = ConcurrentHashMap<UserId, MutableSet<WebSocketSession>>()
     private val logger = lazyLogger
 
-    suspend fun setSession(userId: UserId, session: WebSocketSession) {
+    suspend fun setSession(userId: UserId, session: WebSocketSession, requestGeneration: Long? = null) {
         // One atomic step: a set returned by computeIfAbsent could be removed by a
         // disconnecting window's compute (below) before the add, orphaning this session.
-        connections.compute(userId) { _, sessions ->
-            (sessions ?: ConcurrentHashMap.newKeySet()).apply { add(session) }
+        val register = {
+            connections.compute(userId) { _, sessions ->
+                (sessions ?: ConcurrentHashMap.newKeySet()).apply { add(session) }
+            }
+            Unit
+        }
+        val admitted = testRequestGate?.registerConnection(requestGeneration, register) ?: run { register(); true }
+        if (!admitted) {
+            session.close(CloseReason(CloseReason.Codes.GOING_AWAY, "Test server reset"))
+            return
         }
         try {
             // Keep the session open until the client disconnects

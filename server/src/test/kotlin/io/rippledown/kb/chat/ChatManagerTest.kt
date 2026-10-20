@@ -5,10 +5,13 @@ import io.kotest.matchers.string.beBlank
 import io.mockk.*
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.FunctionCallHandler
+import io.rippledown.chat.OpeningExchange
 import io.rippledown.chat.ReasonTransformation.Companion.TRANSFORMATION_MESSAGE
 import io.rippledown.constants.chat.*
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.ProjectHeldException
+import io.rippledown.kb.chat.ChatManager.Companion.CASELESS_OPENING_PROMPT
+import io.rippledown.kb.chat.ChatManager.Companion.CASE_OPENING_PROMPT
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatManager.Companion.LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE
 import io.rippledown.kb.chat.ChatResponseEnricher.Companion.commentVariableTip
@@ -462,20 +465,40 @@ class ChatManagerTest {
     @Test
     fun `a fixed greeting is returned after the chat is started, without consulting the model`() = runTest {
         // Given
-        coEvery { conversationService.startConversation() } returns ""
+        val opening = OpeningExchange(
+            prompt = CASELESS_OPENING_PROMPT,
+            reply = ActionComment(action = USER_ACTION, message = "Hello there.").toJsonString()
+        )
+        coEvery { conversationService.startConversation(opening) } returns ""
 
         // When
         val response = chatManager.startConversation(null, greeting = "Hello there.")
 
         // Then
         response shouldBe ChatResponse("Hello there.")
-        coVerify(exactly = 1) { conversationService.startConversation() }
+        coVerify(exactly = 1) { conversationService.startConversation(opening) }
+    }
+
+    @Test
+    fun `with a case in view the greeting answers a request for help with its report`() = runTest {
+        // Given
+        val opening = OpeningExchange(
+            prompt = CASE_OPENING_PROMPT,
+            reply = ActionComment(action = USER_ACTION, message = "Add a comment?").toJsonString()
+        )
+        coEvery { conversationService.startConversation(opening) } returns ""
+
+        // When
+        chatManager.startConversation(viewableCase, greeting = "Add a comment?")
+
+        // Then
+        coVerify(exactly = 1) { conversationService.startConversation(opening) }
     }
 
     @Test
     fun `the AI unavailable message replaces the greeting when the chat cannot start`() = runTest {
         // Given
-        coEvery { conversationService.startConversation() } throws RuntimeException("no network")
+        coEvery { conversationService.startConversation(any()) } throws RuntimeException("no network")
 
         // When
         val response = chatManager.startConversation(null, greeting = "Hello there.")

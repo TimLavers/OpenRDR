@@ -587,6 +587,19 @@ class RuleSessionManagerAssignmentTest {
     }
 
     @Test
+    fun `the attribute whose assignment is removed is resolved regardless of case`() {
+        // Given a KB with an assignment rule
+        buildAssignmentRule()
+
+        // When a remove-assignment session is started with the name in the user's casing
+        rsm.startRuleSessionToRemoveAssignment(createCase("C", "25.0"), "diabetes status")
+
+        // Then the session is for the attribute as the KB names it
+        rsm.currentDerivedValueChange shouldBe DerivedValueRemoval("Diabetes status")
+        rsm.isRuleSessionActive() shouldBe true
+    }
+
+    @Test
     fun `replacing an assignment previews the new formula`() {
         // Given a KB with an assignment rule
         buildAssignmentRule()

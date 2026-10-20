@@ -1,9 +1,6 @@
 package io.rippledown
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.window.Window
@@ -13,6 +10,8 @@ import io.ktor.client.engine.cio.*
 import io.rippledown.constants.main.windowTitle
 import io.rippledown.files.FileKitKbFileDialogs
 import io.rippledown.files.KbFileDialogs
+import io.rippledown.interpretation.CommentTooltipTestHook
+import io.rippledown.interpretation.LocalCommentTooltipTestHook
 import io.rippledown.main.*
 import io.rippledown.model.UserId
 import io.rippledown.voice.VoiceRecognition
@@ -54,6 +53,7 @@ private fun installComposeDisposalExceptionFilter() {
 }
 
 class TestClientLauncher {
+    val commentTooltips = CommentTooltipTestHook()
 
     private lateinit var composeWindow: ComposeWindow
     private lateinit var thread: Thread
@@ -91,10 +91,12 @@ class TestClientLauncher {
                 ) {
                     composeWindow = this.window
                     applyAppIcon(this.window)
-                    OpenRDRUI(
-                        handler, dispatcher = Unconfined, voiceRecognition = voiceRecognition,
-                        fileDialogs = fileDialogs ?: remember(window) { FileKitKbFileDialogs(window) }
-                    )
+                    CompositionLocalProvider(LocalCommentTooltipTestHook provides commentTooltips) {
+                        OpenRDRUI(
+                            handler, dispatcher = Unconfined, voiceRecognition = voiceRecognition,
+                            fileDialogs = fileDialogs ?: remember(window) { FileKitKbFileDialogs(window) }
+                        )
+                    }
                 }
             }
         }

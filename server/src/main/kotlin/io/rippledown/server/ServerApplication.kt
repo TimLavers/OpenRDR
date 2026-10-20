@@ -24,7 +24,8 @@ import kotlin.io.path.createTempDirectory
 
 class ServerApplication(
     private val persistenceProvider: PersistenceProvider = PostgresPersistenceProvider(),
-    val webSocketManager: WebSocketManager
+    val webSocketManager: WebSocketManager,
+    private val testRequestGate: TestRequestGate? = null
 ) {
     private val logger = lazyLogger
 
@@ -40,6 +41,24 @@ class ServerApplication(
 
     fun kbServiceFor(userId: UserId): KnowledgeBaseService =
         ApplicationKbService(this, webSocketManager, userId, chatCoordinator)
+
+    suspend fun reset() {
+        val gate = checkNotNull(testRequestGate) { "Test reset is not enabled" }
+        gate.reset(webSocketManager::connectedUsers) {
+            synchronized(kbSetLock) {
+                logger.info("Resetting test server; deleting ${kbManager.all().size} knowledge bases")
+                kbManager.all().forEach { info ->
+                    val endpoint = kbForId(info.id)
+                    endpoint.session.locked {
+                        endpoint.session.usersEditing().forEach(endpoint.session::cancelRuleSessionOf)
+                        kbManager.deleteKB(info)
+                        idToKBEndpoint.remove(info.id)
+                    }
+                }
+                chatCoordinator.reset()
+            }
+        }
+    }
 
     init {
         persistenceProvider.idStore().data().keys.forEach {

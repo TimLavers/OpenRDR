@@ -46,7 +46,7 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
     ): ChatManager {
         val chatService =
             KBChatService.createKBChatService(null, kbName, kbNames, demonstrationNames = demonstrationNames)
-        val conversation = Conversation(chatService, emptyMap(), openingMessage = null)
+        val conversation = Conversation(chatService, emptyMap())
         return ChatManager(conversation, null, kbService)
     }
 

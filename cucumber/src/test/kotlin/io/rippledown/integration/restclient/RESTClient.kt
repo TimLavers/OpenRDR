@@ -6,6 +6,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.rippledown.constants.api.*
@@ -39,6 +40,7 @@ class RESTClient(private val api: Api = Api()) {
     private val endpoint = "http://localhost:$PORT"
 
     private val client = HttpClient(CIO) {
+        install(HttpTimeout) { requestTimeoutMillis = 15_000 }
         defaultRequest {
             header(USER_ID_HEADER, api.userId.value)
         }
@@ -57,8 +59,7 @@ class RESTClient(private val api: Api = Api()) {
     fun serverIsRunning(): Boolean {
         return runBlocking {
             try {
-                client.get("$endpoint$PING")
-                true
+                client.get("$endpoint$PING").status == HttpStatusCode.OK
             } catch (_: Exception) {
                 false
             }
@@ -192,14 +193,25 @@ class RESTClient(private val api: Api = Api()) {
 
     fun kbNames(): List<String> = runBlocking { api.kbList().map { it.name } }
 
+    fun reset() = runBlocking {
+        val response = api.client.post("$endpoint$RESET") { timeout { requestTimeoutMillis = 15_000 } }
+        check(response.status == HttpStatusCode.OK) { "Reset failed (${response.status}): ${response.bodyAsText()}" }
+        currentKB.set(null)
+        currentCase = null
+        api.clearKnowledgeBaseSelection()
+    }
+
     fun shutdown(): Unit = runBlocking {
         try {
-            client.post("$endpoint$SHUTDOWN")
+            client.post("$endpoint$SHUTDOWN") { timeout { requestTimeoutMillis = 2_000 } }
         } catch (_: Exception) {
             //expected
-        } finally {
-            client.close()
         }
+    }
+
+    fun close() {
+        client.close()
+        api.client.close()
     }
 }
 

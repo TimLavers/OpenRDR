@@ -50,6 +50,7 @@ Open work only. Items that are done are removed, not ticked; the requirements do
 
 - Run all tests in GitHub Actions on each push.
 - Convert to multiplatform.
+- Ability to download a client application from the server
 
 **Bugs**
 

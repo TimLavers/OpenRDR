@@ -1,18 +1,20 @@
 package io.rippledown.integration.proxy
 
 import io.kotest.matchers.shouldBe
+import org.awaitility.Awaitility.await
+import org.awaitility.core.ConditionTimeoutException
 import java.io.File
+import java.time.Duration
 
-class DirProxy {
-    private lateinit var userDir: File
-    private lateinit var tempDir: File
-    private lateinit var downloadsDir: File
-    private var logDir: File
-
-    init {
-        createAndCleanManagedDirectories()
-        logDir = File(tempDir, "logs").apply { mkdir() }
-    }
+class DirProxy(
+    fromRuntime: File = File(System.getProperty("user.dir")),
+    private val deleteDirectory: (File) -> Boolean = File::deleteRecursively,
+    private val cleanupTimeout: Duration = Duration.ofSeconds(2)
+) {
+    private val userDir = if (fromRuntime.name == "cucumber") fromRuntime.parentFile else fromRuntime
+    private val tempDir = File(userDir, "temp")
+    private val downloadsDir = File(userDir, "downloads")
+    private val logDir = File(tempDir, "logs")
 
     fun userDir() = userDir
     fun tempDir() = tempDir
@@ -20,21 +22,25 @@ class DirProxy {
     fun logDir() = logDir
 
     fun createAndCleanManagedDirectories() {
-        val fromRuntime = File(System.getProperty("user.dir"))
-        userDir = if (fromRuntime.name.endsWith("cucumber")) fromRuntime.parentFile else fromRuntime
-
-        tempDir = File(userDir, "temp")
+        check(tempDir.canonicalFile.parentFile == userDir.canonicalFile)
+        check(downloadsDir.canonicalFile.parentFile == userDir.canonicalFile)
         cleanupAndCreateAnew(tempDir)
-        downloadsDir = File(userDir, "downloads")
         cleanupAndCreateAnew(downloadsDir)
+        check(logDir.mkdirs()) { "Could not create log directory: $logDir" }
     }
 
     private fun cleanupAndCreateAnew(file: File) {
         with(file) {
             if (exists()) {
-                val deleted = deleteRecursively()
-                if (!deleted) {
-                    throw RuntimeException("Could not delete temp dir: ${file.path}. Enter \"tskill -f java\" or \"taskkill /F /IM java.exe\" and try again.")
+                // Windows can briefly retain file handles after the server process has exited.
+                try {
+                    await().pollDelay(Duration.ZERO).pollInterval(Duration.ofMillis(10))
+                        .atMost(cleanupTimeout).until { deleteDirectory(file) }
+                } catch (timeout: ConditionTimeoutException) {
+                    throw IllegalStateException(
+                        "Could not delete managed directory after server exit: ${file.path}",
+                        timeout
+                    )
                 }
             }
             mkdir()
