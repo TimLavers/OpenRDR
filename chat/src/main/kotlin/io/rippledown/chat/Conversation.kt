@@ -1,8 +1,10 @@
 package io.rippledown.chat
 
 import com.google.genai.Chat
+import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
+import com.google.genai.types.Part
 import io.rippledown.llm.callWithTimeout
 import io.rippledown.llm.geminiApiCallCount
 import io.rippledown.llm.retry
@@ -10,8 +12,17 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.stripEnclosingJson
 import java.util.concurrent.TimeoutException
 
+/**
+ * The exchange the server has already had on the model's behalf: a request for
+ * help, and the greeting the server showed in reply. Recorded as the first two
+ * turns of the history, so the model sees the question the user's first message
+ * is answering without a call being made to produce it. Gemini insists that a
+ * history starts with the user, hence the prompt.
+ */
+data class OpeningExchange(val prompt: String, val reply: String)
+
 interface ConversationService {
-    suspend fun startConversation(): String = ""
+    suspend fun startConversation(opening: OpeningExchange? = null): String = ""
     suspend fun response(message: String): String = ""
 }
 
@@ -25,18 +36,19 @@ interface FunctionCallHandler {
 
 class Conversation(
     private val chatService: ChatService,
-    private val functionCallHandlers: Map<String, FunctionCallHandler>,
-    private val openingMessage: String? = DEFAULT_OPENING_MESSAGE
+    private val functionCallHandlers: Map<String, FunctionCallHandler>
 ) :
     ConversationService {
     private val logger = lazyLogger
     private lateinit var chat: Chat
+    private var pendingOpening: OpeningExchange? = null
 
-    override suspend fun startConversation(): String {
+    override suspend fun startConversation(opening: OpeningExchange?): String {
         chat = retry {
             chatService.startChat()
         }
-        return openingMessage?.let { response(it) } ?: ""
+        pendingOpening = opening
+        return ""
     }
 
     private suspend fun executeFunction(functionCall: FunctionCall): String {
@@ -79,10 +91,10 @@ class Conversation(
         var lastException: Exception? = null
         repeat(MAX_TIMEOUT_RETRIES + 1) { attempt ->
             try {
-                return callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage(message) }
+                return callWithTimeout(SEND_TIMEOUT_MS) { send(message) }
             } catch (e: NoSuchElementException) {
                 logger.warn("Gemini returned a candidate with no content; retrying with a nudge", e)
-                return callWithTimeout(SEND_TIMEOUT_MS) { chat.sendMessage("$message\n\n$CONTINUE_NUDGE") }
+                return callWithTimeout(SEND_TIMEOUT_MS) { send("$message\n\n$CONTINUE_NUDGE") }
             } catch (e: RuntimeException) {
                 if (e.cause !is TimeoutException) throw e
                 lastException = e
@@ -95,6 +107,20 @@ class Conversation(
         }
         throw lastException ?: RuntimeException("Unexpected: exhausted retries without exception")
     }
+
+    // The opening exchange travels with the first message that reaches the model, so a failed send keeps it pending.
+    private fun send(message: String): GenerateContentResponse {
+        val opening = pendingOpening
+        val response = if (opening == null) chat.sendMessage(message)
+        else chat.sendMessage(
+            listOf(content("user", opening.prompt), content("model", opening.reply), content("user", message))
+        )
+        pendingOpening = null
+        return response
+    }
+
+    private fun content(role: String, text: String): Content =
+        Content.builder().role(role).parts(listOf(Part.fromText(text))).build()
 
     internal suspend fun handleResponse(response: GenerateContentResponse, emptyResponseRetries: Int = 0): String {
         logTokenCounts(response, "Turn")
@@ -195,7 +221,6 @@ class Conversation(
         const val MAX_TIMEOUT_RETRIES = 1
         const val TIMEOUT_RETRY_DELAY_MS = 5_000L
         const val CONTINUE_NUDGE = "Please continue with the appropriate response."
-        const val DEFAULT_OPENING_MESSAGE = "Please assist me with the report for this case."
         const val REASON_PARAMETER = "reason"
         const val CONDITION_TEXT_PARAMETER = "conditionText"
         const val SUGGESTION_NUMBER_PARAMETER = "suggestionNumber"

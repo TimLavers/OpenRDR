@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -12,6 +14,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
 import io.rippledown.caseview.ColumnWidths
+import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD
 import io.rippledown.constants.interpretation.INTERPRETATION_TEXT_FIELD_FOR_CORNERSTONE
 import io.rippledown.constants.interpretation.UNRESOLVED_VARIABLE_TOOLTIP
 import io.rippledown.model.condition.ConditionText
@@ -44,6 +47,15 @@ fun ReadonlyInterpretationView(
     handler: ReadonlyInterpretationViewHandler
 ) {
     val rows = commentRowsToDisplay(interpretation.renderedComments, diff, ruleConditions)
+    // Cornerstone rows share this composable, but must not replace the current
+    // case's tooltip snapshot. Disposal also clears it when comments are hidden.
+    val tooltipHook = LocalCommentTooltipTestHook.current
+    if (tooltipHook != null && contentDescription == INTERPRETATION_TEXT_FIELD) {
+        SideEffect { tooltipHook.update(rows) }
+        DisposableEffect(tooltipHook) {
+            onDispose { tooltipHook.clear() }
+        }
+    }
     Column(
         modifier = modifier.fillMaxWidth().semantics { this.contentDescription = contentDescription }
     ) {

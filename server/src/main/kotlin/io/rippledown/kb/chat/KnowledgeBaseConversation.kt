@@ -41,10 +41,15 @@ class KnowledgeBaseConversation(
         state = State.Idle
     }
 
+    // With a case the greeting asks about the report, which is the model's business, so nothing is pending here.
     fun greet(currentCase: ViewableCase?, greeting: String): ChatResponse {
-        state = if (currentCase == null && service.knowledgeBases().isEmpty() && service.openKnowledgeBase() == null) {
-            State.Creating(KbCreationStage.OFFER_CREATION, greeting, nameQuestion = NAME_THE_NEW_KB)
-        } else State.Greeting
+        state = when {
+            currentCase != null -> State.Idle
+            service.knowledgeBases().isEmpty() && service.openKnowledgeBase() == null ->
+                State.Creating(KbCreationStage.OFFER_CREATION, greeting, nameQuestion = NAME_THE_NEW_KB)
+
+            else -> State.Greeting
+        }
         return ChatResponse(greeting)
     }
 

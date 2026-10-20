@@ -176,6 +176,10 @@ fun OpenRDRUI(
     LaunchedEffect(kbInfo, kbImportRevision) {
         withContext(dispatcher) {
             val open = kbInfo
+            // This effect is composed before the startup effect has set kbInfo,
+            // so its first launch can already see the KB the relaunch will be
+            // keyed on. Fetch only when the KB differs from the one last fetched,
+            // or startup fetches the same list twice.
             if (open?.id != casesInfoKbId) {
                 // Case ids are per KB, so a case of the new KB can share the id of the
                 // one showing; drop it so the new KB's case is fetched.
@@ -183,9 +187,9 @@ fun OpenRDRUI(
                 adoptedCaseId = null
                 currentCase = null
                 cornerstoneStatus = null
+                casesInfo = if (open == null) CasesInfo() else api.waitingCasesInfo()
+                casesInfoKbId = open?.id
             }
-            casesInfo = if (open == null) CasesInfo() else api.waitingCasesInfo()
-            casesInfoKbId = open?.id
         }
     }
 

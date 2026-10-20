@@ -1,5 +1,6 @@
 package io.rippledown.kb.chat
 
+import io.rippledown.constants.chat.caseGreeting
 import io.rippledown.constants.chat.emptyKbGreeting
 import io.rippledown.constants.chat.noKbGreeting
 import io.rippledown.log.lazyLogger
@@ -47,6 +48,9 @@ class ChatCoordinator(
     fun contextFor(userId: UserId): ChatContext = conversations[userId]?.context ?: ChatContext.NoKnowledgeBase
 
     fun hasConversation(userId: UserId): Boolean = conversations.containsKey(userId)
+
+    /** The test reset caller must first stop admission and drain all conversation turns. */
+    fun reset() = conversations.clear()
 
     override fun openEndpointFor(userId: UserId): KBEndpoint? = contextFor(userId).endpointOrNull
 
@@ -99,7 +103,7 @@ class ChatCoordinator(
         return affected.keys
     }
 
-    private fun greetingFor(userId: UserId, context: ChatContext): String? = when (context) {
+    private fun greetingFor(userId: UserId, context: ChatContext): String = when (context) {
         is ChatContext.NoKnowledgeBase -> {
             val kbService = kbServiceFor(userId)
             noKbGreeting(
@@ -108,7 +112,8 @@ class ChatCoordinator(
             )
         }
         is ChatContext.KnowledgeBaseOnly -> emptyKbGreeting(context.endpoint.kbInfo().name)
-        is ChatContext.CaseInKnowledgeBase -> null
+        is ChatContext.CaseInKnowledgeBase ->
+            caseGreeting(context.viewableCase.viewableInterpretation.renderedComments.map { it.text })
     }
 
     companion object {

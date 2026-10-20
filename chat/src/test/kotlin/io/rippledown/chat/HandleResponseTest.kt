@@ -71,9 +71,7 @@ class HandleResponseTest {
     }
 
     private fun createConversation(vararg subsequentResponses: GenerateContentResponse): Conversation {
-        val initResponse = mockResponse(text = "Hello")
-        val allResponses = listOf(initResponse) + subsequentResponses.toList()
-        val chatService = QueuedChatService(allResponses)
+        val chatService = QueuedChatService(subsequentResponses.toList())
         val conversation = Conversation(chatService, functionCallHandlers)
         kotlinx.coroutines.runBlocking { conversation.startConversation() }
         return conversation

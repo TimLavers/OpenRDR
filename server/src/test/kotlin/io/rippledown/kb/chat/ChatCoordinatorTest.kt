@@ -7,14 +7,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.rippledown.constants.chat.caseGreeting
 import io.rippledown.constants.chat.emptyKbGreeting
 import io.rippledown.constants.chat.noKbGreeting
 import io.rippledown.model.KBInfo
 import io.rippledown.model.UserId
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.sample.SampleKB
 import io.rippledown.server.KBEndpoint
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
@@ -108,20 +109,40 @@ class ChatCoordinatorTest {
     }
 
     @Test
-    fun `starting with a case lets the model open the conversation`() = runTest {
+    fun `starting with a case gives the fixed greeting built from the case's rendered comments`() = runTest {
         // Given
         val endpoint = mockk<KBEndpoint>()
-        val viewableCase = mockk<ViewableCase>()
+        val viewableCase = createViewableCaseWithInterpretation(
+            name = "Bondi",
+            commentTexts = listOf("Go to the beach.", "Bring flippers.")
+        )
         val context = ChatContext.CaseInKnowledgeBase(endpoint, viewableCase)
         every { factory.create(alice, context) } returns chatManager
-        coEvery { chatManager.startConversation(viewableCase, null) } returns ChatResponse("Shall I add a comment?")
+        val greeting = caseGreeting(listOf("Go to the beach.", "Bring flippers."))
+        coEvery { chatManager.startConversation(viewableCase, greeting) } returns ChatResponse(greeting)
 
         // When
         val response = coordinator.startConversation(alice, context)
 
         // Then
-        response shouldBe ChatResponse("Shall I add a comment?")
+        response shouldBe ChatResponse(greeting)
         coordinator.contextFor(alice) shouldBe context
+    }
+
+    @Test
+    fun `starting with a case that has no comments offers to add one`() = runTest {
+        // Given
+        val viewableCase = createViewableCaseWithInterpretation(name = "Bondi")
+        val context = ChatContext.CaseInKnowledgeBase(mockk<KBEndpoint>(), viewableCase)
+        every { factory.create(alice, context) } returns chatManager
+        val greeting = caseGreeting(emptyList())
+        coEvery { chatManager.startConversation(viewableCase, greeting) } returns ChatResponse(greeting)
+
+        // When
+        val response = coordinator.startConversation(alice, context)
+
+        // Then
+        response shouldBe ChatResponse(greeting)
     }
 
     @Test
@@ -269,7 +290,8 @@ class ChatCoordinatorTest {
     @Test
     fun `usersOn excludes users with no knowledge base and users on a case in another KB`() = runTest {
         // Given
-        val onThyroidsCase = ChatContext.CaseInKnowledgeBase(endpointFor(thyroids), mockk<ViewableCase>())
+        val onThyroidsCase =
+            ChatContext.CaseInKnowledgeBase(endpointFor(thyroids), createViewableCaseWithInterpretation())
         val onGlucose = ChatContext.KnowledgeBaseOnly(endpointFor(glucose))
         val managers = listOf(alice, bob).associateWith { mockk<ChatManager>() }
         every { factory.create(alice, onThyroidsCase) } returns managers.getValue(alice)

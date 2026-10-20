@@ -12,7 +12,7 @@ Feature: Manage rule conditions
     And I request that the comment "Let's surf." be added
     When I provide only the following reason:
       |  hite > 1 |
-    Then the conditions showing for the comment "Let's surf." are:
+    Then the backdoor tooltip for the comment "Let's surf." has conditions:
       |  height > 1.0 |
 
   Scenario: The user should be able to build a rule using several conditions
@@ -25,7 +25,7 @@ Feature: Manage rule conditions
     When I provide only the following reasons:
       |  height > 1 |
       |  period > 5 |
-    Then the conditions showing for the comment "Let's surf." are:
+    Then the backdoor tooltip for the comment "Let's surf." has conditions:
       |  height > 1.0 |
       |  period > 5.0 |
 
@@ -59,5 +59,5 @@ Feature: Manage rule conditions
     When I request that the first reason be removed
     And the chatbot has asked if I want to provide any more reasons and I decline
     And the chatbot has completed the action
-    Then the condition showing for the comment "Let's surf." is:
+    Then the backdoor tooltip for the comment "Let's surf." has conditions:
       |  period > 5.0 |

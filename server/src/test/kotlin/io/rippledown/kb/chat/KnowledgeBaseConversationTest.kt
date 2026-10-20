@@ -17,6 +17,7 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.sample.SampleKB
+import io.rippledown.utils.createViewableCaseWithInterpretation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -151,6 +152,23 @@ class KnowledgeBaseConversationTest {
         conversation.state shouldBe KnowledgeBaseConversation.State.Idle
         coVerify(exactly = 1) { service.addDemonstrationCase() }
     }
+
+    @Test
+    fun `a case greeting asks about the report, so agreement is for the model and not a demonstration case`() =
+        runTest {
+            // Given
+            every { service.knowledgeBases() } returns listOf(KBInfo("id", "Lens"))
+            every { service.openKnowledgeBase() } returns KBInfo("id", "Lens")
+            conversation.greet(createViewableCaseWithInterpretation(name = "Case1"), caseGreeting(emptyList()))
+
+            // When
+            val response = conversation.answer("yes")
+
+            // Then
+            response shouldBe null
+            conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+            coVerify(exactly = 0) { service.addDemonstrationCase() }
+        }
 
     @ParameterizedTest
     @ValueSource(strings = ["no", "open something else"])

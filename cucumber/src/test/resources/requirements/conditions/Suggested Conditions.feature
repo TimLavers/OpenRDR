@@ -43,7 +43,7 @@ Feature: When building a rule, the user is provided with candidate conditions th
     When I set the editable value to be "1.7"
     And the chatbot has asked if I want to provide any more reasons and I decline
     And the chatbot has completed the action
-    Then the condition showing for the comment "Beach time!" is:
+    Then the backdoor tooltip for the comment "Beach time!" has conditions:
       | Waves ≤ 1.7 |
 
   Scenario: When an editable condition is used, it is removed from the list of suggestions.

@@ -6,15 +6,71 @@ import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.RESET
 import io.rippledown.main.Api
 import io.rippledown.model.KBInfo
 import io.rippledown.sample.SampleKB
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 class RESTClientTest {
+
+    @Test
+    fun `successful reset clears the wrapped API selection`() = runBlocking {
+        // Given
+        val kb = KBInfo("old", "Old")
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                CREATE_KB -> respond(
+                    Json.encodeToString(kb),
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+
+                RESET -> respond("OK")
+                else -> error("Unexpected request: ${request.url}")
+            }
+        }
+        val api = Api(engine)
+        val client = RESTClient(api)
+        try {
+            client.createKB("Old")
+
+            // When
+            client.reset()
+
+            // Then
+            shouldThrow<IllegalStateException> { api.kbInfo() }
+            engine.requestHistory.last().method shouldBe HttpMethod.Post
+        } finally {
+            client.close()
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource("409", "500", "404")
+    fun `unsuccessful reset fails without clearing selection`(status: Int) = runBlocking {
+        // Given
+        val kb = KBInfo("old", "Old")
+        val api = Api(MockEngine { request ->
+            if (request.url.encodedPath == RESET) respond("Cannot reset", status = HttpStatusCode.fromValue(status))
+            else respond(Json.encodeToString(kb), headers = headersOf(HttpHeaders.ContentType, "application/json"))
+        })
+        val client = RESTClient(api)
+        try {
+            client.createKB("Old")
+
+            // When
+            shouldThrow<IllegalStateException> { client.reset() }
+
+            // Then
+            api.kbInfo() shouldBe kb
+        } finally {
+            client.close()
+        }
+    }
 
     @Test
     fun `sample setup selects the created KB for subsequent requests`() {

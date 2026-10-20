@@ -128,6 +128,35 @@ class ConstantsTest {
     }
 
     @Test
+    fun `case greeting with no comments offers to add one`() {
+        // When
+        val greeting = caseGreeting(emptyList())
+
+        // Then
+        greeting shouldBe "Would you like to add a comment to the report?"
+    }
+
+    @Test
+    fun `case greeting with one comment shows it without an index and offers add, replace or remove`() {
+        // When
+        val greeting = caseGreeting(listOf("Go to the beach."))
+
+        // Then
+        greeting shouldBe "This case has the following comment:\n\"Go to the beach.\"\n" +
+                "Would you like to add another one, or replace or remove this one?"
+    }
+
+    @Test
+    fun `case greeting with several comments lists them in order`() {
+        // When
+        val greeting = caseGreeting(listOf("Go to the beach.", "Bring flippers."))
+
+        // Then
+        greeting shouldBe "This case has the following comments:\n\"Go to the beach.\"\n\"Bring flippers.\"\n" +
+                "Would you like to add another one, or replace or remove one of these?"
+    }
+
+    @Test
     fun `greeting with stored KBs and no demonstrations preserves old text`() {
         // Given
         val available = listOf("Glucose", "Thyroids")

@@ -2,6 +2,7 @@ package steps
 
 import io.rippledown.TestClientLauncher
 import io.rippledown.integration.FakeVoiceRecognition
+import io.rippledown.integration.pageobjects.CommentTooltipPO
 import io.rippledown.integration.pageobjects.RippleDownUIOperator
 import io.rippledown.main.defaultUserId
 import io.rippledown.model.UserId
@@ -88,6 +89,7 @@ class LaunchedClient(userId: UserId = defaultUserId()) {
     fun caseViewPO() = rdUiOperator.caseViewPO()
     fun cornerstonePO() = rdUiOperator.cornerstonePO()
     fun interpretationViewPO() = rdUiOperator.interpretationViewPO()
+    fun commentTooltipPO() = CommentTooltipPO(testClientLauncher.commentTooltips)
     fun chatPO() = rdUiOperator.chatPO()
     fun reportPO() = rdUiOperator.reportPO()
     fun screenshot(file: File) {

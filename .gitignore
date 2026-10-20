@@ -31,6 +31,6 @@ downloads/
 # Gemini API key loaded by start-demo scripts at runtime
 api-key.txt
 interpretations/
-```
 temp.txt
 documentation/tickets/TODO.md
+documentation/tickets/cuke_baseline_timings/

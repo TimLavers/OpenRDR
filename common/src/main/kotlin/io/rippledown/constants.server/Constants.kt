@@ -2,6 +2,8 @@ package io.rippledown.constants.server
 
 const val SHUTDOWN = "/api/shutdown"
 const val PING = "/api/ping"
+const val RESET = "/api/reset"
+const val TEST_RESET_FLAG = "--test-reset"
 const val IN_MEMORY = "InMemory"
 
 const val STARTING_SERVER = "Starting server"
@@ -20,6 +22,5 @@ const val REFUSAL_STALE = "stale"
 
 const val EXPRESSION = "expression"
 const val ATTRIBUTE_NAMES = "attributeNames"
-
 
 

@@ -103,6 +103,8 @@ featureFolders.forEach { folderName ->
         doLast {
             val rerunFile = file("build/rerun_${folderName}.txt")
             if (rerunFile.exists()) rerunFile.delete()
+            // Written by steps.ScenarioProgress, append-only so that the rerun below adds to it.
+            file("build/timings/${folderName}.csv").delete()
 
             val cukeArgs = argsForCuke() + listOf(
                 "--plugin", "rerun:${rerunFile.path}",
@@ -149,6 +151,7 @@ tasks.register<JavaExec>("cucumberSingleTest") {
  */
 tasks.register<JavaExec>("cucumberDryRun") {
     setupExec()
+    systemProperty("scenarioProgress.noTimings", "true")
     args = listOf("--glue", "steps", "--dry-run", "--plugin", "steps.ScenarioProgress", pathToRequirements)
     dependsOn("testClasses")
 }

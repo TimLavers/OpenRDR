@@ -17,7 +17,7 @@ Feature: Rule action with reasons
       | wave height is more than 0.5 |
     And the chatbot has asked if I want to provide any more reasons and I decline
     Then the report should be "Let's surf."
-    And the condition showing for the comment "Let's surf." is:
+    And the backdoor tooltip for the comment "Let's surf." has conditions:
       | wave height > 0.5 |
 
   Scenario: Add a comment with several reasons in one instruction
@@ -31,7 +31,7 @@ Feature: Rule action with reasons
       | UV is less than 10           |
     And the chatbot has asked if I want to provide any more reasons and I decline
     Then the report should be "Let's surf."
-    And the conditions showing for the comment "Let's surf." are:
+    And the backdoor tooltip for the comment "Let's surf." has conditions:
       | wave height > 0.5 |
       | UV < 10.0         |
 
@@ -76,5 +76,5 @@ Feature: Rule action with reasons
     Then the chatbot indicates that a reason could not be understood
     And the chatbot has asked if I want to provide any more reasons and I decline
     And the report should be "Let's surf."
-    And the condition showing for the comment "Let's surf." is:
+    And the backdoor tooltip for the comment "Let's surf." has conditions:
       | wave height > 0.5 |
