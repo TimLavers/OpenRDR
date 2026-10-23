@@ -101,7 +101,7 @@ class ApplicationKbService(
     override fun description(kbInfo: KBInfo): String = application.kbFor(kbInfo).description()
 
     override fun setDescription(kbInfo: KBInfo, text: String) {
-        application.kbFor(kbInfo).setDescription(text)
+        application.kbFor(kbInfo).setDescription(text, userId)
     }
 
     override fun isRuleSessionActive() =

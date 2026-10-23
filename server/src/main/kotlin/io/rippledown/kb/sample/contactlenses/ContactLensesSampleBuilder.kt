@@ -1,5 +1,6 @@
 package io.rippledown.kb.sample.contactlenses
 
+import io.rippledown.kb.sample.SAMPLE_BUILDER
 import io.rippledown.kb.sample.SampleRuleBuilder
 import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.AgeName
 import io.rippledown.kb.sample.contactlenses.ContactLensesRulesBuilder.Companion.AstigmatismName
@@ -36,12 +37,12 @@ class ContactLensesSampleBuilder(private val kbe: KBEndpoint) {
 
     fun buildRules() {
         setupCases()
-        kbe.setDescription(CONTACT_LENSES_DESCRIPTION)
+        kbe.setDescription(CONTACT_LENSES_DESCRIPTION, SAMPLE_BUILDER)
         ContactLensesRulesBuilder(kbe).buildRules()
     }
 
     fun setupCases() {
-        kbe.setDescription(CONTACT_LENSES_CASES_DESCRIPTION)
+        kbe.setDescription(CONTACT_LENSES_CASES_DESCRIPTION, SAMPLE_BUILDER)
         createAttributes()
         Cases(kbe.kb.attributeManager).allCases.forEach {
             kbe.kb.addProcessedCase(it)

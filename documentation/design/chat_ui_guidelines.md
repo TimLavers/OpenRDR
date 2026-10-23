@@ -45,7 +45,8 @@ If either fails, the answer belongs in the text field.
 | Delete knowledge base chip                 | No                 | Irreversible; the confirmation is the point.                                                                                                                                            |
 | Anything needing a value or an explanation | No                 | Not a closed set.                                                                                                                                                                       |
 | Warning row                                | Built (display)    | A GUI action the server refused is reported in the chat with a warning icon, saying what was not done and why. No controls. (No GUI action is currently refusable; the row type stays.) |
-| App-bar "being edited by X" indicator      | No                 | Would need a push on every rule session start and end to avoid going stale; the delete refusal already names the other user. Revisit if refusals prove confusing.                       |
+| App-bar "Also here: X, Y" presence line    | Planned (display)  | Reversed: was "No" for cost (pushes to stay honest). Users were confused by colleagues' changes appearing unexplained. Passive disclosure beside the KB name; see concurrent_users.md.  |
+| Notice row                                 | Planned (display)  | Another user's change, named and attributed, in the transcript next to the case it altered. Not a bot turn, not model history, no controls.                                             |
 
 Hover tooltips (a KB's one-line description on its row, help on a heading) are passive disclosure and need not pass the
 test.

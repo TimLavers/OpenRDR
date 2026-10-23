@@ -1,5 +1,6 @@
 package io.rippledown.kb.sample.zoo
 
+import io.rippledown.kb.sample.SAMPLE_BUILDER
 import io.rippledown.kb.sample.SampleRuleBuilder
 import io.rippledown.server.KBEndpoint
 
@@ -21,13 +22,13 @@ class ZooSampleBuilder(private val kbe: KBEndpoint) {
     private val zooCases = ZooCases(kbe.kb.attributeManager)
     fun buildRules() {
         setupCases()
-        kbe.setDescription(ZOO_SAMPLE_DESCRIPTION)
+        kbe.setDescription(ZOO_SAMPLE_DESCRIPTION, SAMPLE_BUILDER)
         SingleClassificationZooKBRuleBuilder(kbe).buildRules()
     }
 
     fun setupCases() {
         createAttributes()
-        kbe.setDescription(ZOO_CASES_SAMPLE_DESCRIPTION)
+        kbe.setDescription(ZOO_CASES_SAMPLE_DESCRIPTION, SAMPLE_BUILDER)
         zooCases.cases().forEach {
             kbe.kb.addProcessedCase(it)
         }

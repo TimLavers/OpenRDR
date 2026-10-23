@@ -11,6 +11,7 @@ interface PersistentKB {
     fun conditionStore(): ConditionStore
     fun ruleStore(): RuleStore
     fun ruleSessionRecordStore(): RuleSessionRecordStore
+    fun changeLogStore(): ChangeLogStore
     fun caseStore(): CaseStore
     fun metaDataStore(): KeyValueStore
 }

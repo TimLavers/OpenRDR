@@ -17,6 +17,7 @@ import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -503,11 +504,13 @@ class RuleSessionManager(
         checkDefinitionEditIsAcyclic(attribute, newExpression)
         val oldExpression = kb.derivedDefinitionManager.definitionFor(attribute.id)
         kb.derivedDefinitionManager.store(attribute.id, newExpression)
-        return if (oldExpression == null) {
+        val message = if (oldExpression == null) {
             "Defined \"${attribute.name}\" as ${newExpression.asText()}."
         } else {
             "Changed the definition of \"${attribute.name}\" from ${oldExpression.asText()} to ${newExpression.asText()}."
         }
+        recordChange(ChangeKind.DEFINITION_EDITED, message, attributeIds = setOf(attribute.id))
+        return message
     }
 
     /**
@@ -526,7 +529,9 @@ class RuleSessionManager(
         }
         val oldName = attribute.name
         val renamed = kb.attributeManager.rename(attribute, newName)
-        return renamedMessage(oldName, renamed.name)
+        val message = renamedMessage(oldName, renamed.name)
+        recordChange(ChangeKind.ATTRIBUTE_RENAMED, message, attributeIds = setOf(renamed.id))
+        return message
     }
 
     override fun renameCondition(conditionText: String, newPhrase: String): String {
@@ -548,11 +553,13 @@ class RuleSessionManager(
         ruleSession?.let { session ->
             session.conditions = session.conditions.map { if (it.id == id) renamed else it }.toMutableSet()
         }
-        return if (original.userExpression().isBlank()) {
+        val message = if (original.userExpression().isBlank()) {
             "Called condition \"${original.asText()}\" \"$newPhrase\"."
         } else {
             "Renamed condition \"${original.asText()}\" from \"${original.userExpression()}\" to \"$newPhrase\"."
         }
+        recordChange(ChangeKind.CONDITION_RENAMED, message)
+        return message
     }
 
     /**
@@ -828,6 +835,13 @@ class RuleSessionManager(
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
+        val exemplar = rulesAdded.first()
+        recordChange(
+            ChangeKind.RULES_ADDED,
+            rulesSummary(exemplar),
+            rulesAdded.map { it.id }.toSet(),
+            attributesConcernedBy(exemplar)
+        )
         sendCasesInfo()
     }
 
@@ -871,11 +885,40 @@ class RuleSessionManager(
         val record = checkNotNull(kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()) {
             "There are no rules to undo."
         }
+        // Taken before the deletion, which detaches each rule from its parent.
+        val exemplar = kb.ruleTree.ruleForId(record.idsOfRulesAddedInSession.first())
+        val summary = rulesUndoneSummary(rulesSummary(exemplar))
+        val attributeIds = attributesConcernedBy(exemplar)
         record.idsOfRulesAddedInSession.forEach {
             val toDelete = kb.ruleTree.ruleForId(it)
             kb.ruleManager.deleteLeafRule(toDelete)
         }
         kb.ruleSessionRecorder.delete(kb.ruleSessionRecorder.allRuleSessionHistories().last())
+        recordChange(ChangeKind.RULES_UNDONE, summary, record.idsOfRulesAddedInSession, attributeIds)
+    }
+
+    /**
+     * The summary of a change to the rules, from one of the rules concerned:
+     * the rules of a session share an action and conditions.
+     */
+    private fun rulesSummary(exemplar: Rule) = rulesAddedSummary(exemplar) { describe(it) }
+
+    /**
+     * The attributes a rule assigns and, for a removal or replacement,
+     * retracts.
+     */
+    private fun attributesConcernedBy(rule: Rule) =
+        setOfNotNull(rule.assignment?.attribute?.id, rule.parent?.assignment?.attribute?.id)
+
+    // A manager with no user is a test fixture; its changes have no author to record.
+    private fun recordChange(
+        kind: ChangeKind,
+        summary: String,
+        ruleIds: Set<Int> = emptySet(),
+        attributeIds: Set<Int> = emptySet()
+    ) {
+        val author = userId ?: return
+        kb.changeLog.record(author, kind, summary, ruleIds, attributeIds)
     }
 
     private fun activeRuleSession(message: String = "Rule session not started."): RuleBuildingSession {
@@ -1073,6 +1116,7 @@ class RuleSessionManager(
 
     override fun deleteCaseFromUserList(case: ViewableCase) {
         kb.deleteCaseFromUserList(case.case)
+        recordChange(ChangeKind.CASE_DELETED, caseDeletedSummary(case.name, case.case.caseId.type.name))
         sendCasesInfo()
     }
 
@@ -1097,6 +1141,11 @@ class RuleSessionManager(
         val attributeMoved = kb.attributeManager.all().first { it.name.equals(moved) }
         val attributeDestination = kb.attributeManager.all().first { it.name.equals(destination) }
         kb.caseViewManager.move(attributeMoved, attributeDestination)
+        recordChange(
+            ChangeKind.ATTRIBUTE_MOVED,
+            attributeMovedSummary(attributeMoved, attributeDestination),
+            attributeIds = setOf(attributeMoved.id, attributeDestination.id)
+        )
     }
 
     fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {
