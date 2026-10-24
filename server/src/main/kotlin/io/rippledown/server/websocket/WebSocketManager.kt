@@ -37,6 +37,9 @@ class WebSocketManager(
     private val outgoing = Channel<Outgoing>(Channel.UNLIMITED)
     private val logger = lazyLogger
 
+    /** Called with the user whose set of connections just changed, once the change is visible. */
+    var connectionsChanged: (UserId) -> Unit = {}
+
     init {
         scope.launch {
             for (item in outgoing) {
@@ -60,6 +63,7 @@ class WebSocketManager(
             session.close(CloseReason(CloseReason.Codes.GOING_AWAY, "Test server reset"))
             return
         }
+        connectionsChanged(userId)
         try {
             // Keep the session open until the client disconnects
             for (frame in session.incoming) {
@@ -69,6 +73,7 @@ class WebSocketManager(
             connections.compute(userId) { _, sessions ->
                 sessions?.apply { remove(session) }?.takeIf { it.isNotEmpty() }
             }
+            connectionsChanged(userId)
             session.close()
         }
     }

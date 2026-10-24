@@ -174,7 +174,43 @@ Prerequisite for every new push; also fixes the existing ones. Design doc, lock 
 - Tests: `WebSocketManagerTest` — order preserved across users; a connection whose `send` blocks does not delay
   delivery to the others beyond the timeout; `enqueue` from a thread holding a `ReentrantLock` returns immediately.
 
-## Step 3: presence
+## Step 3: presence — IMPLEMENTED, final UI verification pending (24 Oct 2026)
+
+### Current state
+
+Server and client implementation are complete in the uncommitted working tree. Do not commit without the user's
+review. Step 4 has not started.
+
+- `PresenceInfo` / `PresentUser` and the route, wire-prefix and display constants are in place.
+- `Presence` intersects users with an open KB and connected identities, sorts by user id, and derives editing from
+  `KBSession.usersEditing()` under the session lock. Start, commit and cancel publish presence changes.
+- `ChatCoordinator` retains `contextChanged` and adds `openKbChanged(from, to)` for presence. It reports starts,
+  closes and deletions; `ServerApplication` also wires connection changes and rule-session changes to presence.
+- A stale commit refusal leaves the rule session active, so it deliberately does **not** publish a presence change.
+- `GET PRESENCE` returns `List<PresentUser>` for the requested KB. `Api.presence()` supplies the KB parameter;
+  `WebSocketApi` routes presence frames through `Api` to `OpenRDRUI`.
+- The UI fetches a snapshot on KB adoption, excludes self, ignores other-KB pushes and clears the visible names on
+  KB switches/close. An older snapshot cannot overwrite a newer push; cancellation is propagated. The effect
+  captures its KB key at composition time to avoid duplicate startup requests.
+- `ApplicationBar` displays `Also here: Bob, Carol` only when others are present. Its accessibility description is
+  `PRESENCE_DESCRIPTION`. `ApplicationBarOperator.presence()` is ready for step 8's window assertion.
+- New tests: `PresenceInfoTest`, route coverage in `KBEditingTest`, `ApiPresenceTest`, `WebSocketForPresenceTest`,
+  `ApplicationBarPresenceTest`, `OpenRDRUIPresenceTest`. The existing server presence and lifecycle tests remain.
+- UI tests now support Jupiter alongside legacy JUnit 4 through Vintage. Existing `kotlin.test` annotations stay
+  on JUnit 4 so their Compose rules and setup methods continue to run. New tests use JUnit 5.
+- Fixed the remaining six-callback verification in `OpenRDRUITest`; all websocket mocks include `presenceChanged`.
+
+Validation so far:
+
+- TDD: `OpenRDRUIPresenceTest.a presence push takes precedence over an older snapshot` first failed with Bob displayed
+  instead of the newer Carol; it now passes. This is the only UI test method run so far.
+- `:common:test`: **851 passed**.
+- Filtered `:server:test`: **1,936 passed**, covering `io.rippledown.kb.*`, `model.*`, `persistence.inmemory.*`,
+  `persistence.Persistent*Test`, `persistence.KeyValueTest`, `server.*`, `suggestions.*`, `util.*`.
+  PostgreSQL tests were excluded.
+- `:ui:compileTestKotlin` and `:cucumber:compileTestKotlin` passed. IntelliJ's production UI build also passed.
+- The focused presence suite and one existing JUnit 4 UI smoke test are ready to run, pending the user's permission
+  under `AGENTS.md` (more than one UI unit test). No cucumber scenarios were run.
 
 ### Server
 
@@ -192,13 +228,11 @@ Prerequisite for every new push; also fixes the existing ones. Design doc, lock 
     1. `WebSocketManager.setSession`: after register and in the `finally`, call injected
        `connectionsChanged: (UserId) -> Unit`; `ServerApplication` wires it to
        `presence.push(kbId of openEndpointFor(userId))`, if any.
-    2. `ChatCoordinator`: replace the `contextChanged: suspend (UserId, ChatContext) -> Unit` constructor lambda's
-       contract with `(userId, from: ChatContext, to: ChatContext)` and call it from **all three** places the context
-       changes — `startConversation`, `knowledgeBaseClosed`, `knowledgeBaseDeleted` (the latter two reset immediately;
-       a hook on start alone leaves a departed user listed). `ServerApplication` keeps sending `CHAT_CONTEXT` for the
-       start case and calls `presence.transition(from.kbId, to.kbId)` for all.
+  2. `ChatCoordinator`: retain the existing `contextChanged` callback for `CHAT_CONTEXT` and add
+     `openKbChanged(fromKbId, toKbId)` for **all three** places the context changes — `startConversation`,
+     `knowledgeBaseClosed`, `knowledgeBaseDeleted`. `ServerApplication` wires this to `presence.transition`.
     3. `editing` flag: `KBSession` gives each `RuleSessionManager` a `sessionStateChanged: () -> Unit` that it calls on
-       session start, commit, cancel and stale refusal; `KBSession` forwards to `presence.push(kb.id)`.
+       session start, commit and cancel; `KBSession` forwards to `presence.push(kb.id)`.
 - `GET PRESENCE` route → `presence.present(kbId)`; used by the client for its snapshot, below.
 - Tests: `PresenceTest` (intersection; disconnected user drops out; user on another KB excluded; editing flag),
   `WebSocketManagerTest` (callback on open and on close), `ChatCoordinatorTest` (transition reported on start, on
@@ -215,8 +249,10 @@ Prerequisite for every new push; also fixes the existing ones. Design doc, lock 
 - `ApplicationBar(kbInfo, description, othersPresent: List<String>)`: after the name, a subdued
   `Text("Also here: Bob, Carol")`, nothing when empty. Content description constant `PRESENCE_DESCRIPTION` in
   `constants/kb` for the page object.
-- Tests: `ApplicationBarTest` (absent when alone, names joined), `OpenRDRUITest` (excludes self; snapshot fetched on
-  KB adoption; push for another KB ignored), `WebSocketApiTest` frame routing.
+- Tests: `ApplicationBarPresenceTest` (absent when alone, names joined), `OpenRDRUIPresenceTest` (excludes self;
+  snapshot fetched on
+  KB adoption; push for another KB ignored; snapshot ordering, failure and cancellation), `WebSocketForPresenceTest`
+  frame routing.
 
 ## Step 4: change notices
 

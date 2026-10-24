@@ -26,6 +26,7 @@ import io.rippledown.files.KbFileTransferController
 import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.PresenceInfo
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
@@ -79,6 +80,12 @@ fun OpenRDRUI(
     // the other window is in the middle of. See concurrent_users.md.
     var adoptedContext by remember { mutableStateOf<Pair<String?, Long?>?>(null) }
     var adoptedCaseId by remember { mutableStateOf<Long?>(null) }
+    // Others on the open KB, self excluded, from presence pushes plus a one-off
+    // snapshot taken when the KB opens (a window that joins later heard no push).
+    var presenceInfo by remember { mutableStateOf<PresenceInfo?>(null) }
+    var presenceRevision by remember { mutableIntStateOf(0) }
+    val othersPresent = presenceInfo?.takeIf { it.kbId == kbInfo?.id }?.users.orEmpty()
+        .filter { it.userId != api.userId.value }
     val adopt: (ChatContextInfo) -> Unit = { context ->
         adoptedContext = context.kbInfo?.id to context.caseId
         if (context.kbInfo?.id == kbInfo?.id) currentCaseId = context.caseId else adoptedCaseId = context.caseId
@@ -170,6 +177,27 @@ fun OpenRDRUI(
                 kbInfo = api.kbList().firstOrNull()?.let { api.selectKB(it.id) }
             }
             kbListRead = true
+        }
+    }
+
+    // Capture the effect's key at composition time: startup can set kbInfo before
+    // the initial (null-keyed) effect runs, which would otherwise fetch twice.
+    val presenceKbId = kbInfo?.id
+    LaunchedEffect(api, presenceKbId) {
+        if (presenceKbId == null) {
+            presenceInfo = null
+            return@LaunchedEffect
+        }
+        val revisionAtStart = presenceRevision
+        try {
+            val users = api.presence()
+            if (kbInfo?.id == presenceKbId && presenceRevision == revisionAtStart) {
+                presenceInfo = PresenceInfo(presenceKbId, users)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // A later push can supply presence if the snapshot is unavailable.
         }
     }
 
@@ -325,6 +353,12 @@ fun OpenRDRUI(
                     // about to be superseded by it; either way the response settles the context.
                     val differs = context.kbInfo?.id != kbInfo?.id || context.caseId != currentCaseId
                     if (differs && conversationStarted) adopt(context)
+                },
+                presenceChanged = { info ->
+                    if (info.kbId == kbInfo?.id) {
+                        ++presenceRevision
+                        presenceInfo = info
+                    }
                 }
             )
         }
@@ -332,7 +366,7 @@ fun OpenRDRUI(
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, kbDescription)
+            ApplicationBar(kbInfo, kbDescription, othersPresent.map { it.userId })
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {

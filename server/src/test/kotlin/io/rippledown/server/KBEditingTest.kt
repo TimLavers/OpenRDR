@@ -7,21 +7,49 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.CHANGES
-import io.rippledown.constants.api.KB_DESCRIPTION
-import io.rippledown.constants.api.KB_INFO
-import io.rippledown.constants.api.LAST_RULE_DESCRIPTION
+import io.rippledown.constants.api.*
 import io.rippledown.constants.server.DEFAULT_CHANGES_LIMIT
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.constants.server.LIMIT
 import io.rippledown.constants.server.SINCE_ID
 import io.rippledown.model.KBInfo
+import io.rippledown.model.PresentUser
 import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.change.ChangeRecord
 import io.rippledown.model.rule.UndoRuleDescription
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class KBEditingTest: OpenRDRServerTestBase() {
+
+    @Test
+    fun `presence returns the snapshot for the requested KB including editing flags`() = testApplication {
+        // Given
+        setupServer()
+        val users = listOf(PresentUser("Alice", false), PresentUser("Bob", true))
+        every { serverApplication.presence.present(kbId) } returns users
+
+        // When
+        val response = httpClient.get(PRESENCE) { parameter(KB_ID, kbId) }
+
+        // Then
+        response.status shouldBe HttpStatusCode.OK
+        response.body<List<PresentUser>>() shouldBe users
+        verify(exactly = 1) { serverApplication.presence.present(kbId) }
+    }
+
+    @Test
+    fun `presence returns an empty list when nobody is present`() = testApplication {
+        // Given
+        setupServer()
+        every { serverApplication.presence.present(kbId) } returns emptyList()
+
+        // When
+        val response = httpClient.get(PRESENCE) { parameter(KB_ID, kbId) }
+
+        // Then
+        response.status shouldBe HttpStatusCode.OK
+        response.body<List<PresentUser>>() shouldBe emptyList()
+    }
 
     @Test
     fun kbDescription() = testApplication {

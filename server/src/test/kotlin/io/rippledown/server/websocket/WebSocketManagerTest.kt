@@ -14,7 +14,7 @@ import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.toJsonString
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.test.Test
@@ -399,6 +399,25 @@ class WebSocketManagerTest {
         manager.drain()
         alice.sent shouldBe listOf("hello", "everyone")
         alice.disconnect()
+    }
+
+    @Test
+    fun `the connections listener hears of each connection opening and closing`() = runBlocking {
+        // Given
+        val manager = WebSocketManager()
+        val events = Collections.synchronizedList(mutableListOf<String>())
+        manager.connectionsChanged = { events.add("${it.value}:${manager.connectedUsers().contains(it)}") }
+
+        // When
+        val alice = connect(manager, "alice")
+        yield()
+        val bob = connect(manager, "bob")
+        yield()
+        alice.disconnect()
+        bob.disconnect()
+
+        // Then
+        events shouldBe listOf("alice:true", "bob:true", "alice:false", "bob:false")
     }
 
     @Test

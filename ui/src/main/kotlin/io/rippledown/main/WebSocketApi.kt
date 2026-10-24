@@ -12,6 +12,7 @@ import io.rippledown.fromJsonString
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.PresenceInfo
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -26,7 +27,8 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
         updateCasesInfo: (CasesInfo) -> Unit = {},
         kbInfoUpdated: (KBInfo) -> Unit = {},
         kbClosed: () -> Unit = {},
-        chatContextChanged: (ChatContextInfo) -> Unit = {}
+        chatContextChanged: (ChatContextInfo) -> Unit = {},
+        presenceChanged: (PresenceInfo) -> Unit = {}
     ) {
         client.webSocket(
             method = HttpMethod.Get,
@@ -54,6 +56,9 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
 
                             receivedText.startsWith(CHAT_CONTEXT_PREFIX) ->
                                 handleChatContext(receivedText, chatContextChanged)
+
+                            receivedText.startsWith(PRESENCE_PREFIX) ->
+                                handlePresence(receivedText, presenceChanged)
 
                             else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                         }
@@ -94,6 +99,14 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
             chatContextChanged(message.removePrefix(CHAT_CONTEXT_PREFIX).fromJsonString<ChatContextInfo>())
         } catch (e: Exception) {
             logger.error("Error parsing chat context", e)
+        }
+    }
+
+    private fun handlePresence(message: String, presenceChanged: (PresenceInfo) -> Unit) {
+        try {
+            presenceChanged(message.removePrefix(PRESENCE_PREFIX).fromJsonString<PresenceInfo>())
+        } catch (e: Exception) {
+            logger.error("Error parsing presence info", e)
         }
     }
 

@@ -82,7 +82,8 @@ class Api(
         updateCasesInfo: (CasesInfo) -> Unit = {},
         kbInfoUpdated: (KBInfo) -> Unit = {},
         kbClosed: () -> Unit = {},
-        chatContextChanged: (ChatContextInfo) -> Unit = {}
+        chatContextChanged: (ChatContextInfo) -> Unit = {},
+        presenceChanged: (PresenceInfo) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -101,7 +102,8 @@ class Api(
             chatContextChanged = {
                 currentKB = it.kbInfo
                 chatContextChanged(it)
-            }
+            },
+            presenceChanged = presenceChanged
         )
     }
     fun shutdown() {
@@ -141,6 +143,14 @@ class Api(
     }
 
     suspend fun kbInfo(): KBInfo = checkNotNull(currentKB) { "No knowledge base is open." }
+
+    /**
+     * The users on the open KB as a snapshot, for a window that started after
+     * the last presence push. See concurrent_users.md.
+     */
+    suspend fun presence(): List<PresentUser> = client.get("$API_URL$PRESENCE") {
+        setKBParameter()
+    }.body()
 
     fun clearKnowledgeBaseSelection() {
         currentKB = null

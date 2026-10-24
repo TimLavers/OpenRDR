@@ -48,7 +48,8 @@ class RuleSessionManager(
     private val kb: KB,
     private val webSocketManager: WebSocketManager? = null,
     private val kbLock: ReentrantLock = ReentrantLock(),
-    private val userId: UserId? = null
+    private val userId: UserId? = null,
+    private val sessionStateChanged: () -> Unit = {}
 ) : RuleService {
     val logger = lazyLogger
 
@@ -158,6 +159,7 @@ class RuleSessionManager(
             kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), sessionResolver()
         )
         logger.info("Rule session created")
+        sessionStateChanged()
         return cornerstoneStatus(null)
     }
 
@@ -767,12 +769,17 @@ class RuleSessionManager(
 
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
+        clearSession()
+    }
+
+    private fun clearSession() {
         ruleSession = null
         currentChange = null
         pendingDefinition = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
+        sessionStateChanged()
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -828,12 +835,7 @@ class RuleSessionManager(
         val rulesAdded = session.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
-        ruleSession = null
-        currentChange = null
-        pendingDefinition = null
-        commentAttributeInSession = null
-        diffAttribute = null
-        replacedDiffAttribute = null
+        clearSession()
         val exemplar = rulesAdded.first()
         recordChange(
             ChangeKind.RULES_ADDED,

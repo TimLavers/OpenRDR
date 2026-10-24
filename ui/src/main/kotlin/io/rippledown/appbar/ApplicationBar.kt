@@ -23,9 +23,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.rippledown.constants.kb.KB_CONTROL_CURRENT_KB_LABEL_DESCRIPTION
-import io.rippledown.constants.kb.KB_NAME_ID
-import io.rippledown.constants.kb.NO_KB_SELECTED
+import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.APPLICATION_BAR_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.model.KBInfo
@@ -39,6 +37,7 @@ private val AppBarHeight = 44.dp
 fun ApplicationBar(
     kbInfo: KBInfo?,
     description: String? = null,
+    othersPresent: List<String> = emptyList(),
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -56,7 +55,22 @@ fun ApplicationBar(
         if (kbInfo != null) {
             key(kbInfo.id) { KnowledgeBaseDescription(description) }
         }
+        if (othersPresent.isNotEmpty()) {
+            OthersPresent(othersPresent)
+        }
     }
+}
+
+@Composable
+private fun OthersPresent(othersPresent: List<String>) {
+    Text(
+        text = PRESENCE_PREFIX_TEXT + othersPresent.joinToString(", "),
+        style = MaterialTheme.typography.body2,
+        color = colors.onPrimary.copy(alpha = 0.7f),
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .semantics { contentDescription = PRESENCE_DESCRIPTION }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

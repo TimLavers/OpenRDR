@@ -28,6 +28,7 @@ class ChatCoordinatorTest {
     private lateinit var chatManager: ChatManager
     private lateinit var coordinator: ChatCoordinator
     private val contextChanges = mutableListOf<Pair<UserId, ChatContext>>()
+    private val kbTransitions = mutableListOf<Pair<String?, String?>>()
     private val thyroids = KBInfo("thyroids_1", "Thyroids")
     private val glucose = KBInfo("glucose_1", "Glucose")
     private val alice = UserId("alice")
@@ -38,7 +39,12 @@ class ChatCoordinatorTest {
         factory = mockk()
         kbService = mockk()
         chatManager = mockk()
-        coordinator = ChatCoordinator(factory, { kbService }) { userId, context -> contextChanges += userId to context }
+        coordinator = ChatCoordinator(
+            factory,
+            { kbService },
+            contextChanged = { userId, context -> contextChanges += userId to context },
+            openKbChanged = { from, to -> kbTransitions += from to to }
+        )
     }
 
     private fun endpointFor(kbInfo: KBInfo): KBEndpoint {
@@ -391,6 +397,60 @@ class ChatCoordinatorTest {
     }
 
     @Test
+    fun `starting a conversation reports the KB left and the KB joined`() = runTest {
+        // Given
+        val onThyroids = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        val onGlucose = ChatContext.KnowledgeBaseOnly(endpointFor(glucose))
+        every { factory.create(alice, any()) } returns chatManager
+        every { kbService.knowledgeBases() } returns emptyList()
+        every { kbService.demonstrations() } returns emptyList()
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+
+        // When
+        coordinator.startConversation(alice, onThyroids)
+        coordinator.startConversation(alice, onGlucose)
+        coordinator.startConversation(alice, ChatContext.NoKnowledgeBase)
+
+        // Then
+        kbTransitions shouldBe listOf(null to thyroids.id, thyroids.id to glucose.id, glucose.id to null)
+    }
+
+    @Test
+    fun `closing the knowledge base reports leaving it`() = runTest {
+        // Given
+        val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        every { factory.create(alice, context) } returns chatManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coordinator.startConversation(alice, context)
+        kbTransitions.clear()
+
+        // When
+        coordinator.knowledgeBaseClosed(alice)
+        coordinator.knowledgeBaseClosed(bob)
+
+        // Then
+        kbTransitions shouldBe listOf(thyroids.id to null)
+    }
+
+    @Test
+    fun `deleting the knowledge base reports leaving it once, and not at all when nobody was on it`() = runTest {
+        // Given
+        val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
+        every { factory.create(any(), context) } returns chatManager
+        coEvery { chatManager.startConversation(null, any()) } returns ChatResponse("")
+        coordinator.startConversation(alice, context)
+        coordinator.startConversation(bob, context)
+        kbTransitions.clear()
+
+        // When
+        coordinator.knowledgeBaseDeleted(thyroids.id)
+        coordinator.knowledgeBaseDeleted(glucose.id)
+
+        // Then
+        kbTransitions shouldBe listOf(thyroids.id to null)
+    }
+
+    @Test
     fun `a start that fails reports no context change`() = runTest {
         // Given
         val context = ChatContext.KnowledgeBaseOnly(endpointFor(thyroids))
@@ -401,6 +461,7 @@ class ChatCoordinatorTest {
 
         // Then
         contextChanges shouldBe emptyList()
+        kbTransitions shouldBe emptyList()
     }
 
     @Test

@@ -16,13 +16,16 @@ import java.util.concurrent.ConcurrentHashMap
  * its context changes (a KB is opened or closed, a case is selected); the
  * server never starts one on its own. A user's windows share the one
  * conversation, so [contextChanged] is called after each start for them to
- * be told. Conversations are never evicted;
+ * be told. [openKbChanged] is called with the KB ids left and joined whenever
+ * a conversation's KB changes, by a start, a close or a deletion, so that who
+ * is on each KB can be re-announced. Conversations are never evicted;
  * see documentation/design/concurrent_users.md.
  */
 class ChatCoordinator(
     private val factory: ChatManagerFactory,
     private val kbServiceFor: (UserId) -> KnowledgeBaseService,
     private val contextChanged: suspend (UserId, ChatContext) -> Unit = { _, _ -> },
+    private val openKbChanged: (from: String?, to: String?) -> Unit = { _, _ -> }
 ) : OpenKnowledgeBases {
     private val logger = lazyLogger
 
@@ -63,10 +66,12 @@ class ChatCoordinator(
         return conversation.oneTurnAtATime.withLock {
             logger.info("Starting conversation for user '$userId' in context ${context::class.simpleName}")
             val manager = factory.create(userId, context)
+            val previousKbId = conversation.context.kbInfoOrNull?.id
             conversation.context = context
             conversation.chatManager = manager
             val response = manager.startConversation(context.caseOrNull, greetingFor(userId, context))
             contextChanged(userId, context)
+            openKbChanged(previousKbId, context.kbInfoOrNull?.id)
             response
         }
     }
@@ -90,7 +95,10 @@ class ChatCoordinator(
      * that is no longer open.
      */
     override fun knowledgeBaseClosed(userId: UserId) {
-        conversations[userId]?.reset()
+        val conversation = conversations[userId] ?: return
+        val kbId = conversation.context.kbInfoOrNull?.id
+        conversation.reset()
+        openKbChanged(kbId, null)
     }
 
     /**
@@ -100,6 +108,7 @@ class ChatCoordinator(
     override fun knowledgeBaseDeleted(kbId: String): Set<UserId> {
         val affected = conversationsOn(kbId)
         affected.values.forEach { it.reset() }
+        if (affected.isNotEmpty()) openKbChanged(kbId, null)
         return affected.keys
     }
 

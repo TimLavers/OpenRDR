@@ -6,9 +6,14 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * @param sessionStateChanged called whenever a user's rule session starts or ends,
+ * so that who is editing can be re-announced. See concurrent_users.md.
+ */
 class KBSession(
     val kb: KB,
-    private val webSocketManager: WebSocketManager? = null
+    private val webSocketManager: WebSocketManager? = null,
+    private val sessionStateChanged: () -> Unit = {}
 ) {
     private val lock = ReentrantLock()
     private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
@@ -19,7 +24,9 @@ class KBSession(
      * See documentation/design/concurrent_users.md.
      */
     fun ruleSessionManagerFor(userId: UserId): RuleSessionManager =
-        ruleSessionManagers.computeIfAbsent(userId) { RuleSessionManager(kb, webSocketManager, lock, it) }
+        ruleSessionManagers.computeIfAbsent(userId) {
+            RuleSessionManager(kb, webSocketManager, lock, it, sessionStateChanged)
+        }
 
     /**
      * Runs [block] as the only thread touching this KB. Reads are included: interpreting
@@ -33,16 +40,17 @@ class KBSession(
      * is refused while anyone else is among them.
      * See documentation/design/concurrent_users.md.
      */
-    fun usersEditing(): Set<UserId> =
+    fun usersEditing(): Set<UserId> = locked {
         ruleSessionManagers.filterValues { it.isRuleSessionActive() }.keys
+    }
 
     /**
      * Cancels [userId]'s rule session, if any, and tells them, so their client
      * drops its session state. Used when the user closes the KB.
      */
-    fun cancelRuleSessionOf(userId: UserId) {
-        val ruleSessionManager = ruleSessionManagers[userId] ?: return
-        if (!ruleSessionManager.isRuleSessionActive()) return
+    fun cancelRuleSessionOf(userId: UserId) = locked {
+        val ruleSessionManager = ruleSessionManagers[userId] ?: return@locked
+        if (!ruleSessionManager.isRuleSessionActive()) return@locked
         ruleSessionManager.cancelRuleSession()
         webSocketManager?.sendRuleSessionCompleted(userId)
     }

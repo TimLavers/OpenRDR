@@ -287,6 +287,70 @@ class KBSessionTest {
     }
 
     @Test
+    fun `usersEditing waits for the lock`() {
+        // Given a thread inside the lock
+        val firstIsInside = CountDownLatch(1)
+        val letFirstLeave = CountDownLatch(1)
+        val read = CountDownLatch(1)
+        val first = thread {
+            session.locked {
+                firstIsInside.countDown()
+                letFirstLeave.await(5, SECONDS)
+            }
+        }
+        firstIsInside.await(5, SECONDS) shouldBe true
+
+        // When
+        val reader = thread {
+            session.usersEditing()
+            read.countDown()
+        }
+
+        // Then
+        read.await(200, MILLISECONDS) shouldBe false
+        letFirstLeave.countDown()
+        read.await(5, SECONDS) shouldBe true
+        first.join()
+        reader.join()
+    }
+
+    @Test
+    fun `the session state hook fires when a rule session starts, commits or is cancelled`() {
+        // Given
+        var changes = 0
+        session = KBSession(kb, webSocketManager) { changes++ }
+        val rsm = session.ruleSessionManagerFor(alice)
+
+        // When / Then
+        rsm.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        changes shouldBe 1
+        rsm.commitCurrentRuleSession()
+        changes shouldBe 2
+        rsm.startRuleSessionToAddComment(createCase("Case2"), "Stop.")
+        changes shouldBe 3
+        session.cancelRuleSessionOf(alice)
+        changes shouldBe 4
+    }
+
+    @Test
+    fun `the session state hook does not fire for operations that leave the session as it was`() {
+        // Given
+        var changes = 0
+        session = KBSession(kb, webSocketManager) { changes++ }
+        val rsm = session.ruleSessionManagerFor(alice)
+        rsm.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        changes shouldBe 1
+
+        // When
+        rsm.addConditionToCurrentRuleSession(lessThanOrEqualTo(null, glucose(), 1.5))
+        session.cancelRuleSessionOf(bob)
+        session.usersEditing()
+
+        // Then
+        changes shouldBe 1
+    }
+
+    @Test
     fun `a rule session started through the RuleSessionManager is active`() {
         // Given - start a rule session through rsm
         val sessionCase = createCase("Case1")
