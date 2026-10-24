@@ -8,6 +8,13 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.every
+import io.mockk.spyk
+import io.mockk.verify
+import io.rippledown.model.change.ChangeKind
+import io.rippledown.model.change.KbChange
+import io.rippledown.persistence.inmemory.InMemoryChangeLogStore
+import io.rippledown.toJsonString
 import io.rippledown.model.*
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -24,6 +31,42 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class KBSessionTest {
+    @org.junit.jupiter.api.Test
+    fun `a recorded change is broadcast with its KB identity`() {
+        // Given
+        val kind = ChangeKind.DESCRIPTION_SET
+
+        // When
+        val record = session.locked { kb.changeLog.record(alice, kind, "Set the description.") }
+
+        // Then
+        verify(exactly = 1) {
+            webSocketManager.broadcast("KbChanged:" + KbChange(kb.kbInfo.id, record).toJsonString())
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `a change that cannot be persisted is still broadcast without an id`() {
+        // Given
+        val store = mockk<InMemoryChangeLogStore>()
+        every { store.create(any()) } throws IllegalStateException("Store unavailable")
+        val persistent = spyk(InMemoryKB(KBInfo("broken", "Broken")))
+        every { persistent.changeLogStore() } returns store
+        val failingKB = KB(persistent)
+        val failingSession = KBSession(failingKB, webSocketManager)
+
+        // When
+        val record = failingSession.locked {
+            failingKB.changeLog.record(bob, ChangeKind.DESCRIPTION_SET, "Set the description.")
+        }
+
+        // Then
+        record.id shouldBe null
+        verify(exactly = 1) {
+            webSocketManager.broadcast("KbChanged:" + KbChange("broken", record).toJsonString())
+        }
+    }
+
     private lateinit var kb: KB
     private lateinit var session: KBSession
     private lateinit var webSocketManager: WebSocketManager

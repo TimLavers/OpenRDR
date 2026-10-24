@@ -13,6 +13,7 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.PresenceInfo
+import io.rippledown.model.change.KbChange
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -28,7 +29,8 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
         kbInfoUpdated: (KBInfo) -> Unit = {},
         kbClosed: () -> Unit = {},
         chatContextChanged: (ChatContextInfo) -> Unit = {},
-        presenceChanged: (PresenceInfo) -> Unit = {}
+        presenceChanged: (PresenceInfo) -> Unit = {},
+        kbChanged: (KbChange) -> Unit = {}
     ) {
         client.webSocket(
             method = HttpMethod.Get,
@@ -59,6 +61,9 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
 
                             receivedText.startsWith(PRESENCE_PREFIX) ->
                                 handlePresence(receivedText, presenceChanged)
+
+                            receivedText.startsWith(KB_CHANGED_PREFIX) ->
+                                handleKbChange(receivedText, kbChanged)
 
                             else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                         }
@@ -107,6 +112,14 @@ open class WebSocketApi(private val client: HttpClient, private val port: Int = 
             presenceChanged(message.removePrefix(PRESENCE_PREFIX).fromJsonString<PresenceInfo>())
         } catch (e: Exception) {
             logger.error("Error parsing presence info", e)
+        }
+    }
+
+    private fun handleKbChange(message: String, kbChanged: (KbChange) -> Unit) {
+        try {
+            kbChanged(message.removePrefix(KB_CHANGED_PREFIX).fromJsonString<KbChange>())
+        } catch (e: Exception) {
+            logger.error("Error parsing KB change", e)
         }
     }
 

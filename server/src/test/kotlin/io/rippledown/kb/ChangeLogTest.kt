@@ -14,6 +14,49 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class ChangeLogTest {
+    @org.junit.jupiter.api.Test
+    fun `recorded hook receives the persisted record exactly once`() {
+        // Given
+        val received = mutableListOf<ChangeRecord>()
+        changeLog.onRecorded = { received.add(it) }
+
+        // When
+        val record = changeLog.record(alice, ChangeKind.DESCRIPTION_SET, "Changed.")
+
+        // Then
+        received shouldBe listOf(record)
+        received.single().id shouldBe 1
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `recorded hook still receives the record when persistence fails`() {
+        // Given
+        val store = mockk<ChangeLogStore>()
+        every { store.create(any()) } throws IllegalStateException("Store unavailable")
+        val log = ChangeLog(store)
+        val received = mutableListOf<ChangeRecord>()
+        log.onRecorded = { received.add(it) }
+
+        // When
+        val record = log.record(bob, ChangeKind.DESCRIPTION_SET, "Changed.")
+
+        // Then
+        received shouldBe listOf(record)
+        received.single().id shouldBe null
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `a failed notification does not report an already persisted mutation as failed`() {
+        // Given
+        changeLog.onRecorded = { error("Notification unavailable") }
+
+        // When
+        val record = changeLog.record(alice, ChangeKind.DESCRIPTION_SET, "Changed.")
+
+        // Then
+        changeLog.all() shouldBe listOf(record)
+    }
+
     private lateinit var changeLog: ChangeLog
     private val alice = UserId("alice")
     private val bob = UserId("bob")

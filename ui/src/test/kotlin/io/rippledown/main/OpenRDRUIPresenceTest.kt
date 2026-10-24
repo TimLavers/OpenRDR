@@ -41,7 +41,7 @@ class OpenRDRUIPresenceTest {
         coEvery { api.waitingCasesInfo() } returns CasesInfo()
         coEvery { api.kbDescription(any()) } returns ""
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
             chatContextChanged = arg(5)
             presenceChanged = arg(6)
         }

@@ -1,6 +1,9 @@
 package io.rippledown.kb
 
 import io.rippledown.model.UserId
+import io.rippledown.constants.chat.KB_CHANGED_PREFIX
+import io.rippledown.model.change.KbChange
+import io.rippledown.toJsonString
 import io.rippledown.server.websocket.WebSocketManager
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -17,6 +20,12 @@ class KBSession(
 ) {
     private val lock = ReentrantLock()
     private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
+
+    init {
+        kb.changeLog.onRecorded = { record ->
+            webSocketManager?.broadcast(KB_CHANGED_PREFIX + KbChange(kb.kbInfo.id, record).toJsonString())
+        }
+    }
 
     /**
      * The rule-building session of [userId] on this KB. Each user has their own

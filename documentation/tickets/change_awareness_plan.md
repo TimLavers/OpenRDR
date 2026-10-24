@@ -174,19 +174,19 @@ Prerequisite for every new push; also fixes the existing ones. Design doc, lock 
 - Tests: `WebSocketManagerTest` — order preserved across users; a connection whose `send` blocks does not delay
   delivery to the others beyond the timeout; `enqueue` from a thread holding a `ReentrantLock` returns immediately.
 
-## Step 3: presence — IMPLEMENTED, final UI verification pending (24 Oct 2026)
+## Step 3: presence — DONE (25 Oct 2026)
 
 ### Current state
 
-Server and client implementation are complete in the uncommitted working tree. Do not commit without the user's
-review. Step 4 has not started.
+Server and client implementation and focused verification are complete.
 
 - `PresenceInfo` / `PresentUser` and the route, wire-prefix and display constants are in place.
 - `Presence` intersects users with an open KB and connected identities, sorts by user id, and derives editing from
   `KBSession.usersEditing()` under the session lock. Start, commit and cancel publish presence changes.
 - `ChatCoordinator` retains `contextChanged` and adds `openKbChanged(from, to)` for presence. It reports starts,
   closes and deletions; `ServerApplication` also wires connection changes and rule-session changes to presence.
-- A stale commit refusal leaves the rule session active, so it deliberately does **not** publish a presence change.
+- A stale commit refusal cancels the rule session. The existing cancellation hook publishes the resulting presence
+  change; no additional hook is needed in `refuseStaleCommit`.
 - `GET PRESENCE` returns `List<PresentUser>` for the requested KB. `Api.presence()` supplies the KB parameter;
   `WebSocketApi` routes presence frames through `Api` to `OpenRDRUI`.
 - The UI fetches a snapshot on KB adoption, excludes self, ignores other-KB pushes and clears the visible names on
@@ -200,17 +200,20 @@ review. Step 4 has not started.
   on JUnit 4 so their Compose rules and setup methods continue to run. New tests use JUnit 5.
 - Fixed the remaining six-callback verification in `OpenRDRUITest`; all websocket mocks include `presenceChanged`.
 
-Validation so far:
+Validation:
 
 - TDD: `OpenRDRUIPresenceTest.a presence push takes precedence over an older snapshot` first failed with Bob displayed
-  instead of the newer Carol; it now passes. This is the only UI test method run so far.
+  instead of the newer Carol; it now passes.
 - `:common:test`: **851 passed**.
 - Filtered `:server:test`: **1,936 passed**, covering `io.rippledown.kb.*`, `model.*`, `persistence.inmemory.*`,
   `persistence.Persistent*Test`, `persistence.KeyValueTest`, `server.*`, `suggestions.*`, `util.*`.
   PostgreSQL tests were excluded.
 - `:ui:compileTestKotlin` and `:cucumber:compileTestKotlin` passed. IntelliJ's production UI build also passed.
-- The focused presence suite and one existing JUnit 4 UI smoke test are ready to run, pending the user's permission
-  under `AGENTS.md` (more than one UI unit test). No cucumber scenarios were run.
+- With the user's permission, the focused UI check completed on 25 Oct: **10 passed**, none skipped:
+  `ApplicationBarPresenceTest` (1), `ApiPresenceTest` (3), `OpenRDRUIPresenceTest` (4),
+  `WebSocketForPresenceTest` (1), and `OpenRDRUITest.should start a web socket session when composed` (1).
+  The WebSocket test explicitly returns `Unit` so Jupiter discovers it. The successful run used `--offline`
+  after online dependency resolution hit an internal Gradle error. No cucumber scenarios were run.
 
 ### Server
 
@@ -254,7 +257,42 @@ Validation so far:
   KB adoption; push for another KB ignored; snapshot ordering, failure and cancellation), `WebSocketForPresenceTest`
   frame routing.
 
-## Step 4: change notices
+## Step 4: change notices — DONE (25 Oct 2026)
+
+### Current state
+
+Implementation and focused verification are complete. Step 5 has not started.
+
+- `ChangeLog.onRecorded` is wired by `KBSession` to broadcast `KB_CHANGED_PREFIX` + `KbChange`. A failed store write
+  still publishes the unpersisted record. A failed notification is logged without reporting the completed mutation
+  as failed. The existing enqueue-based websocket dispatcher keeps network I/O out of the KB lock.
+- `RuleSessionManager` captures the change-log position at session start. Stale refusals append up to three recent
+  changes by other users, excluding older records and the current user's changes. A new session resets the baseline;
+  no matching records leaves the original refusal message unchanged. Cancellation behavior is preserved.
+- `Api` and `WebSocketApi` have the eighth callback, `kbChanged`. All websocket mocks and verifications were updated.
+- `OpenRDRUI` deduplicates non-null record IDs per KB and retains the highest `lastSeenChangeId` for step 5. Changes
+  without IDs still apply. Other-KB events are ignored. Rules, definitions, renames and moves refresh the displayed
+  case, descriptions reload separately, and case deletion is left to `casesInfo`.
+- Case refreshes capture KB/case IDs and reject obsolete responses. Missing or failed fetches retain the current
+  case. Pending refresh kinds are accumulated during rule building and flushed once on session completion.
+- Switching KBs reloads the selected case even when both KBs have identical case lists and selected IDs.
+- Only another user's change adds `NoticeMessage`. `NoticeRow` is full-width, subdued and italic, with
+  `NOTICE_PREFIX` accessibility text. Notices do not count as bot replies in `ChatTestHook` or clear a pending chat turn.
+
+Validation:
+
+- TDD: new server tests first failed for missing broadcasts/stale context; the client regression first failed because
+  the displayed case was not refreshed. These regressions now pass.
+- `:common:test`: **851 passed**. Filtered `:server:test`: **1,944 passed**, using the same non-PostgreSQL filters as
+  step 3.
+- `:ui:compileTestKotlin` and `:cucumber:compileTestKotlin` passed.
+- With the user's permission, the focused UI check completed: **23 passed**, none skipped:
+  `OpenRDRUIChangeTest` (17 including six change kinds), `ChatStateTest` (3), `ChatPanelNoticeTest` (1),
+  `WebSocketForKbChangeTest` (1), and `OpenRDRUITest.should start a web socket session when composed` (1).
+- The first focused run exposed a KB-switch regression: equal case lists/IDs did not trigger loading the new KB's
+  case. Including the loaded KB ID in the case-loading effect fixes it; the regression now passes and confirms a
+  delayed change refresh cannot overwrite the new KB's case.
+- The successful run used `--offline`. No cucumber scenarios were run.
 
 ### Server
 

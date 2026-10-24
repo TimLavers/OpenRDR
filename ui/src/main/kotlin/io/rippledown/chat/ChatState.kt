@@ -26,6 +26,10 @@ class ChatState {
         history = history + WarningMessage(text)
     }
 
+    fun notice(text: String) {
+        history = history + NoticeMessage(text)
+    }
+
     fun receive(response: ChatResponse, onFileDialogRequested: (KbFileDialogRequest) -> Unit) {
         val lastBotMessage = history.lastOrNull()
         val isDuplicate = when (lastBotMessage) {

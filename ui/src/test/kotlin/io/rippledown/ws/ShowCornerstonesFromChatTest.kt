@@ -68,7 +68,8 @@ class ShowCornerstonesFromChatTest {
                 kbInfoUpdated = any(),
                 kbClosed = any(),
                 chatContextChanged = any(),
-                presenceChanged = any()
+                presenceChanged = any(),
+                kbChanged = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()
@@ -115,7 +116,8 @@ class ShowCornerstonesFromChatTest {
                 kbInfoUpdated = any(),
                 kbClosed = any(),
                 chatContextChanged = any(),
-                presenceChanged = any()
+                presenceChanged = any(),
+                kbChanged = any()
             )
         } coAnswers {
             updateCornerstoneStatus = firstArg()

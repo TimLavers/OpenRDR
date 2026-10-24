@@ -27,6 +27,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.PresenceInfo
+import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
@@ -92,7 +93,8 @@ fun OpenRDRUI(
         kbInfo = context.kbInfo
     }
     var kbDescription by remember(api, kbInfo?.id, kbImportRevision) { mutableStateOf<String?>(null) }
-    LaunchedEffect(api, kbInfo?.id, chatId, kbImportRevision) {
+    var descriptionRevision by remember { mutableIntStateOf(0) }
+    LaunchedEffect(api, kbInfo?.id, chatId, kbImportRevision, descriptionRevision) {
         val open = kbInfo ?: return@LaunchedEffect
         kbDescription = try {
             api.kbDescription(open)
@@ -104,6 +106,44 @@ fun OpenRDRUI(
     }
     val chatState = remember { ChatState() }
     val scope = rememberCoroutineScope()
+    // IDs are local to each KB. Null IDs (a failed log write) still carry a live
+    // change. Keep the cursor for reconnect recovery separately from deduplication.
+    val lastSeenChangeId = remember { mutableMapOf<String, Int>() }
+    val seenChangeIds = remember { mutableMapOf<String, MutableSet<Int>>() }
+    val pendingRefreshes = remember { mutableMapOf<String, MutableSet<ChangeKind>>() }
+    var caseRefreshRevision by remember { mutableIntStateOf(0) }
+
+    fun refreshForChanges(kinds: Set<ChangeKind>) {
+        val kbId = kbInfo?.id ?: return
+        val refreshKinds = kinds - ChangeKind.CASE_DELETED
+        if (refreshKinds.isEmpty()) return
+        if (cornerstoneStatus != null) {
+            pendingRefreshes.getOrPut(kbId) { mutableSetOf() }.addAll(refreshKinds)
+            return
+        }
+        if (ChangeKind.DESCRIPTION_SET in refreshKinds) ++descriptionRevision
+        if ((refreshKinds - ChangeKind.DESCRIPTION_SET).isEmpty()) return
+        val caseId = currentCaseId ?: return
+        val revision = ++caseRefreshRevision
+        scope.launch {
+            // Selection can change while this coroutine is queued or awaiting REST.
+            if (kbInfo?.id != kbId || currentCaseId != caseId) return@launch
+            try {
+                val refreshed = api.getCase(caseId)
+                if (kbInfo?.id == kbId && currentCaseId == caseId && revision == caseRefreshRevision) {
+                    if (cornerstoneStatus != null) {
+                        pendingRefreshes.getOrPut(kbId) { mutableSetOf() }.addAll(refreshKinds)
+                    } else if (refreshed != null) {
+                        currentCase = refreshed
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Keep the displayed case if a refresh is temporarily unavailable.
+            }
+        }
+    }
     val fileTransfers = remember(api, fileDialogs) {
         fileDialogs?.let { dialogs ->
             KbFileTransferController(dialogs, api, onImported = { imported ->
@@ -184,6 +224,7 @@ fun OpenRDRUI(
     // the initial (null-keyed) effect runs, which would otherwise fetch twice.
     val presenceKbId = kbInfo?.id
     LaunchedEffect(api, presenceKbId) {
+        pendingRefreshes.keys.retainAll(setOfNotNull(presenceKbId))
         if (presenceKbId == null) {
             presenceInfo = null
             return@LaunchedEffect
@@ -228,7 +269,9 @@ fun OpenRDRUI(
     // and re-select that one instead of always falling back to the first case.
     var lastKnownCaseOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
 
-    LaunchedEffect(casesInfo, currentCaseId) {
+    // Different KBs can have identical case lists and selected IDs. Loading the
+    // new KB's list must still trigger a fetch of its selected case.
+    LaunchedEffect(casesInfoKbId, casesInfo, currentCaseId) {
         withContext(dispatcher) {
             val allCaseIds = casesInfo.caseIds + casesInfo.cornerstoneCaseIds +
                     casesInfo.userDefinedCaseLists.flatMap { it.caseIds }
@@ -333,6 +376,8 @@ fun OpenRDRUI(
                 },
                 ruleSessionCompleted = {
                     cornerstoneStatus = null
+                    val pending = kbInfo?.id?.let { pendingRefreshes.remove(it) }
+                    if (pending != null) refreshForChanges(pending)
                 },
                 updateCasesInfo = { incoming ->
                     // Ignore updates that belong to a different KB than the one
@@ -358,6 +403,18 @@ fun OpenRDRUI(
                     if (info.kbId == kbInfo?.id) {
                         ++presenceRevision
                         presenceInfo = info
+                    }
+                },
+                kbChanged = changed@{ change ->
+                    if (change.kbId != kbInfo?.id) return@changed
+                    val record = change.record
+                    record.id?.let { id ->
+                        if (!seenChangeIds.getOrPut(change.kbId) { mutableSetOf() }.add(id)) return@changed
+                        lastSeenChangeId[change.kbId] = maxOf(lastSeenChangeId[change.kbId] ?: id, id)
+                    }
+                    refreshForChanges(setOf(record.kind))
+                    if (record.userId != api.userId.value) {
+                        chatState.notice("${record.userId}: ${record.summary}")
                     }
                 }
             )

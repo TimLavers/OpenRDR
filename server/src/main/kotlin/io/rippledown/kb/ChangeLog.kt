@@ -12,6 +12,7 @@ import io.rippledown.persistence.ChangeLogStore
  */
 class ChangeLog(private val store: ChangeLogStore, private val clock: () -> Long = System::currentTimeMillis) {
     private val logger = lazyLogger
+    var onRecorded: (ChangeRecord) -> Unit = {}
 
     /**
      * The mutation this records has already happened, so a store failure is logged
@@ -25,12 +26,18 @@ class ChangeLog(private val store: ChangeLogStore, private val clock: () -> Long
         attributeIds: Set<Int> = emptySet()
     ): ChangeRecord {
         val record = ChangeRecord(null, userId.value, clock(), kind, summary, ruleIds, attributeIds)
-        return try {
+        val recorded = try {
             store.create(record)
         } catch (e: Exception) {
             logger.error("Could not persist change record $record", e)
             record
         }
+        try {
+            onRecorded(recorded)
+        } catch (e: Exception) {
+            logger.error("Could not notify clients of change record $recorded", e)
+        }
+        return recorded
     }
 
     fun all(): List<ChangeRecord> = store.all()

@@ -93,6 +93,8 @@ const val CHAT_CONTEXT_PREFIX = "ChatContext:"
 
 // Broadcast whenever who is on a KB changes; the client keeps the one for its KB. See concurrent_users.md.
 const val PRESENCE_PREFIX = "Presence:"
+const val KB_CHANGED_PREFIX = "KbChanged:"
+const val NOTICE_PREFIX = "NOTICE_"
 
 const val LIST_KNOWLEDGE_BASES = "ListKnowledgeBases"
 const val OPEN_KNOWLEDGE_BASE = "OpenKnowledgeBase"

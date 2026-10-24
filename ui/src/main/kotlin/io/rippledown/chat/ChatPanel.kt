@@ -85,6 +85,10 @@ data class WarningMessage(
     override val isUser: Boolean = false
 }
 
+data class NoticeMessage(override val text: String) : ChatMessage {
+    override val isUser: Boolean = false
+}
+
 data class KbChoiceListMessage(
     override val text: String,
     val listing: KnowledgeBaseListing
@@ -177,6 +181,7 @@ fun ChatPanel(
                         is UserMessage -> UserRow(message.text, index)
                         is TipMessage -> TipRow(message.text, index)
                         is WarningMessage -> WarningRow(message.text, index)
+                        is NoticeMessage -> NoticeRow(message.text, index)
                         is SuggestionListMessage -> SuggestionListRow(
                             message.suggestions, index
                         ) { suggestion, isEditable ->

@@ -18,6 +18,7 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
+import io.rippledown.model.change.KbChange
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
@@ -83,7 +84,8 @@ class Api(
         kbInfoUpdated: (KBInfo) -> Unit = {},
         kbClosed: () -> Unit = {},
         chatContextChanged: (ChatContextInfo) -> Unit = {},
-        presenceChanged: (PresenceInfo) -> Unit = {}
+        presenceChanged: (PresenceInfo) -> Unit = {},
+        kbChanged: (KbChange) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -103,7 +105,8 @@ class Api(
                 currentKB = it.kbInfo
                 chatContextChanged(it)
             },
-            presenceChanged = presenceChanged
+            presenceChanged = presenceChanged,
+            kbChanged = kbChanged
         )
     }
     fun shutdown() {

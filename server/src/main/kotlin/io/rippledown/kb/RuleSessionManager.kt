@@ -132,6 +132,7 @@ class RuleSessionManager(
     )
 
     private var pendingDefinition: PendingDefinition? = null
+    private var changeLogIdAtStart: Int? = null
 
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
@@ -158,6 +159,7 @@ class RuleSessionManager(
         ruleSession = RuleBuildingSession(
             kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), sessionResolver()
         )
+        changeLogIdAtStart = kb.changeLog.mostRecent(1).firstOrNull()?.id
         logger.info("Rule session created")
         sessionStateChanged()
         return cornerstoneStatus(null)
@@ -773,6 +775,7 @@ class RuleSessionManager(
     }
 
     private fun clearSession() {
+        changeLogIdAtStart = null
         ruleSession = null
         currentChange = null
         pendingDefinition = null
@@ -852,9 +855,15 @@ class RuleSessionManager(
      * cancelled and its user told. See documentation/design/concurrent_users.md.
      */
     private fun refuseStaleCommit(message: String): Nothing {
+        val changes = kb.changeLog.since(changeLogIdAtStart)
+            .filter { it.userId != userId?.value }
+            .takeLast(3)
+        val context = if (changes.isEmpty()) "" else changes.joinToString(
+            prefix = " Since you started: ", separator = "; "
+        ) { "${it.userId}: ${it.summary}" }
         cancelRuleSession()
         sendRuleSessionCompleted()
-        throw StaleRuleSessionException(message)
+        throw StaleRuleSessionException(message + context)
     }
 
     /**
