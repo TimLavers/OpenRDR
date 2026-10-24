@@ -39,7 +39,7 @@ class TestRequestGate(private val drainTimeoutMillis: Long = 5_000) {
         }
     }
 
-    suspend fun reset(connectedUsers: () -> Set<UserId>, clear: () -> Unit) {
+    suspend fun reset(connectedUsers: () -> Set<UserId>, clear: suspend () -> Unit) {
         synchronized(lock) {
             if (state != State.ACCEPTING) throw ResetRejectedException("Server is resetting or requires replacement")
             state = State.RESETTING

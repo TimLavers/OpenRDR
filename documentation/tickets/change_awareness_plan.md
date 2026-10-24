@@ -152,7 +152,11 @@ test zips) yields an empty log.
 `GET CHANGES` (`KBEndpoint.changes(sinceId: Int?, limit: Int)`) — used by the client in step 5 and by the cukes in
 step 8, so it belongs here, not with acceptance.
 
-## Step 2: the push dispatcher (pushes leave the lock)
+## Step 2: the push dispatcher (pushes leave the lock) — DONE (24 Oct 2026)
+
+As planned. `sendToUser` / `broadcast` are the enqueue calls (names kept); the consumer runs in the Ktor
+`Application` scope; `WebSocketManager.drain()` is awaited by the test-server reset (`TestRequestGate.reset`'s `clear`
+is now suspending) and by `WebSocketManagerTest`. The `onRecorded` hook on `ChangeLog` still waits for step 4.
 
 Prerequisite for every new push; also fixes the existing ones. Design doc, lock section item 4.
 

@@ -2,7 +2,6 @@ package io.rippledown.kb
 
 import io.rippledown.model.UserId
 import io.rippledown.server.websocket.WebSocketManager
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -45,6 +44,6 @@ class KBSession(
         val ruleSessionManager = ruleSessionManagers[userId] ?: return
         if (!ruleSessionManager.isRuleSessionActive()) return
         ruleSessionManager.cancelRuleSession()
-        runBlocking { webSocketManager?.sendRuleSessionCompleted(userId) }
+        webSocketManager?.sendRuleSessionCompleted(userId)
     }
 }

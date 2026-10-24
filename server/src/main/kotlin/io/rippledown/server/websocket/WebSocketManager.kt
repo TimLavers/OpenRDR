@@ -10,16 +10,41 @@ import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.server.TestRequestGate
 import io.rippledown.toJsonString
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.ConcurrentHashMap
+
+const val SEND_TIMEOUT_MILLIS = 5_000L
 
 /**
  * The connected clients, keyed by user. One user may have several windows,
- * hence a set of sessions per user. See documentation/design/concurrent_users.md.
+ * hence a set of sessions per user.
+ *
+ * Pushes are queued and delivered by one consumer coroutine, so a caller can
+ * push from under the KB lock without holding it across I/O, and a client that
+ * has stopped reading cannot stall the request that triggered the push.
+ * See documentation/design/concurrent_users.md.
  */
-class WebSocketManager(private val testRequestGate: TestRequestGate? = null) {
+class WebSocketManager(
+    private val testRequestGate: TestRequestGate? = null,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val sendTimeoutMillis: Long = SEND_TIMEOUT_MILLIS
+) {
+    // A null message is a drain marker: it carries only the deferred to complete.
+    private class Outgoing(val targets: Set<UserId>?, val message: String?, val done: CompletableDeferred<Unit>? = null)
 
     private val connections = ConcurrentHashMap<UserId, MutableSet<WebSocketSession>>()
+    private val outgoing = Channel<Outgoing>(Channel.UNLIMITED)
     private val logger = lazyLogger
+
+    init {
+        scope.launch {
+            for (item in outgoing) {
+                item.message?.let { deliver(item.targets, it) }
+                item.done?.complete(Unit)
+            }
+        }
+    }
 
     suspend fun setSession(userId: UserId, session: WebSocketSession, requestGeneration: Long? = null) {
         // One atomic step: a set returned by computeIfAbsent could be removed by a
@@ -50,42 +75,58 @@ class WebSocketManager(private val testRequestGate: TestRequestGate? = null) {
 
     fun connectedUsers(): Set<UserId> = connections.keys.toSet()
 
-    suspend fun sendStatus(userId: UserId, status: CornerstoneStatus) {
+    fun sendStatus(userId: UserId, status: CornerstoneStatus) {
         sendToUser(userId, status.toJsonString<CornerstoneStatus>())
     }
 
-    suspend fun sendCasesInfo(casesInfo: CasesInfo) {
+    fun sendCasesInfo(casesInfo: CasesInfo) {
         broadcast(CASES_INFO_PREFIX + casesInfo.toJsonString<CasesInfo>())
     }
 
-    suspend fun sendRuleSessionCompleted(userId: UserId) {
+    fun sendRuleSessionCompleted(userId: UserId) {
         sendToUser(userId, RULE_SESSION_COMPLETED)
     }
 
-    suspend fun sendKbInfo(userId: UserId, kbInfo: KBInfo) {
+    fun sendKbInfo(userId: UserId, kbInfo: KBInfo) {
         sendToUser(userId, KB_INFO_PREFIX + kbInfo.toJsonString<KBInfo>())
     }
 
-    suspend fun sendKbClosed(userId: UserId) {
+    fun sendKbClosed(userId: UserId) {
         sendToUser(userId, KB_CLOSED)
     }
 
-    suspend fun sendChatContext(userId: UserId, context: ChatContextInfo) {
+    fun sendChatContext(userId: UserId, context: ChatContextInfo) {
         sendToUser(userId, CHAT_CONTEXT_PREFIX + context.toJsonString<ChatContextInfo>())
     }
 
-    suspend fun sendToUser(userId: UserId, message: String) {
-        connections[userId]?.forEach { send(it, message) }
+    fun sendToUser(userId: UserId, message: String) {
+        outgoing.trySend(Outgoing(setOf(userId), message))
     }
 
-    suspend fun broadcast(message: String) {
-        connections.values.forEach { sessions -> sessions.forEach { send(it, message) } }
+    fun broadcast(message: String) {
+        outgoing.trySend(Outgoing(null, message))
     }
 
-    // A dead connection must not fail the request that triggered the push.
+    /**
+     * Completes once everything queued before the call has been delivered or
+     * given up on. For tests and the test-server reset.
+     */
+    suspend fun drain() {
+        val done = CompletableDeferred<Unit>()
+        outgoing.trySend(Outgoing(null, null, done))
+        done.await()
+    }
+
+    private suspend fun deliver(targets: Set<UserId>?, message: String) {
+        val sessions = if (targets == null) connections.values.flatten() else targets.flatMap { connections[it].orEmpty() }
+        sessions.forEach { send(it, message) }
+    }
+
+    // A dead or stalled connection must not fail the request that triggered the push.
     private suspend fun send(session: WebSocketSession, message: String) {
         try {
-            session.send(message)
+            val sent = withTimeoutOrNull(sendTimeoutMillis) { session.send(message) }
+            if (sent == null) logger.warn("Gave up pushing to a client after ${sendTimeoutMillis}ms.")
         } catch (e: Exception) {
             logger.warn("Could not push to a client: ${e.message}")
         }

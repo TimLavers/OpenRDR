@@ -57,6 +57,8 @@ class ServerApplication(
                 }
                 chatCoordinator.reset()
             }
+            // Pushes queued by the finished test must not reach the next test's connections.
+            webSocketManager.drain()
         }
     }
 

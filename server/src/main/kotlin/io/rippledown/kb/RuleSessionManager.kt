@@ -29,7 +29,6 @@ import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.suggestions.ConditionSuggester
 import io.rippledown.suggestions.SuggestionContext
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -741,11 +740,11 @@ class RuleSessionManager(
 
     override fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-        runBlocking { webSocketManager?.sendStatus(addressee(), cornerstoneStatus) }
+        webSocketManager?.sendStatus(addressee(), cornerstoneStatus)
     }
 
     override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted(addressee()) }
+        webSocketManager?.sendRuleSessionCompleted(addressee())
     }
 
     // A session that pushes belongs to a user; only test fixtures build one without.
@@ -1128,7 +1127,7 @@ class RuleSessionManager(
     )
 
     private fun sendCasesInfo() {
-        runBlocking { webSocketManager?.sendCasesInfo(casesInfo()) }
+        webSocketManager?.sendCasesInfo(casesInfo())
     }
 
     fun conditionForExpression(expression: String) = conditionForExpression(activeRuleSession().case, expression)

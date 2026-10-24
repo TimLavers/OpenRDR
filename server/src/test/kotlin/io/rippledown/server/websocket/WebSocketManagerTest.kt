@@ -14,6 +14,9 @@ import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.toJsonString
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.util.Collections
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.test.Test
 
 class WebSocketManagerTest {
@@ -66,6 +69,7 @@ class WebSocketManagerTest {
 
         //When
         manager.sendKbInfo(carol, kbInfo)
+        manager.drain()
 
         //Then
         sent.size shouldBe 1
@@ -77,6 +81,7 @@ class WebSocketManagerTest {
     fun `sendKbClosed sends the KB_CLOSED marker`() = withConnectedManager { manager, sent ->
         //When
         manager.sendKbClosed(carol)
+        manager.drain()
 
         //Then
         sent shouldBe listOf(KB_CLOSED)
@@ -89,6 +94,7 @@ class WebSocketManagerTest {
 
         //When
         manager.sendChatContext(carol, context)
+        manager.drain()
 
         //Then
         sent.size shouldBe 1
@@ -104,6 +110,7 @@ class WebSocketManagerTest {
         //When / Then - no exception
         manager.sendKbInfo(carol, KBInfo("glucose_123", "Glucose"))
         manager.sendKbClosed(carol)
+        manager.drain()
     }
 
     @Test
@@ -125,6 +132,7 @@ class WebSocketManagerTest {
         oldIncoming.close()
         oldJob.join()
         manager.sendKbClosed(carol)
+        manager.drain()
 
         //Then
         oldFrames.filterIsInstance<Frame.Close>().size shouldBe 1
@@ -137,11 +145,11 @@ class WebSocketManagerTest {
     private fun sessionMock(incoming: Channel<Frame>, frames: MutableList<Frame>) =
         sessionMock(incoming) { frames.add(it) }
 
-    private fun sessionMock(incoming: Channel<Frame>, onFrame: (Frame) -> Unit): WebSocketSession {
+    private fun sessionMock(incoming: Channel<Frame>, onFrame: suspend (Frame) -> Unit): WebSocketSession {
         val session = mockk<WebSocketSession>()
         every { session.incoming } returns incoming
         coEvery { session.flush() } just Runs
-        coEvery { session.send(any<Frame>()) } answers { onFrame(firstArg()) }
+        coEvery { session.send(any<Frame>()) } coAnswers { onFrame(firstArg()) }
         return session
     }
 
@@ -161,9 +169,19 @@ class WebSocketManagerTest {
         lateinit var job: Job
     }
 
-    private fun CoroutineScope.connect(manager: WebSocketManager, name: String): ConnectedUser {
-        val user = ConnectedUser(UserId(name), Channel(), mutableListOf())
-        val session = sessionMock(user.incoming) { if (it is Frame.Text) user.sent.add(it.readText()) }
+    private fun CoroutineScope.connect(
+        manager: WebSocketManager,
+        name: String,
+        onText: suspend (String) -> Unit = {}
+    ): ConnectedUser {
+        val user = ConnectedUser(UserId(name), Channel(), Collections.synchronizedList(mutableListOf()))
+        val session = sessionMock(user.incoming) {
+            if (it is Frame.Text) {
+                val text = it.readText()
+                onText(text)
+                user.sent.add(text)
+            }
+        }
         user.job = launch { manager.setSession(user.userId, session) }
         return user
     }
@@ -183,6 +201,7 @@ class WebSocketManagerTest {
 
         // When
         manager.sendToUser(alice.userId, "for alice")
+        manager.drain()
 
         // Then
         alice.sent shouldBe listOf("for alice")
@@ -201,6 +220,7 @@ class WebSocketManagerTest {
 
         // When
         manager.sendToUser(UserId("alice"), "hello")
+        manager.drain()
 
         // Then
         window1.sent shouldBe listOf("hello")
@@ -216,6 +236,7 @@ class WebSocketManagerTest {
 
         // When / Then - no exception
         manager.sendToUser(UserId("nobody"), "hello")
+        manager.drain()
     }
 
     @Test
@@ -228,6 +249,7 @@ class WebSocketManagerTest {
 
         // When
         manager.broadcast("everyone")
+        manager.drain()
 
         // Then
         alice.sent shouldBe listOf("everyone")
@@ -249,6 +271,7 @@ class WebSocketManagerTest {
         alice.disconnect()
         manager.sendToUser(alice.userId, "too late")
         manager.broadcast("still here")
+        manager.drain()
 
         // Then
         manager.connectedUsers() shouldBe setOf(bob.userId)
@@ -268,6 +291,7 @@ class WebSocketManagerTest {
         // When
         window1.disconnect()
         manager.sendToUser(UserId("alice"), "hello")
+        manager.drain()
 
         // Then
         manager.connectedUsers() shouldBe setOf(UserId("alice"))
@@ -293,12 +317,88 @@ class WebSocketManagerTest {
 
         // When
         manager.broadcast("hello")
+        manager.drain()
 
         // Then
         bob.sent shouldBe listOf("hello")
         deadIncoming.close()
         deadJob.join()
         bob.disconnect()
+    }
+
+    @Test
+    fun `messages are delivered in the order they were enqueued, across users`() = runBlocking {
+        // Given
+        val manager = WebSocketManager()
+        val delivered = Collections.synchronizedList(mutableListOf<String>())
+        val alice = connect(manager, "alice") { delivered.add("alice:$it") }
+        val bob = connect(manager, "bob") { delivered.add("bob:$it") }
+        yield()
+
+        // When
+        manager.sendToUser(alice.userId, "1")
+        manager.broadcast("2")
+        manager.sendToUser(bob.userId, "3")
+        manager.sendToUser(alice.userId, "4")
+        manager.drain()
+
+        // Then
+        alice.sent shouldBe listOf("1", "2", "4")
+        bob.sent shouldBe listOf("2", "3")
+        delivered.indexOf("alice:1") shouldBe 0
+        delivered.indexOf("bob:3") shouldBe 3
+        delivered.indexOf("alice:4") shouldBe 4
+        alice.disconnect()
+        bob.disconnect()
+    }
+
+    @Test
+    fun `a connection whose send blocks delays the others by no more than the timeout`() = runBlocking {
+        // Given
+        val manager = WebSocketManager(sendTimeoutMillis = 100)
+        val stuck = connect(manager, "stuck") { awaitCancellation() }
+        val bob = connect(manager, "bob")
+        yield()
+
+        // When
+        val started = System.currentTimeMillis()
+        manager.broadcast("hello")
+        manager.sendToUser(bob.userId, "again")
+        manager.drain()
+        val elapsed = System.currentTimeMillis() - started
+
+        // Then
+        bob.sent shouldBe listOf("hello", "again")
+        stuck.sent shouldBe emptyList()
+        (elapsed < 2_000) shouldBe true
+        stuck.disconnect()
+        bob.disconnect()
+    }
+
+    @Test
+    fun `enqueuing from a thread holding a lock returns without waiting for delivery`() = runBlocking {
+        // Given
+        val manager = WebSocketManager()
+        val lock = ReentrantLock()
+        val gate = CompletableDeferred<Unit>()
+        val alice = connect(manager, "alice") { gate.await() }
+        yield()
+
+        // When
+        val returned = withTimeoutOrNull(1_000) {
+            lock.withLock {
+                manager.sendToUser(alice.userId, "hello")
+                manager.broadcast("everyone")
+            }
+            true
+        }
+
+        // Then
+        returned shouldBe true
+        gate.complete(Unit)
+        manager.drain()
+        alice.sent shouldBe listOf("hello", "everyone")
+        alice.disconnect()
     }
 
     @Test
