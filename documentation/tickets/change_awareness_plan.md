@@ -9,7 +9,16 @@ Order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8. Step 1 alone already answers
 prerequisite for every new push. Step 4 is what removes the day-to-day confusion. Steps 6 and 7 are independent of
 each other once 1–5 are in.
 
-## Step 1: the change log
+## Step 1: the change log — DONE (24 Oct 2026)
+
+As planned, except:
+
+- `ChangeLog` has no `onRecorded` hook yet; it arrives in step 4 with its only consumer (the `KbChange` push).
+- Queries are `mostRecent(count)` (not `recent`), `since(id: Int?)`, `concerning(attributeId, limit)`.
+- Export classes are `ChangeRecordsExporter` + `ChangeRecordsSource`.
+- `GET CHANGES` takes `sinceId` and `limit` query parameters (`SINCE_ID`, `LIMIT` in `constants.server`); `limit`
+  defaults to `DEFAULT_CHANGES_LIMIT` = 50. Records are returned oldest first, keeping the newest `limit`.
+- Existing Postgres databases need the `change_log` table created by hand (see `PostgresChangeLogStore`).
 
 ### Model (`common`)
 
