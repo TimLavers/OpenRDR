@@ -10,6 +10,8 @@ Open work only. Items that are done are removed, not ticked; the requirements do
 
 **Derived attributes**
 
+- AI-evaluated Boolean attributes defined through chat: [design](ai_derived_attributes_design.md) and
+  [implementation plan](ai_derived_attributes_implementation_plan.md).
 - Delete a derived attribute.
 - List all derived attributes, whether or not the case has them.
 - Impact summary (e.g. count of affected cornerstones) when a definition is edited globally.

@@ -58,6 +58,11 @@ validated by deterministic server code. See [design/chat_architecture.md](design
 - [Testing](design/testing.md): acceptance tests, page objects, OCR.
 - [Decisions log](design/decisions_log.md): one line per decision, with a link.
 
+### Planned features
+
+- AI-evaluated derived attributes: [proposed design](tickets/ai_derived_attributes_design.md) and
+  [detailed implementation plan](tickets/ai_derived_attributes_implementation_plan.md).
+
 ## Working conventions
 
 - Design docs are updated when a decision is resolved or a feature lands, in the present tense. A doc describes the
