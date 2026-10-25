@@ -5,6 +5,8 @@ import io.rippledown.persistence.RuleStore
 
 class InMemoryRuleStore: RuleStore {
     private val rules = mutableSetOf<PersistentRule>()
+    // The change log retains deleted rule IDs and their authors.
+    private var nextId = 1
 
     override fun all() = rules
 
@@ -12,9 +14,7 @@ class InMemoryRuleStore: RuleStore {
         require(prototype.id == null) {
             "Cannot create a persistent rule if it already has an id."
         }
-        val maxById = rules.maxByOrNull { it.id!! }
-        val maxId = maxById?.id ?: 0
-        val result = prototype.copy(id = maxId + 1)
+        val result = prototype.copy(id = nextId++)
         rules.add(result)
         return result
     }
@@ -25,6 +25,7 @@ class InMemoryRuleStore: RuleStore {
         }
         persistentRules.forEach { require(it.id != null) {"Cannot load a rule that has null id."} }
         rules.addAll(persistentRules)
+        nextId = maxOf(nextId, (persistentRules.maxOfOrNull { it.id ?: 0 } ?: 0) + 1)
     }
 
     override fun removeById(ruleId: Int) {

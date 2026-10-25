@@ -67,6 +67,63 @@ Feature: Several users share one server, each with their own chat and open knowl
     When Bob reads case Case1 in the knowledge base Thyroids
     Then Bob sees the TSH value 0.67 for case Case1
 
+  Scenario: Bob's commit is in the change log
+    Given case Case1 for KB Thyroids is provided having data:
+      | TSH | 0.67 |
+    And Bob starts a rule session on case Case1 in the knowledge base Thyroids to add "Go to Bondi."
+    When Bob commits his rule session with no conditions
+    And Alice reads the last 5 changes in the knowledge base Thyroids
+    Then Alice's change history contains exactly these entries in order:
+      | user | kind        | summary contains |
+      | Bob  | RULES_ADDED | Go to Bondi.     |
+
+  Scenario: Closing a knowledge base removes a user from presence while their connection stays open
+    Given Alice starts a conversation about the knowledge base Thyroids
+    And Bob starts a conversation about the knowledge base Thyroids
+    And Alice keeps a live connection to the server
+    And Bob keeps a live connection to the server
+    Then Alice sees exactly these users present in the knowledge base Thyroids:
+      | user  | editing |
+      | Alice | false   |
+      | Bob   | false   |
+    When Bob asks the chat to close the knowledge base
+    Then Alice sees exactly these users present in the knowledge base Thyroids:
+      | user  | editing |
+      | Alice | false   |
+    And Bob's original connection to the server is still open
+
+  Scenario: Undo is bound to the rule shown
+    Given case Case1 for KB Thyroids is provided having data:
+      | TSH | 0.67 |
+    And Alice starts a rule session on case Case1 in the knowledge base Thyroids to add "Go to Bondi."
+    And Alice commits her rule session with no conditions
+    And Alice previews undo in the knowledge base Thyroids
+    And Alice's undo preview contains "Go to Bondi."
+    When Bob starts a rule session on case Case1 in the knowledge base Thyroids to add "Go to Manly."
+    And Bob commits his rule session with no conditions
+    And Alice confirms the undo
+    Then Alice's undo refusal contains "The most recent rule changed since it was shown."
+    And Alice's undo refusal contains "The most recent rule was added by Bob:"
+    And Alice's undo refusal contains "Go to Manly."
+    And the comment given to case Case1 in the knowledge base Thyroids is "Go to Bondi. Go to Manly."
+    When Alice reads the last 5 changes in the knowledge base Thyroids
+    Then Alice's change history contains exactly these entries in order:
+      | user  | kind        | summary contains |
+      | Alice | RULES_ADDED | Go to Bondi.     |
+      | Bob   | RULES_ADDED | Go to Manly.     |
+    When Alice previews undo in the knowledge base Thyroids
+    Then Alice's undo preview contains "The most recent rule was added by Bob:"
+    And Alice's undo preview contains "Go to Manly."
+    When Alice confirms the undo
+    Then Alice's undo succeeds
+    And the comment given to case Case1 in the knowledge base Thyroids is "Go to Bondi."
+    When Alice reads the last 5 changes in the knowledge base Thyroids
+    Then Alice's change history contains exactly these entries in order:
+      | user  | kind         | summary contains |
+      | Alice | RULES_ADDED  | Go to Bondi.     |
+      | Bob   | RULES_ADDED  | Go to Manly.     |
+      | Alice | RULES_UNDONE | Go to Manly.     |
+
   Scenario: Closing a knowledge base does not disturb another user's rule session
     Given case Case1 for KB Thyroids is provided having data:
       | TSH | 0.67 |

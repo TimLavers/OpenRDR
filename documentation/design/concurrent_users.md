@@ -359,6 +359,17 @@ rather than an accident:
 
 A hard refusal was considered and not adopted: there are legitimate reasons to undo a colleague's rule.
 
+Preview and undo both take the KB lock, including when called directly. An undo requires the caller's own
+preview; every undo attempt consumes it. A refusal describes the new latest rule without recording another
+preview. Chat carries that refusal into the next model turn, so an affirmation first requests a fresh preview
+and then waits for a new confirmation. An empty history is reported without requesting confirmation.
+`UndoRuleRefusedException` distinguishes these expected refusals from unexpected errors; REST returns it as
+`409 Conflict` with the existing `X-Refusal: stale` header.
+
+The in-memory rule-session and rule stores allocate increasing IDs across deletions and advance their counters
+past imported IDs. Reusing a deleted session ID could otherwise authorise undo of a replacement session; reusing
+a deleted rule ID could associate that replacement with an older author's change record.
+
 ## Testing
 
 Multi-user acceptance is REST-first (`requirements/kb/Concurrent Users.feature`, `ConcurrentUsersDefs.kt`): several

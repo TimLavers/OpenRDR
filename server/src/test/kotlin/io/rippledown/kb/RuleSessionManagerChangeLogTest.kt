@@ -81,6 +81,7 @@ class RuleSessionManagerChangeLogTest {
         commitRuleAddingComment(case, "Go to the beach.")
         val ruleId = kb.ruleTree.root.childRules().single().id
         val commentAttributeId = kb.changeLog.all().single().attributeIds.single()
+        rsm.descriptionOfMostRecentRule()
 
         // When
         rsm.undoLastRuleSession()

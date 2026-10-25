@@ -74,6 +74,7 @@ class BuildTemplate {
     }
 
     fun undoLastRuleSession() {
+        rsm.descriptionOfMostRecentRule()
         rsm.undoLastRuleSession()
     }
 }

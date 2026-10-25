@@ -133,6 +133,7 @@ class RuleSessionManager(
 
     private var pendingDefinition: PendingDefinition? = null
     private var changeLogIdAtStart: Int? = null
+    private var pendingUndoRecordId: Int? = null
 
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
@@ -876,19 +877,39 @@ class RuleSessionManager(
 
     override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
 
-    override fun descriptionOfMostRecentRule(): UndoRuleDescription {
+    override fun descriptionOfMostRecentRule(): UndoRuleDescription = kbLock.withLock {
         val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
-            ?: return UndoRuleDescription("There are no rules to undo.", false)
-        val idOfExemplar = record.idsOfRulesAddedInSession.random()
-        val exemplar = kb.ruleTree.ruleForId(idOfExemplar)
-        return UndoRuleDescription(exemplar.actionSummary { describe(it) }, true)
+        pendingUndoRecordId = record?.id
+        if (record == null) UndoRuleDescription("There are no rules to undo.", false)
+        else UndoRuleDescription(undoDescription(record), true)
+    }
+
+    // Also used to describe a stale refusal, without authorising another undo.
+    private fun undoDescription(record: RuleSessionRecord): String {
+        val exemplar = kb.ruleTree.ruleForId(record.idsOfRulesAddedInSession.first())
+        val description = exemplar.actionSummary { describe(it) }
+        val author = kb.changeLog.all().lastOrNull {
+            it.kind == ChangeKind.RULES_ADDED && it.ruleIds == record.idsOfRulesAddedInSession
+        }?.userId
+        return if (author != null && userId != null && author != userId.value)
+            "The most recent rule was added by $author: $description"
+        else description
     }
 
     fun ruleSessionHistories() = kb.ruleSessionRecorder.allRuleSessionHistories()
 
-    override fun undoLastRuleSession() {
-        val record = checkNotNull(kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()) {
-            "There are no rules to undo."
+    override fun undoLastRuleSession() = kbLock.withLock {
+        val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
+        val reviewedId = pendingUndoRecordId
+        pendingUndoRecordId = null
+        if (record == null) throw UndoRuleRefusedException("There are no rules to undo.")
+        if (reviewedId == null) {
+            throw UndoRuleRefusedException("Please review the most recent rule before undoing it.")
+        }
+        if (record.id != reviewedId) {
+            throw UndoRuleRefusedException(
+                "The most recent rule changed since it was shown. ${undoDescription(record)} Undo it?"
+            )
         }
         // Taken before the deletion, which detaches each rule from its parent.
         val exemplar = kb.ruleTree.ruleForId(record.idsOfRulesAddedInSession.first())
@@ -898,7 +919,7 @@ class RuleSessionManager(
             val toDelete = kb.ruleTree.ruleForId(it)
             kb.ruleManager.deleteLeafRule(toDelete)
         }
-        kb.ruleSessionRecorder.delete(kb.ruleSessionRecorder.allRuleSessionHistories().last())
+        kb.ruleSessionRecorder.delete(record)
         recordChange(ChangeKind.RULES_UNDONE, summary, record.idsOfRulesAddedInSession, attributeIds)
     }
 

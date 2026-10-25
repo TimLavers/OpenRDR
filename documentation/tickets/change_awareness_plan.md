@@ -385,7 +385,7 @@ pushes going silent after a drop.
 
 ### Current state
 
-Implementation and verification are complete. Step 7 has not started.
+Implementation and verification are complete.
 
 - `ListRecentChanges` and `ListUsersPresent` are read-only `KbManagementAction`s through `KnowledgeBaseService`.
   Both work with no case selected and during rule building, without changing the chat context or rule session.
@@ -438,7 +438,47 @@ and no case selected.
 - Tests: `ListRecentChangesTest` (incl. attribute filter and unknown attribute), `ListUsersPresentTest`,
   `ActionCommentParsingTest`, and a `ChatManager`-level test with a KB open and **no case** that the action runs.
 
-## Step 7: undo bound to what was shown
+## Step 7: undo bound to what was shown — DONE (26 Oct 2026)
+
+### Current state
+
+Implementation and verification are complete.
+
+- `descriptionOfMostRecentRule` remembers the reviewed session ID for the caller. Preview and undo acquire the
+  KB lock themselves. Undo requires that same session to remain latest; missing, removed, or changed targets
+  are refused without deleting rules or recording a change. Every undo attempt consumes the pending preview.
+- Another user's rule is prefixed with its author from the matching `RULES_ADDED` record. Own rules and rules
+  without recorded authors retain the plain description. Successful undo still records the confirming user and
+  broadcasts the existing change event.
+- Stale refusals describe the new latest rule without authorising its deletion. A fresh preview and a subsequent
+  confirmation are required. The undo prompt explains this recovery flow.
+- `UndoRuleRefusedException` extends `IllegalStateException`, distinguishing expected refusals from unexpected
+  failures. Chat displays its explanation and carries it into the next model turn; ordinary unexpected errors
+  retain generic error handling. REST responds with `409 Conflict` and the existing stale-refusal header.
+- In-memory rule-session IDs previously reused deleted IDs, allowing a replacement session to match an obsolete
+  preview. They now increase across deletions. Rule IDs also increase so a new rule cannot inherit a deleted
+  rule's logged author. Both counters advance past IDs loaded from storage.
+- Existing direct-undo test fixtures now preview first, following the same contract as the chat and REST clients.
+
+Validation:
+
+- TDD: the first six regressions failed before production changes. Expanded coverage then produced 16 failures
+  among 20 tests, including chat recovery and locking; the new REST regression initially returned 500 instead
+  of 409. All now pass.
+- Added **25 server tests** across `UndoConfirmationTest`, `UndoConfirmationChatTest`, `RuleIdentityTest`,
+  `RuleSessionRecordIdentityTest`, and `UndoRefusalRouteTest`. They cover author disclosure, missing previews,
+  intervening commits and undos, repeated confirmations, fresh preview after refusal, pre-log rules, ID reuse,
+  imported IDs, lock ownership, chat recovery/reset, generic errors, and REST refusals.
+- Focused undo and existing regression tests: **255 passed**.
+- `:common:test`: **851 passed**. Filtered `:server:test`: **2,004 passed**, none skipped, using step 3's
+  non-PostgreSQL filters. IntelliJ's production build passed.
+- `:ui:compileTestKotlin` and `:cucumber:compileTestKotlin` passed. `:cucumber:cucumberDryRun` passed:
+  **230 scenarios / 3,014 steps defined**. Gradle used `--offline`; no UI tests, live cucumber scenarios,
+  or PostgreSQL tests were run for this step.
+- Local evidence: `build/step7-red.log`, `build/step7-red-expanded.log`, `build/step7-focused.log`,
+  and `build/step7-validation.log`.
+
+### Original scope
 
 The flow is two turns (`SHOW_LAST_RULE_FOR_UNDO` → `UNDO_LAST_RULE` on affirmation, instruction
 `11_undoing_the_report_change.md`) and the two look up the latest session independently, so a commit by anyone in
@@ -455,17 +495,40 @@ between makes the "yes" undo the wrong rule.
 - Tests: `RuleSessionManagerTest` — own rule: plain description; other user's rule: prefixed; commit between preview
   and confirmation: refused with the new description, nothing deleted; undo after a fresh preview: succeeds.
 
-## Step 8: acceptance
+## Step 8: acceptance — implemented (26 Oct 2026), live validation pending
+
+### Current state
+
+Added three scenarios to `requirements/kb/Concurrent Users.feature`:
+
+- Bob's commit appears in Alice's `GET CHANGES limit=5` response with the expected author, kind, and comment summary.
+- Alice and Bob have the KB open and hold live WebSockets. Alice's presence snapshot lists both users; after Bob
+  closes the KB through chat, it lists only Alice. Bob's original socket is still connected, with no reconnect.
+- Alice previews her rule for undo, then Bob commits another rule. Alice's confirmation is refused, both comments
+  remain, and no undo is logged. A fresh preview names Bob and his rule; confirmation then removes only his rule
+  and adds a `RULES_UNDONE` entry attributed to Alice.
+
+`ConcurrentUsersDefs` now owns the REST clients' WebSocket coroutines and HTTP engines. Its ordered teardown hook
+cancels and joins the connections, then closes every client and engine before server teardown. The history and
+undo scenarios use deterministic REST calls; presence uses the existing chat steps to open and close the KB.
+The two-window scenario and stale-commit context assertions were already completed on 25 Oct (below).
+
+Validation:
+
+- The new scenarios initially failed the dry run with undefined steps (`build/step8-red.log`).
+- IntelliJ compilation and `:cucumber:compileTestKotlin` passed.
+- `:cucumber:cucumberDryRun` passed: **233 scenarios / 3,294 steps defined** (`build/step8-validation.log`).
+  Cucumber's step total includes the new per-scenario teardown hook.
+- No production code changed in step 8. No UI tests or live cucumber scenarios were run; live validation remains
+  with the user as planned. Retain this plan until that validation is complete, then remove it as specified
+  at the top of the plan.
 
 ### Partial completion (25 Oct 2026)
 
 The monitored full cucumber run exposed the old two-window refresh expectation and exact stale-refusal text check.
 Both are updated and pass: Bob's window shows Alice's presence and change notice and refreshes without reselecting
 a case; Alice's stale refusal retains its original explanation and includes Bob's recorded change. The dry run
-passes all **230 scenarios / 3,014 steps**. These checks were brought forward to keep the existing suite green.
-
-Step 8 remains incomplete: the dedicated REST change-log and presence scenarios and the undo-binding scenario
-below still need implementation; the latter depends on step 7.
+then passed all **230 scenarios / 3,014 steps**. These checks were brought forward to keep the existing suite green.
 
 ### Original scope
 

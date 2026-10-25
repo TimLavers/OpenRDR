@@ -51,5 +51,5 @@ The temporary selection script is `build/awareness-cucumber-rerun.init.gradle`. 
 The remaining command was
 `gradlew :cucumber:report :cucumber:rulebuilding :cucumber:samples :cucumber:trial-matching :cucumber:voice --continue --offline --console=plain`.
 
-These fixes bring forward part of change-awareness step 8. Step 7 and the remaining new acceptance scenarios
-are still outstanding in the [implementation plan](change_awareness_plan.md).
+These fixes brought forward part of change-awareness step 8. At the end of this run, step 7 and the remaining
+new acceptance scenarios were outstanding; see the [implementation plan](change_awareness_plan.md) for current status.

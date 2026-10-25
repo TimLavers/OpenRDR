@@ -1174,6 +1174,7 @@ class KBTest {
         kb.interpret(otherCase)
         kb.commentsFor(otherCase) shouldBe setOf("Whatever.") // Sanity
 
+        rsm.descriptionOfMostRecentRule()
         rsm.undoLastRuleSession()
         kb.interpret(otherCase)
         kb.commentsFor(otherCase) shouldBe emptySet()
