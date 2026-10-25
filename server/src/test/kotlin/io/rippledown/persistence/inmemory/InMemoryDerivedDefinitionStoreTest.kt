@@ -18,6 +18,13 @@ class InMemoryDerivedDefinitionStoreTest {
             Binary(Operator.TIMES, AttributeValue(height), AttributeValue(height))
         )
     )
+    private val hasDiabetes = AiBoolean(
+        sourceAttribute = Attribute(3, "clinical_notes"),
+        instructions = "True if the notes affirm a personal history of diabetes.",
+        examples = listOf(AiBooleanExample("FH diab", false, "Family history only")),
+        revision = "rev-1",
+        evaluationProfile = AiEvaluationProfile("gemini", "gemini-2.5-flash", 0.0, 1, 1)
+    )
     private lateinit var store: InMemoryDerivedDefinitionStore
 
     @BeforeTest
@@ -59,6 +66,16 @@ class InMemoryDerivedDefinitionStoreTest {
         // Then the new definition replaces the old
         store.definitionFor(10) shouldBe corrected
         store.all() shouldBe mapOf(10 to corrected)
+    }
+
+    @Test
+    fun `an AI Boolean definition is stored like any other`() {
+        // When an AI Boolean definition is stored
+        store.store(12, hasDiabetes)
+
+        // Then it is retrieved unchanged
+        store.definitionFor(12) shouldBe hasDiabetes
+        store.all() shouldBe mapOf(12 to hasDiabetes)
     }
 
     @Test

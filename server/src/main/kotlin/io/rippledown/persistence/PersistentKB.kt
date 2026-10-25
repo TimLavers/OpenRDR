@@ -8,6 +8,7 @@ interface PersistentKB {
     fun attributeStore(): AttributeStore
     fun attributeOrderStore(): OrderStore
     fun derivedDefinitionStore(): DerivedDefinitionStore
+    fun aiEvaluationStore(): AiEvaluationStore
     fun conditionStore(): ConditionStore
     fun ruleStore(): RuleStore
     fun ruleSessionRecordStore(): RuleSessionRecordStore
