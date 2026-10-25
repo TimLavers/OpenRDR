@@ -81,7 +81,7 @@ The windows do not share chat *history*: a window shows the turns it took part i
 problem at hand; the point is that whatever window the user types in, the chat acts on the KB and case they can see.
 
 Conversations are **never evicted** while the server runs. Evicting when the user's last web socket closes was
-rejected: the client has no reconnect loop and the ping timeout is 15 s, so a network blip or a laptop sleep would
+rejected: the ping timeout is 15 s, so a network blip or a laptop sleep would
 delete the conversation and the server-side open KB while the window still shows them. A conversation is a prompt and
 a history — negligible at the expected user counts.
 
@@ -325,13 +325,15 @@ concurrent activity, not a proven cause; the wording says "since you started", n
 
 ### Socket recovery
 
-The client opens one web socket and has no reconnect loop. That was tolerable while pushes were conveniences; with
-presence and notices riding on the socket it is not, since REST and the chat keep working after a drop and awareness
-would silently stop. `WebSocketApi` reconnects with backoff; while disconnected the application bar says so
+`WebSocketApi` reconnects after failed connection attempts or closed sessions, with backoff from 1 second up to
+30 seconds, reset after a successful connection. Cancellation stops the loop. While disconnected the application bar says so
 (*Reconnecting…*, a display). On reconnect the window resynchronises: it re-fetches presence and the displayed case,
 and fetches `GET CHANGES since=<last id seen>` for its KB, posting the missed notices. Each window remembers the last
 change id it has seen per KB, and a record arriving twice (socket and replay) is dropped by `(kbId, id)`. The snapshot
-is fetched after the subscription is open, so nothing falls between them.
+is fetched after the subscription is open, so nothing falls between them. Recovery captures its starting ID before
+live frames arrive and retains it if replay fails or the connection drops again, even before the recovery task runs.
+It requests all records after that ID rather than the endpoint's default newest 50. A case refresh is deferred while
+the window is building a rule; a response for a KB the window has left is discarded.
 
 ### On demand: history and presence through the chat
 

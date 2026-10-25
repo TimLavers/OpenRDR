@@ -261,7 +261,7 @@ Validation:
 
 ### Current state
 
-Implementation and focused verification are complete. Step 5 has not started.
+Implementation and focused verification are complete.
 
 - `ChangeLog.onRecorded` is wired by `KBSession` to broadcast `KB_CHANGED_PREFIX` + `KbChange`. A failed store write
   still publishes the unpersisted record. A failed notification is logged without reporting the completed mutation
@@ -330,7 +330,40 @@ Validation:
   during a rule session, one refresh when it completes; case switched during the fetch → result discarded; `getCase`
   returns null → case unchanged; `DESCRIPTION_SET` reloads the description; duplicate id dropped.
 
-## Step 5: socket recovery
+## Step 5: socket recovery — DONE (25 Oct 2026)
+
+### Current state
+
+Implementation and focused verification are complete. Step 6 has not started.
+
+- `WebSocketApi` retries both failed connection attempts and closed sessions until its coroutine is cancelled.
+  Backoff starts at 1 second, doubles to a 30-second cap, and resets after a successful connection. Cancellation
+  propagates during both the active session and the retry delay. The ninth callback reports connection status.
+- `ApplicationBar` displays subdued, non-interactive `Reconnecting…` text with `RECONNECTING_DESCRIPTION` while
+  disconnected. `Api` forwards the status callback; existing mocks and verifications include it.
+- After subscription, `OpenRDRUI` reloads presence and the current case, and replays `Api.changes(sinceId)` through
+  the same change handler as live frames. KB adoption while connected also recovers history. Case refreshes remain
+  deferred during rule building; failed snapshots do not prevent the other recovery requests from completing.
+- Recovery captures its cursor in the connection callback before live frames arrive. Failed or interrupted replays
+  retain that cursor, including connections that drop before the recovery effect runs. Older KB responses are
+  discarded, and record IDs deduplicate replay/live delivery per KB.
+- `Api.changes` explicitly requests all records after the cursor (`limit=Int.MAX_VALUE`), because the endpoint's
+  default limit returns only the newest 50 and would silently omit earlier missed notices.
+- Frame-routing tests now cancel their long-lived socket sessions after receiving the expected messages.
+
+Validation:
+
+- TDD: the reconnection regression first timed out because the old client stopped after one connection. A second
+  regression exposed cursor loss when a brief connection received a live frame and dropped before recomposition.
+  Both now pass.
+- `:common:test`: **851 passed**. Filtered `:server:test`: **1,944 passed**, with step 3's non-PostgreSQL filters.
+- Focused `:ui:test`: **49 passed**, none skipped. Includes `OpenRDRUIRecoveryTest` (10), `ApiChangesTest` (3), all
+  `WebSocket*Test` classes (13), the existing change-notice tests (17), presence tests (4), application-bar presence
+  test (1), and the existing websocket-start smoke test (1).
+- UI and cucumber test sources compile. IntelliJ's production UI build passed. Gradle used `--offline`; no cucumber
+  scenarios or PostgreSQL tests were run.
+
+### Original scope
 
 A pre-existing gap (`WebSocketApi.startSession` opens one connection; the design doc already noted there is no
 reconnect loop) that awareness makes load-bearing. Separate commit because it also fixes `casesInfo` and cornerstone

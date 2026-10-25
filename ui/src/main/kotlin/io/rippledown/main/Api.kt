@@ -19,6 +19,7 @@ import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.change.KbChange
+import io.rippledown.model.change.ChangeRecord
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
@@ -85,7 +86,8 @@ class Api(
         kbClosed: () -> Unit = {},
         chatContextChanged: (ChatContextInfo) -> Unit = {},
         presenceChanged: (PresenceInfo) -> Unit = {},
-        kbChanged: (KbChange) -> Unit = {}
+        kbChanged: (KbChange) -> Unit = {},
+        connected: (Boolean) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -106,7 +108,8 @@ class Api(
                 chatContextChanged(it)
             },
             presenceChanged = presenceChanged,
-            kbChanged = kbChanged
+            kbChanged = kbChanged,
+            connected = connected
         )
     }
     fun shutdown() {
@@ -153,6 +156,13 @@ class Api(
      */
     suspend fun presence(): List<PresentUser> = client.get("$API_URL$PRESENCE") {
         setKBParameter()
+    }.body()
+
+    suspend fun changes(sinceId: Int? = null): List<ChangeRecord> = client.get("$API_URL$CHANGES") {
+        setKBParameter()
+        sinceId?.let { parameter(SINCE_ID, it) }
+        // The default limit keeps only the newest 50. Recovery needs every missed record.
+        parameter(LIMIT, Int.MAX_VALUE)
     }.body()
 
     fun clearKnowledgeBaseSelection() {

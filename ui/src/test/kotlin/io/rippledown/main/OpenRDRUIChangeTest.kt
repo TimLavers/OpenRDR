@@ -55,7 +55,7 @@ class OpenRDRUIChangeTest {
         coEvery { api.getCase(2) } returns createViewableCaseWithInterpretation("Second case", 2, listOf("Second comment."))
         coEvery { api.kbDescription(any()) } returns "Original description."
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
             sessionChanged = arg(0)
             sessionCompleted = arg(1)
             contextChanged = arg(5)

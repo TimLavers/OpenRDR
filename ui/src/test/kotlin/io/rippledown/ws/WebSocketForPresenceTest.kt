@@ -7,8 +7,7 @@ import io.rippledown.main.Api
 import io.rippledown.model.PresenceInfo
 import io.rippledown.model.PresentUser
 import io.rippledown.toJsonString
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 
 class WebSocketForPresenceTest {
@@ -26,14 +25,18 @@ class WebSocketForPresenceTest {
             )
             val api = Api(webSocketPort = server.port)
             val received = mutableListOf<PresenceInfo>()
+            val completed = CompletableDeferred<Unit>()
             var completions = 0
             var otherCallbacks = 0
             try {
                 // When
-                withTimeout(5_000) {
+                val session = launch {
                     api.startWebSocketSession(
                         updateCornerstoneStatus = { ++otherCallbacks },
-                        ruleSessionCompleted = { ++completions },
+                        ruleSessionCompleted = {
+                            ++completions
+                            completed.complete(Unit)
+                        },
                         updateCasesInfo = { ++otherCallbacks },
                         kbInfoUpdated = { ++otherCallbacks },
                         kbClosed = { ++otherCallbacks },
@@ -41,6 +44,9 @@ class WebSocketForPresenceTest {
                         presenceChanged = { received.add(it) }
                     )
                 }
+
+                withTimeout(5_000) { completed.await() }
+                session.cancelAndJoin()
 
                 // Then
                 received shouldBe listOf(present, empty)

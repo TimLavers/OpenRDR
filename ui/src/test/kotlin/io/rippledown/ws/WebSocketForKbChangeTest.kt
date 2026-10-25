@@ -8,8 +8,7 @@ import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.change.ChangeRecord
 import io.rippledown.model.change.KbChange
 import io.rippledown.toJsonString
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 
 class WebSocketForKbChangeTest {
@@ -26,14 +25,18 @@ class WebSocketForKbChangeTest {
         )
         val api = Api(webSocketPort = server.port)
         val received = mutableListOf<KbChange>()
+        val completed = CompletableDeferred<Unit>()
         var completions = 0
         var otherCallbacks = 0
         try {
             // When
-            withTimeout(5_000) {
+            val session = launch {
                 api.startWebSocketSession(
                     updateCornerstoneStatus = { ++otherCallbacks },
-                    ruleSessionCompleted = { ++completions },
+                    ruleSessionCompleted = {
+                        ++completions
+                        completed.complete(Unit)
+                    },
                     updateCasesInfo = { ++otherCallbacks },
                     kbInfoUpdated = { ++otherCallbacks },
                     kbClosed = { ++otherCallbacks },
@@ -42,6 +45,9 @@ class WebSocketForKbChangeTest {
                     kbChanged = { received.add(it) }
                 )
             }
+
+            withTimeout(5_000) { completed.await() }
+            session.cancelAndJoin()
 
             // Then
             received shouldBe listOf(persisted, unpersisted)

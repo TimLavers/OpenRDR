@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import io.rippledown.constants.kb.*
 import io.rippledown.constants.main.APPLICATION_BAR_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
+import io.rippledown.constants.main.RECONNECTING_DESCRIPTION
 import io.rippledown.model.KBInfo
 import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Text as Material3Text
@@ -38,6 +39,7 @@ fun ApplicationBar(
     kbInfo: KBInfo?,
     description: String? = null,
     othersPresent: List<String> = emptyList(),
+    connected: Boolean = true,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -57,6 +59,15 @@ fun ApplicationBar(
         }
         if (othersPresent.isNotEmpty()) {
             OthersPresent(othersPresent)
+        }
+        if (!connected) {
+            Text(
+                text = "Reconnecting…",
+                style = MaterialTheme.typography.body2,
+                color = colors.onPrimary.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 12.dp)
+                    .semantics { contentDescription = RECONNECTING_DESCRIPTION }
+            )
         }
     }
 }

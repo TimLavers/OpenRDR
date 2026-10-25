@@ -28,6 +28,7 @@ import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.PresenceInfo
 import io.rippledown.model.change.ChangeKind
+import io.rippledown.model.change.KbChange
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
@@ -87,11 +88,6 @@ fun OpenRDRUI(
     var presenceRevision by remember { mutableIntStateOf(0) }
     val othersPresent = presenceInfo?.takeIf { it.kbId == kbInfo?.id }?.users.orEmpty()
         .filter { it.userId != api.userId.value }
-    val adopt: (ChatContextInfo) -> Unit = { context ->
-        adoptedContext = context.kbInfo?.id to context.caseId
-        if (context.kbInfo?.id == kbInfo?.id) currentCaseId = context.caseId else adoptedCaseId = context.caseId
-        kbInfo = context.kbInfo
-    }
     var kbDescription by remember(api, kbInfo?.id, kbImportRevision) { mutableStateOf<String?>(null) }
     var descriptionRevision by remember { mutableIntStateOf(0) }
     LaunchedEffect(api, kbInfo?.id, chatId, kbImportRevision, descriptionRevision) {
@@ -110,8 +106,28 @@ fun OpenRDRUI(
     // change. Keep the cursor for reconnect recovery separately from deduplication.
     val lastSeenChangeId = remember { mutableMapOf<String, Int>() }
     val seenChangeIds = remember { mutableMapOf<String, MutableSet<Int>>() }
+    var socketConnected by remember { mutableStateOf(false) }
+    var connectionRevision by remember { mutableIntStateOf(0) }
+    var connectionCursors by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
+    // Keep a failed/interrupted replay's starting point, even if newer live frames arrive.
+    val pendingRecoveryCursors = remember { mutableMapOf<String, Int?>() }
     val pendingRefreshes = remember { mutableMapOf<String, MutableSet<ChangeKind>>() }
     var caseRefreshRevision by remember { mutableIntStateOf(0) }
+
+    fun retainRecoveryCursor(kbId: String) {
+        if (!pendingRecoveryCursors.containsKey(kbId)) {
+            pendingRecoveryCursors[kbId] = connectionCursors[kbId]
+        }
+    }
+
+    val adopt: (ChatContextInfo) -> Unit = { context ->
+        adoptedContext = context.kbInfo?.id to context.caseId
+        if (context.kbInfo?.id == kbInfo?.id) currentCaseId = context.caseId else adoptedCaseId = context.caseId
+        if (socketConnected && context.kbInfo?.id != kbInfo?.id) {
+            context.kbInfo?.id?.let(::retainRecoveryCursor)
+        }
+        kbInfo = context.kbInfo
+    }
 
     fun refreshForChanges(kinds: Set<ChangeKind>) {
         val kbId = kbInfo?.id ?: return
@@ -142,6 +158,18 @@ fun OpenRDRUI(
             } catch (_: Exception) {
                 // Keep the displayed case if a refresh is temporarily unavailable.
             }
+        }
+    }
+    fun handleKbChange(change: KbChange) {
+        if (change.kbId != kbInfo?.id) return
+        val record = change.record
+        record.id?.let { id ->
+            if (!seenChangeIds.getOrPut(change.kbId) { mutableSetOf() }.add(id)) return
+            lastSeenChangeId[change.kbId] = maxOf(lastSeenChangeId[change.kbId] ?: id, id)
+        }
+        refreshForChanges(setOf(record.kind))
+        if (record.userId != api.userId.value) {
+            chatState.notice("${record.userId}: ${record.summary}")
         }
     }
     val fileTransfers = remember(api, fileDialogs) {
@@ -223,7 +251,7 @@ fun OpenRDRUI(
     // Capture the effect's key at composition time: startup can set kbInfo before
     // the initial (null-keyed) effect runs, which would otherwise fetch twice.
     val presenceKbId = kbInfo?.id
-    LaunchedEffect(api, presenceKbId) {
+    LaunchedEffect(api, presenceKbId, connectionRevision) {
         pendingRefreshes.keys.retainAll(setOfNotNull(presenceKbId))
         if (presenceKbId == null) {
             presenceInfo = null
@@ -239,6 +267,25 @@ fun OpenRDRUI(
             throw e
         } catch (_: Exception) {
             // A later push can supply presence if the snapshot is unavailable.
+        }
+    }
+
+    val recoveryConnection = connectionRevision.takeIf { socketConnected }
+    LaunchedEffect(api, presenceKbId, recoveryConnection) {
+        val recoveryKbId = presenceKbId ?: return@LaunchedEffect
+        val revision = recoveryConnection ?: return@LaunchedEffect
+        retainRecoveryCursor(recoveryKbId)
+        refreshForChanges(setOf(ChangeKind.RULES_ADDED))
+        try {
+            val records = api.changes(pendingRecoveryCursors[recoveryKbId])
+            if (kbInfo?.id == recoveryKbId && socketConnected && connectionRevision == revision) {
+                records.forEach { handleKbChange(KbChange(recoveryKbId, it)) }
+                pendingRecoveryCursors.remove(recoveryKbId)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Retain the cursor so the next connection retries the missing history.
         }
     }
 
@@ -391,7 +438,10 @@ fun OpenRDRUI(
                         casesInfo = incoming
                     }
                 },
-                kbInfoUpdated = { kbInfo = it },
+                kbInfoUpdated = {
+                    if (socketConnected && it.id != kbInfo?.id) retainRecoveryCursor(it.id)
+                    kbInfo = it
+                },
                 kbClosed = { kbInfo = null },
                 chatContextChanged = { context ->
                     // While this window's own start is in flight the push is its echo, or is
@@ -405,17 +455,15 @@ fun OpenRDRUI(
                         presenceInfo = info
                     }
                 },
-                kbChanged = changed@{ change ->
-                    if (change.kbId != kbInfo?.id) return@changed
-                    val record = change.record
-                    record.id?.let { id ->
-                        if (!seenChangeIds.getOrPut(change.kbId) { mutableSetOf() }.add(id)) return@changed
-                        lastSeenChangeId[change.kbId] = maxOf(lastSeenChangeId[change.kbId] ?: id, id)
+                kbChanged = ::handleKbChange,
+                connected = { connected ->
+                    if (connected) {
+                        // Capture before any live frames advance the cursor, not in the later effect.
+                        connectionCursors = lastSeenChangeId.toMap()
+                        kbInfo?.id?.let(::retainRecoveryCursor)
+                        ++connectionRevision
                     }
-                    refreshForChanges(setOf(record.kind))
-                    if (record.userId != api.userId.value) {
-                        chatState.notice("${record.userId}: ${record.summary}")
-                    }
+                    socketConnected = connected
                 }
             )
         }
@@ -423,7 +471,7 @@ fun OpenRDRUI(
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, kbDescription, othersPresent.map { it.userId })
+            ApplicationBar(kbInfo, kbDescription, othersPresent.map { it.userId }, socketConnected)
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
