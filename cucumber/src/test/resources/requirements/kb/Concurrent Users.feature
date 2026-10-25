@@ -57,6 +57,7 @@ Feature: Several users share one server, each with their own chat and open knowl
     When Bob commits his rule session with no conditions
     And Alice commits her rule session with the condition "TSH ≤ 1.0"
     Then Alice's commit is refused because the interpretation of Case1 changed
+    And Alice's commit refusal contains "Since you started: Bob: Added comment \"Go to Bondi.\""
     And the comment given to case Case1 in the knowledge base Thyroids is "Go to Bondi."
 
   Scenario: A knowledge base being edited by one user can still be read by another

@@ -17,6 +17,14 @@ class ListCapabilities : Action {
         )
         val sections = buildList {
             add(knowledgeBases)
+            add(
+                CapabilitySection(
+                    "Other users", listOf(
+                        "show recent changes and who made them, optionally for a named attribute (requires an open knowledge base)",
+                        "show who else is working on the open knowledge base and who is building a rule"
+                    )
+                )
+            )
             if (hasCase) {
                 add(
                     CapabilitySection(

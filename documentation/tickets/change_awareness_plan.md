@@ -334,7 +334,7 @@ Validation:
 
 ### Current state
 
-Implementation and focused verification are complete. Step 6 has not started.
+Implementation and focused verification are complete.
 
 - `WebSocketApi` retries both failed connection attempts and closed sessions until its coroutine is cancelled.
   Backoff starts at 1 second, doubles to a 30-second cap, and resets after a successful connection. Cancellation
@@ -381,7 +381,41 @@ pushes going silent after a drop.
   (replayed records produce notices once; a record seen live and again in replay is dropped; indicator shown while
   down).
 
-## Step 6: chat actions
+## Step 6: chat actions — DONE (25 Oct 2026)
+
+### Current state
+
+Implementation and verification are complete. Step 7 has not started.
+
+- `ListRecentChanges` and `ListUsersPresent` are read-only `KbManagementAction`s through `KnowledgeBaseService`.
+  Both work with no case selected and during rule building, without changing the chat context or rule session.
+- `ApplicationKbService.recentChanges` reads under the KB session lock, newest first. Attribute names resolve to
+  stable IDs before filtering and limiting, so history remains available after a rename. Exact name resolution
+  is shared with `RuleSessionManager`; unknown names and non-positive limits are refused.
+- Recent changes default to ten records and include each author's name and summary. Times use the server's local
+  time zone: `HH:mm` today, otherwise `d MMM HH:mm`. Empty global and attribute histories have distinct messages.
+- `ApplicationKbService.usersPresent` uses the existing presence service and excludes the caller. The chat response
+  names the open KB and identifies other users who are building a rule.
+- `ActionComment` binds optional `limit` and `attribute` parameters by reflection. `21_awareness.md` is included in
+  both prompt contexts, and the capability card includes an "Other users" section with or without a selected case.
+  `16_listing_capabilities.md` does not enumerate sections, so it needed no change.
+
+Validation:
+
+- TDD: the two action-dispatch cases first failed because the new action classes did not exist; both now pass.
+- Added **35 server tests** across `ActionCommentAwarenessTest`, `AwarenessChatTest`, `ListRecentChangesTest`,
+  `ListUsersPresentTest`, and `ApplicationKbAwarenessTest`. Coverage includes case-less chat, active rule sessions,
+  optional arguments, empty history/presence, invalid limits, unknown attributes, renamed attributes, caller
+  exclusion, KB switches, and date formatting across midnight and years. Existing capability tests were updated.
+- `:common:test`: **851 passed**. Filtered `:server:test`: **1,979 passed**, none skipped, using step 3's
+  non-PostgreSQL filters.
+- `:ui:compileTestKotlin` and `:cucumber:compileTestKotlin` passed. IntelliJ's production build passed.
+  Gradle used `--offline`. No UI tests, cucumber scenarios, or PostgreSQL tests were run for this step.
+- Follow-up on 25 Oct: the user reported UI tests passing. The full cucumber suite was monitored and completed
+  after correcting two acceptance expectations from before the awareness changes: **230 scenarios now pass**.
+  See [the validation report](cucumber_validation_2026-10-25.md) for failures, fixes, and rerun evidence.
+
+### Original scope
 
 Both are `KbManagementAction`s (`changesContext = false`) through `KnowledgeBaseService`, **not** `ChatAction`s: the
 case-less `ChatManager` (`ChatManagerFactory.caseLess`) has no `RuleService`, and both are meaningful with a KB open
@@ -422,6 +456,18 @@ between makes the "yes" undo the wrong rule.
   and confirmation: refused with the new description, nothing deleted; undo after a fresh preview: succeeds.
 
 ## Step 8: acceptance
+
+### Partial completion (25 Oct 2026)
+
+The monitored full cucumber run exposed the old two-window refresh expectation and exact stale-refusal text check.
+Both are updated and pass: Bob's window shows Alice's presence and change notice and refreshes without reselecting
+a case; Alice's stale refusal retains its original explanation and includes Bob's recorded change. The dry run
+passes all **230 scenarios / 3,014 steps**. These checks were brought forward to keep the existing suite green.
+
+Step 8 remains incomplete: the dedicated REST change-log and presence scenarios and the undo-binding scenario
+below still need implementation; the latter depends on step 7.
+
+### Original scope
 
 - `requirements/kb/Concurrent Users.feature` (REST, no LLM):
     - "Bob's commit is in the change log": Alice reads `GET CHANGES limit=5` and sees one record with user `Bob`, kind

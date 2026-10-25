@@ -1,5 +1,6 @@
 package io.rippledown.server
 
+import io.rippledown.constants.chat.POSITIVE_CHANGE_LIMIT_MESSAGE
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.chat.KnowledgeBaseService
 import io.rippledown.kb.chat.OpenKnowledgeBases
@@ -10,6 +11,8 @@ import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.UserId
+import io.rippledown.model.PresentUser
+import io.rippledown.model.change.ChangeRecord
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.sample.SampleKB
 import io.rippledown.server.websocket.WebSocketManager
@@ -106,6 +109,26 @@ class ApplicationKbService(
 
     override fun isRuleSessionActive() =
         openEndpoint()?.session?.ruleSessionManagerFor(userId)?.isRuleSessionActive() == true
+
+    override fun recentChanges(limit: Int, attributeName: String?): List<ChangeRecord> {
+        require(limit > 0) { POSITIVE_CHANGE_LIMIT_MESSAGE }
+        val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
+        return endpoint.session.locked {
+            val kb = endpoint.kb
+            if (attributeName == null) kb.changeLog.mostRecent(limit)
+            else {
+                val attribute = requireNotNull(kb.attributeManager.attributeNamedExactly(attributeName)) {
+                    "No attribute named \"$attributeName\" exists."
+                }
+                kb.changeLog.concerning(attribute.id, limit)
+            }
+        }
+    }
+
+    override fun usersPresent(): List<PresentUser> {
+        val endpoint = checkNotNull(openEndpoint()) { "No knowledge base is open." }
+        return application.presence.present(endpoint.kbInfo().id).filter { it.userId != userId.value }
+    }
 
     private fun demonstrationCase(): ExternalCase {
         val stream = checkNotNull(ApplicationKbService::class.java.getResourceAsStream(DEMO_CASE_RESOURCE)) {

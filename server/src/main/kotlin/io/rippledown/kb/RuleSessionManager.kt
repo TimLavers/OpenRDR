@@ -686,12 +686,7 @@ class RuleSessionManager(
      * silent near-match would quietly compute a plausible number from the wrong
      * attribute for ever. A name that does not resolve exactly is asked about.
      */
-    private fun attributeNamedExactly(name: String): Attribute? {
-        val attributes = kb.attributeManager.all()
-        attributes.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
-        val target = name.normalizeForComparison()
-        return attributes.firstOrNull { it.name.normalizeForComparison() == target }
-    }
+    private fun attributeNamedExactly(name: String): Attribute? = kb.attributeManager.attributeNamedExactly(name)
 
     /**
      * The name of the attribute nearest [name], for suggesting the correction

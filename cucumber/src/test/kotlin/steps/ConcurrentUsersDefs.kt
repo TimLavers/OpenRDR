@@ -8,6 +8,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
 import io.rippledown.main.Api
 import io.rippledown.model.StaleRuleSessionException
 import io.rippledown.model.UserId
@@ -21,6 +22,9 @@ import io.rippledown.model.interpretationChangedMessage
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.model.rule.SessionStartRequest
 import kotlinx.coroutines.runBlocking
+import org.assertj.swing.edt.GuiActionRunner.execute
+import org.awaitility.Awaitility.await
+import java.time.Duration.ofSeconds
 
 /**
  * Several users talking to the one server, each over REST with their own
@@ -108,6 +112,22 @@ class ConcurrentUsersDefs {
         StepsInfrastructure.switchToClientOf(userName)
     }
 
+    @Then("{word}'s window should show that {word} is also here")
+    fun windowShowsOtherUser(userName: String, otherUser: String) {
+        StepsInfrastructure.switchToClientOf(userName)
+        await().atMost(ofSeconds(10)).untilAsserted {
+            execute<String?> { applicationBarPO().presence() } shouldBe "Also here: $otherUser"
+        }
+    }
+
+    @Then("{word}'s window should show a notice containing {string}")
+    fun windowShowsNotice(userName: String, text: String) {
+        StepsInfrastructure.switchToClientOf(userName)
+        await().atMost(ofSeconds(10)).untilAsserted {
+            chatPO().hasNoticeContaining(text) shouldBe true
+        }
+    }
+
     @Given("{word} starts a conversation about the knowledge base {word}")
     fun startConversationAboutKb(userName: String, kbName: String) {
         user(userName).startConversation(kbName)
@@ -163,7 +183,12 @@ class ConcurrentUsersDefs {
 
     @Then("{word}'s commit is refused because the interpretation of {word} changed")
     fun commitRefusedAsStale(userName: String, caseName: String) {
-        user(userName).lastCommitRefusal shouldBe interpretationChangedMessage(caseName)
+        user(userName).lastCommitRefusal shouldStartWith interpretationChangedMessage(caseName)
+    }
+
+    @Then("{word}'s commit refusal contains {string}")
+    fun commitRefusalContains(userName: String, text: String) {
+        user(userName).lastCommitRefusal shouldContain text
     }
 
     @Then("the comment given to case {word} in the knowledge base {word} is {string}")
