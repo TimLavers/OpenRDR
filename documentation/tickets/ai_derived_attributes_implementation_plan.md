@@ -1,6 +1,6 @@
 # Implementation plan: AI-evaluated derived attributes
 
-**Status: steps 1–4 implemented; step 5 next.**
+**Status: steps 1–5 implemented; step 6 next.**
 
 Design and acceptance semantics: [AI-evaluated derived attributes](ai_derived_attributes_design.md).
 Implement in the order below. Names marked new are proposed names, not claims about existing classes.
@@ -17,7 +17,7 @@ authoritative for later steps.
   The evaluator tests live in `DefaultValueExpressionEvaluatorTest`, not a separate `AiExpressionEvaluatorTest`.
 - **Step 2 — done.** `AiEvaluationKey`/`AiEvaluationRecord` in `model/rule/evaluation`; `persistence/AiEvaluationStore`
   (`InMemoryAiEvaluationStore`, `PostgresAiEvaluationStore`); `AiBooleanClassifier`/`AiClassification` and
-  `AiEvaluationService` in `kb/ai`; export/import of records.
+  `AiEvaluationService` in `kb/ai`. Export/import of records is left to step 10.
 - **Step 3 — done.** The adapter is in `llm`, not in `Gemini.kt`: `GeminiBooleanClassifier` (prompt contract v1,
   strict parsing, `ClassificationLimits`, typed `ClassificationFailure` kinds) over a `StructuredGenerationTransport`
   whose production implementation is `GeminiStructuredTransport`. The server bridge is `kb/ai/GeminiAiBooleanClassifier`;
@@ -27,7 +27,16 @@ authoritative for later steps.
   run resets the case's interpretation. `materialise`/`apply` keep local semantics and throw
   `IncompleteInferenceException` on a stopped outcome, so until step 5 routes the entry points through the coordinator a
   KB holding an AI definition fails loudly rather than answering wrongly.
-- **Steps 5–10 — not started.**
+- **Step 5 — done.** `kb/ai/AiInferenceCoordinator` with `interpretStored(caseId)` / `interpret(case)` returning
+  `PreparedInterpretation` (`Ready(case, provenance)` / `Incomplete(attribute, reason)` / `Abandoned(reason)`). The
+  snapshot is the case's data with a fresh `Interpretation`, `RuleTree.copy()` (deep: `Rule.copy` re-parents, conditions
+  are immutable data classes) and `DerivedDefinitionManager.all()`. Staleness is detected structurally rather than by
+  revision counters: on re-validation the live rule shapes (id, parent, conditions, assignment), definitions map and
+  case data are compared with the snapshot's, so no mutation site can forget to bump a counter. Evaluations already
+  obtained are kept across restarts, as a result is identified by its key. Restart budget `DEFAULT_MAX_RESTARTS = 3`.
+  Prepare/apply separation and the routing of `KBEndpoint`, cornerstones and ingestion through the coordinator are
+  step 6; until then nothing calls the coordinator in production.
+- **Steps 6–10 — not started.**
 
 ## Working rules and verification
 

@@ -34,7 +34,7 @@ class GeminiStructuredTransportTest {
     private val classifier = GeminiBooleanClassifier(GeminiStructuredTransport())
 
     @Test
-    fun `an affirmative note classifies true with verbatim evidence`() = runBlocking {
+    fun `an affirmative note classifies true with verbatim evidence`(): Unit = runBlocking {
         val result = classifier.classify(hasDiabetes, "54M. T2 Diab since 2019, on metformin.")
 
         val classified = result.shouldBeInstanceOf<BooleanClassification.Classified>()
@@ -43,7 +43,7 @@ class GeminiStructuredTransportTest {
     }
 
     @Test
-    fun `a family history note classifies false`() = runBlocking {
+    fun `a family history note classifies false`(): Unit = runBlocking {
         val result = classifier.classify(hasDiabetes, "Mother had diabetes. Pt well, no complaints.")
 
         result.shouldBeInstanceOf<BooleanClassification.Classified>().value shouldBe false
