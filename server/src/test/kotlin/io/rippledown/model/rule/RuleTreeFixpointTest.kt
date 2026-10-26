@@ -1,15 +1,25 @@
 package io.rippledown.model.rule
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.caseview.AiProvenance
 import io.rippledown.model.condition.greaterThanOrEqualTo
 import io.rippledown.model.condition.isAbsent
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.condition.isPresent
+import io.rippledown.model.rule.evaluation.AiEvaluationRequest
+import io.rippledown.model.rule.evaluation.AiEvaluationResult
+import io.rippledown.model.rule.evaluation.DefaultValueExpressionEvaluator
+import io.rippledown.model.rule.evaluation.EvaluationContext
+import io.rippledown.model.rule.evaluation.EvaluationOutcome
+import io.rippledown.model.rule.evaluation.ValueExpressionEvaluator
 import io.rippledown.utils.defaultDate
 import kotlin.test.Test
 
@@ -396,6 +406,292 @@ internal class RuleTreeFixpointTest {
 
         // Then no assignment is made and no error is thrown
         materialised.numberOfEpisodes() shouldBe 0
+    }
+
+    private val notes = Attribute(4, "clinical_notes")
+    private val hasDiabetes = Attribute(13, "hasDiabetes", AttributeKind.DERIVED)
+    private val hasDiabetesDefinition = AiBoolean(
+        sourceAttribute = notes,
+        instructions = "True if the notes affirm a personal history of diabetes.",
+        revision = "rev-1",
+        evaluationProfile = AiEvaluationProfile("gemini", "gemini-2.5-flash", 0.0, 1, 1)
+    )
+    private val aiResolver: DefinitionResolver = { if (it == hasDiabetes) hasDiabetesDefinition else null }
+    private val diabetic = AssignValue(Attribute(23, "C4", AttributeKind.COMMENT), CommentTemplate("Diabetic."))
+    private val notDiabetic = AssignValue(Attribute(24, "C5", AttributeKind.COMMENT), CommentTemplate("Not diabetic."))
+    private val unknown = AssignValue(Attribute(25, "C6", AttributeKind.COMMENT), CommentTemplate("Diabetes status unknown."))
+
+    private class CountingEvaluator : ValueExpressionEvaluator {
+        private val delegate = DefaultValueExpressionEvaluator()
+        val evaluated = mutableListOf<ValueExpression>()
+        override fun evaluate(expression: ValueExpression, case: RDRCase, context: EvaluationContext): EvaluationOutcome {
+            evaluated.add(expression)
+            return delegate.evaluate(expression, case, context)
+        }
+        fun aiEvaluations() = evaluated.count { it is AiBoolean }
+    }
+
+    private fun success(value: Boolean, evidence: String? = null) =
+        AiEvaluationResult.Success(value, evidence, 1_700_000_000_000, "gemini-2.5-flash-001")
+
+    private fun contextWith(input: String, result: AiEvaluationResult) =
+        EvaluationContext.EMPTY.with(AiEvaluationRequest(hasDiabetesDefinition, input), result)
+
+    private fun RuleTree.withDiabetesRules(): RuleTree {
+        withRule(assignment = AssignValue(hasDiabetes, ByDefinition))
+        withRule(assignment = diabetic, conditions = arrayOf(isCondition(nextConditionId++, hasDiabetes, "true")))
+        withRule(assignment = notDiabetic, conditions = arrayOf(isCondition(nextConditionId++, hasDiabetes, "false")))
+        withRule(assignment = unknown, conditions = arrayOf(isAbsent(hasDiabetes, nextConditionId++)))
+        return this
+    }
+
+    @Test
+    fun `a prepared true result is materialised and drives the downstream rule`() {
+        // Given rules on an AI Boolean, and a prepared true result for the case's notes
+        val tree = RuleTree().withDiabetesRules()
+        val case = case(notes to "T2 Diab")
+        val context = contextWith("T2 Diab", success(true, "T2 Diab"))
+        val evaluator = CountingEvaluator()
+
+        // When the case is inferred
+        val outcome = tree.infer(case, aiResolver, evaluator, context)
+
+        // Then the value is on the case, only the true rule fired, and the provenance is reported
+        val complete = outcome.shouldBeInstanceOf<InferenceOutcome.Complete>()
+        complete.case.latestValue(hasDiabetes) shouldBe "true"
+        complete.case.interpretation.assignments() shouldBe setOf(AssignValue(hasDiabetes, ByDefinition), diabetic)
+        complete.provenance shouldBe mapOf(
+            hasDiabetes to AiProvenance(
+                sourceName = "clinical_notes",
+                instructions = hasDiabetesDefinition.instructions,
+                evidence = "T2 Diab",
+                evaluatedAt = 1_700_000_000_000,
+                model = "gemini-2.5-flash-001",
+                revision = "rev-1"
+            )
+        )
+    }
+
+    @Test
+    fun `a prepared false result is a value, not an absence`() {
+        // Given a prepared false result
+        val tree = RuleTree().withDiabetesRules()
+        val case = case(notes to "FH diab")
+        val context = contextWith("FH diab", success(false))
+
+        // When the case is inferred
+        val outcome = tree.infer(case, aiResolver, CountingEvaluator(), context)
+
+        // Then the false rule fired and the absence rule did not
+        val complete = outcome.shouldBeInstanceOf<InferenceOutcome.Complete>()
+        complete.case.latestValue(hasDiabetes) shouldBe "false"
+        complete.case.interpretation.assignments() shouldBe setOf(AssignValue(hasDiabetes, ByDefinition), notDiabetic)
+    }
+
+    @Test
+    fun `the prepared result is reused on every pass`() {
+        // Given a chain that needs several passes to stabilise
+        val tree = RuleTree().withDiabetesRules()
+        val case = case(notes to "T2 Diab")
+        val evaluator = CountingEvaluator()
+
+        // When the case is inferred
+        tree.infer(case, aiResolver, evaluator, contextWith("T2 Diab", success(true)))
+
+        // Then the AI expression was evaluated once per pass (assign, fire downstream, confirm stable), with no demand
+        evaluator.aiEvaluations() shouldBe 3
+    }
+
+    @Test
+    fun `a missing result ends the attempt with a demand and no partial interpretation`() {
+        // Given no prepared result for the case's notes
+        val tree = RuleTree().withDiabetesRules()
+        val case = case(notes to "T2 Diab")
+
+        // When the case is inferred
+        val outcome = tree.infer(case, aiResolver, CountingEvaluator(), EvaluationContext.EMPTY)
+
+        // Then the demand names the exact request, and nothing has been concluded
+        outcome shouldBe InferenceOutcome.Demand(hasDiabetes, AiEvaluationRequest(hasDiabetesDefinition, "T2 Diab"))
+        case.interpretation.assignments() shouldBe emptySet()
+    }
+
+    @Test
+    fun `a failed evaluation ends the attempt without firing absence rules`() {
+        // Given a prepared failure for the case's notes
+        val tree = RuleTree().withDiabetesRules()
+        val case = case(notes to "T2 Diab")
+        val context = contextWith("T2 Diab", AiEvaluationResult.Failure("Gemini unavailable"))
+
+        // When the case is inferred
+        val outcome = tree.infer(case, aiResolver, CountingEvaluator(), context)
+
+        // Then the outcome is incomplete, naming the attribute, and the absence rule has not fired
+        outcome shouldBe InferenceOutcome.Incomplete(hasDiabetes, "Gemini unavailable")
+        case.interpretation.assignments() shouldBe emptySet()
+    }
+
+    @Test
+    fun `a case without the source value needs no evaluation and lets absence rules fire`() {
+        // Given a case with no notes
+        val tree = RuleTree().withDiabetesRules()
+        val case = case(glucose to "5.0")
+
+        // When the case is inferred with no prepared results
+        val outcome = tree.infer(case, aiResolver, CountingEvaluator(), EvaluationContext.EMPTY)
+
+        // Then inference completes with the absence rule fired and no provenance
+        val complete = outcome.shouldBeInstanceOf<InferenceOutcome.Complete>()
+        complete.case.latestValue(hasDiabetes).shouldBeNull()
+        complete.case.interpretation.assignments() shouldBe setOf(AssignValue(hasDiabetes, ByDefinition), unknown)
+        complete.provenance shouldBe emptyMap()
+    }
+
+    @Test
+    fun `a blank source value is no input`() {
+        val tree = RuleTree().withDiabetesRules()
+
+        val outcome = tree.infer(case(notes to "   "), aiResolver, CountingEvaluator(), EvaluationContext.EMPTY)
+
+        outcome.shouldBeInstanceOf<InferenceOutcome.Complete>().case.interpretation.assignments() shouldBe
+                setOf(AssignValue(hasDiabetes, ByDefinition), unknown)
+    }
+
+    @Test
+    fun `an inactive AI rule is not evaluated`() {
+        // Given an AI assignment rule whose condition does not hold
+        val tree = RuleTree()
+        tree.withRule(
+            assignment = AssignValue(hasDiabetes, ByDefinition),
+            conditions = arrayOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0))
+        )
+        val evaluator = CountingEvaluator()
+
+        // When a case not satisfying the condition is inferred with no prepared results
+        val outcome = tree.infer(case(notes to "T2 Diab", glucose to "5.0"), aiResolver, evaluator, EvaluationContext.EMPTY)
+
+        // Then inference completes without any demand
+        outcome.shouldBeInstanceOf<InferenceOutcome.Complete>()
+        evaluator.aiEvaluations() shouldBe 0
+    }
+
+    @Test
+    fun `a retracted AI assignment is not evaluated`() {
+        // Given an AI assignment rule with a stopping child whose condition holds
+        val tree = RuleTree()
+        val assigning = tree.withRule(assignment = AssignValue(hasDiabetes, ByDefinition))
+        assigning.addChild(
+            Rule(nextRuleId++, null, setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(), null)
+        )
+        val evaluator = CountingEvaluator()
+
+        // When the case is inferred with no prepared results
+        val outcome = tree.infer(case(notes to "T2 Diab", glucose to "12.0"), aiResolver, evaluator, EvaluationContext.EMPTY)
+
+        // Then no demand is made
+        outcome.shouldBeInstanceOf<InferenceOutcome.Complete>()
+        evaluator.aiEvaluations() shouldBe 0
+    }
+
+    @Test
+    fun `a literal override in a child rule is not evaluated as AI`() {
+        // Given an AI by-definition rule with a conditioned child overriding it with a literal
+        val tree = RuleTree()
+        val byDefinition = tree.withRule(assignment = AssignValue(hasDiabetes, ByDefinition))
+        byDefinition.addChild(
+            Rule(
+                nextRuleId++, null, setOf(greaterThanOrEqualTo(nextConditionId++, glucose, 11.0)), mutableSetOf(),
+                AssignValue(hasDiabetes, Literal("true"))
+            )
+        )
+        val evaluator = CountingEvaluator()
+
+        // When a case satisfying the child's condition is inferred with no prepared results
+        val outcome = tree.infer(case(notes to "FH diab", glucose to "12.0"), aiResolver, evaluator, EvaluationContext.EMPTY)
+
+        // Then the literal is assigned and no classification was needed
+        outcome.shouldBeInstanceOf<InferenceOutcome.Complete>().case.latestValue(hasDiabetes) shouldBe "true"
+        evaluator.aiEvaluations() shouldBe 0
+    }
+
+    @Test
+    fun `an AI value activating a rule on a later pass still needs no new request`() {
+        // Given a rule whose firing depends on the AI value and itself assigns a derived value
+        val tree = RuleTree().withDiabetesRules()
+        tree.withRule(
+            assignment = AssignValue(riskScore, Literal("7")),
+            conditions = arrayOf(isCondition(nextConditionId++, hasDiabetes, "true"))
+        )
+        val case = case(notes to "T2 Diab")
+
+        // When the case is inferred with the one prepared result
+        val outcome = tree.infer(case, aiResolver, CountingEvaluator(), contextWith("T2 Diab", success(true)))
+
+        // Then the later-pass rule has fired
+        outcome.shouldBeInstanceOf<InferenceOutcome.Complete>().case.latestValue(riskScore) shouldBe "7"
+    }
+
+    @Test
+    fun `a stale AI value is stripped when the source is gone`() {
+        // Given a case carrying a derived AI value but no longer the notes
+        val tree = RuleTree().withDiabetesRules()
+        val stale = case(glucose to "5.0").withDerivedValue(hasDiabetes, "true")
+
+        // When inferred
+        val outcome = tree.infer(stale, aiResolver, CountingEvaluator(), EvaluationContext.EMPTY)
+
+        // Then the value is gone and the absence rule fires
+        val complete = outcome.shouldBeInstanceOf<InferenceOutcome.Complete>()
+        complete.case.attributes.contains(hasDiabetes) shouldBe false
+        complete.case.interpretation.assignments() shouldBe setOf(AssignValue(hasDiabetes, ByDefinition), unknown)
+    }
+
+    @Test
+    fun `different notes are different requests`() {
+        // Given a result prepared for other notes
+        val tree = RuleTree().withDiabetesRules()
+        val context = contextWith("FH diab", success(false))
+
+        // When a case with different notes is inferred
+        val outcome = tree.infer(case(notes to "T2 Diab"), aiResolver, CountingEvaluator(), context)
+
+        // Then a demand for the new notes is made
+        outcome shouldBe InferenceOutcome.Demand(hasDiabetes, AiEvaluationRequest(hasDiabetesDefinition, "T2 Diab"))
+    }
+
+    @Test
+    fun `local-only interpretation is unchanged by the evaluator`() {
+        // Given the local rules of the earlier tests
+        val tree = RuleTree()
+        tree.withRule(assignment = AssignValue(bmi, ByDefinition))
+
+        // When inferred with the default evaluator and an empty context
+        val outcome = tree.infer(case(weight to "93.0", height to "1.8"), { bmiFormula() })
+
+        // Then the formula is evaluated locally
+        outcome.shouldBeInstanceOf<InferenceOutcome.Complete>().case.latestValue(bmi) shouldBe "28.7"
+    }
+
+    @Test
+    fun `the legacy entry points refuse an unprepared AI evaluation`() {
+        // Given rules on an AI Boolean and a case needing a classification
+        val tree = RuleTree().withDiabetesRules()
+
+        // When the synchronous entry points are used
+        val fromMaterialise = shouldThrow<IncompleteInferenceException> { tree.materialise(case(notes to "T2 Diab"), aiResolver) }
+        val fromApply = shouldThrow<IncompleteInferenceException> { tree.apply(case(notes to "T2 Diab"), aiResolver) }
+
+        // Then they fail rather than publish a partial interpretation
+        fromMaterialise.outcome shouldBe InferenceOutcome.Demand(hasDiabetes, AiEvaluationRequest(hasDiabetesDefinition, "T2 Diab"))
+        fromApply.message shouldContain "hasDiabetes"
+    }
+
+    @Test
+    fun `stopped outcomes describe themselves by attribute`() {
+        InferenceOutcome.Demand(hasDiabetes, AiEvaluationRequest(hasDiabetesDefinition, "T2 Diab")).description shouldBe
+                "Interpretation needs an AI evaluation of hasDiabetes that has not been prepared."
+        InferenceOutcome.Incomplete(hasDiabetes, "Gemini unavailable").description shouldBe
+                "The AI evaluation of hasDiabetes failed: Gemini unavailable"
     }
 
     @Test

@@ -1,9 +1,33 @@
 # Implementation plan: AI-evaluated derived attributes
 
-**Status: planned; no implementation performed by this document.**
+**Status: steps 1–4 implemented; step 5 next.**
 
 Design and acceptance semantics: [AI-evaluated derived attributes](ai_derived_attributes_design.md).
 Implement in the order below. Names marked new are proposed names, not claims about existing classes.
+
+## Progress
+
+Where the implementation settled on different names or placement than proposed below, the implemented form is
+authoritative for later steps.
+
+- **Step 1 — done.** `AiBoolean`, `AiEvaluationProfile`, `AiBooleanExample` in `common/.../model/rule/AiBoolean.kt`;
+  `AiProvenance` in `common/.../model/caseview`. Server: `model/rule/evaluation/ValueExpressionEvaluator.kt`
+  (`AiEvaluationRequest`, `AiEvaluationResult`, `EvaluationContext`, `EvaluationOutcome`,
+  `DefaultValueExpressionEvaluator`, `AiBoolean.inputFrom`), `kb/ai/AiBooleanValidation.kt`, `kb/ai/AiEvaluationPolicy.kt`.
+  The evaluator tests live in `DefaultValueExpressionEvaluatorTest`, not a separate `AiExpressionEvaluatorTest`.
+- **Step 2 — done.** `AiEvaluationKey`/`AiEvaluationRecord` in `model/rule/evaluation`; `persistence/AiEvaluationStore`
+  (`InMemoryAiEvaluationStore`, `PostgresAiEvaluationStore`); `AiBooleanClassifier`/`AiClassification` and
+  `AiEvaluationService` in `kb/ai`; export/import of records.
+- **Step 3 — done.** The adapter is in `llm`, not in `Gemini.kt`: `GeminiBooleanClassifier` (prompt contract v1,
+  strict parsing, `ClassificationLimits`, typed `ClassificationFailure` kinds) over a `StructuredGenerationTransport`
+  whose production implementation is `GeminiStructuredTransport`. The server bridge is `kb/ai/GeminiAiBooleanClassifier`;
+  `AiEvaluationPolicy` takes its versions from the `llm` constants. `GeminiStructuredTransportTest` is the live check.
+- **Step 4 — done.** `RuleTree.infer(case, resolver, evaluator, context)` returns `InferenceOutcome`:
+  `Complete(case, provenance)` or `Stopped` (`Demand(attribute, request)` / `Incomplete(attribute, reason)`); a stopped
+  run resets the case's interpretation. `materialise`/`apply` keep local semantics and throw
+  `IncompleteInferenceException` on a stopped outcome, so until step 5 routes the entry points through the coordinator a
+  KB holding an AI definition fails loudly rather than answering wrongly.
+- **Steps 5–10 — not started.**
 
 ## Working rules and verification
 
