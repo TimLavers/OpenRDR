@@ -1,23 +1,29 @@
 package io.rippledown.appbar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +34,7 @@ import io.rippledown.constants.main.APPLICATION_BAR_DESCRIPTION
 import io.rippledown.constants.main.APPLICATION_BAR_ID
 import io.rippledown.constants.main.RECONNECTING_DESCRIPTION
 import io.rippledown.model.KBInfo
+import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Text as Material3Text
 
@@ -57,9 +64,6 @@ fun ApplicationBar(
         if (kbInfo != null) {
             key(kbInfo.id) { KnowledgeBaseDescription(description) }
         }
-        if (othersPresent.isNotEmpty()) {
-            OthersPresent(othersPresent)
-        }
         if (!connected) {
             Text(
                 text = "Reconnecting…",
@@ -69,19 +73,72 @@ fun ApplicationBar(
                     .semantics { contentDescription = RECONNECTING_DESCRIPTION }
             )
         }
+        Spacer(Modifier.weight(1f))
+        if (kbInfo != null && othersPresent.isNotEmpty()) {
+            key(kbInfo.id) { OthersPresent(kbInfo.name, othersPresent) }
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OthersPresent(othersPresent: List<String>) {
-    Text(
-        text = PRESENCE_PREFIX_TEXT + othersPresent.joinToString(", "),
-        style = MaterialTheme.typography.body2,
-        color = colors.onPrimary.copy(alpha = 0.7f),
-        modifier = Modifier
-            .padding(horizontal = 12.dp)
-            .semantics { contentDescription = PRESENCE_DESCRIPTION }
-    )
+private fun OthersPresent(kbName: String, othersPresent: List<String>) {
+    val text = "Others with $kbName open:\n" + othersPresent.joinToString("\n") { "• $it" }
+    val tooltip = rememberTooltipState(isPersistent = true)
+    val scope = rememberCoroutineScope()
+    var focused by remember { mutableStateOf(false) }
+    var openedByClick by remember { mutableStateOf(false) }
+    LaunchedEffect(focused) {
+        if (focused) tooltip.show() else tooltip.dismiss()
+    }
+    LaunchedEffect(tooltip.isVisible) {
+        if (!tooltip.isVisible) openedByClick = false
+    }
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+        state = tooltip,
+        focusable = false,
+        tooltip = {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = Material3Theme.colorScheme.inverseSurface,
+                contentColor = Material3Theme.colorScheme.inverseOnSurface,
+                shadowElevation = 4.dp
+            ) {
+                Material3Text(
+                    text,
+                    fontSize = 12.sp,
+                    modifier = Modifier.widthIn(max = 320.dp).heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState()).padding(12.dp)
+                        .semantics { contentDescription = PRESENCE_DETAILS_DESCRIPTION }
+                )
+            }
+        }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.heightIn(min = 36.dp).clip(RoundedCornerShape(4.dp))
+                .semantics(mergeDescendants = true) {
+                    contentDescription = PRESENCE_DESCRIPTION
+                    stateDescription = text
+                }
+                .onFocusChanged { focused = it.isFocused }
+                .clickable(role = Role.Button) {
+                    // Hover can reveal the names before the first click arrives.
+                    // Only a second click should toggle that list closed.
+                    val dismiss = openedByClick && tooltip.isVisible
+                    openedByClick = !dismiss
+                    scope.launch { if (dismiss) tooltip.dismiss() else tooltip.show() }
+                }
+                .padding(horizontal = 8.dp)
+        ) {
+            Icon(Icons.Outlined.People, contentDescription = null,
+                tint = colors.onPrimary.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
+            Text(othersPresent.size.toString(), style = MaterialTheme.typography.body2,
+                color = colors.onPrimary.copy(alpha = 0.7f))
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

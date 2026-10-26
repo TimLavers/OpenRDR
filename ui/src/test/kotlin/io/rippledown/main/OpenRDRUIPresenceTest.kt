@@ -1,6 +1,9 @@
 package io.rippledown.main
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.runComposeUiTest
@@ -65,11 +68,13 @@ class OpenRDRUIPresenceTest {
         runOnIdle {
             presenceChanged(PresenceInfo(kb.id, listOf(PresentUser("Alice", false), PresentUser("Carol", true))))
         }
-        presence.assertTextEquals("Also here: Carol")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Carol"))
         runOnIdle { snapshot.complete(listOf(PresentUser("Alice", false), PresentUser("Bob", false))) }
 
         // Then the current presence is retained and self is excluded
-        presence.assertTextEquals("Also here: Carol")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Carol"))
         coVerify(exactly = 0) { api.startConversation(any(), any()) }
     }
 
@@ -83,7 +88,8 @@ class OpenRDRUIPresenceTest {
 
         // Then
         val presence = onNodeWithContentDescription(PRESENCE_DESCRIPTION)
-        presence.assertTextEquals("Also here: Bob")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Bob"))
         coVerify(exactly = 1) { api.presence() }
         coVerify(exactly = 0) { api.startConversation(any(), any()) }
 
@@ -91,7 +97,8 @@ class OpenRDRUIPresenceTest {
         runOnIdle { presenceChanged(PresenceInfo("other-kb", listOf(PresentUser("Carol", false)))) }
 
         // Then
-        presence.assertTextEquals("Also here: Bob")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Bob"))
 
         // When the open KB reports that only this user remains
         runOnIdle { presenceChanged(PresenceInfo(kb.id, listOf(PresentUser("Alice", true)))) }
@@ -106,7 +113,8 @@ class OpenRDRUIPresenceTest {
         coEvery { api.presence() } returns listOf(PresentUser("Bob", false))
         setContent { OpenRDRUI(handler, dispatcher = Unconfined, voiceRecognition = voiceRecognition) }
         val presence = onNodeWithContentDescription(PRESENCE_DESCRIPTION)
-        presence.assertTextEquals("Also here: Bob")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Bob"))
 
         // When a different KB is adopted and its snapshot has not returned
         val snapshot = CompletableDeferred<List<PresentUser>>()
@@ -119,7 +127,8 @@ class OpenRDRUIPresenceTest {
 
         // When a push arrives on the new KB, then it is closed before the snapshot completes
         runOnIdle { presenceChanged(PresenceInfo("other", listOf(PresentUser("Carol", false)))) }
-        presence.assertTextEquals("Also here: Carol")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Other open:\n• Carol"))
         runOnIdle { chatContextChanged(ChatContextInfo(null, null)) }
         runOnIdle { snapshot.complete(listOf(PresentUser("Dave", false))) }
 
@@ -140,6 +149,7 @@ class OpenRDRUIPresenceTest {
         runOnIdle { presenceChanged(PresenceInfo(kb.id, listOf(PresentUser("Bob", false)))) }
 
         // Then
-        presence.assertTextEquals("Also here: Bob")
+        presence.assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Bob"))
     }
 }

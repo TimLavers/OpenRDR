@@ -270,8 +270,10 @@ The push is `PRESENCE` + `{kbId, users}`, a broadcast filtered by the client on 
 `casesInfo` is (a client's conversation lags the KB its window shows). A window also fetches a snapshot (`GET PRESENCE`)
 once it has adopted its KB: a new window can receive the connection-triggered push before its
 `kbInfo` is set and discard it, and a window that adopts an existing conversation starts none of its own, so no push
-is guaranteed to follow. The client shows the others in the application bar beside the KB name — *Also here: Bob,
-Carol* — and nothing when alone.
+is guaranteed to follow. The client shows a people icon and a count of other users at the right of the application
+bar, and nothing when alone. Hover, click, or keyboard focus reveals **Others with <KB name> open:** followed by
+a bulleted list of names. The count and list update as users join or leave; changing or closing the KB dismisses
+the old popup. The current user's name stays in the window title.
 
 ### The change log: who did what, when
 
@@ -284,6 +286,10 @@ The `summary` is one line written for history, by a formatter of its own — *Ad
 is hot* — because `Rule.actionSummary` is laid out over several lines for the panel and omits the conditions, which
 are the part a colleague needs. `attributeIds` are the attributes the change concerns (the attribute a rule assigns,
 the attribute renamed or redefined), so that "who changed BMI?" is a filter by id and survives a rename.
+
+Assignments made by definition show the stored expression, for example *Assigned x2 = 2 * x when x ≤ 2.0.*
+The summary captures the definition at the time of the change; later definition edits leave earlier history intact.
+Undo previews also resolve definitions, showing the expression currently used by the rule being reviewed.
 
 `RuleSessionRecord` stays as the undo mechanism; the log is append-only and is never consulted by the engine. It is
 exported and imported with the KB like the rule session records; an export without the directory imports as an empty
@@ -388,7 +394,7 @@ with connections and clients closed by the scenario teardown hook.
 What a REST client cannot see is what another user's *window* does with the frames it was or was not sent. One
 two-window scenario covers that (`requirements/kb/Concurrent Users with windows.feature`): Alice builds a rule with a
 cornerstone in her window while Bob, on the same KB, sees no cornerstone; once she commits, his window shows the
-presence line, a notice naming her, and his case updated without his reselecting it (before the awareness work his
+presence icon and popup, a notice naming her, and his case updated without his reselecting it (before the awareness work his
 case stayed stale until he reselected it). `StepsInfrastructure` keeps one `LaunchedClient` per named user and a
 current one that the page objects address; "I switch to Alice's window" redirects them and brings her window to the
 front, since Robot clicks land on whichever window is on top. The in-JVM observation hooks (`ChatTestHook`,
@@ -415,7 +421,7 @@ checks reconnection; `OpenRDRUIRecoveryTest` checks replay, duplicate delivery, 
 Over REST, `Concurrent Users.feature` covers Bob committing and Alice reading the log;
 Bob leaving presence when he closes the KB while his socket stays connected; and an intervening commit causing
 Alice's undo to be refused until she previews again, followed by a successful undo attributed to her. The
-two-window scenario checks Bob's window showing the presence line, the notice, and his case updated without
+two-window scenario checks Bob's window showing Alice in the presence popup, the notice, and his case updated without
 reselecting it.
 
 ## Out of scope

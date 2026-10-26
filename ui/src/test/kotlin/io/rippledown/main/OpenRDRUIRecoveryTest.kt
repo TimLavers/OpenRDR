@@ -1,6 +1,7 @@
 package io.rippledown.main
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.semantics.SemanticsProperties
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.chat.ChatTestHook
@@ -125,7 +126,8 @@ class OpenRDRUIRecoveryTest {
         // Then
         onNodeWithText("Recovered comment.").assertExists()
         onNodeWithContentDescription("Reconnecting").assertDoesNotExist()
-        onNodeWithContentDescription(PRESENCE_DESCRIPTION).assertTextEquals("Also here: Bob")
+        onNodeWithContentDescription(PRESENCE_DESCRIPTION).assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Bob"))
         notices() shouldBe listOf("Bob: Change 1.")
         coVerify(exactly = 1) { api.changes(null) }
         coVerify(exactly = 2) { api.presence() }
@@ -264,7 +266,8 @@ class OpenRDRUIRecoveryTest {
         runOnIdle { presence.complete(listOf(PresentUser("Bob", false))) }
 
         // Then
-        onNodeWithContentDescription(PRESENCE_DESCRIPTION).assertTextEquals("Also here: Carol")
+        onNodeWithContentDescription(PRESENCE_DESCRIPTION).assertTextEquals("1").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription, "Others with Clinic open:\n• Carol"))
     }
 
     @Test

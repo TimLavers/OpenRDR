@@ -45,7 +45,7 @@ If either fails, the answer belongs in the text field.
 | Delete knowledge base chip                 | No                 | Irreversible; the confirmation is the point.                                                                                                                                            |
 | Anything needing a value or an explanation | No                 | Not a closed set.                                                                                                                                                                       |
 | Warning row                                | Built (display)    | A GUI action the server refused is reported in the chat with a warning icon, saying what was not done and why. No controls. (No GUI action is currently refusable; the row type stays.) |
-| App-bar "Also here: X, Y" presence line    | Built (display)    | Connected users with this KB open, shown beside the KB name and kept current by pushes and snapshots; see [concurrent_users.md](concurrent_users.md).                                   |
+| App-bar people icon and count             | Built             | Other connected users with this KB open; hover, click, or keyboard focus shows a bulleted list of names. Kept current by pushes and snapshots; see [concurrent_users.md](concurrent_users.md). |
 | Notice row                                 | Built (display)    | Another user's change, named and attributed, in the transcript next to the case it altered. Not a bot turn, not model history, no controls.                                             |
 
 Hover tooltips (a KB's one-line description on its row, help on a heading) are passive disclosure and need not pass the

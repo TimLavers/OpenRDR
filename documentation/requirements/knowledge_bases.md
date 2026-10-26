@@ -40,7 +40,7 @@ presence list even if their socket remains connected. A socket reconnect recover
 
 Validation: `ListRecentChangesTest` and `AwarenessChatTest` cover chat history; `ListUsersPresentTest` covers chat
 presence. `kb/Concurrent Users.feature` covers REST history and presence transitions, and
-`kb/Concurrent Users with windows.feature` covers the visible presence line, notice, and case refresh. See
+`kb/Concurrent Users with windows.feature` covers the presence icon and names popup, notice, and case refresh. See
 [the concurrent-users design](../design/concurrent_users.md) for lifecycle and persistence guarantees.
 
 ## Demonstration knowledge bases

@@ -704,12 +704,14 @@ class RuleSessionManager(
 
     /**
      * How an assignment reads to the user: a comment as its (truncated) text,
-     * resolved through the attribute's definition when the rule assigns it by
-     * definition, and anything else as the assignment itself.
+     * and a derived value as the attribute and its expression. Resolve stored
+     * definitions for both kinds so the user sees the actual definition.
      */
     private fun describe(assignment: AssignValue): String {
-        if (assignment.attribute.kind != AttributeKind.COMMENT) return assignment.asText()
         val expression = assignment.expression.resolvedFor(assignment.attribute, kb.definitionResolver)
+        if (assignment.attribute.kind != AttributeKind.COMMENT) {
+            return assignment.copy(expression = expression ?: assignment.expression).asText()
+        }
         val text = when (expression) {
             is CommentTemplate -> expression.textWithVariableNames { id -> attributeById(id) }
             is Literal -> expression.value

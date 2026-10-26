@@ -11,6 +11,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
 import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -219,8 +220,15 @@ class ConcurrentUsersDefs {
     @Then("{word}'s window should show that {word} is also here")
     fun windowShowsOtherUser(userName: String, otherUser: String) {
         StepsInfrastructure.switchToClientOf(userName)
-        await().atMost(ofSeconds(10)).untilAsserted {
-            execute<String?> { applicationBarPO().presence() } shouldBe "Also here: $otherUser"
+        await().atMost(ofSeconds(10)).until {
+            execute<Boolean> { applicationBarPO().showPresence() }
+        }
+        try {
+            await().atMost(ofSeconds(10)).untilAsserted {
+                execute<String?> { applicationBarPO().presence() }.orEmpty().lines() shouldContain "• $otherUser"
+            }
+        } finally {
+            execute { applicationBarPO().hidePresence() }
         }
     }
 
