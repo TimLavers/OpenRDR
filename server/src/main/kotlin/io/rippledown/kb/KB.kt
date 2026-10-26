@@ -19,6 +19,7 @@ class KB(private val persistentKB: PersistentKB) {
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
+    val aiEvaluationStore = persistentKB.aiEvaluationStore()
 
     /**
      * Resolves a derived attribute to its stored definition, so that
@@ -139,9 +140,15 @@ class KB(private val persistentKB: PersistentKB) {
 
     fun getCase(id: Long): RDRCase? = caseManager.getCase(id)
 
+    /**
+     * Stores the primary data of an externally supplied case without
+     * interpreting it, so that the data is retained even if the
+     * interpretation cannot be completed.
+     */
+    fun storeCase(externalCase: ExternalCase): RDRCase = caseManager.add(createRDRCase(externalCase))
+
     fun processCase(externalCase: ExternalCase): RDRCase {
-        val case = createRDRCase(externalCase)
-        val stored = caseManager.add(case)
+        val stored = storeCase(externalCase)
         interpret(stored)
         // Resolve ByDefinition assignments to their stored definitions so that
         // callers reading the interpretation directly (e.g. the interpreter API
@@ -183,8 +190,13 @@ class KB(private val persistentKB: PersistentKB) {
 
     fun interpret(case: RDRCase) = ruleTree.apply(case, definitionResolver)
 
-    fun viewableCase(case: RDRCase): ViewableCase {
-        val materialised = ruleTree.materialise(case, definitionResolver)
+    fun viewableCase(case: RDRCase): ViewableCase = viewableCaseOf(ruleTree.materialise(case, definitionResolver))
+
+    /**
+     * The view of a case whose derived values and interpretation have
+     * already been materialised.
+     */
+    fun viewableCaseOf(materialised: RDRCase): ViewableCase {
         // For display, a ByDefinition assignment is shown as the attribute's
         // stored definition text, so the panel and tooltip show the formula
         // rather than the sentinel. Inference structures are untouched.

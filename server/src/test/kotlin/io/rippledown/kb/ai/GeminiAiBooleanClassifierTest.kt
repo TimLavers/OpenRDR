@@ -30,7 +30,7 @@ internal class GeminiAiBooleanClassifierTest {
     @Test
     fun `a classification is passed through with its evidence and model`() = runTest {
         // Given a Gemini classifier whose transport answers true
-        val classifier = GeminiAiBooleanClassifier(GeminiBooleanClassifier(transport("""{"value":true,"evidence":"T2 Diab"}""")))
+        val classifier = GeminiAiBooleanClassifier { GeminiBooleanClassifier(transport("""{"value":true,"evidence":"T2 Diab"}""")) }
 
         // When the request is classified
         val result = classifier.classify(request)
@@ -41,7 +41,7 @@ internal class GeminiAiBooleanClassifierTest {
 
     @Test
     fun `a failure becomes a reason naming the kind`() = runTest {
-        val classifier = GeminiAiBooleanClassifier(GeminiBooleanClassifier(transport("", "SAFETY")))
+        val classifier = GeminiAiBooleanClassifier { GeminiBooleanClassifier(transport("", "SAFETY")) }
 
         val result = classifier.classify(request)
 
@@ -50,7 +50,7 @@ internal class GeminiAiBooleanClassifierTest {
 
     @Test
     fun `the default profile is one the classifier supports`() = runTest {
-        val classifier = GeminiAiBooleanClassifier(GeminiBooleanClassifier(transport("""{"value":false,"evidence":null}""")))
+        val classifier = GeminiAiBooleanClassifier { GeminiBooleanClassifier(transport("""{"value":false,"evidence":null}""")) }
 
         classifier.classify(request) shouldBe AiClassification.Classified(false, null, "gemini-2.5-flash-001")
     }

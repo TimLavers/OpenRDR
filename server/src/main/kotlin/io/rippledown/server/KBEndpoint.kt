@@ -2,11 +2,18 @@ package io.rippledown.server
 
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.RuleSessionManager
+import io.rippledown.kb.ai.AiBooleanClassifier
+import io.rippledown.kb.ai.AiEvaluationService
+import io.rippledown.kb.ai.AiInferenceCoordinator
+import io.rippledown.kb.ai.GeminiAiBooleanClassifier
+import io.rippledown.kb.ai.PreparedInterpretation
+import io.rippledown.kb.ai.toException
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.kb.report.ReportService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
@@ -20,10 +27,15 @@ import kotlin.io.path.createTempDirectory
 
 class KBEndpoint(
     val session: KBSession,
-    private val reportService: ReportService = ReportService()
+    private val reportService: ReportService = ReportService(),
+    classifier: AiBooleanClassifier = GeminiAiBooleanClassifier()
 ) {
     val kb get() = session.kb
     val logger = lazyLogger
+
+    private val coordinator by lazy {
+        AiInferenceCoordinator(session, AiEvaluationService(kb.aiEvaluationStore, classifier))
+    }
 
     private val reportCache = mutableMapOf<Long, Pair<Int, CaseReport>>() // caseId -> (commentsHash, report)
 
@@ -72,16 +84,29 @@ class KBEndpoint(
         )
     }
 
-    fun case(id: Long): RDRCase = session.locked {
-        val case = uninterpretedCase(id)
-        kb.interpret(case)
-        case
+    /**
+     * The stored case with its interpretation. AI evaluations happen outside
+     * the KB lock; see [AiInferenceCoordinator].
+     */
+    suspend fun interpretedCase(id: Long): RDRCase = prepared(id).case.withoutDerivedValues()
+
+    suspend fun viewableCase(id: Long): ViewableCase {
+        val ready = prepared(id)
+        return session.locked { kb.viewableCaseOf(ready.case) }
     }
 
-    fun viewableCase(id: Long) = session.locked { kb.viewableCase(uninterpretedCase(id)) }
+    private suspend fun prepared(id: Long): PreparedInterpretation.Ready =
+        when (val prepared = coordinator.interpretStored(id)) {
+            is PreparedInterpretation.Ready -> prepared
+            is PreparedInterpretation.Incomplete -> throw prepared.toException(id)
+            is PreparedInterpretation.Abandoned -> throw prepared.toException(id)
+        }
 
-    fun conditionHintsForCase(id: Long, userId: UserId): ConditionList =
-        session.locked { ruleSessionManager(userId).conditionHintsForCase(case(id)) }
+    fun conditionHintsForCase(id: Long, userId: UserId): ConditionList = session.locked {
+        val case = uninterpretedCase(id)
+        kb.interpret(case)
+        ruleSessionManager(userId).conditionHintsForCase(case)
+    }
 
     suspend fun caseReport(caseId: Long): CaseReport {
         val viewable = viewableCase(caseId)
@@ -95,7 +120,19 @@ class KBEndpoint(
         return report
     }
 
-    fun processCase(externalCase: ExternalCase) = session.locked { kb.processCase(externalCase) }
+    /**
+     * Stores the case, then interprets it. The primary data is retained even
+     * if the interpretation cannot be completed; the exception then names the
+     * stored case so that it can be requested again.
+     */
+    suspend fun processCase(externalCase: ExternalCase): RDRCase {
+        val stored = session.locked { kb.storeCase(externalCase) }
+        val interpreted = interpretedCase(requireNotNull(stored.id) { "A stored case has an id." })
+        // Callers reading the interpretation directly (e.g. the interpreter
+        // API) see CommentTemplate/Literal expressions, not sentinels.
+        session.locked { interpreted.interpretation.resolveDefinitions(kb.definitionResolver) }
+        return interpreted
+    }
 
     fun addCornerstoneCase(externalCase: ExternalCase) = session.locked { kb.addCornerstoneCase(externalCase) }
 

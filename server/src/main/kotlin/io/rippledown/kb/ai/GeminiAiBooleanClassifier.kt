@@ -8,11 +8,14 @@ import io.rippledown.model.rule.evaluation.AiEvaluationRequest
 /**
  * The production [AiBooleanClassifier]: delegates to the Gemini adapter in
  * the llm module, which owns the prompt contract, validation and attempt
- * budget.
+ * budget. The adapter is created on first use, so that a knowledge base
+ * without AI definitions never touches the Gemini client.
  */
 class GeminiAiBooleanClassifier(
-    private val classifier: GeminiBooleanClassifier = GeminiBooleanClassifier(GeminiStructuredTransport())
+    createClassifier: () -> GeminiBooleanClassifier = { GeminiBooleanClassifier(GeminiStructuredTransport()) }
 ) : AiBooleanClassifier {
+    private val classifier by lazy(createClassifier)
+
     override suspend fun classify(request: AiEvaluationRequest) =
         classifier.classify(request.definition, request.input).toAiClassification()
 }

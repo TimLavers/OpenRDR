@@ -4,6 +4,9 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
 import io.rippledown.model.Attribute
@@ -117,6 +120,27 @@ internal class AiInferenceCoordinatorTest {
         ready.case.interpretation.assignments().map { it.attribute } shouldBe listOf(advice)
         ready.provenance shouldBe emptyMap()
         classifier.calls.get() shouldBe 0
+    }
+
+    @Test
+    fun `an interpretation that needs no classification is completed in a single locked pass`(): Unit = runBlocking {
+        // Given a local rule only, and a session that counts its locked sections
+        addRule(AssignValue(advice, CommentTemplate("High glucose.")), isCondition(nextConditionId++, glucose, "12.0"))
+        val case = storedCase("Fermi", glucose to "12.0")
+        val countingSession = mockk<KBSession>()
+        every { countingSession.kb } returns kb
+        every { countingSession.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
+        val coordinator = AiInferenceCoordinator(
+            countingSession,
+            AiEvaluationService(persistentKB.aiEvaluationStore(), FakeClassifier { error("not called") })
+        )
+
+        // When the case is interpreted
+        val prepared = coordinator.interpretStored(idOf(case))
+
+        // Then the whole run happened under one lock, so no change could have overtaken it
+        prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>()
+        verify(exactly = 1) { countingSession.locked(any<() -> Any?>()) }
     }
 
     @Test

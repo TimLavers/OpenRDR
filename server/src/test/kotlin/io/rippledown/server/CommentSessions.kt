@@ -2,6 +2,7 @@ package io.rippledown.server
 
 import io.rippledown.kb.commentsFor
 import io.rippledown.model.UserId
+import kotlinx.coroutines.runBlocking
 
 /**
  * The user whose rule session the endpoint tests drive.
@@ -14,13 +15,13 @@ val TEST_USER = UserId("test-user")
  * points of the rule session manager.
  */
 fun KBEndpoint.startRuleSessionToAddComment(caseId: Long, comment: String) =
-    session.ruleSessionManagerFor(TEST_USER).startRuleSessionToAddComment(case(caseId), comment)
+    session.ruleSessionManagerFor(TEST_USER).startRuleSessionToAddComment(runBlocking { interpretedCase(caseId) }, comment)
 
 fun KBEndpoint.startRuleSessionToRemoveComment(caseId: Long, comment: String) =
-    session.ruleSessionManagerFor(TEST_USER).startRuleSessionToRemoveComment(case(caseId), comment)
+    session.ruleSessionManagerFor(TEST_USER).startRuleSessionToRemoveComment(runBlocking { interpretedCase(caseId) }, comment)
 
 fun KBEndpoint.startRuleSessionToReplaceComment(caseId: Long, comment: String, replacement: String) =
-    session.ruleSessionManagerFor(TEST_USER).startRuleSessionToReplaceComment(case(caseId), comment, replacement)
+    session.ruleSessionManagerFor(TEST_USER).startRuleSessionToReplaceComment(runBlocking { interpretedCase(caseId) }, comment, replacement)
 
 /**
  * The comments the knowledge base gives the case with the given id.

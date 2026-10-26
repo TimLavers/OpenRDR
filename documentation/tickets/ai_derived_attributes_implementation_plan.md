@@ -1,6 +1,6 @@
 # Implementation plan: AI-evaluated derived attributes
 
-**Status: steps 1–5 implemented; step 6 next.**
+**Status: steps 1–6 implemented; step 7 next.**
 
 Design and acceptance semantics: [AI-evaluated derived attributes](ai_derived_attributes_design.md).
 Implement in the order below. Names marked new are proposed names, not claims about existing classes.
@@ -35,8 +35,26 @@ authoritative for later steps.
   case data are compared with the snapshot's, so no mutation site can forget to bump a counter. Evaluations already
   obtained are kept across restarts, as a result is identified by its key. Restart budget `DEFAULT_MAX_RESTARTS = 3`.
   Prepare/apply separation and the routing of `KBEndpoint`, cornerstones and ingestion through the coordinator are
-  step 6; until then nothing calls the coordinator in production.
-- **Steps 6–10 — not started.**
+  step 6; until then nothing calls the coordinator in production. Step 6 moved the first inference pass inside the
+  snapshot's locked section: the lock is released only when a `Demand` arises, so a KB without AI definitions is
+  interpreted in one locked pass and can never be overtaken (the ingest/edit stress test exhausted the restart budget
+  otherwise).
+- **Step 6 — done.** `KB.storeCase` (ingest only) and `KB.viewableCaseOf(materialised)` split out of `processCase` /
+  `viewableCase`, which keep their local semantics for the rule-session paths that step 7 migrates. `KBEndpoint` takes an
+  `AiBooleanClassifier` (default `GeminiAiBooleanClassifier`, whose Gemini adapter is created lazily) and builds the
+  coordinator from `KB.aiEvaluationStore`; `interpretedCase(id)` (replaces `case(id)`), `viewableCase(id)`,
+  `processCase` and `caseReport` are `suspend` and go through `coordinator.interpretStored`. `processCase` stores under
+  the lock, interprets outside it, and returns `Ready.case.withoutDerivedValues()` with definitions resolved, so the
+  success payload is unchanged and the feed carries no derived values. `conditionHintsForCase` still interprets locally
+  under the lock (step 7). Wire contract: common `IncompleteInterpretation(caseId, category, attributeName, reason)` with
+  `IncompleteCategory { EVALUATION_FAILED, ABANDONED }`; the server throws `kb/ai/InterpretationIncompleteException`
+  and the `CASE`, `PROCESS_CASE`, `INTERPRET_CASE` and `CASE_REPORT` routes answer `INCOMPLETE_INTERPRETATION_STATUS`
+  (503) with that body; the ingestion routes still push `CasesInfo` because the case was stored. The report cache is
+  never consulted for an incomplete interpretation because the view is prepared first. The UI's `Api.getCase` /
+  `getCaseReport` already map any non-success to `null`; presenting the diagnosis is step 9. Tests:
+  `KBEndpointAiInterpretationTest`, route tests in `CaseManagementTest`/`InterpreterTest`/`routes.ReportManagementTest`,
+  `IncompleteInterpretationTest` (common).
+- **Steps 7–10 — not started.**
 
 ## Working rules and verification
 

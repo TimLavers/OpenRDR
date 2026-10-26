@@ -49,7 +49,7 @@ fun Application.chatManagement(application: ServerApplication) {
  * The ids are optional: none means no knowledge base is open, a KB id alone
  * means the KB has no case to talk about.
  */
-private fun RoutingContext.chatContext(application: ServerApplication): ChatContext {
+private suspend fun RoutingContext.chatContext(application: ServerApplication): ChatContext {
     val kbId = call.parameters[KB_ID] ?: return ChatContext.NoKnowledgeBase
     val endpoint = application.kbForId(kbId)
     val caseId = call.parameters[CASE_ID]?.toLongOrNull() ?: return ChatContext.KnowledgeBaseOnly(endpoint)

@@ -30,14 +30,16 @@ sealed class PreparedInterpretation {
 }
 
 /**
- * Runs inference with the KB lock held only to take a snapshot and to check
- * it is still current. The classification, with its network and database
- * I/O, happens between those two short locked phases, so other users of the
- * KB are never blocked on the provider. If the rules, definitions or case
- * changed meanwhile, the prepared interpretation is discarded and the run
- * restarts from a fresh snapshot, keeping the classifications already
- * obtained: a result is identified by its definition and input, so it stays
- * valid whatever else changed. See documentation/tickets/ai_derived_attributes_design.md.
+ * Runs inference under the KB lock until it demands an AI evaluation. The
+ * classification, with its network and database I/O, then happens with the
+ * lock released, so other users of the KB are never blocked on the provider;
+ * the lock is retaken only to check that the snapshot is still current. An
+ * interpretation that needs no evaluation never leaves the lock, so it cannot
+ * be overtaken. If the rules, definitions or case changed during an
+ * evaluation, the prepared interpretation is discarded and the run restarts
+ * from a fresh snapshot, keeping the classifications already obtained: a
+ * result is identified by its definition and input, so it stays valid
+ * whatever else changed. See documentation/tickets/ai_derived_attributes_design.md.
  */
 class AiInferenceCoordinator(
     private val session: KBSession,
@@ -63,9 +65,18 @@ class AiInferenceCoordinator(
     private suspend fun run(caseSource: () -> RDRCase?): PreparedInterpretation {
         var context = EvaluationContext.EMPTY
         repeat(maxRestarts + 1) { attempt ->
-            val snapshot = session.locked { caseSource()?.let { Snapshot.of(it, kb.ruleTree, kb.derivedDefinitionManager.all()) } }
-                ?: return PreparedInterpretation.Abandoned("The case no longer exists.")
-            val (prepared, extended) = inferWithEvaluations(snapshot, context)
+            val (snapshot, firstOutcome) = session.locked {
+                caseSource()?.let { live ->
+                    val snapshot = Snapshot.of(live, kb.ruleTree, kb.derivedDefinitionManager.all())
+                    snapshot to snapshot.infer(context)
+                }
+            } ?: return PreparedInterpretation.Abandoned("The case no longer exists.")
+            val firstDemand = when (firstOutcome) {
+                is InferenceOutcome.Complete -> return firstOutcome.toPrepared()
+                is InferenceOutcome.Incomplete -> return firstOutcome.toPrepared()
+                is InferenceOutcome.Demand -> firstOutcome
+            }
+            val (prepared, extended) = inferWithEvaluations(snapshot, context, firstDemand)
             context = extended
             val current = session.locked {
                 val live = caseSource()
@@ -79,20 +90,26 @@ class AiInferenceCoordinator(
 
     private suspend fun inferWithEvaluations(
         snapshot: Snapshot,
-        initial: EvaluationContext
+        initial: EvaluationContext,
+        firstDemand: InferenceOutcome.Demand
     ): Pair<PreparedInterpretation, EvaluationContext> {
         var context = initial
+        var demand = firstDemand
         while (true) {
-            when (val outcome = snapshot.tree.infer(snapshot.case, snapshot.resolver, evaluator, context)) {
-                is InferenceOutcome.Demand ->
-                    context = context.with(outcome.request, evaluationService.evaluate(outcome.request))
-                is InferenceOutcome.Complete ->
-                    return PreparedInterpretation.Ready(outcome.case, outcome.provenance) to context
-                is InferenceOutcome.Incomplete ->
-                    return PreparedInterpretation.Incomplete(outcome.attribute, outcome.reason) to context
+            context = context.with(demand.request, evaluationService.evaluate(demand.request))
+            when (val outcome = snapshot.infer(context)) {
+                is InferenceOutcome.Demand -> demand = outcome
+                is InferenceOutcome.Complete -> return outcome.toPrepared() to context
+                is InferenceOutcome.Incomplete -> return outcome.toPrepared() to context
             }
         }
     }
+
+    private fun Snapshot.infer(context: EvaluationContext) = tree.infer(case, resolver, evaluator, context)
+
+    private fun InferenceOutcome.Complete.toPrepared() = PreparedInterpretation.Ready(case, provenance)
+
+    private fun InferenceOutcome.Incomplete.toPrepared() = PreparedInterpretation.Incomplete(attribute, reason)
 
     /**
      * What a run reads, copied so that the run shares nothing with the live

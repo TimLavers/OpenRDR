@@ -13,6 +13,7 @@ import io.rippledown.model.external.MeasurementEvent
 import io.rippledown.model.rule.BuildRuleRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.utils.defaultDate
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
@@ -45,7 +46,7 @@ class KBEndpointConcurrencyTest {
     @Test
     fun `cases ingested while a user edits the KB leave it consistent`() {
         // Given a KB with one case, so that a rule can be built on it
-        endpoint.processCase(externalCase("Seed", "Glucose" to "12.0", "Shared" to "1"))
+        runBlocking { endpoint.processCase(externalCase("Seed", "Glucose" to "12.0", "Shared" to "1")) }
         val failures = ConcurrentLinkedQueue<Throwable>()
         val start = CountDownLatch(1)
 
@@ -55,9 +56,11 @@ class KBEndpointConcurrencyTest {
                 start.await(5, SECONDS)
                 repeat(casesPerThread) { i ->
                     try {
-                        endpoint.processCase(
-                            externalCase("Case $t-$i", "Glucose" to "$i", "Shared" to "$i", "New $t-$i" to "x")
-                        )
+                        runBlocking {
+                            endpoint.processCase(
+                                externalCase("Case $t-$i", "Glucose" to "$i", "Shared" to "$i", "New $t-$i" to "x")
+                            )
+                        }
                     } catch (e: Throwable) {
                         failures.add(e)
                     }

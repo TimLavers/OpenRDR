@@ -29,7 +29,7 @@ class ChatManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val caseId = 42L
         val viewableCase = mockk<ViewableCase>()
-        every { kbEndpoint.viewableCase(caseId) } returns viewableCase
+        coEvery { kbEndpoint.viewableCase(caseId) } returns viewableCase
         val response = ChatResponse("Shall I add a surfing comment to the report?")
         val context = slot<ChatContext>()
         coEvery { chatCoordinator.startConversation(UserId("alice"), capture(context)) } returns response
