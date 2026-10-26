@@ -33,8 +33,8 @@ two windows. Two push shapes:
   every window filters `casesInfo` by KB *name*, so the renamed `KB_INFO` goes to every user whose conversation is on
   the KB (`OpenKnowledgeBases.usersOn`), or their case lists would silently stop updating. `CHAT_CONTEXT` goes to
   all of one user's windows after each conversation start (see "One conversation, several windows").
-- `broadcast(message)` for `casesInfo`: case ingestion is not a user action and the client already filters by KB
-  name.
+- `broadcast(message)` for `casesInfo`, `PRESENCE`, and `KB_CHANGED`: clients filter the case list by KB name and
+  awareness messages by KB id. Case ingestion is not a user action.
 
 Per-KB addressing ("everyone with this KB open") was considered and rejected: the client starts its conversation only
 once its context has settled (after the case list for a newly opened KB has arrived), so for a round-trip or two the
@@ -95,8 +95,8 @@ lock, below.
 
 ## The per-KB lock
 
-Ktor runs each request as its own coroutine on a thread pool, so two requests for the same KB can be inside `KB` at
-the same instant, and nothing in `io.rippledown.kb` is synchronised. Case ingestion from the laboratory is the one
+Ktor runs each request as its own coroutine on a thread pool, so without the per-KB lock two requests could access
+the KB's shared object graph at the same instant. Case ingestion from the laboratory is the one
 writer that is always running: `processCase` creates attributes while a user reorders them, interprets the new case
 while a commit adds a tree node, and two lab posts with the same new attribute name both see `byName == null`. Reads
 are not pure either: `KBEndpoint.case(id)` calls `kb.interpret(case)`, which writes the interpretation into the
@@ -116,7 +116,8 @@ is ms-scale, so one exclusive lock is the honest choice.
       `ChatManagerFactory` wraps the user's manager in `LockedRuleService`, which runs every call under the lock.
     - `deleteKB` takes the doomed KB's lock (inside `kbSetLock`) so an in-flight mutation finishes before the KB
       goes.
-3. **Never held across I/O.** One engine entry calls the LLM synchronously: `RuleSessionManager.conditionForExpression`
+3. **LLM calls run outside the lock.** One engine entry calls the LLM synchronously:
+   `RuleSessionManager.conditionForExpression`
    via `ConditionGenerator.conditionFor`. Holding the KB lock across that call would make a lab post wait up to the
    LLM timeout, so the entry wrappers do *not* lock `conditionForExpression`; `RuleSessionManager` holds the lock
    itself only around what touches the KB (the attribute lookups the translator is handed, and the validation
@@ -127,9 +128,11 @@ is ms-scale, so one exclusive lock is the honest choice.
    `runBlocking` from inside commit and cornerstone paths, on the argument that a local, buffered socket makes the
    stall short. That argument does not hold: Ktor's `send` suspends when a connection's outgoing queue is full, and a
    broadcast visits every connection, so one slow client on any KB could stall edits on this one. `WebSocketManager`
-   therefore has a dispatcher: `enqueue` / `enqueueTo` never suspend, a single consumer sends in order, and a frame
+   therefore has a dispatcher: `broadcast` / `sendToUser` enqueue without suspending, a single consumer sends in order,
+   and a frame
    that does not go within a bound is dropped and logged (the change log, below, is the recovery path). All pushes go
-   through it; the engine never performs socket I/O under the lock.
+   through it; the engine never performs socket I/O under the lock. Synchronous persistence writes still run under
+   the lock; the mutation and its change record are separate transactions, as described below.
 
 The lock makes the managers' internal synchronisation unnecessary; they stay as they are. `KBEndpointConcurrencyTest`
 drives the lab feed and a user against one `KBEndpoint` from several threads; with the lock removed by hand it fails
@@ -257,10 +260,11 @@ hold a rule session, and that session still blocks deletion of the KB.
 
 The set changes when a socket opens or closes and when a conversation's context changes, and the owner of each state
 reports the transition. `WebSocketManager` reports connect and disconnect. `ChatCoordinator` owns the context, so it
-reports every transition `(userId, fromKbId, toKbId)` itself — from `startConversation`, `knowledgeBaseClosed` and
+reports every transition `(fromKbId, toKbId)` itself — from `startConversation`, `knowledgeBaseClosed` and
 `knowledgeBaseDeleted` alike; the latter two reset the context immediately, long before the client's next
 conversation start, so a hook on start alone would leave a departed user listed. A transition pushes for the KB left
-and the KB joined. `usersEditing()` is read under the KB lock, since it reads session state the lock protects.
+and the KB joined. Rule-session start, commit, and cancellation also push presence to update the editing flag.
+`usersEditing()` is read under the KB lock, since it reads session state the lock protects.
 
 The push is `PRESENCE` + `{kbId, users}`, a broadcast filtered by the client on `kbId`, for the same reason
 `casesInfo` is (a client's conversation lags the KB its window shows). A window also fetches a snapshot (`GET PRESENCE`)
@@ -285,6 +289,9 @@ the attribute renamed or redefined), so that "who changed BMI?" is a filter by i
 exported and imported with the KB like the rule session records; an export without the directory imports as an empty
 log.
 
+`GET CHANGES` accepts `sinceId` (exclusive) and `limit` (default 50). It returns records in ascending ID order,
+keeping the newest `limit` records after that cursor. The chat action presents recent changes newest first.
+
 **The guarantee is weaker than transactional.** The lock gives mutual exclusion, not atomicity: the stores run their
 own transactions and a rule commit already spans several writes. The record is appended after the mutation inside the
 same locked block. If the append fails the mutation stands, the failure is logged at error level, and the push below
@@ -300,8 +307,8 @@ author, and "who did that?" cannot be answered after the fact even from the data
 After a record is written the server broadcasts `KB_CHANGED` + `{kbId, record}`. Invalidation and the notice are
 separate decisions:
 
-- **Every window on that KB invalidates, including the author's other windows.** Today only the window that made the
-  chat turn refreshes its case; the author's second window was left stale, as was any client sharing the identity.
+- **Every window on that KB invalidates, including the author's other windows.** Before change pushes, only the
+  window that made the chat turn refreshed its case; other windows sharing the identity could remain stale.
 - **Only windows of users other than the author post the notice** — *Bob: Added comment "Go to the beach." when Sun
   is hot.* A notice is a distinct message type: not a bot turn, not sent to the model as history, visually subdued.
   It puts the explanation beside the thing that changed, which is what was missing.
@@ -328,7 +335,7 @@ concurrent activity, not a proven cause; the wording says "since you started", n
 `WebSocketApi` reconnects after failed connection attempts or closed sessions, with backoff from 1 second up to
 30 seconds, reset after a successful connection. Cancellation stops the loop. While disconnected the application bar says so
 (*Reconnecting…*, a display). On reconnect the window resynchronises: it re-fetches presence and the displayed case,
-and fetches `GET CHANGES since=<last id seen>` for its KB, posting the missed notices. Each window remembers the last
+and fetches `GET CHANGES sinceId=<last id seen>` for its KB, posting the missed notices. Each window remembers the last
 change id it has seen per KB, and a record arriving twice (socket and replay) is dropped by `(kbId, id)`. The snapshot
 is fetched after the subscription is open, so nothing falls between them. Recovery captures its starting ID before
 live frames arrive and retains it if replay fails or the connection drops again, even before the recovery task runs.
@@ -373,10 +380,10 @@ a deleted rule ID could associate that replacement with an older author's change
 ## Testing
 
 Multi-user acceptance is REST-first (`requirements/kb/Concurrent Users.feature`, `ConcurrentUsersDefs.kt`): several
-`Api` instances with different user ids against one server, the chat reached through `sendUserMessage`. Everything
-above — identity keying, per-user conversations and pushes, two editors in one KB, the stale-commit refusal, the delete
-refusal — is observable that way. Conditions in those scenarios are built in the step definitions rather than
-translated, so no LLM is involved.
+`Api` instances with different user ids against one server, the chat reached through `sendUserMessage`. Direct rule,
+history, and undo steps use deterministic REST calls; conditions are built in the step definitions without a model.
+Steps that send chat messages use the live model. Presence checks hold WebSockets open alongside REST requests,
+with connections and clients closed by the scenario teardown hook.
 
 What a REST client cannot see is what another user's *window* does with the frames it was or was not sent. One
 two-window scenario covers that (`requirements/kb/Concurrent Users with windows.feature`): Alice builds a rule with a
@@ -400,11 +407,15 @@ non-contiguous ids); the writer tests in the `RuleSessionManager` and `KBEndpoin
 success, none on refusal or no-op, mutation stands when the store throws); `WebSocketManagerTest` (dispatcher order,
 slow-connection bound); `PresenceTest` and `ChatCoordinatorTest` (intersection; transitions on start, close and
 delete; a KB closed while the socket stays up; two windows of one identity); `StaleRuleSessionTest` (the "since you
-started" list); undo with a commit between preview and confirmation; the action tests with a KB open and no case; and
-on the client `OpenRDRUITest` (author's second window refreshes without a notice, other KB ignored, no refresh
-during a session, switching case during a refresh, failed refresh) and `WebSocketApiTest` (reconnect, replay,
-duplicate delivery). Over REST, `Concurrent Users.feature` gains Bob committing and Alice reading the log; the
-two-window scenario gains Bob's window showing the presence line, the notice, and his case updated without
+started" list); `UndoConfirmationTest` and `UndoConfirmationChatTest` (intervening commits and fresh preview after
+refusal); `ListRecentChangesTest`, `ListUsersPresentTest`, and `AwarenessChatTest` (actions with a KB open and no case).
+On the client, `OpenRDRUIChangeTest` checks the author's second window refreshing without a notice, other KBs being
+ignored, deferral during a session, switching case during a refresh, and failed refresh. `WebSocketRecoveryTest`
+checks reconnection; `OpenRDRUIRecoveryTest` checks replay, duplicate delivery, recovery failures, and context changes.
+Over REST, `Concurrent Users.feature` covers Bob committing and Alice reading the log;
+Bob leaving presence when he closes the KB while his socket stays connected; and an intervening commit causing
+Alice's undo to be refused until she previews again, followed by a successful undo attributed to her. The
+two-window scenario checks Bob's window showing the presence line, the notice, and his case updated without
 reselecting it.
 
 ## Out of scope

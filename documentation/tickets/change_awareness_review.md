@@ -2,10 +2,15 @@
 
 Reviewed: 23 October 2026.
 
+Completion: the eight implementation stages and live acceptance finished on 26 October 2026. This document retains
+the original review findings; current behaviour and the explicitly deferred items are described in
+[the maintained design](../design/concurrent_users.md).
+
 Documents reviewed:
 
 - [Concurrent users design](../design/concurrent_users.md)
-- [Change awareness implementation plan](change_awareness_plan.md)
+- Change awareness implementation plan (temporary document, removed after completion; final version in commit
+  `16aeb84d`)
 
 This is a static review of the documents and the relevant server, UI, persistence, prompt, and test code. No tests
 were run as part of the review. References describe the code at review time; the awareness feature is proposed work.

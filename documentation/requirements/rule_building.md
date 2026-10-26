@@ -58,13 +58,13 @@ per rule is the RDR discipline, and stating it is one sentence.
 
 ## Finishing
 
-| Requirement  | Description                                                                                                                                                        | Validation                                                            |
-|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| Commit       | When the user has no more reasons and every cornerstone is allowed or excluded, the rule is committed and the case re-interpreted. The case becomes a cornerstone. | `rulebuilding/Build rule.feature`                                     |
-| Cancel       | The user may cancel the session at any point; nothing changes.                                                                                                     | `chat/Manage rule conditions.feature`                                 |
-| Undo         | The last committed rule can be undone; the chat first shows what it was.                                                                                           | `rulebuilding/Undo rule.feature`, `chat/Remove previous rule.feature` |
-| Exclusive    | While a rule is being built, requests that change what the chat is about (open, create, delete, import or export a knowledge base) are refused.                    | `kb/Knowledge Base Management.feature`                                |
-| Show reasons | Hovering a comment or derived value shows the conditions, from the root rule down, that gave it.                                                                   | `rulebuilding/Show conditions for rule action.feature`                |
+| Requirement  | Description                                                                                                                                                                                       | Validation                                                                                           |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| Commit       | When the user has no more reasons and every cornerstone is allowed or excluded, the rule is committed and the case re-interpreted. The case becomes a cornerstone.                                | `rulebuilding/Build rule.feature`                                                                    |
+| Cancel       | The user may cancel the session at any point; nothing changes.                                                                                                                                    | `chat/Manage rule conditions.feature`                                                                |
+| Undo         | The chat previews the latest rule session and names another author. Confirmation removes that session only if it remains latest; an intervening commit requires a fresh preview and confirmation. | `rulebuilding/Undo rule.feature`, `chat/Remove previous rule.feature`, `kb/Concurrent Users.feature` |
+| Exclusive    | While a rule is being built, requests that change what the chat is about (open, create, delete, import or export a knowledge base) are refused.                                                   | `kb/Knowledge Base Management.feature`                                                               |
+| Show reasons | Hovering a comment or derived value shows the conditions, from the root rule down, that gave it.                                                                                                  | `rulebuilding/Show conditions for rule action.feature`                                               |
 
 ## Building rules without the GUI
 

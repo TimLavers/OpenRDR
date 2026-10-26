@@ -52,4 +52,13 @@ The remaining command was
 `gradlew :cucumber:report :cucumber:rulebuilding :cucumber:samples :cucumber:trial-matching :cucumber:voice --continue --offline --console=plain`.
 
 These fixes brought forward part of change-awareness step 8. At the end of this run, step 7 and the remaining
-new acceptance scenarios were outstanding; see the [implementation plan](change_awareness_plan.md) for current status.
+new acceptance scenarios were outstanding.
+
+## Final acceptance — 26 October 2026
+
+After commit `16aeb84d` (steps 7 and 8), the user reported running the full cucumber suite successfully.
+This completes live acceptance, including the new change-history, presence-after-KB-close, and undo-confirmation
+scenarios. This result is user-reported; no additional run was performed by the agent.
+
+All eight change-awareness steps are complete. The temporary implementation plan has been removed as specified;
+the maintained design is [Concurrent users](../design/concurrent_users.md).
