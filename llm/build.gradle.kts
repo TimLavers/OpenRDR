@@ -8,4 +8,5 @@ dependencies {
     implementation(libs.logback)
     implementation(libs.generativeai)
     testImplementation(libs.kotestAssertions)
+    testImplementation(libs.kotlinxCoroutinesTest)
 }
