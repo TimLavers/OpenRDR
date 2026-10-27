@@ -316,7 +316,8 @@ separate decisions:
 - **Every window on that KB invalidates, including the author's other windows.** Before change pushes, only the
   window that made the chat turn refreshed its case; other windows sharing the identity could remain stale.
 - **Only windows of users other than the author post the notice** — *Bob: Added comment "Go to the beach." when Sun
-  is hot.* A notice is a distinct message type: not a bot turn, not sent to the model as history, visually subdued.
+  is hot.* A notice uses the same white rounded bubble, padding, and subtle shadow as a bot response, with grey
+  italic text and the author's name retained. It remains a distinct message type, not a bot turn or model history.
   It puts the explanation beside the thing that changed, which is what was missing.
 
 What invalidation means depends on the kind: rules, definitions, renames and moves re-fetch the displayed case (names
