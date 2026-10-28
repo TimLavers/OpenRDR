@@ -19,13 +19,23 @@ data class AiDefinitionDraftView(
     val previewMessage: String? = null,
     val evidence: String? = null,
     val changesEverywhere: Boolean = false,
-    val prompt: String? = null
+    val prompt: String? = null,
+    val valueLabel: String = "Preview"
 ) {
     /** The preview lines as they appear in the response text. */
     val previewText: String
         get() = if (previewValue != null) {
-            "Preview: $previewValue" + (evidence?.let { "\nEvidence: \"$it\"" } ?: "")
+            "$valueLabel: $previewValue" + (evidence?.let { "\nEvidence: \"$it\"" } ?: "")
         } else {
             previewMessage.orEmpty()
         }
+
+    /** The explanation of a committed definition's value, as response text. */
+    val explanationText: String
+        get() = "\"$attributeName\" is \"${previewValue ?: previewMessage ?: "unassigned"}\"" +
+                (evidence?.let { " — evidence: \"$it\"" } ?: "") +
+                "\nSource: $source\nCriteria: $criteria" +
+                if (examples.isEmpty()) "" else examples.joinToString("", "\nExamples:") {
+                    "\n${it.input} → ${it.expected}"
+                }
 }

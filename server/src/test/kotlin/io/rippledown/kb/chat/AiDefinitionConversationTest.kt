@@ -197,6 +197,13 @@ class AiDefinitionConversationTest {
         // Then the saved criteria and excerpt are shown with no new provider call
         explanation.text shouldContain "T2 Diab"
         explanation.text shouldContain "Personal history"
+        val explanationView = requireNotNull(explanation.draft)
+        explanationView.attributeName shouldBe "hasDiabetes"
+        explanationView.source shouldBe "clinical_notes"
+        explanationView.previewValue shouldBe "true"
+        explanationView.evidence shouldBe "T2 Diab"
+        explanationView.valueLabel shouldBe "Value"
+        explanationView.prompt.shouldBeNull()
         calls shouldBe 1
     }
 
@@ -217,6 +224,7 @@ class AiDefinitionConversationTest {
 
         // Then the absence of a saved result is explicit and no new classifier request was made
         response.text shouldContain "No saved evaluation"
+        response.draft.shouldBeNull()
         calls shouldBe 1
     }
 

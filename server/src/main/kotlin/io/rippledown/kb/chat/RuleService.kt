@@ -41,7 +41,7 @@ interface RuleService {
      * The value, evidence and approved criteria of an AI definition on [case],
      * without starting a rule session.
      */
-    fun explainAiEvaluation(attributeName: String, case: RDRCase?): String
+    fun explainAiEvaluation(attributeName: String, case: RDRCase?): AiDefinitionDraftView
     fun retryAiEvaluation(case: RDRCase): String
 
     fun startRuleSessionToAddComment(

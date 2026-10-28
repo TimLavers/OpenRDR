@@ -19,6 +19,7 @@ import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.AiDefinitionDraftView
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -86,28 +87,27 @@ class RuleSessionManager(
         return (listOf("Interpretation complete.") + values).joinToString("\n")
     }
 
-    override fun explainAiEvaluation(attributeName: String, case: RDRCase?): String {
+    override fun explainAiEvaluation(attributeName: String, case: RDRCase?): AiDefinitionDraftView {
         val name = attributeName.trim()
         val attribute = kb.attributeManager.all().singleOrNull { it.name.equals(name, ignoreCase = true) }
-            ?: return "No attribute named \"$name\" exists."
+            ?: throw IllegalArgumentException("No attribute named \"$name\" exists.")
         val definition = kb.derivedDefinitionManager.definitionFor(attribute.id)
-        if (definition !is AiBoolean) return "\"${attribute.name}\" is not an AI-evaluated definition."
-        val selected = case ?: return "Select a case to explain the value of \"${attribute.name}\"."
+        check(definition is AiBoolean) { "\"${attribute.name}\" is not an AI-evaluated definition." }
+        val selected = case ?: throw IllegalStateException("Select a case to explain the value of \"${attribute.name}\".")
         val live = selected.id?.let { kb.getCase(it) } ?: selected
         val copy = live.copy(interpretation = Interpretation(live.caseId))
         return when (val outcome =
             kb.ruleTree.infer(copy, kb.definitionResolver, DefaultValueExpressionEvaluator(), kb.evaluationContext())) {
             is InferenceOutcome.Stopped -> throw IncompleteInferenceException(outcome)
-            is InferenceOutcome.Complete -> buildString {
-                val provenance = outcome.provenance[attribute]
-                append("\"${attribute.name}\" is \"${outcome.case.latestValue(attribute) ?: "unassigned"}\"")
-                provenance?.evidence?.let { append(" — evidence: \"$it\"") }
-                append("\nSource: ${definition.sourceAttribute.name}")
-                append("\nCriteria: ${definition.instructions}")
-                if (definition.examples.isNotEmpty()) {
-                    append(definition.examples.joinToString("", "\nExamples:") { "\n${it.input} → ${it.expected}" })
-                }
-            }
+            is InferenceOutcome.Complete -> AiDefinitionDraftView(
+                attributeName = attribute.name,
+                source = definition.sourceAttribute.name,
+                criteria = definition.instructions,
+                examples = definition.examples,
+                previewValue = outcome.case.latestValue(attribute)?.let { "$it" } ?: "unassigned",
+                evidence = outcome.provenance[attribute]?.evidence,
+                valueLabel = "Value"
+            )
         }
     }
 

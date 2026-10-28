@@ -38,15 +38,15 @@ fun AiDraftCard(message: AiDefinitionDraftMessage, index: Int) {
             .semantics(mergeDescendants = true) { contentDescription = "$BOT$index:${message.text}" }
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            DraftRow("Draft", draft.attributeName)
-            DraftRow("Source", draft.source)
+            DraftRow("Name", draft.attributeName)
+            DraftRow("Refers to", draft.source)
             DraftRow("Criteria", draft.criteria)
             if (draft.examples.isNotEmpty()) {
                 DraftRow("Examples", draft.examples.joinToString("\n") {
                     "${it.input} → ${it.expected}" + (it.explanation?.let { e -> " ($e)" } ?: "")
                 })
             }
-            draft.run { previewValue ?: previewMessage }?.let { DraftRow("Preview", it) }
+            draft.run { previewValue ?: previewMessage }?.let { DraftRow(draft.valueLabel, it) }
             draft.evidence?.let { DraftRow("Evidence", it) }
             if (draft.changesEverywhere) {
                 Text(

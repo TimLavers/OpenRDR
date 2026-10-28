@@ -43,8 +43,8 @@ class AiDraftCardTest {
 
         // And each heading is shown with its value aligned alongside it
         listOf(
-            "Draft" to "hasDiabetes",
-            "Source" to "clinical_notes",
+            "Name" to "hasDiabetes",
+            "Refers to" to "clinical_notes",
             "Criteria" to "Personal history only",
             "Examples" to "FH diab → false\nT2 Diab → true",
             "Preview" to "true",

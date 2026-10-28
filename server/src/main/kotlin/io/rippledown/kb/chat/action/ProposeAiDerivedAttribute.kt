@@ -93,7 +93,8 @@ class RetryAiEvaluation : ChatAction {
 class ExplainAiEvaluation(val attributeName: String) : ChatAction {
     override suspend fun doIt(ruleService: RuleService, currentCase: ViewableCase?, modelResponder: ModelResponder): ChatResponse =
         authoringResponse {
-            ChatResponse(ruleService.explainAiEvaluation(attributeName, currentCase?.case))
+            val view = ruleService.explainAiEvaluation(attributeName, currentCase?.case)
+            ChatResponse(view.explanationText, draft = view)
         }
 }
 
