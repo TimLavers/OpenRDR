@@ -7,6 +7,7 @@ import io.rippledown.llm.aiEvaluationModel
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
 import io.rippledown.model.RDRCase
+import io.rippledown.model.chat.AiDefinitionDraftView
 import io.rippledown.model.rule.*
 import io.rippledown.model.rule.evaluation.DefaultValueExpressionEvaluator
 import io.rippledown.model.rule.evaluation.EvaluationOutcome
@@ -32,6 +33,21 @@ data class AiDefinitionDraft(
         if (editedAttributeId != null) append("\nThis changes the default definition everywhere.")
     }
 }
+
+/** What a draft preview produced: a value with evidence, or the reason there is none. */
+data class AiDraftPreview(val value: String? = null, val evidence: String? = null, val message: String? = null)
+
+fun AiDefinitionDraft.toView(preview: AiDraftPreview = AiDraftPreview()) = AiDefinitionDraftView(
+    attributeName = attributeName,
+    source = definition.sourceAttribute.name,
+    criteria = definition.instructions,
+    examples = definition.examples,
+    previewValue = preview.value,
+    previewMessage = preview.message,
+    evidence = preview.evidence,
+    changesEverywhere = editedAttributeId != null,
+    prompt = "Accept this definition?"
+)
 
 data class AcceptedAiDefinition(
     val message: String,
@@ -102,20 +118,22 @@ class AiDefinitionAuthoring(
                 else " Please confirm the source: ${near.joinToString { "\"$it\"" }}."
     }
 
-    fun preview(id: String, case: RDRCase?): String {
+    fun preview(id: String, case: RDRCase?): AiDefinitionDraftView {
         val current = current(id, case)
-        if (case == null) return "Select a case to preview and accept this draft."
+        if (case == null) return current.toView(AiDraftPreview(message = "Select a case to preview and accept this draft."))
         if (current.caseId == null) draft = current.copy(caseId = case.id)
         val live = liveCase(case)
-        return when (val result = DefaultValueExpressionEvaluator().evaluate(current.definition, live, kb.evaluationContext())) {
-            is EvaluationOutcome.Value -> "Preview: ${result.value}" +
-                    (result.provenance?.evidence?.let { "\nEvidence: \"$it\"" } ?: "")
-            EvaluationOutcome.NoInput -> "No ${current.definition.sourceAttribute.name} value; not evaluated."
+        val preview = when (val result =
+            DefaultValueExpressionEvaluator().evaluate(current.definition, live, kb.evaluationContext())) {
+            is EvaluationOutcome.Value -> AiDraftPreview("${result.value}", result.provenance?.evidence)
+            EvaluationOutcome.NoInput ->
+                AiDraftPreview(message = "No ${current.definition.sourceAttribute.name} value; not evaluated.")
             is EvaluationOutcome.NeedsEvaluation -> throw IncompleteInferenceException(
                 InferenceOutcome.Demand(Attribute(-1, current.attributeName, AttributeKind.DERIVED), result.request))
             is EvaluationOutcome.Failed -> throw IncompleteInferenceException(
                 InferenceOutcome.Incomplete(Attribute(-1, current.attributeName, AttributeKind.DERIVED), result.reason))
         }
+        return current.toView(preview)
     }
 
     fun accept(id: String, case: RDRCase?): AcceptedAiDefinition {

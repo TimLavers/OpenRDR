@@ -73,6 +73,11 @@ class AiDefinitionConversationTest {
         val draft = requireNotNull(service.currentAiDefinitionDraft())
         response.text shouldContain "Preview: true"
         response.text shouldContain "FH diab → false"
+        val view = requireNotNull(response.draft)
+        view.attributeName shouldBe "hasDiabetes"
+        view.source shouldBe "clinical_notes"
+        view.previewValue shouldBe "true"
+        view.prompt shouldBe "Accept this definition?"
 
         // When the user accepts and completes the ordinary rule workflow
         chat.response("yes")

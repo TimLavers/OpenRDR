@@ -30,6 +30,8 @@ The numbered steps below remain the acceptance checklist; this section records t
   remain to be checked. Serial classification is bounded, but no per-cornerstone progress counter is exposed.
 - **Step 8:** structured propose/edit/preview/accept/cancel/retry/explain actions, exact draft acceptance,
   source-name correction, server-owned profiles/revisions, caseless drafting, and prompt resources are implemented.
+  The draft offer carries an `AiDefinitionDraftView` on the response, which the client renders as a two-column
+  card (headings left, values right); the response text remains the full formatted blob.
   A caseless draft binds to its first previewed case. Competing names and stale drafts are tested.
   Retry works for draft and committed evaluations; explanation reads saved records and never classifies new input.
   Failed case views can still open chat to request a retry.

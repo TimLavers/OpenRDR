@@ -62,6 +62,7 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
       | true                    |
       | Accept this definition? |
     When I confirm
+    And pause
     And the chatbot has asked if I want to provide any reasons and I decline
     Then the chatbot has completed the action
     And the UI should show the value for derived attribute "hasDiabetes" as "true"

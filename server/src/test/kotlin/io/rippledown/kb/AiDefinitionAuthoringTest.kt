@@ -101,7 +101,7 @@ class AiDefinitionAuthoringTest {
         val draft = draft()
 
         // When a preview is displayed and that exact draft is accepted
-        service.previewAiDefinition(draft.id, case) shouldContain "Preview: true"
+        service.previewAiDefinition(draft.id, case).previewText shouldContain "Preview: true"
         service.acceptAiDefinition(draft.id, case)
 
         // Then previewing and starting a rule never create a live attribute

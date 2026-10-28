@@ -45,6 +45,7 @@ If either fails, the answer belongs in the text field.
 | Delete knowledge base chip                 | No                 | Irreversible; the confirmation is the point.                                                                                                                                            |
 | Anything needing a value or an explanation | No                 | Not a closed set.                                                                                                                                                                       |
 | Warning row                                | Built (display)    | A GUI action the server refused is reported in the chat with a warning icon, saying what was not done and why. No controls. (No GUI action is currently refusable; the row type stays.) |
+| AI definition draft card                   | Built (display)    | The draft offer is rendered as a two-column card (headings left, values right, no grid lines) from a server-attached `AiDefinitionDraftView`; the message text stays the full blob so matching and accessibility are unchanged. No controls — acceptance is typed. |
 | App-bar "being edited by X" indicator      | No                 | Would need a push on every rule session start and end to avoid going stale; the delete refusal already names the other user. Revisit if refusals prove confusing.                       |
 
 Hover tooltips (a KB's one-line description on its row, help on a heading) are passive disclosure and need not pass the

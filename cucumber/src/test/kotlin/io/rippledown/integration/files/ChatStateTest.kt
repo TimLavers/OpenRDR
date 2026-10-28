@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.constants.chat.CHAT_BOT_NO_RESPONSE_MESSAGE
 import io.rippledown.model.UserId
+import io.rippledown.model.chat.AiDefinitionDraftView
 import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.chat.KbFileDialogRequest
@@ -163,6 +164,24 @@ class ChatStateTest {
         // Then
         state.awaitingResponse shouldBe true
         state.history shouldBe emptyList()
+    }
+
+    @Test
+    fun `an AI definition draft renders as a card and deduplicates by content`() {
+        // Given
+        val state = ChatState()
+        val draft = AiDefinitionDraftView("hasDiabetes", "clinical_notes", "Personal history",
+            previewValue = "true", prompt = "Accept this definition?")
+
+        // When
+        state.receive(ChatResponse("Draft offer", draft = draft)) {}
+        state.receive(ChatResponse("Draft offer", draft = draft)) {}
+        state.receive(ChatResponse("Draft offer")) {}
+
+        // Then the identical offer is shown once, and a text-only repeat is not hidden by it
+        state.history shouldBe listOf(
+            AiDefinitionDraftMessage("Draft offer", draft), BotMessage("Draft offer")
+        )
     }
 
     @Test

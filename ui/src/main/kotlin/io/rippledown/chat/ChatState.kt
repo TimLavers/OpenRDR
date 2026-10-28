@@ -31,7 +31,9 @@ class ChatState {
         val isDuplicate = when (lastBotMessage) {
             is CapabilityListMessage -> lastBotMessage.text == response.text && lastBotMessage.sections == response.capabilities
             is KbChoiceListMessage -> lastBotMessage.text == response.text && lastBotMessage.listing == response.kbListing
-            is BotMessage -> lastBotMessage.text == response.text && response.kbListing == null && response.capabilities.isEmpty()
+            is AiDefinitionDraftMessage -> lastBotMessage.text == response.text && lastBotMessage.draft == response.draft
+            is BotMessage -> lastBotMessage.text == response.text && response.kbListing == null &&
+                    response.capabilities.isEmpty() && response.draft == null
             else -> false
         }
         if (!isDuplicate) {
@@ -43,6 +45,7 @@ class ChatState {
                     // user's comment, before the suggestions are presented.
                     response.tip?.let { add(TipMessage(it)) }
                     val listing = response.kbListing
+                    val draft = response.draft
                     when {
                         response.capabilities.isNotEmpty() -> add(
                             CapabilityListMessage(
@@ -52,6 +55,7 @@ class ChatState {
                         )
 
                         listing != null -> add(KbChoiceListMessage(response.text, listing))
+                        draft != null -> add(AiDefinitionDraftMessage(response.text, draft))
                         else -> add(BotMessage(response.text))
                     }
                     if (response.suggestions.isNotEmpty()) add(SuggestionListMessage(response.suggestions))

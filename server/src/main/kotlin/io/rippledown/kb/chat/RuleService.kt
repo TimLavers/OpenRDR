@@ -4,6 +4,7 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CommentVariable
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.AiDefinitionDraftView
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -32,7 +33,7 @@ interface RuleService {
      * bypasses the evaluation service's failure cooldown; the delegate itself
      * does not evaluate.
      */
-    fun previewAiDefinition(draftId: String, case: RDRCase?, retryAfterFailure: Boolean = false): String
+    fun previewAiDefinition(draftId: String, case: RDRCase?, retryAfterFailure: Boolean = false): AiDefinitionDraftView
     fun acceptAiDefinition(draftId: String, case: RDRCase?): AcceptedAiDefinition
     fun cancelAiDefinitionDraft()
 

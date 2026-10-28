@@ -1,6 +1,8 @@
 package io.rippledown.kb.chat.action
 
+import io.rippledown.kb.ai.AiDraftPreview
 import io.rippledown.kb.ai.InterpretationIncompleteException
+import io.rippledown.kb.ai.toView
 import io.rippledown.kb.chat.ModelResponder
 import io.rippledown.kb.chat.RuleService
 import io.rippledown.kb.chat.respondAfterSessionStart
@@ -21,12 +23,13 @@ open class ProposeAiDerivedAttribute(
         authoringResponse {
             val draft = ruleService.proposeAiDefinition(attributeName, sourceName, instructions, examples,
                 currentCase?.id, reasons, edit)
-            val preview = try {
+            val view = try {
                 ruleService.previewAiDefinition(draft.id, currentCase?.case)
             } catch (e: InterpretationIncompleteException) {
-                "Could not evaluate the preview: ${e.details.reason}. You can retry this draft."
+                draft.toView(AiDraftPreview(
+                    message = "Could not evaluate the preview: ${e.details.reason}. You can retry this draft."))
             }
-            ChatResponse("${draft.description()}\n\n$preview\n\nAccept this definition?")
+            ChatResponse("${draft.description()}\n\n${view.previewText}\n\n${view.prompt}", draft = view)
         }
 }
 
@@ -51,7 +54,8 @@ class PreviewAiDefinition(val draftId: String) : ChatAction {
             val draft = checkNotNull(ruleService.currentAiDefinitionDraft()?.takeIf { it.id == draftId }) {
                 "This draft is no longer current."
             }
-            ChatResponse("${draft.description()}\n\n${ruleService.previewAiDefinition(draftId, currentCase?.case)}\n\nAccept this definition?")
+            val view = ruleService.previewAiDefinition(draftId, currentCase?.case)
+            ChatResponse("${draft.description()}\n\n${view.previewText}\n\n${view.prompt}", draft = view)
         }
 }
 
@@ -75,8 +79,8 @@ class RetryAiEvaluation : ChatAction {
                 val selected = requireNotNull(currentCase) { "Select a case before retrying evaluation." }
                 ChatResponse(ruleService.retryAiEvaluation(selected.case))
             } else {
-                val preview = ruleService.previewAiDefinition(draft.id, currentCase?.case, retryAfterFailure = true)
-                ChatResponse("${draft.description()}\n\n$preview\n\nAccept this definition?")
+                val view = ruleService.previewAiDefinition(draft.id, currentCase?.case, retryAfterFailure = true)
+                ChatResponse("${draft.description()}\n\n${view.previewText}\n\n${view.prompt}", draft = view)
             }
         }
 }

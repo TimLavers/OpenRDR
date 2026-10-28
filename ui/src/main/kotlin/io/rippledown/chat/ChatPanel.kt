@@ -42,6 +42,7 @@ import io.rippledown.constants.chat.CHAT_BOT_PLACEHOLDER
 import io.rippledown.decoration.LIGHT_BLUE
 import io.rippledown.main.defaultUserId
 import io.rippledown.model.UserId
+import io.rippledown.model.chat.AiDefinitionDraftView
 import io.rippledown.model.chat.CapabilitySection
 import io.rippledown.model.chat.KnowledgeBaseListing
 import io.rippledown.voice.RecordingIndicator
@@ -97,6 +98,13 @@ typealias OnMessageSent = (UserMessage) -> Unit
 data class CapabilityListMessage(
     override val text: String,
     val sections: List<CapabilitySection>
+) : ChatMessage {
+    override val isUser: Boolean = false
+}
+
+data class AiDefinitionDraftMessage(
+    override val text: String,
+    val draft: AiDefinitionDraftView
 ) : ChatMessage {
     override val isUser: Boolean = false
 }
@@ -174,6 +182,7 @@ fun ChatPanel(
                 itemsIndexed(messages) { index, message ->
                     when (message) {
                         is CapabilityListMessage -> CapabilityCard(message, index, capabilityHeight)
+                        is AiDefinitionDraftMessage -> AiDraftCard(message, index)
                         is UserMessage -> UserRow(message.text, index)
                         is TipMessage -> TipRow(message.text, index)
                         is WarningMessage -> WarningRow(message.text, index)
