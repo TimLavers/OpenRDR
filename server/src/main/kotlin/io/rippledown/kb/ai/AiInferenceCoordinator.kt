@@ -6,47 +6,52 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.Interpretation
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.AiProvenance
-import io.rippledown.model.condition.Condition
-import io.rippledown.model.rule.AssignValue
-import io.rippledown.model.rule.DefinitionResolver
+import io.rippledown.model.caseview.IncompleteCategory
+import io.rippledown.model.caseview.IncompleteInterpretation
+import io.rippledown.model.rule.IncompleteInferenceException
 import io.rippledown.model.rule.InferenceOutcome
-import io.rippledown.model.rule.RuleTree
-import io.rippledown.model.rule.ValueExpression
+import io.rippledown.model.rule.evaluation.AiEvaluationResult
 import io.rippledown.model.rule.evaluation.DefaultValueExpressionEvaluator
-import io.rippledown.model.rule.evaluation.EvaluationContext
 import io.rippledown.model.rule.evaluation.ValueExpressionEvaluator
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
-const val DEFAULT_MAX_RESTARTS = 3
+const val DEFAULT_MAX_EVALUATIONS_PER_OPERATION = 100
 
 /**
- * The result of interpreting a case with its AI evaluations prepared. Only
- * [Ready] is an interpretation: its case carries the derived values and the
- * interpretation, and is a copy, never the stored case.
+ * A case interpreted with its AI evaluations prepared. The case carries the
+ * derived values and the interpretation, and is a copy, never the stored case.
  */
-sealed class PreparedInterpretation {
-    data class Ready(val case: RDRCase, val provenance: Map<Attribute, AiProvenance>) : PreparedInterpretation()
-    data class Incomplete(val attribute: Attribute, val reason: String) : PreparedInterpretation()
-    data class Abandoned(val reason: String) : PreparedInterpretation()
-}
+data class PreparedInterpretation(val case: RDRCase, val provenance: Map<Attribute, AiProvenance>)
 
 /**
- * Runs inference under the KB lock until it demands an AI evaluation. The
- * classification, with its network and database I/O, then happens with the
- * lock released, so other users of the KB are never blocked on the provider;
- * the lock is retaken only to check that the snapshot is still current. An
- * interpretation that needs no evaluation never leaves the lock, so it cannot
- * be overtaken. If the rules, definitions or case changed during an
- * evaluation, the prepared interpretation is discarded and the run restarts
- * from a fresh snapshot, keeping the classifications already obtained: a
- * result is identified by its definition and input, so it stays valid
- * whatever else changed. See documentation/tickets/ai_derived_attributes_design.md.
+ * Lets an operation that interprets cases under the KB lock obtain the AI
+ * evaluations it needs without holding the lock during them. The engine reads
+ * only the KB's prepared results and stops with a demand when one is missing;
+ * the demand propagates out of the locked section as an
+ * [IncompleteInferenceException], the classification is obtained here with
+ * the lock released, added to the KB's prepared results, and the operation is
+ * run again. An operation that needs no evaluation runs once under the lock
+ * and cannot be overtaken; one that does is repeated against the live KB, so
+ * nothing it computed against a stale KB survives. An operation must
+ * therefore interpret before it mutates. A failed classification ends the
+ * operation with a typed [InterpretationIncompleteException].
+ * See documentation/tickets/ai_derived_attributes_design.md.
  */
 class AiInferenceCoordinator(
     private val session: KBSession,
     private val evaluationService: AiEvaluationService,
-    private val maxRestarts: Int = DEFAULT_MAX_RESTARTS,
-    private val evaluator: ValueExpressionEvaluator = DefaultValueExpressionEvaluator()
+    private val maxEvaluationsPerOperation: Int = DEFAULT_MAX_EVALUATIONS_PER_OPERATION,
+    private val evaluator: ValueExpressionEvaluator = DefaultValueExpressionEvaluator(),
+    private val operationTimeoutMillis: Long = 120_000
 ) {
+    init {
+        require(operationTimeoutMillis > 0) { "The operation timeout must be positive." }
+        require(maxEvaluationsPerOperation >= 0) { "The evaluation budget cannot be negative." }
+    }
     private val logger = lazyLogger
     private val kb get() = session.kb
 
@@ -54,89 +59,93 @@ class AiInferenceCoordinator(
      * Interprets the stored case with the given id, as it stands when the
      * run is published.
      */
-    suspend fun interpretStored(caseId: Long): PreparedInterpretation = run { kb.getCase(caseId) }
+    suspend fun interpretStored(caseId: Long): PreparedInterpretation = withPreparedEvaluations(caseId) {
+        session.locked {
+            val live = kb.getCase(caseId)
+                ?: throw InterpretationIncompleteException(abandoned(caseId, "The case no longer exists."))
+            interpretUnderLock(live)
+        }
+    }
 
     /**
      * Interprets a case the caller holds, such as a cornerstone or a preview,
      * against the current rules and definitions. The case is not modified.
      */
-    suspend fun interpret(case: RDRCase): PreparedInterpretation = run { case }
+    suspend fun interpret(case: RDRCase): PreparedInterpretation =
+        withPreparedEvaluations(case.id) { session.locked { interpretUnderLock(case) } }
 
-    private suspend fun run(caseSource: () -> RDRCase?): PreparedInterpretation {
-        var context = EvaluationContext.EMPTY
-        repeat(maxRestarts + 1) { attempt ->
-            val (snapshot, firstOutcome) = session.locked {
-                caseSource()?.let { live ->
-                    val snapshot = Snapshot.of(live, kb.ruleTree, kb.derivedDefinitionManager.all())
-                    snapshot to snapshot.infer(context)
-                }
-            } ?: return PreparedInterpretation.Abandoned("The case no longer exists.")
-            val firstDemand = when (firstOutcome) {
-                is InferenceOutcome.Complete -> return firstOutcome.toPrepared()
-                is InferenceOutcome.Incomplete -> return firstOutcome.toPrepared()
-                is InferenceOutcome.Demand -> firstOutcome
-            }
-            val (prepared, extended) = inferWithEvaluations(snapshot, context, firstDemand)
-            context = extended
-            val current = session.locked {
-                val live = caseSource()
-                live != null && snapshot.isCurrent(live, kb.ruleTree, kb.derivedDefinitionManager.all())
-            }
-            if (current) return prepared
-            logger.info("Interpretation of ${snapshot.case.name} was overtaken by a change (attempt ${attempt + 1}); restarting")
-        }
-        return PreparedInterpretation.Abandoned("The knowledge base kept changing while the case was being interpreted.")
-    }
-
-    private suspend fun inferWithEvaluations(
-        snapshot: Snapshot,
-        initial: EvaluationContext,
-        firstDemand: InferenceOutcome.Demand
-    ): Pair<PreparedInterpretation, EvaluationContext> {
-        var context = initial
-        var demand = firstDemand
-        while (true) {
-            context = context.with(demand.request, evaluationService.evaluate(demand.request))
-            when (val outcome = snapshot.infer(context)) {
-                is InferenceOutcome.Demand -> demand = outcome
-                is InferenceOutcome.Complete -> return outcome.toPrepared() to context
-                is InferenceOutcome.Incomplete -> return outcome.toPrepared() to context
-            }
+    private fun interpretUnderLock(case: RDRCase): PreparedInterpretation {
+        val copy = RDRCase(case.caseId, case.data, Interpretation(case.caseId))
+        return when (val outcome = kb.ruleTree.infer(copy, kb.definitionResolver, evaluator, kb.evaluationContext())) {
+            is InferenceOutcome.Complete -> PreparedInterpretation(outcome.case, outcome.provenance)
+            is InferenceOutcome.Stopped -> throw IncompleteInferenceException(outcome)
         }
     }
-
-    private fun Snapshot.infer(context: EvaluationContext) = tree.infer(case, resolver, evaluator, context)
-
-    private fun InferenceOutcome.Complete.toPrepared() = PreparedInterpretation.Ready(case, provenance)
-
-    private fun InferenceOutcome.Incomplete.toPrepared() = PreparedInterpretation.Incomplete(attribute, reason)
 
     /**
-     * What a run reads, copied so that the run shares nothing with the live
-     * KB, and what it compares against to see whether the live KB has moved.
+     * Runs [operation], obtaining each AI evaluation it demands and running it
+     * again, until it completes. The operation takes the KB lock itself, so
+     * that an operation which also calls the LLM can keep that outside the
+     * lock. [caseId] names the case an incomplete result is reported for.
      */
-    private class Snapshot private constructor(
-        val case: RDRCase,
-        val tree: RuleTree,
-        private val definitions: Map<Int, ValueExpression>,
-        private val shape: Set<RuleShape>
-    ) {
-        val resolver: DefinitionResolver = { definitions[it.id] }
+    suspend fun <T> withPreparedEvaluations(caseId: Long?, operation: () -> T): T =
+        withPreparedEvaluations(caseId, false, operation)
 
-        fun isCurrent(liveCase: RDRCase, liveTree: RuleTree, liveDefinitions: Map<Int, ValueExpression>) =
-            liveCase.hasSameDataAs(case) && liveTree.shape() == shape && liveDefinitions == definitions
+    suspend fun <T> withPreparedEvaluations(caseId: Long?, retryAfterFailure: Boolean, operation: () -> T): T =
+        prepare(caseId, retryAfterFailure, savedOnly = false, operation)
 
-        companion object {
-            fun of(case: RDRCase, tree: RuleTree, definitions: Map<Int, ValueExpression>) = Snapshot(
-                case = RDRCase(case.caseId, case.data, Interpretation(case.caseId)),
-                tree = tree.copy(),
-                definitions = definitions,
-                shape = tree.shape()
-            )
+    suspend fun <T> withSavedEvaluations(caseId: Long?, operation: () -> T): T =
+        prepare(caseId, retryAfterFailure = false, savedOnly = true, operation)
+
+    private data class Completed<T>(val value: T)
+
+    private suspend fun <T> prepare(caseId: Long?, retryAfterFailure: Boolean, savedOnly: Boolean, operation: () -> T): T {
+        // Box the result so an operation legitimately returning null is not mistaken for a timeout.
+        val completed = withContext(Dispatchers.Default) {
+            withTimeoutOrNull(operationTimeoutMillis) {
+                Completed(prepareWithinDeadline(caseId, retryAfterFailure, savedOnly, operation))
+            }
+        } ?: throw InterpretationIncompleteException(abandoned(caseId,
+            "AI evaluation exceeded the operation time limit. Please retry."))
+        return completed.value
+    }
+
+    private suspend fun <T> prepareWithinDeadline(caseId: Long?, retryAfterFailure: Boolean, savedOnly: Boolean, operation: () -> T): T {
+        var evaluations = 0
+        while (true) {
+            currentCoroutineContext().ensureActive()
+            val stopped = try {
+                return operation()
+            } catch (e: IncompleteInferenceException) {
+                e.outcome
+            }
+            when (stopped) {
+                is InferenceOutcome.Incomplete ->
+                    throw InterpretationIncompleteException(evaluationFailed(caseId, stopped.attribute, stopped.reason))
+
+                is InferenceOutcome.Demand -> {
+                    if (evaluations == maxEvaluationsPerOperation) {
+                        throw InterpretationIncompleteException(
+                            abandoned(caseId, "The operation needed more than $maxEvaluationsPerOperation AI evaluations.")
+                        )
+                    }
+                    evaluations++
+                    logger.info("Evaluating ${stopped.attribute.name} outside the lock (evaluation $evaluations)")
+                    val result = if (savedOnly) evaluationService.savedEvaluation(stopped.request)
+                    else evaluationService.evaluate(stopped.request, retryAfterFailure)
+                    when (result) {
+                        is AiEvaluationResult.Success -> kb.preparedEvaluations.add(stopped.request, result)
+                        is AiEvaluationResult.Failure ->
+                            throw InterpretationIncompleteException(evaluationFailed(caseId, stopped.attribute, result.reason))
+                    }
+                }
+            }
         }
     }
+
+    private fun evaluationFailed(caseId: Long?, attribute: Attribute, reason: String) =
+        IncompleteInterpretation(caseId, IncompleteCategory.EVALUATION_FAILED, attribute.name, reason)
+
+    private fun abandoned(caseId: Long?, reason: String) =
+        IncompleteInterpretation(caseId, IncompleteCategory.ABANDONED, null, reason)
 }
-
-private data class RuleShape(val id: Int, val parentId: Int?, val conditions: Set<Condition>, val assignment: AssignValue?)
-
-private fun RuleTree.shape() = rules().map { RuleShape(it.id, it.parent?.id, it.conditions, it.assignment) }.toSet()

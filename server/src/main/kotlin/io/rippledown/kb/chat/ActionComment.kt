@@ -3,6 +3,7 @@ package io.rippledown.kb.chat
 import io.rippledown.kb.chat.action.Action
 import io.rippledown.log.lazyLogger
 import kotlinx.serialization.Serializable
+import io.rippledown.model.rule.AiBooleanExample
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 
@@ -32,6 +33,10 @@ data class ActionComment(
     val conditionText: String? = null,
     val newPhrase: String? = null,
     val reasons: List<String>? = null,
+    val sourceName: String? = null,
+    val instructions: String? = null,
+    val examples: List<AiBooleanExample>? = null,
+    val draftId: String? = null,
 ) {
     companion object {
         val logger = lazyLogger
@@ -70,6 +75,10 @@ data class ActionComment(
         if (conditionText != null) asMap["conditionText"] = conditionText
         if (newPhrase != null) asMap["newPhrase"] = newPhrase
         if (reasons != null) asMap["reasons"] = reasons
+        if (sourceName != null) asMap["sourceName"] = sourceName
+        if (instructions != null) asMap["instructions"] = instructions
+        if (examples != null) asMap["examples"] = examples
+        if (draftId != null) asMap["draftId"] = draftId
 
         val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {

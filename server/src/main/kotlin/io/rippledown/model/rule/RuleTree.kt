@@ -79,17 +79,26 @@ open class RuleTree(val root: Rule = rootRule()) {
      * time. The case's interpretation is updated in place; [materialise]
      * additionally returns the case with its derived values written.
      */
-    fun apply(kase: RDRCase, resolver: DefinitionResolver = NO_DEFINITIONS): Interpretation {
-        materialise(kase, resolver)
+    fun apply(
+        kase: RDRCase,
+        resolver: DefinitionResolver = NO_DEFINITIONS,
+        context: EvaluationContext = EvaluationContext.EMPTY
+    ): Interpretation {
+        materialise(kase, resolver, context)
         return kase.interpretation
     }
 
     /**
-     * Interpretation with local expressions only: an AI evaluation that has
-     * not been prepared is an error here, not a missing value.
+     * Interpretation with prepared results only: an AI evaluation that is not
+     * in [context] is an error here, not a missing value. The coordinator
+     * catches it, obtains the result outside the lock and runs again.
      */
-    fun materialise(kase: RDRCase, resolver: DefinitionResolver = NO_DEFINITIONS): RDRCase =
-        when (val outcome = infer(kase, resolver)) {
+    fun materialise(
+        kase: RDRCase,
+        resolver: DefinitionResolver = NO_DEFINITIONS,
+        context: EvaluationContext = EvaluationContext.EMPTY
+    ): RDRCase =
+        when (val outcome = infer(kase, resolver, context = context)) {
             is InferenceOutcome.Complete -> outcome.case
             is InferenceOutcome.Stopped -> throw IncompleteInferenceException(outcome)
         }

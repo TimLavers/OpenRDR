@@ -110,3 +110,11 @@ conditions hold the id.
 Derived values in earlier episodes (re-interpreting with the latest episode stripped would give them); grouping derived
 attributes; assigning a value by asking the model to read a note; persisted user-controlled ordering of comments and
 derived values (see `tickets/attribute_ordering_plan.md`).
+
+## Demand-driven AI evaluation
+
+An active `AiBoolean` assignment reads the KB's prepared evaluation context. Missing input assigns nothing;
+a missing prepared result returns a demand and stops the speculative inference. The coordinator obtains the
+persisted result or classification outside the KB lock and repeats preparation. Failures cannot activate
+absence-based rules or publish partial comments. Canonical true/false values support normal downstream conditions.
+Display and explanation use saved provenance; they never call the classifier directly.

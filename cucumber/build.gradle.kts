@@ -144,6 +144,14 @@ tasks.register<JavaExec>("cucumberSingleTest") {
     dependsOn(prerequisiteTasks)
 }
 
+// One visible, real-model demonstration; no unrelated scenarios or automatic rerun.
+tasks.register<JavaExec>("aiDerivedAttributeDemo") {
+    setupExec()
+    systemProperty("scenarioProgress.hideTotal", "true")
+    args = argsForCuke() + listOf(pathToRequirements, "--tags", "@ai_diabetes_demo")
+    dependsOn(prerequisiteTasks)
+}
+
 /**
  * Checks that every step of every feature is defined, without starting the
  * server, the client or the LLM. Use it after editing features or step

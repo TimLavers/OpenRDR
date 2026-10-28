@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap
 class InMemoryAiEvaluationStore : AiEvaluationStore {
     private val records = ConcurrentHashMap<AiEvaluationKey, AiEvaluationRecord>()
 
+    override fun all() = records.values.toList()
+
     override fun recordFor(key: AiEvaluationKey) = records[key]
 
     override fun insertIfAbsent(record: AiEvaluationRecord): AiEvaluationRecord =

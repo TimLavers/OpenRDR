@@ -5,8 +5,13 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.AiBoolean
 import io.rippledown.model.rule.DefinitionResolver
 import io.rippledown.model.rule.RuleSessionRecorder
+import io.rippledown.model.rule.evaluation.EvaluationContext
+import io.rippledown.model.rule.evaluation.PreparedEvaluations
+import io.rippledown.model.rule.evaluation.DefaultValueExpressionEvaluator
+import io.rippledown.model.rule.evaluation.EvaluationOutcome
 import io.rippledown.model.rule.resolvedFor
 import io.rippledown.persistence.PersistentKB
 
@@ -20,6 +25,15 @@ class KB(private val persistentKB: PersistentKB) {
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
     val aiEvaluationStore = persistentKB.aiEvaluationStore()
+
+    /**
+     * The classifications obtained so far, read by every interpretation under
+     * the lock and added to by the coordinator outside it. See
+     * documentation/tickets/ai_derived_attributes_design.md.
+     */
+    val preparedEvaluations = PreparedEvaluations()
+
+    fun evaluationContext(): EvaluationContext = preparedEvaluations.context()
 
     /**
      * Resolves a derived attribute to its stored definition, so that
@@ -188,9 +202,16 @@ class KB(private val persistentKB: PersistentKB) {
         }
     }
 
-    fun interpret(case: RDRCase) = ruleTree.apply(case, definitionResolver)
+    /**
+     * Interprets the case with the prepared classifications. Throws
+     * [io.rippledown.model.rule.IncompleteInferenceException] if one is
+     * missing; the coordinator obtains it outside the lock and calls again.
+     */
+    fun interpret(case: RDRCase) = ruleTree.apply(case, definitionResolver, evaluationContext())
 
-    fun viewableCase(case: RDRCase): ViewableCase = viewableCaseOf(ruleTree.materialise(case, definitionResolver))
+    fun materialise(case: RDRCase): RDRCase = ruleTree.materialise(case, definitionResolver, evaluationContext())
+
+    fun viewableCase(case: RDRCase): ViewableCase = viewableCaseOf(materialise(case))
 
     /**
      * The view of a case whose derived values and interpretation have
@@ -203,7 +224,15 @@ class KB(private val persistentKB: PersistentKB) {
         val resolvedInterpretation = materialised.interpretation.withResolvedDefinitions(definitionResolver)
         val viewableInterpretation =
             interpretationViewManager.viewableInterpretation(resolvedInterpretation, materialised)
-        return caseViewManager.getViewableCase(materialised, viewableInterpretation)
+        // Read only prepared results: rendering never initiates classification or store I/O.
+        val evaluator = DefaultValueExpressionEvaluator()
+        val context = evaluationContext()
+        val provenance = resolvedInterpretation.assignments().mapNotNull { assignment ->
+            val definition = assignment.expression as? AiBoolean ?: return@mapNotNull null
+            val outcome = evaluator.evaluate(definition, materialised, context) as? EvaluationOutcome.Value
+            outcome?.provenance?.let { assignment.attribute.id to it }
+        }.toMap()
+        return caseViewManager.getViewableCase(materialised, viewableInterpretation).copy(aiProvenance = provenance)
     }
 
     override fun equals(other: Any?): Boolean {

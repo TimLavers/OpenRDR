@@ -12,6 +12,7 @@ import io.rippledown.constants.api.START_CONVERSATION
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.kb.chat.ChatContext
+import io.rippledown.kb.ai.InterpretationIncompleteException
 import io.rippledown.log.lazyLogger
 import io.rippledown.server.ServerApplication
 
@@ -53,5 +54,10 @@ private suspend fun RoutingContext.chatContext(application: ServerApplication): 
     val kbId = call.parameters[KB_ID] ?: return ChatContext.NoKnowledgeBase
     val endpoint = application.kbForId(kbId)
     val caseId = call.parameters[CASE_ID]?.toLongOrNull() ?: return ChatContext.KnowledgeBaseOnly(endpoint)
-    return ChatContext.CaseInKnowledgeBase(endpoint, endpoint.viewableCase(caseId))
+    val view = try {
+        endpoint.viewableCase(caseId)
+    } catch (failure: InterpretationIncompleteException) {
+        failure.details.caseView() ?: throw failure
+    }
+    return ChatContext.CaseInKnowledgeBase(endpoint, view)
 }

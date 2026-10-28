@@ -7,6 +7,22 @@ import io.kotest.matchers.shouldBe
 
 class DerivedValueStepDefs(val chatDefs: ChatDefs) {
 
+    private val savedAiProvenance = mutableMapOf<Pair<String, String>, io.rippledown.model.caseview.AiProvenance>()
+
+    @When("I remember the saved AI provenance for {string}")
+    fun rememberAiProvenance(attributeName: String) {
+        val name = currentCaseName()
+        val row = restClient().getProcessedCaseWithName(name).derivedValues().single { it.name == attributeName }
+        savedAiProvenance[name to attributeName] = requireNotNull(row.provenance)
+    }
+
+    @Then("the saved AI provenance for {string} is unchanged")
+    fun requireSameAiProvenance(attributeName: String) {
+        val name = currentCaseName()
+        val row = restClient().getProcessedCaseWithName(name).derivedValues().single { it.name == attributeName }
+        row.provenance shouldBe requireNotNull(savedAiProvenance[name to attributeName])
+    }
+
     private var lastDerivedValueName: String? = null
 
     @When("I request that the derived attribute {string} be added with value {string} for reason {string}")

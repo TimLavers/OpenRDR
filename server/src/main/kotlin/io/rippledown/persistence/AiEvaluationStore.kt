@@ -12,6 +12,9 @@ import io.rippledown.model.rule.evaluation.AiEvaluationRecord
  * See documentation/tickets/ai_derived_attributes_design.md.
  */
 interface AiEvaluationStore {
+    /** Snapshot for export. Like record lookup, this may perform database I/O. */
+    fun all(): List<AiEvaluationRecord>
+
     fun recordFor(key: AiEvaluationKey): AiEvaluationRecord?
 
     /**

@@ -268,7 +268,7 @@ internal class RuleTreeFixpointTest {
         tree.withRule(assignment = AssignValue(bmi, ByDefinition))
 
         // When the case is materialised with a resolver that has no definition
-        val materialised = tree.materialise(case(weight to "93.0", height to "1.8")) { null }
+        val materialised = tree.materialise(case(weight to "93.0", height to "1.8"), resolver = { null })
 
         // Then no assignment is made and no error is thrown
         materialised.latestValue(bmi).shouldBeNull()
@@ -283,9 +283,9 @@ internal class RuleTreeFixpointTest {
         val case = case(weight to "93.0", height to "1.8")
 
         // When the case is materialised before and after the definition is edited
-        val before = tree.materialise(case) { bmiFormula() }
+        val before = tree.materialise(case, resolver = { bmiFormula() })
         val editedDefinition = Formula(Binary(Operator.TIMES, AttributeValue(weight), Num(2.0)))
-        val after = tree.materialise(case) { editedDefinition }
+        val after = tree.materialise(case, resolver = { editedDefinition })
 
         // Then the value reflects the edited definition, with no rule change
         before.latestValue(bmi) shouldBe "28.7"
@@ -304,7 +304,8 @@ internal class RuleTreeFixpointTest {
         byDefinitionRule.addChild(child)
 
         // When a case satisfying the child's condition is materialised
-        val materialised = tree.materialise(case(weight to "93.0", height to "1.8", glucose to "12.0")) { bmiFormula() }
+        val materialised =
+            tree.materialise(case(weight to "93.0", height to "1.8", glucose to "12.0"), resolver = { bmiFormula() })
 
         // Then the leaf-most rule's concrete expression wins over the definition
         materialised.latestValue(bmi) shouldBe "186"

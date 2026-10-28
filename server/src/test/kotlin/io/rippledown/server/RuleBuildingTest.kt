@@ -35,7 +35,7 @@ internal class RuleBuildingTest {
     fun `should return empty CornerstoneStatus when a rule session is started and there are no cornerstones`() {
         val id = supplyCaseFromFile("Case1", kbEndpoint).caseId.id!!
         val diff = Addition("Go to Bondi")
-        val cornerstoneStatus = kbEndpoint.startRuleSession(SessionStartRequest(id, diff), TEST_USER)
+        val cornerstoneStatus = runBlocking { kbEndpoint.startRuleSession(SessionStartRequest(id, diff), TEST_USER) }
         // The pending change carries the name of the comment attribute the server minted.
         cornerstoneStatus shouldBe CornerstoneStatus(
             pendingChange = diff.copy(
@@ -55,7 +55,7 @@ internal class RuleBuildingTest {
         kbEndpoint.kb.addCornerstoneCase(case2)
         val viewableCase = runBlocking { kbEndpoint.viewableCase(cc1.id!!) }
         val diff = Addition("Go to Bondi")
-        val cornerstoneStatus = kbEndpoint.startRuleSession(SessionStartRequest(id2, diff), TEST_USER)
+        val cornerstoneStatus = runBlocking { kbEndpoint.startRuleSession(SessionStartRequest(id2, diff), TEST_USER) }
         cornerstoneStatus shouldBe CornerstoneStatus(
             viewableCase,
             0,
@@ -74,17 +74,19 @@ internal class RuleBuildingTest {
         val comment1 = "Bondi or bust."
         val comment2 = "Bring your flippers."
         with(kbEndpoint) {
-            startRuleSession(SessionStartRequest(id, Addition(comment1)), TEST_USER)
-            commitCurrentRuleSession(TEST_USER)
-            startRuleSession(SessionStartRequest(id, Addition(comment2)), TEST_USER)
-            commitCurrentRuleSession(TEST_USER)
+            runBlocking {
+                startRuleSession(SessionStartRequest(id, Addition(comment1)), TEST_USER)
+                commitCurrentRuleSession(TEST_USER)
+                startRuleSession(SessionStartRequest(id, Addition(comment2)), TEST_USER)
+                commitCurrentRuleSession(TEST_USER)
+            }
             runBlocking { viewableCase(id) }.latestText() shouldBe "$comment1${COMMENT_SEPARATOR}$comment2" //sanity check
         }
 
         //When
-        kbEndpoint.startRuleSession(SessionStartRequest(id, Removal(comment2)), TEST_USER)
+        runBlocking { kbEndpoint.startRuleSession(SessionStartRequest(id, Removal(comment2)), TEST_USER) }
         val ruleRequest = RuleRequest(id)
-        kbEndpoint.commitRuleSession(ruleRequest, TEST_USER)
+        runBlocking { kbEndpoint.commitRuleSession(ruleRequest, TEST_USER) }
 
         //Then
         val updatedInterpretation = runBlocking { kbEndpoint.viewableCase(id) }.viewableInterpretation
@@ -105,14 +107,15 @@ internal class RuleBuildingTest {
         kbEndpoint.kb.addCornerstoneCase(case2).id!!
         val cc3Id = kbEndpoint.kb.addCornerstoneCase(case3).id!!
         kbEndpoint.kb.addCornerstoneCase(case4).id!!
-        val ccStatus = kbEndpoint.startRuleSession(SessionStartRequest(id1, Addition("Go to Bondi")), TEST_USER)
+        val ccStatus =
+            runBlocking { kbEndpoint.startRuleSession(SessionStartRequest(id1, Addition("Go to Bondi")), TEST_USER) }
         withClue("sanity check. The session case is not a cornerstone") {
             ccStatus.numberOfCornerstones shouldBe 3
         }
         withClue("There are 3 cornerstones showing, so index 1 0-based corresponds to case3") {
 
         }
-        val cornerstone = kbEndpoint.selectCornerstone(1, TEST_USER).cornerstoneToReview //0-based index
+        val cornerstone = runBlocking { kbEndpoint.selectCornerstone(1, TEST_USER) }.cornerstoneToReview //0-based index
         cornerstone shouldBe runBlocking { kbEndpoint.viewableCase(cc3Id) }
     }
 }

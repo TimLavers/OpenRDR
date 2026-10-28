@@ -158,3 +158,12 @@ The chat panel is a message list (model left, user right) with a text field, a m
 ([voice_input.md](voice_input.md)) and, when the server attaches them, suggestion chips, a clickable KB list or a
 capability card ([chat_ui_guidelines.md](chat_ui_guidelines.md)). The cornerstone under review is shown in the case
 area, not in the transcript: a pathologist should compare data in a table, not read a case out of prose.
+
+## AI attribute authoring
+
+Structured AI actions propose, preview, accept, edit and cancel server-owned drafts; ordinary formula parsing
+is unchanged. Bare acceptance is tied to the displayed draft ID. Source correction is a separate confirmation.
+A KB-only conversation can retain a draft until a case is selected; its first preview binds that case.
+`LockedRuleService` prepares demanded evaluations outside the lock and checks an operation guard on retries.
+`RetryAiEvaluation` also supports committed definitions. `ExplainAiEvaluation` uses saved evaluations only.
+An incomplete case can open chat with primary data and its diagnostic so retry remains available.

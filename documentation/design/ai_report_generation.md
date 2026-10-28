@@ -44,3 +44,9 @@ produced" as distinct from "the model returned nothing".
 The Markdown renderer does not expose text to the accessibility bridge, so the formatted text is also placed on a hidden
 node for the page objects and unit tests. `10^N` and the `u` micro prefix are rewritten (`10¹²`, `μmol/L`) to match the
 case view's units cell.
+
+## Incomplete AI interpretation
+
+Report preparation completes AI-dependent inference before consulting the report cache. An evaluation failure
+returns the typed incomplete diagnosis instead of an old report. The client clears report state when that
+diagnosis arrives, shows primary case data and the diagnostic, and hides the report until interpretation succeeds.

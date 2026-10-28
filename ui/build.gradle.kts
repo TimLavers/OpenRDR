@@ -93,6 +93,7 @@ compose.desktop {
 }
 compose.resources {
     generateResClass = always
+    packageOfResClass = "openrdr.ui.generated.resources"
 }
 
 // The Compose Desktop runtime image is jlinked from `javaHome` (set above). Its

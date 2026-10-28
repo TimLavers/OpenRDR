@@ -1,6 +1,7 @@
 # Design: AI-evaluated derived attributes
 
-**Status: proposed; not implemented.** This document describes the intended feature, not current behaviour.
+**Status: core inference, chat authoring and status display implemented in the working tree.**
+Export/import was implemented last. The implementation plan distinguishes verified behavior and pending acceptance work.
 
 Implementation: [detailed plan](ai_derived_attributes_implementation_plan.md).
 Related designs: [derived definitions](../design/derived_attribute_definitions.md),
@@ -159,53 +160,42 @@ guarantee.
 
 ## Run remote work outside the KB lock
 
-`KBEndpoint` and `LockedRuleService` currently wrap most operations in a per-KB `ReentrantLock`. `RuleBuildingSession`
-also interprets candidate trees and cornerstones synchronously. Simply injecting a Gemini caller into `RuleTree`
-would hold this lock across network latency and would affect more than the case-view path.
+The implemented coordinator uses the agreed prepared-result approach, replacing the original snapshot proposal.
+The KB owns a copy-on-write `PreparedEvaluations` map of successful results. Synchronous inference reads only this
+map and performs no persistence or provider I/O.
 
-Introduce an `AiInferenceCoordinator` around operations that may need evaluations:
-
-1. Under the KB lock, capture an isolated snapshot of the case data, relevant tree/definitions, pending-definition
-   overlay, and operation/session identity. Capture a revision token for relevant KB/session state.
-2. Outside the lock, evaluate the snapshot with an immutable map of known results. If it returns `NeedsEvaluation`,
-   load a persisted result or make a bounded Gemini request, then restart the pure snapshot calculation with that
-   result. No live case interpretation, session state, or rule is mutated during these attempts.
-3. Persist successful evaluations and use a single shared in-flight request per cache key to coalesce concurrent
-   requests. Database record access and network work happen outside the KB lock.
-4. Reacquire the KB lock and validate that the case, rules, definitions, and relevant session still match. If so,
-   publish the completed interpretation or apply the prepared operation exactly once. If not, discard the proposed
-   application and prepare again against current state; cached evaluations remain useful only for matching inputs.
-5. Bound restarts when concurrent changes prevent completion, and return a retryable "case or knowledge base changed"
-   outcome. A cancelled session, deleted case/KB, or switched conversation must not receive a late result.
+1. Run local inference/preparation under `KBSession.locked`, using isolated interpretations for previews.
+2. If inference demands a missing result, unwind the locked section before reading the durable evaluation store
+   or calling Gemini. Shared in-flight evaluations coalesce requests with the same key.
+3. Add the successful durable result to the prepared map, then rerun preparation under the lock against the live
+   rules and definitions. Definition revisions and exact inputs identify reusable results.
+4. Apply a mutation only once preparation succeeds. Failed condition changes and commit requests restore their
+   previous review state before a demand can escape. All-in-one rule creation uses a temporary session.
+5. Capture per-user operation guards across unlocked work. Closing the KB, cancelling/replacing a session or
+   changing its conditions invalidates a waiting operation. Condition translation checks context before and
+   after its unlocked model call.
+6. Bound each operation to 100 demanded evaluations and 120 seconds. A failed or timed-out operation remains
+   incomplete. A shared classification may finish for another waiter, but the cancelled operation cannot publish.
 
 ```mermaid
 flowchart TD
-    S[Capture snapshot under KB lock] --> I[Run local inference outside lock]
-    I -->|Needs evaluation| C{Persisted result available?}
-    C -->|Yes| R[Add result to evaluation context]
-    C -->|No| G[Call Gemini outside lock]
-    G -->|Validated and persisted| R
-    G -->|Failure| F[Return incomplete status]
-    R --> I
-    I -->|Complete| V{State still current under lock?}
-    V -->|Yes| P[Publish or apply once]
-    V -->|No, restart budget remains| S
-    V -->|No, budget exhausted| F
+    P[Prepare under KB lock with isolated interpretations] --> D{Result demanded?}
+    D -->|Yes: release lock| S[Read saved result or classify outside lock]
+    S -->|Durable success| C[Add prepared result]
+    C --> G{User operation still current?}
+    G -->|Yes| P
+    G -->|No| F[Return stale or incomplete]
+    S -->|Failure or deadline| F
+    D -->|No| A[Apply once under the same lock]
 ```
 
-Use a monotonic KB evaluation-state revision for interpretation-affecting mutations, plus a user-session revision
-for pending definitions/conditions. Presentation-only changes need not invalidate a classification; realignment at
-publication uses current attribute identities. The snapshot must not share mutable interpretation or tree state
-with the live KB: existing case-copy helpers can share `Interpretation` and are not sufficient without inspection.
+The synchronous chat `RuleService` uses `runBlocking` at its orchestration boundary, outside the KB lock.
+The core inference engine stays synchronous. Endpoint operations are suspend functions. Saved-result explanation
+uses a store-only coordinator mode, so it never starts a new classification.
 
-Planning and applying a mutation are separate operations. Never retry an arbitrary mutation callback after a cache
-miss: it may already have created an attribute, changed a session, recorded a rule, or sent a push. Rule start,
-condition changes, and commit all require preparation before the short locked application phase. Commit preserves
-the existing stale-session, dependency-cycle, and new-cornerstone checks.
-
-The same coordinator boundary covers ingestion, case retrieval, view construction, preview, original/candidate-tree
-cornerstone comparisons, condition suggestions, and commit revalidation. Non-AI paths retain their local fast path.
-Only service/orchestration boundaries need suspension; the rule engine stays synchronous and network-free.
+Interpretation, session previews, original/candidate cornerstone comparisons, suggestions and commit revalidation
+use the same evaluation contract. Each boundary must preserve preparation before mutation; wrapping arbitrary
+stateful callbacks in a retry loop is not sufficient. The implementation plan records the remaining audit work.
 
 ## Gemini request and validation
 

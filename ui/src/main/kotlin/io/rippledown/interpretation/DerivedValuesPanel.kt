@@ -227,6 +227,6 @@ internal fun valueAnnotatedString(row: DerivedValueRowState) = buildAnnotatedStr
             append(row.newFormula)
         }
     } else {
-        append(row.info.value)
+        append(row.info.displayValue())
     }
 }

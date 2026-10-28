@@ -24,6 +24,26 @@ class ChatManagementTest : OpenRDRServerTestBase() {
     private val carol = UserId("carol")
 
     @Test
+    fun `an incomplete case still opens chat so its evaluation can be retried`() = testApplication {
+        // Given a retained case whose classification failed
+        setupServer()
+        val primary = RDRCase(io.rippledown.model.CaseId(42L, "Demo"))
+        val failure = io.rippledown.model.caseview.IncompleteInterpretation(42L,
+            io.rippledown.model.caseview.IncompleteCategory.EVALUATION_FAILED, "hasDiabetes", "Unavailable", primary)
+        coEvery { kbEndpoint.viewableCase(42L) } throws io.rippledown.kb.ai.InterpretationIncompleteException(failure)
+        val context = slot<ChatContext>()
+        coEvery { chatCoordinator.startConversation(carol, capture(context)) } returns ChatResponse("You can retry.")
+        // When the user opens this case's conversation
+        val response = clientFor(carol).post(START_CONVERSATION) {
+            parameter(KB_ID, kbId)
+            parameter(CASE_ID, 42L)
+        }
+        // Then the failed case remains selected with its diagnostic
+        response.status shouldBe HttpStatusCode.OK
+        context.captured.caseOrNull?.incomplete?.reason shouldBe "Unavailable"
+    }
+
+    @Test
     fun `starting a conversation with a KB and a case starts it in the case context`() = testApplication {
         //Given
         setupServer()

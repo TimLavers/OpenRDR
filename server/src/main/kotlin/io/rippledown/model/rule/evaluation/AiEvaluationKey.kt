@@ -21,6 +21,7 @@ const val AI_FINGERPRINT_VERSION = 1
  * not part of it, so a renamed source keeps its records; any semantic or
  * profile edit changes it. KB scope is implicit in the owning store.
  */
+@Serializable
 data class AiEvaluationKey(
     val revision: String,
     val definitionFingerprint: String,

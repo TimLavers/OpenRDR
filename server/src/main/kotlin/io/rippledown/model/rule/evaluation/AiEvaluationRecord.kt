@@ -1,6 +1,7 @@
 package io.rippledown.model.rule.evaluation
 
 import io.rippledown.model.rule.AiBoolean
+import kotlinx.serialization.Serializable
 
 /**
  * A durable, successful classification. The [definition] is the snapshot
@@ -8,6 +9,7 @@ import io.rippledown.model.rule.AiBoolean
  * explained after the live definition is edited. The input itself is not
  * stored, only its hash in the [key]; the evidence is a short excerpt.
  */
+@Serializable
 data class AiEvaluationRecord(
     val key: AiEvaluationKey,
     val value: Boolean,

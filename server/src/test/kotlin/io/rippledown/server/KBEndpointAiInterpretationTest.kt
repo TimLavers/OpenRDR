@@ -151,6 +151,8 @@ internal class KBEndpointAiInterpretationTest {
 
         // Then
         viewable.case.latestValue(hasDiabetes) shouldBe "true"
+        viewable.derivedValues().single().provenance?.evidence shouldBe "T2 Diab"
+        viewable.derivedValues().single().provenance?.revision shouldBe "rev-1"
         viewable.viewableInterpretation.renderedComments.map { it.text } shouldBe listOf("Diabetic diet advice given.")
         classifier.calls shouldBe 1
     }
@@ -167,6 +169,11 @@ internal class KBEndpointAiInterpretationTest {
         // Then
         thrown.details.caseId shouldBe stored.id
         thrown.details.attributeName shouldBe "hasDiabetes"
+        val view = requireNotNull(thrown.details.caseView())
+        view.case.latestValue(notes) shouldBe "T2 Diab"
+        view.derivedValues().single().displayValue() shouldBe "Evaluation failed: Gemini unavailable"
+        view.latestText() shouldBe ""
+        view.case.latestValue(hasDiabetes) shouldBe null
     }
 
     @Test

@@ -64,7 +64,10 @@ if needed with `podman machine start`.
 
 ### Google Gemini
 
-OpenRDR uses Google Gemini to generate rule conditions from user-entered expressions.
+OpenRDR uses Google Gemini to generate rule conditions from user-entered expressions,
+support chat authoring, and evaluate AI Boolean derived attributes from primary case text
+using expert-approved criteria. Runtime classifications are stored for reproducible inference.
+See the [ten-case diabetes demonstration](documentation/ai_derived_attribute_demo.md).
 For this feature to work, and for the associated tests to pass, a Google API key is required and needs to be set
 as the value of an environment variable named `API_KEY`. To create a Google API key, see
 <a href="https://cloud.google.com/docs/authentication/api-keys" title="close icons">Manage API keys</a>

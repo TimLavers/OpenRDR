@@ -57,3 +57,11 @@ with a variable, whose text differs case to case, still matches.
 Background colour is invisible to the accessibility tree the acceptance tests read, so the highlight state is also
 exposed as the cell's content description (`…_PENDING_ADD_<name>` and so on), and every id takes a prefix so that the
 case's and the cornerstone's tables can be on screen together.
+
+## AI-derived previews
+
+The AI definition draft displays its criteria, examples and current-case classification in chat. Its revision
+survives acceptance and commit. Preview records may be persisted without activating the definition. New attribute
+names use provisional IDs; cancellation releases the name without deleting another user's attribute. Failed
+previews stay explicit and retryable. Candidate cornerstone evaluation uses the pending definition resolver,
+while original interpretations use committed definitions.

@@ -14,6 +14,8 @@ class RuleConversation(private val service: RuleService?) {
     sealed interface State {
         data object Ready : State
         data class OfferedAssignment(val action: ActionComment) : State
+        data class OfferedAiDefinition(val draftId: String) : State
+        data class OfferedSourceCorrection(val action: ActionComment) : State
         data object AwaitingReasonReply : State
         data object AwaitingCornerstoneAllowance : State
     }
@@ -37,6 +39,27 @@ class RuleConversation(private val service: RuleService?) {
     }
 
     fun assignmentAction(message: String): ActionComment? {
+        val correctionOffer = state as? State.OfferedSourceCorrection
+        if (correctionOffer != null) {
+            reset()
+            return when {
+                isAcceptance(message) -> service?.currentAiSourceCorrection()
+                    ?.let { correctionOffer.action.copy(sourceName = it) }
+                message.trim().lowercase().trimEnd('.', '!') in setOf("no", "cancel", "cancel draft", "never mind") ->
+                    ActionComment(CANCEL_AI_DEFINITION_DRAFT)
+                else -> null
+            }
+        }
+        val aiOffer = state as? State.OfferedAiDefinition
+        if (aiOffer != null) {
+            reset()
+            return when {
+                isAcceptance(message) -> ActionComment(ACCEPT_AI_DERIVED_ATTRIBUTE, draftId = aiOffer.draftId)
+                message.trim().lowercase().trimEnd('.', '!') in setOf("no", "cancel", "cancel draft", "never mind") ->
+                    ActionComment(CANCEL_AI_DEFINITION_DRAFT)
+                else -> null
+            }
+        }
         val pending = state as? State.OfferedAssignment ?: return null
         reset()
         return pending.action.takeIf { isAcceptance(message) && service?.isRuleSessionActive() != true }
@@ -100,6 +123,17 @@ class RuleConversation(private val service: RuleService?) {
     }
 
     fun rememberOffer(action: ActionComment) {
+        if (action.action in setOf(PROPOSE_AI_DERIVED_ATTRIBUTE, EDIT_AI_DERIVED_DEFINITION)) {
+            service?.currentAiSourceCorrection()?.let {
+                state = State.OfferedSourceCorrection(action)
+                return
+            }
+        }
+        if (action.action in setOf(PROPOSE_AI_DERIVED_ATTRIBUTE, EDIT_AI_DERIVED_DEFINITION,
+                ACCEPT_AI_DERIVED_ATTRIBUTE, PREVIEW_AI_DEFINITION, RETRY_AI_EVALUATION)) {
+            service?.currentAiDefinitionDraft()?.let { state = State.OfferedAiDefinition(it.id) }
+            return
+        }
         if (action.action != ASSIGN_DERIVED_VALUE) return
         val name = action.attributeName ?: return
         val expression = action.valueExpression ?: return

@@ -1,60 +1,77 @@
 # Implementation plan: AI-evaluated derived attributes
 
-**Status: steps 1–6 implemented; step 7 next.**
+**Status: core inference, chat authoring and status display implemented; review and acceptance work ongoing.
+Export/import was implemented last. See Progress for verified behavior and remaining work.**
 
 Design and acceptance semantics: [AI-evaluated derived attributes](ai_derived_attributes_design.md).
 Implement in the order below. Names marked new are proposed names, not claims about existing classes.
 
 ## Progress
 
-Where the implementation settled on different names or placement than proposed below, the implemented form is
-authoritative for later steps.
+Updated 29 October 2026. All changes after the original steps 1–6 commit remain uncommitted.
+The numbered steps below remain the acceptance checklist; this section records the actual implementation.
 
-- **Step 1 — done.** `AiBoolean`, `AiEvaluationProfile`, `AiBooleanExample` in `common/.../model/rule/AiBoolean.kt`;
-  `AiProvenance` in `common/.../model/caseview`. Server: `model/rule/evaluation/ValueExpressionEvaluator.kt`
-  (`AiEvaluationRequest`, `AiEvaluationResult`, `EvaluationContext`, `EvaluationOutcome`,
-  `DefaultValueExpressionEvaluator`, `AiBoolean.inputFrom`), `kb/ai/AiBooleanValidation.kt`, `kb/ai/AiEvaluationPolicy.kt`.
-  The evaluator tests live in `DefaultValueExpressionEvaluatorTest`, not a separate `AiExpressionEvaluatorTest`.
-- **Step 2 — done.** `AiEvaluationKey`/`AiEvaluationRecord` in `model/rule/evaluation`; `persistence/AiEvaluationStore`
-  (`InMemoryAiEvaluationStore`, `PostgresAiEvaluationStore`); `AiBooleanClassifier`/`AiClassification` and
-  `AiEvaluationService` in `kb/ai`. Export/import of records is left to step 10.
-- **Step 3 — done.** The adapter is in `llm`, not in `Gemini.kt`: `GeminiBooleanClassifier` (prompt contract v1,
-  strict parsing, `ClassificationLimits`, typed `ClassificationFailure` kinds) over a `StructuredGenerationTransport`
-  whose production implementation is `GeminiStructuredTransport`. The server bridge is `kb/ai/GeminiAiBooleanClassifier`;
-  `AiEvaluationPolicy` takes its versions from the `llm` constants. `GeminiStructuredTransportTest` is the live check.
-- **Step 4 — done.** `RuleTree.infer(case, resolver, evaluator, context)` returns `InferenceOutcome`:
-  `Complete(case, provenance)` or `Stopped` (`Demand(attribute, request)` / `Incomplete(attribute, reason)`); a stopped
-  run resets the case's interpretation. `materialise`/`apply` keep local semantics and throw
-  `IncompleteInferenceException` on a stopped outcome, so until step 5 routes the entry points through the coordinator a
-  KB holding an AI definition fails loudly rather than answering wrongly.
-- **Step 5 — done.** `kb/ai/AiInferenceCoordinator` with `interpretStored(caseId)` / `interpret(case)` returning
-  `PreparedInterpretation` (`Ready(case, provenance)` / `Incomplete(attribute, reason)` / `Abandoned(reason)`). The
-  snapshot is the case's data with a fresh `Interpretation`, `RuleTree.copy()` (deep: `Rule.copy` re-parents, conditions
-  are immutable data classes) and `DerivedDefinitionManager.all()`. Staleness is detected structurally rather than by
-  revision counters: on re-validation the live rule shapes (id, parent, conditions, assignment), definitions map and
-  case data are compared with the snapshot's, so no mutation site can forget to bump a counter. Evaluations already
-  obtained are kept across restarts, as a result is identified by its key. Restart budget `DEFAULT_MAX_RESTARTS = 3`.
-  Prepare/apply separation and the routing of `KBEndpoint`, cornerstones and ingestion through the coordinator are
-  step 6; until then nothing calls the coordinator in production. Step 6 moved the first inference pass inside the
-  snapshot's locked section: the lock is released only when a `Demand` arises, so a KB without AI definitions is
-  interpreted in one locked pass and can never be overtaken (the ingest/edit stress test exhausted the restart budget
-  otherwise).
-- **Step 6 — done.** `KB.storeCase` (ingest only) and `KB.viewableCaseOf(materialised)` split out of `processCase` /
-  `viewableCase`, which keep their local semantics for the rule-session paths that step 7 migrates. `KBEndpoint` takes an
-  `AiBooleanClassifier` (default `GeminiAiBooleanClassifier`, whose Gemini adapter is created lazily) and builds the
-  coordinator from `KB.aiEvaluationStore`; `interpretedCase(id)` (replaces `case(id)`), `viewableCase(id)`,
-  `processCase` and `caseReport` are `suspend` and go through `coordinator.interpretStored`. `processCase` stores under
-  the lock, interprets outside it, and returns `Ready.case.withoutDerivedValues()` with definitions resolved, so the
-  success payload is unchanged and the feed carries no derived values. `conditionHintsForCase` still interprets locally
-  under the lock (step 7). Wire contract: common `IncompleteInterpretation(caseId, category, attributeName, reason)` with
-  `IncompleteCategory { EVALUATION_FAILED, ABANDONED }`; the server throws `kb/ai/InterpretationIncompleteException`
-  and the `CASE`, `PROCESS_CASE`, `INTERPRET_CASE` and `CASE_REPORT` routes answer `INCOMPLETE_INTERPRETATION_STATUS`
-  (503) with that body; the ingestion routes still push `CasesInfo` because the case was stored. The report cache is
-  never consulted for an incomplete interpretation because the view is prepared first. The UI's `Api.getCase` /
-  `getCaseReport` already map any non-success to `null`; presenting the diagnosis is step 9. Tests:
-  `KBEndpointAiInterpretationTest`, route tests in `CaseManagementTest`/`InterpreterTest`/`routes.ReportManagementTest`,
-  `IncompleteInterpretationTest` (common).
-- **Steps 7–10 — not started.**
+- **Steps 1–6:** implemented in `7e9f9a41`. AI Boolean definitions/profiles/examples, strict Gemini adapter,
+  stable persisted evaluations, demand-driven inference and typed incomplete responses.
+- **Step 7:** implemented orchestration and rule-session integration, with additional safety work in this checkout.
+  The agreed implementation replaces the original snapshot coordinator with a KB-local `PreparedEvaluations`
+  cache and a retry-on-demand boundary. Synchronous inference runs under the KB lock; demanded record I/O and
+  classification run outside it. An operation must prepare before applying mutations. Calls have a 100-evaluation
+  budget and a 120-second elapsed-time budget; classifications shared with other callers can outlive a cancelled
+  waiter. Chat uses the agreed synchronous `LockedRuleService` with `runBlocking` outside the KB lock.
+  Session and cornerstone calculations use isolated interpretations and the original/candidate definition resolvers.
+  Commit revalidates the live tree and definitions. AI names use provisional negative IDs until commit.
+  Per-user operation guards cover chat calls and endpoint session start, commit and cornerstone changes.
+  Failed condition removals/updates and commit requests restore prior review conditions; failed next-case
+  interpretation cannot exempt a cornerstone. Closing a KB invalidates pending starts and discards drafts.
+  All-in-one `buildRule` uses a temporary session, and condition translation checks operation identity around
+  its unlocked work. Replacement/deletion of the reviewed primary case blocks commitment.
+  **Remaining audit:** persistence failure injection and progress reporting across large cornerstone reviews
+  remain to be checked. Serial classification is bounded, but no per-cornerstone progress counter is exposed.
+- **Step 8:** structured propose/edit/preview/accept/cancel/retry/explain actions, exact draft acceptance,
+  source-name correction, server-owned profiles/revisions, caseless drafting, and prompt resources are implemented.
+  A caseless draft binds to its first previewed case. Competing names and stale drafts are tested.
+  Retry works for draft and committed evaluations; explanation reads saved records and never classifies new input.
+  Failed case views can still open chat to request a retry.
+  **Remaining coverage:** partial/ambiguous clarification and long multi-turn cornerstones in the live authoring model.
+- **Step 9:** shared DTOs now carry saved provenance and incomplete diagnostics with backward-compatible defaults.
+  No-input rows show `Not evaluated: no <source> value`; true/false retain canonical values.
+  Failed view responses remain HTTP 503 and additionally carry primary data with an empty interpretation.
+  The client shows that data, a failure row and a case-level diagnostic, and clears/hides stale reports.
+  Tooltips show source, approved criteria, optional saved evidence and evaluation time. Rendering performs no I/O.
+  Shared mapping/serialization and endpoint tests pass. Desktop rendering has not yet been exercised.
+- **Step 11, before export/import:** a real-model, ten-case demonstration is defined in
+  `cucumber/src/test/resources/requirements/demo/AI diabetes from clinical notes.feature`.
+  Run only it with `:cucumber:aiDerivedAttributeDemo`. It authors the definition through chat, adds a comment
+  conditioned on true, visits ten synthetic cases with pauses, and explains a saved result.
+  The scenario compiles and all bindings pass the dry run; the desktop scenario has **not** been run.
+  `AiDiabetesEvaluationTest` is an opt-in synthetic model-quality harness, separate from deterministic adapter
+  tests. It includes the six supplied examples, twelve held-out notes and fresh repeated classifications;
+  it writes profile/revision/model/timing/evidence and disagreements to a JSON report. It has compiled but
+  has **not** been enabled against Gemini. Owner review of extended-corpus disagreements remains outstanding.
+  See [demo and evaluation instructions](../ai_derived_attribute_demo.md).
+- **Step 10, implemented last as requested:** the `AiEvaluations` export directory retains successful records
+  with versioned envelopes, definition snapshots and provenance. Import validates AI definitions, revisions,
+  fingerprint/policy versions, source IDs, model consistency, hash representation and duplicate consistency
+  before creating persistence. Exact duplicate records are accepted; conflicting records are refused.
+  Old archives without the directory remain supported; orphan preview records do not activate definitions.
+  Endpoint export loads records before taking the KB lock. In-memory round-trip tests prove zero provider calls
+  after import. The separate `AI evaluation export import.feature` compares values, comments and full saved
+  provenance across export/import; it is compiled/bound but has **not** run on the desktop.
+
+Verification for the recent changes:
+- Shared case-view mapping/serialization tests and focused server safety, authoring, conversation and endpoint
+  tests pass. Deterministic `GeminiBooleanClassifierTest` passes; the live evaluation harness is disabled by default.
+- `:cucumber:compileTestKotlin` and `:cucumber:cucumberDryRun` pass: 232 scenarios / 3,126 steps bound.
+  This executes no scenario hooks, desktop interactions or model calls.
+- The earlier broad server run had 2,000 tests and one live `KbCreationReplyModelTest` disagreement
+  (startup question “What is a knowledge base?” classified as OTHER_REQUEST instead of UNCLEAR).
+  The final offline server run passed 2,002 tests; it explicitly excludes `KbCreationReplyModelTest`,
+  `KBModelIntegrationTest` and three live-Gemini methods in `KBTest`. Its log is `build/ai-final-regression.log`.
+  All 864 common tests passed. The focused llm run passed 38 deterministic tests, with the opt-in evaluation
+  harness skipped. `git diff --check` passes.
+- No UI unit tests, actual Cucumber scenarios, Postgres tests or opt-in model-quality runs have been executed
+  for these latest changes. No changes have been committed.
 
 ## Working rules and verification
 
@@ -341,8 +358,9 @@ database recreation; definition revision and literal override persistence.
    requested examples and the design's longer/negative/adversarial cases. Keep labelled examples used in the prompt
    separate from held-out examples that measure generalisation.
 5. Record expected/actual labels, disagreements, elapsed time, profile/revision, and returned model version. Repeat a
-   representative subset to expose variability, bypassing the production cache only within the harness. Never write
-   evaluation results back into a production KB. Do not describe mocked fixture success as model accuracy.
+   representative subset to expose variability, using fresh Gemini requests without reusing saved classifications
+   within the harness. Never write evaluation results back into a production KB. Do not describe mocked fixture
+   success as model accuracy.
 6. Require all six specified examples to pass and have the owner review extended-corpus disagreements before adopting
    a profile. Agree a quantitative target if needed; do not invent an acceptable clinical error rate.
 7. Update `requirements/derived_attributes.md`, `design/derived_attribute_definitions.md`, `rule_tree_and_inference.md`,

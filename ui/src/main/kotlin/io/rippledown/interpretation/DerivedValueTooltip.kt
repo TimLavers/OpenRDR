@@ -17,16 +17,23 @@ import androidx.compose.ui.unit.em
 import io.rippledown.constants.interpretation.DERIVED_VALUE_CONDITIONS_PREFIX
 import io.rippledown.constants.interpretation.DERIVED_VALUE_FORMULA_PREFIX
 import io.rippledown.model.caseview.DerivedValueInfo
+import java.time.Instant
 
 @Composable
 internal fun DerivedValueTooltip(info: DerivedValueInfo, showFormula: Boolean = true) {
     Column {
-        if (showFormula && !info.formula.isLiteralValue(info.value)) {
+        if (showFormula && info.formula.isNotBlank() && !info.formula.isLiteralValue(info.value)) {
             Text(
                 text = formulaAnnotatedString(info.formula),
                 modifier = Modifier.padding(4.dp)
                     .semantics { contentDescription = "$DERIVED_VALUE_FORMULA_PREFIX${info.formula}" }
             )
+        }
+        info.provenance?.let { saved ->
+            Text("Source: ${saved.sourceName}", modifier = Modifier.padding(4.dp))
+            Text("Criteria: ${saved.instructions}", modifier = Modifier.padding(4.dp))
+            Text("Evidence: ${saved.evidence ?: "No supporting excerpt returned"}", modifier = Modifier.padding(4.dp))
+            Text("Evaluated: ${Instant.ofEpochMilli(saved.evaluatedAt)}", modifier = Modifier.padding(4.dp))
         }
         ConditionTooltip(info.conditions, formalDescriptionPrefix = DERIVED_VALUE_CONDITIONS_PREFIX)
     }

@@ -1,5 +1,6 @@
 package io.rippledown.kb.ai
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -14,12 +15,16 @@ import io.rippledown.model.AttributeKind
 import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RDRCaseBuilder
+import io.rippledown.model.caseview.IncompleteCategory
+import io.rippledown.model.caseview.IncompleteInterpretation
 import io.rippledown.model.condition.isAbsent
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.rule.AiBoolean
 import io.rippledown.model.rule.AssignValue
 import io.rippledown.model.rule.ByDefinition
 import io.rippledown.model.rule.CommentTemplate
+import io.rippledown.model.rule.IncompleteInferenceException
+import io.rippledown.model.rule.InferenceOutcome
 import io.rippledown.model.rule.Literal
 import io.rippledown.model.rule.Rule
 import io.rippledown.model.rule.evaluation.AiEvaluationRequest
@@ -37,6 +42,29 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 internal class AiInferenceCoordinatorTest {
+    @Test
+    fun `an operation has a total deadline while the shared evaluation can finish for other callers`(): Unit = runBlocking {
+        // Given a provider that has not yet answered
+        installDiabetesRules()
+        val case = storedCase("Slow", notes to "T2 Diab")
+        val release = CompletableDeferred<Unit>()
+        val classifier = FakeClassifier { release.await(); classified(true) }
+        val service = AiEvaluationService(persistentKB.aiEvaluationStore(), classifier)
+        val coordinator = AiInferenceCoordinator(session, service, operationTimeoutMillis = 100)
+        try {
+            // When the total operation deadline expires
+            val failure = shouldThrow<InterpretationIncompleteException> {
+                coordinator.interpretStored(requireNotNull(case.id))
+            }
+            // Then nothing was published, and the error is explicitly retryable
+            failure.details.category shouldBe IncompleteCategory.ABANDONED
+            case.interpretation.assignments().shouldBeEmpty()
+        } finally {
+            release.complete(Unit)
+        }
+        withTimeout(5_000) { AiInferenceCoordinator(session, service).interpretStored(requireNotNull(case.id)) }
+        classifier.calls.get() shouldBe 1
+    }
     private lateinit var persistentKB: InMemoryKB
     private lateinit var kb: KB
     private lateinit var session: KBSession
@@ -79,8 +107,8 @@ internal class AiInferenceCoordinatorTest {
         )
     }
 
-    private fun coordinator(classifier: AiBooleanClassifier, maxRestarts: Int = 3) =
-        AiInferenceCoordinator(session, AiEvaluationService(persistentKB.aiEvaluationStore(), classifier), maxRestarts)
+    private fun coordinator(classifier: AiBooleanClassifier, maxEvaluations: Int = DEFAULT_MAX_EVALUATIONS_PER_OPERATION) =
+        AiInferenceCoordinator(session, AiEvaluationService(persistentKB.aiEvaluationStore(), classifier), maxEvaluations)
 
     private fun addRule(assignment: AssignValue?, vararg conditions: io.rippledown.model.condition.Condition): Rule {
         val rule = Rule(nextRuleId++, null, conditions.toSet(), mutableSetOf(), assignment)
@@ -116,9 +144,8 @@ internal class AiInferenceCoordinatorTest {
         val prepared = coordinator(classifier).interpretStored(idOf(case))
 
         // Then the local rule has fired and the classifier was never consulted
-        val ready = prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>()
-        ready.case.interpretation.assignments().map { it.attribute } shouldBe listOf(advice)
-        ready.provenance shouldBe emptyMap()
+        prepared.case.interpretation.assignments().map { it.attribute } shouldBe listOf(advice)
+        prepared.provenance shouldBe emptyMap()
         classifier.calls.get() shouldBe 0
     }
 
@@ -136,10 +163,9 @@ internal class AiInferenceCoordinatorTest {
         )
 
         // When the case is interpreted
-        val prepared = coordinator.interpretStored(idOf(case))
+        coordinator.interpretStored(idOf(case))
 
         // Then the whole run happened under one lock, so no change could have overtaken it
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>()
         verify(exactly = 1) { countingSession.locked(any<() -> Any?>()) }
     }
 
@@ -154,11 +180,10 @@ internal class AiInferenceCoordinatorTest {
         val prepared = coordinator(classifier).interpretStored(idOf(case))
 
         // Then the value is materialised with provenance and only the downstream rule for true fired
-        val ready = prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>()
-        ready.case.latestValue(hasDiabetes) shouldBe "true"
-        ready.case.interpretation.assignments().map { it.attribute }.toSet() shouldBe setOf(hasDiabetes, advice)
-        ready.provenance.keys shouldBe setOf(hasDiabetes)
-        ready.provenance.getValue(hasDiabetes).evidence shouldBe "T2 Diab"
+        prepared.case.latestValue(hasDiabetes) shouldBe "true"
+        prepared.case.interpretation.assignments().map { it.attribute }.toSet() shouldBe setOf(hasDiabetes, advice)
+        prepared.provenance.keys shouldBe setOf(hasDiabetes)
+        prepared.provenance.getValue(hasDiabetes).evidence shouldBe "T2 Diab"
         classifier.calls.get() shouldBe 1
     }
 
@@ -178,19 +203,37 @@ internal class AiInferenceCoordinatorTest {
     }
 
     @Test
-    fun `a saved evaluation is reused without consulting the classifier`(): Unit = runBlocking {
-        // Given a case already classified once
+    fun `an obtained classification is kept by the knowledge base for every later interpretation`(): Unit = runBlocking {
+        // Given a case classified once
         installDiabetesRules()
         val case = storedCase("Fermi", notes to "T2 Diab")
-        val first = FakeClassifier { classified(false) }
-        coordinator(first).interpretStored(idOf(case))
+        val classifier = FakeClassifier { classified(false) }
+        coordinator(classifier).interpretStored(idOf(case))
+
+        // When the KB interprets the case itself, under the lock, with no coordinator
+        val materialised = session.locked { kb.materialise(requireNotNull(kb.getCase(idOf(case)))) }
+
+        // Then the prepared result is read without any further classification
+        materialised.latestValue(hasDiabetes) shouldBe "false"
+        classifier.calls.get() shouldBe 1
+    }
+
+    @Test
+    fun `a saved evaluation is reused without consulting the classifier`(): Unit = runBlocking {
+        // Given a case already classified once, with the in-memory results lost since
+        kb.derivedDefinitionManager.store(hasDiabetes.id, definition)
+        kb.ruleManager.createRuleAndAddToParent(kb.ruleTree.root, AssignValue(hasDiabetes, ByDefinition), emptySet())
+        val case = storedCase("Fermi", notes to "T2 Diab")
+        coordinator(FakeClassifier { classified(false) }).interpretStored(idOf(case))
+        kb = KB(persistentKB)
+        session = KBSession(kb)
 
         // When it is interpreted again with a classifier that must not be called
         val second = FakeClassifier { error("not called") }
         val prepared = coordinator(second).interpretStored(idOf(case))
 
         // Then the saved result is used
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>().case.latestValue(hasDiabetes) shouldBe "false"
+        prepared.case.latestValue(hasDiabetes) shouldBe "false"
         second.calls.get() shouldBe 0
     }
 
@@ -202,8 +245,7 @@ internal class AiInferenceCoordinatorTest {
 
         val prepared = coordinator(classifier).interpretStored(idOf(case))
 
-        val ready = prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>()
-        ready.case.interpretation.assignments().map { it.attribute }.toSet() shouldBe setOf(hasDiabetes, unknown)
+        prepared.case.interpretation.assignments().map { it.attribute }.toSet() shouldBe setOf(hasDiabetes, unknown)
         classifier.calls.get() shouldBe 0
     }
 
@@ -214,17 +256,24 @@ internal class AiInferenceCoordinatorTest {
         val case = storedCase("Fermi", notes to "T2 Diab")
 
         // When the case is interpreted
-        val prepared = coordinator(FakeClassifier { AiClassification.Failed("Gemini unavailable") }).interpretStored(idOf(case))
+        val thrown = shouldThrow<InterpretationIncompleteException> {
+            coordinator(FakeClassifier { AiClassification.Failed("Gemini unavailable") }).interpretStored(idOf(case))
+        }
 
-        // Then the outcome names the attribute and the reason
-        prepared shouldBe PreparedInterpretation.Incomplete(hasDiabetes, "Gemini unavailable")
+        // Then the details name the case, the attribute and the reason
+        thrown.details shouldBe IncompleteInterpretation(
+            idOf(case), IncompleteCategory.EVALUATION_FAILED, hasDiabetes.name, "Gemini unavailable"
+        )
     }
 
     @Test
     fun `an unknown case is abandoned`(): Unit = runBlocking {
-        val prepared = coordinator(FakeClassifier { error("not called") }).interpretStored(999)
+        val thrown = shouldThrow<InterpretationIncompleteException> {
+            coordinator(FakeClassifier { error("not called") }).interpretStored(999)
+        }
 
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Abandoned>()
+        thrown.details.category shouldBe IncompleteCategory.ABANDONED
+        thrown.details.caseId shouldBe 999
     }
 
     @Test
@@ -249,7 +298,7 @@ internal class AiInferenceCoordinatorTest {
         otherOperation.shouldBeInstanceOf<String>()
 
         release.complete(Unit)
-        withTimeout(5_000) { interpretation.await() }.shouldBeInstanceOf<PreparedInterpretation.Ready>()
+        withTimeout(5_000) { interpretation.await() }.case.latestValue(hasDiabetes) shouldBe "true"
     }
 
     @Test
@@ -268,9 +317,8 @@ internal class AiInferenceCoordinatorTest {
         // When the case is interpreted
         val prepared = coordinator(classifier).interpretStored(idOf(case))
 
-        // Then the run restarted on the new tree, reusing the classification
-        val ready = prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>()
-        ready.case.interpretation.assignments().map { it.attribute }.toSet() shouldBe setOf(hasDiabetes, advice, extra)
+        // Then the run was repeated on the new tree, reusing the classification
+        prepared.case.interpretation.assignments().map { it.attribute }.toSet() shouldBe setOf(hasDiabetes, advice, extra)
         classifier.calls.get() shouldBe 1
     }
 
@@ -293,7 +341,7 @@ internal class AiInferenceCoordinatorTest {
         val prepared = coordinator(classifier).interpretStored(idOf(case))
 
         // Then the published value comes from the revised definition
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>().case.latestValue(hasDiabetes) shouldBe "false"
+        prepared.case.latestValue(hasDiabetes) shouldBe "false"
         classifier.calls.get() shouldBe 2
     }
 
@@ -306,15 +354,17 @@ internal class AiInferenceCoordinatorTest {
             classified(true)
         }
 
-        val prepared = coordinator(classifier).interpretStored(idOf(case))
+        val thrown = shouldThrow<InterpretationIncompleteException> {
+            coordinator(classifier).interpretStored(idOf(case))
+        }
 
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Abandoned>()
+        thrown.details.category shouldBe IncompleteCategory.ABANDONED
         kb.getCase(idOf(case)).shouldBeNull()
     }
 
     @Test
-    fun `a knowledge base that keeps changing exhausts the restart budget`(): Unit = runBlocking {
-        // Given every classification is overtaken by a definition edit
+    fun `an operation that keeps demanding new evaluations is abandoned at the budget`(): Unit = runBlocking {
+        // Given every classification is overtaken by a definition edit, so a new one is always demanded
         installDiabetesRules()
         val case = storedCase("Fermi", notes to "T2 Diab")
         var revision = 1
@@ -326,12 +376,14 @@ internal class AiInferenceCoordinatorTest {
             classified(true)
         }
 
-        // When the case is interpreted with a budget of one restart
-        val prepared = coordinator(classifier, maxRestarts = 1).interpretStored(idOf(case))
+        // When the case is interpreted with a budget of one evaluation
+        val thrown = shouldThrow<InterpretationIncompleteException> {
+            coordinator(classifier, maxEvaluations = 1).interpretStored(idOf(case))
+        }
 
         // Then the run gives up after the budget rather than looping
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Abandoned>()
-        classifier.calls.get() shouldBe 2
+        thrown.details.category shouldBe IncompleteCategory.ABANDONED
+        classifier.calls.get() shouldBe 1
     }
 
     @Test
@@ -360,7 +412,7 @@ internal class AiInferenceCoordinatorTest {
     }
 
     @Test
-    fun `a case that is not stored can be interpreted from a snapshot of the knowledge base`(): Unit = runBlocking {
+    fun `a case that is not stored can be interpreted against the knowledge base`(): Unit = runBlocking {
         // Given an AI rule and a case that is not in the KB
         installDiabetesRules()
         val unstored = with(RDRCaseBuilder()) {
@@ -372,7 +424,7 @@ internal class AiInferenceCoordinatorTest {
         val prepared = coordinator(FakeClassifier { classified(false) }).interpret(unstored)
 
         // Then the result is on the returned copy, and the supplied case is untouched
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>().case.latestValue(hasDiabetes) shouldBe "false"
+        prepared.case.latestValue(hasDiabetes) shouldBe "false"
         unstored.interpretation.assignments().shouldBeEmpty()
     }
 
@@ -386,7 +438,63 @@ internal class AiInferenceCoordinatorTest {
 
         val prepared = coordinator(classifier).interpretStored(idOf(case))
 
-        prepared.shouldBeInstanceOf<PreparedInterpretation.Ready>().case.latestValue(hasDiabetes) shouldBe "true"
+        prepared.case.latestValue(hasDiabetes) shouldBe "true"
         classifier.calls.get() shouldBe 0
+    }
+
+    @Test
+    fun `an operation demanding an evaluation is run again once the result is prepared`(): Unit = runBlocking {
+        // Given an operation that interprets a case under the lock
+        installDiabetesRules()
+        val case = storedCase("Fermi", notes to "T2 Diab")
+        val runs = AtomicInteger()
+        val classifier = FakeClassifier { classified(true) }
+
+        // When it is run through the coordinator
+        val result = coordinator(classifier).withPreparedEvaluations(idOf(case)) {
+            runs.incrementAndGet()
+            session.locked { kb.materialise(requireNotNull(kb.getCase(idOf(case)))).latestValue(hasDiabetes) }
+        }
+
+        // Then it was rerun exactly once, after the single classification, and the result is from the rerun
+        result shouldBe "true"
+        runs.get() shouldBe 2
+        classifier.calls.get() shouldBe 1
+    }
+
+    @Test
+    fun `an operation whose demanded evaluation fails is incomplete and is not run again`(): Unit = runBlocking {
+        // Given
+        installDiabetesRules()
+        val case = storedCase("Fermi", notes to "T2 Diab")
+        val runs = AtomicInteger()
+
+        // When
+        val thrown = shouldThrow<InterpretationIncompleteException> {
+            coordinator(FakeClassifier { AiClassification.Failed("Rate limited") }).withPreparedEvaluations(idOf(case)) {
+                runs.incrementAndGet()
+                session.locked { kb.materialise(requireNotNull(kb.getCase(idOf(case)))) }
+            }
+        }
+
+        // Then
+        thrown.details shouldBe IncompleteInterpretation(idOf(case), IncompleteCategory.EVALUATION_FAILED, hasDiabetes.name, "Rate limited")
+        runs.get() shouldBe 1
+    }
+
+    @Test
+    fun `an operation that stops on a failure already in its context is incomplete`(): Unit = runBlocking {
+        // Given an operation whose engine run reports a failed evaluation rather than demanding one
+        val outcome = InferenceOutcome.Incomplete(hasDiabetes, "Refused")
+
+        // When
+        val thrown = shouldThrow<InterpretationIncompleteException> {
+            coordinator(FakeClassifier { error("not called") }).withPreparedEvaluations(7) {
+                throw IncompleteInferenceException(outcome)
+            }
+        }
+
+        // Then
+        thrown.details shouldBe IncompleteInterpretation(7, IncompleteCategory.EVALUATION_FAILED, hasDiabetes.name, "Refused")
     }
 }

@@ -270,3 +270,11 @@ users through one `KBSession`), `KBEndpointConcurrencyTest` (the lab feed agains
   demands and forfeits the "one instance per object within a KB" invariant (see [architecture.md](architecture.md))
   that the rule engine relies on.
 - Merging two users' concurrent edits to the *same* rule session — a session belongs to one user.
+
+## AI work in flight
+
+The AI coordinator releases the KB lock before record I/O or provider work. Evaluation results are shared by
+key, while acceptance and rule-session mutations remain per user. Session changes and closing a KB invalidate
+waiting operation guards. Candidate cases and cornerstones use fresh interpretations. Failed condition changes
+and commit requests preserve the prior review; all-in-one rule creation uses a temporary session.
+Provider work has an operation deadline, and cancelling one waiter does not cancel shared work for other users.

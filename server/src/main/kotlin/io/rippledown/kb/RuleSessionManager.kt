@@ -10,6 +10,8 @@ import io.rippledown.hints.AttributeFor
 import io.rippledown.hints.ConditionChatService
 import io.rippledown.hints.ConditionGenerator
 import io.rippledown.kb.chat.RuleService
+import io.rippledown.kb.ai.validateAiBoolean
+import io.rippledown.kb.ai.AiDefinitionAuthoring
 import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
 import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
@@ -24,6 +26,7 @@ import io.rippledown.model.condition.ConditionText
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.diff.*
 import io.rippledown.model.rule.*
+import io.rippledown.model.rule.evaluation.DefaultValueExpressionEvaluator
 import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.suggestions.ConditionSuggester
@@ -53,6 +56,73 @@ class RuleSessionManager(
     val logger = lazyLogger
 
     private var ruleSession: RuleBuildingSession? = null
+    private var reviewedStoredCase: RDRCase? = null
+    private var operationRevision = 0L
+    private val aiAuthoring = AiDefinitionAuthoring(kb, this)
+
+    override fun proposeAiDefinition(
+        attributeName: String, sourceName: String, instructions: String, examples: List<AiBooleanExample>,
+        caseId: Long?, reasons: List<String>, edit: Boolean
+    ) = aiAuthoring.propose(attributeName, sourceName, instructions, examples, caseId, reasons, edit)
+
+    override fun currentAiDefinitionDraft() = aiAuthoring.draft
+    override fun currentAiSourceCorrection() = aiAuthoring.pendingSourceCorrection
+
+    // The retry flag is applied by the orchestration boundary; this method only interprets.
+    override fun previewAiDefinition(draftId: String, case: RDRCase?, retryAfterFailure: Boolean) =
+        aiAuthoring.preview(draftId, case)
+
+    override fun acceptAiDefinition(draftId: String, case: RDRCase?) = aiAuthoring.accept(draftId, case)
+    override fun cancelAiDefinitionDraft() = aiAuthoring.cancel()
+
+    override fun retryAiEvaluation(case: RDRCase): String {
+        val live = case.id?.let { checkNotNull(kb.getCase(it)) { "The selected case no longer exists." } } ?: case
+        val evaluated = kb.materialise(live.copy(interpretation = Interpretation(live.caseId)))
+        val values = evaluated.interpretation.assignments().mapNotNull { assignment ->
+            val definition = assignment.expression.resolvedFor(assignment.attribute, kb.definitionResolver) as? AiBoolean
+                ?: return@mapNotNull null
+            "${assignment.attribute.name}: ${evaluated.latestValue(assignment.attribute) ?: "Not evaluated: no ${definition.sourceAttribute.name} value"}"
+        }
+        return (listOf("Interpretation complete.") + values).joinToString("\n")
+    }
+
+    override fun explainAiEvaluation(attributeName: String, case: RDRCase?): String {
+        val name = attributeName.trim()
+        val attribute = kb.attributeManager.all().singleOrNull { it.name.equals(name, ignoreCase = true) }
+            ?: return "No attribute named \"$name\" exists."
+        val definition = kb.derivedDefinitionManager.definitionFor(attribute.id)
+        if (definition !is AiBoolean) return "\"${attribute.name}\" is not an AI-evaluated definition."
+        val selected = case ?: return "Select a case to explain the value of \"${attribute.name}\"."
+        val live = selected.id?.let { kb.getCase(it) } ?: selected
+        val copy = live.copy(interpretation = Interpretation(live.caseId))
+        return when (val outcome =
+            kb.ruleTree.infer(copy, kb.definitionResolver, DefaultValueExpressionEvaluator(), kb.evaluationContext())) {
+            is InferenceOutcome.Stopped -> throw IncompleteInferenceException(outcome)
+            is InferenceOutcome.Complete -> buildString {
+                val provenance = outcome.provenance[attribute]
+                append("\"${attribute.name}\" is \"${outcome.case.latestValue(attribute) ?: "unassigned"}\"")
+                provenance?.evidence?.let { append(" — evidence: \"$it\"") }
+                append("\nSource: ${definition.sourceAttribute.name}")
+                append("\nCriteria: ${definition.instructions}")
+                if (definition.examples.isNotEmpty()) {
+                    append(definition.examples.joinToString("", "\nExamples:") { "\n${it.input} → ${it.expected}" })
+                }
+            }
+        }
+    }
+
+    internal fun invalidatePendingOperations() {
+        operationRevision++
+    }
+
+    override fun operationGuard(): () -> Unit {
+        val revision = operationRevision
+        return {
+            if (revision != operationRevision) {
+                throw StaleRuleSessionException("The rule session changed while AI evaluation was in progress. Please try again.")
+            }
+        }
+    }
 
     /**
      * The change the session in progress is about to make. A session makes one
@@ -152,13 +222,25 @@ class RuleSessionManager(
         logger.info("Starting rule session for case ${case.name} and action $action")
         logger.info("Current comments are: ${case.interpretation.commentTexts(case)} ")
         check(ruleSession == null) { "Session already in progress." }
-        check(action.isApplicable(kb.ruleTree, case)) { "Action $action is not applicable to case ${case.name}" }
+        val isolated = case.copy(interpretation = Interpretation(case.caseId))
+        check(action.isApplicable(kb.ruleTree, isolated, kb.definitionResolver, kb.evaluationContext())) {
+            "Action $action is not applicable to case ${case.name}"
+        }
         checkActionExpressionIsAcyclic(action)
         ruleSession = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), sessionResolver()
+            kb.ruleManager, kb.ruleTree, isolated, action, kb.allCornerstoneCases(), sessionResolver(), kb.evaluationContext(),
+            kb.definitionResolver
         )
         logger.info("Rule session created")
-        return cornerstoneStatus(null)
+        return try {
+            cornerstoneStatus(null).also {
+                reviewedStoredCase = case.id?.let { kb.getCase(it) }?.withoutDerivedValues()
+                invalidatePendingOperations()
+            }
+        } catch (e: Throwable) {
+            ruleSession = null
+            throw e
+        }
     }
 
     /**
@@ -324,7 +406,19 @@ class RuleSessionManager(
         case: RDRCase,
         attributeName: String,
         expressionText: String
+    ): CornerstoneStatus =
+        startRuleSessionToAssignValue(case, attributeName, valueExpressionFor(expressionText, attributeName))
+
+    /** The structured authoring path preserves the approved expression and revision. */
+    internal fun startRuleSessionToAssignValue(
+        case: RDRCase,
+        attributeName: String,
+        expression: ValueExpression
     ): CornerstoneStatus {
+        check(ruleSession == null) { "Session already in progress." }
+        require(attributeName.isNotBlank()) { "An attribute name cannot be blank." }
+        require(expression != ByDefinition) { "A definition must contain a concrete expression." }
+        if (expression is AiBoolean) validateAiBoolean(expression, kb.attributeManager.all())
         val existingAttribute = kb.attributeManager.byName(attributeName)
         if (existingAttribute != null && existingAttribute.kind == AttributeKind.EXTERNAL) {
             error(nameClashWithExistingExternalAttributeMessage(attributeName))
@@ -333,8 +427,12 @@ class RuleSessionManager(
         // created, so that a refusal leaves nothing behind: an attribute with no
         // rule and no definition would be litter, and worse, the name would then
         // clash with the corrected request the user is being asked to confirm.
-        val expression = valueExpressionFor(expressionText, attributeName)
-        val attribute = kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
+        // AI sessions use an isolated target until commit. Cancelling never reserves
+        // a live name, and competing sessions cannot delete or overwrite each other.
+        val attribute = if (expression is AiBoolean && existingAttribute == null) {
+            val unusedId = generateSequence(-1) { it - 1 }.first { id -> kb.attributeManager.all().none { it.id == id } }
+            Attribute(unusedId, attributeName, AttributeKind.DERIVED)
+        } else kb.attributeManager.getOrCreate(attributeName, AttributeKind.DERIVED)
         cycleForDefinition(attribute, expression)?.let {
             error("This value cannot be assigned: ${cycleMessage(it)}.")
         }
@@ -493,13 +591,17 @@ class RuleSessionManager(
      * documentation/design/derived_attribute_definitions.md.
      */
     override fun editDerivedAttributeDefinition(attributeName: String, valueExpression: String): String {
+        return editDerivedAttributeDefinition(attributeName, valueExpressionFor(valueExpression))
+    }
+
+    internal fun editDerivedAttributeDefinition(attributeName: String, newExpression: ValueExpression): String {
         check(ruleSession == null) { "Session already in progress." }
         val attribute = attributeForName(attributeName)
             ?: error("No attribute with name \"$attributeName\" exists.")
         check(attribute.kind == AttributeKind.DERIVED) {
             "\"${attribute.name}\" is not a derived attribute, so it does not have a definition to edit."
         }
-        val newExpression = valueExpressionFor(valueExpression)
+        if (newExpression is AiBoolean) validateAiBoolean(newExpression, kb.attributeManager.all())
         checkDefinitionEditIsAcyclic(attribute, newExpression)
         val oldExpression = kb.derivedDefinitionManager.definitionFor(attribute.id)
         kb.derivedDefinitionManager.store(attribute.id, newExpression)
@@ -747,21 +849,36 @@ class RuleSessionManager(
     override fun removeCondition(conditionId: Int): CornerstoneStatus {
         val session = activeRuleSession("No rule session in progress.")
         val condition = kb.conditionManager.getById(conditionId)
-        session.removeCondition(condition)
-        return cornerstoneStatus(null)
+        return replaceConditions(session.conditions - condition, null)
     }
 
     override fun removeConditionByText(conditionText: String): CornerstoneStatus {
         val session = activeRuleSession("No rule session in progress.")
         val condition = session.conditions.firstOrNull { it.asText() == conditionText }
             ?: throw IllegalArgumentException("Condition not found in current rule session: $conditionText")
-        session.removeCondition(condition)
-        return cornerstoneStatus(null)
+        return replaceConditions(session.conditions - condition, null)
+    }
+
+    private fun replaceConditions(conditions: Set<Condition>, selected: ViewableCase?): CornerstoneStatus {
+        val session = activeRuleSession()
+        val previous = session.conditions
+        // Speculate under the lock, restoring before a demand can escape to the coordinator.
+        val status = try {
+            session.conditions = conditions.toMutableSet()
+            cornerstoneStatus(selected)
+        } finally {
+            session.conditions = previous
+        }
+        session.conditions = conditions.toMutableSet()
+        invalidatePendingOperations()
+        return status
     }
 
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
+        invalidatePendingOperations()
         ruleSession = null
+        reviewedStoredCase = null
         currentChange = null
         pendingDefinition = null
         commentAttributeInSession = null
@@ -774,6 +891,10 @@ class RuleSessionManager(
     fun conflictingCasesInCurrentRuleSession(): List<RDRCase> = activeRuleSession().cornerstoneCases()
 
     override fun addConditionToCurrentRuleSession(condition: Condition) {
+        addCondition(condition, invalidate = true)
+    }
+
+    private fun addCondition(condition: Condition, invalidate: Boolean) {
         val session = activeRuleSession()
         // Align the provided condition with that in the condition manager.
         val conditionId = condition.id
@@ -791,25 +912,44 @@ class RuleSessionManager(
         }
         cycleMessageFor(conditionToUse)?.let { throw IllegalArgumentException(it) }
         session.addCondition(conditionToUse)
+        if (invalidate) invalidatePendingOperations()
     }
 
     override fun commitCurrentRuleSession() {
         val session = activeRuleSession()
+        reviewedStoredCase?.let { reviewed ->
+            val live = reviewed.id?.let { kb.getCase(it) }?.withoutDerivedValues()
+            if (live == null || live.data != reviewed.data) {
+                refuseStaleCommit("The source case changed or was removed while this rule was reviewed. Please start a new review.")
+            }
+        }
         // Each check below passed when the session started or the condition was
         // added; another user's commit since then can make any of them fail.
         if (createsDependencyCycle(session)) {
             refuseStaleCommit(dependencyCycleMessage())
         }
         pendingDefinition?.let { pending ->
+            if (pending.attribute.id < 0 && kb.attributeManager.all().any {
+                    it.name.equals(pending.attribute.name, ignoreCase = true)
+                }) {
+                refuseStaleCommit("An attribute named \"${pending.attribute.name}\" was created while this rule was being reviewed.")
+            }
             if (kb.derivedDefinitionManager.definitionFor(pending.attribute.id) != pending.definitionAtStart) {
                 refuseStaleCommit(definitionChangedMessage(pending.attribute.name))
             }
         }
-        if (!session.action.isApplicable(kb.ruleTree, session.case)) {
+        if (!session.action.isApplicable(kb.ruleTree, session.case, kb.definitionResolver, kb.evaluationContext())) {
             refuseStaleCommit(interpretationChangedMessage(session.case.name))
         }
         val now = RuleBuildingSession(
-            kb.ruleManager, kb.ruleTree, session.case, session.action, kb.allCornerstoneCases(), sessionResolver()
+            kb.ruleManager,
+            kb.ruleTree,
+            session.case,
+            session.action,
+            kb.allCornerstoneCases(),
+            sessionResolver(),
+            kb.evaluationContext(),
+            kb.definitionResolver
         )
         if (session.conditions.any { !it.holds(now.materialisedCase) }) {
             refuseStaleCommit(interpretationChangedMessage(session.case.name))
@@ -818,11 +958,19 @@ class RuleSessionManager(
         if (now.cornerstoneCases().any { it.id !in session.idsOfConflictingCornerstonesAtStart }) {
             refuseStaleCommit(cornerstonesChangedMessage())
         }
-        pendingDefinition?.let { kb.derivedDefinitionManager.store(it.attribute.id, it.expression) }
-        val rulesAdded = session.commit()
+        val committedAction = pendingDefinition?.let { pending ->
+            val attribute = if (pending.attribute.id < 0) {
+                kb.attributeManager.getOrCreate(pending.attribute.name, AttributeKind.DERIVED)
+            } else pending.attribute
+            kb.derivedDefinitionManager.store(attribute.id, pending.expression)
+            ChangeTreeToAddAssignment(AssignValue(attribute, ByDefinition))
+        } ?: session.action
+        val rulesAdded = now.commit(committedAction)
+        invalidatePendingOperations()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
         ruleSession = null
+        reviewedStoredCase = null
         currentChange = null
         pendingDefinition = null
         commentAttributeInSession = null
@@ -886,7 +1034,7 @@ class RuleSessionManager(
     override fun conditionHintsForCase(case: RDRCase): ConditionList {
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible to the suggestion generators.
-        val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
+        val materialisedCase = kb.materialise(case)
         val ctx = SuggestionContext(
             sessionCase = materialisedCase,
             attributes = kb.attributeManager.all(),
@@ -917,14 +1065,7 @@ class RuleSessionManager(
      * after the new set of conditions have been applied
      */
     fun updateCornerstone(request: UpdateCornerstoneRequest): CornerstoneStatus {
-        val session = activeRuleSession()
-
-        //replace the conditions in the current session with the updated ones
-        session.conditions = request.conditionList.conditions.toMutableSet()
-
-        //update the cornerstone status
-        val currentCC = request.cornerstoneStatus.cornerstoneToReview
-        return cornerstoneStatus(currentCC)
+        return replaceConditions(request.conditionList.conditions.toSet(), request.cornerstoneStatus.cornerstoneToReview)
     }
 
     /**
@@ -941,15 +1082,18 @@ class RuleSessionManager(
             return CornerstoneStatus()
         }
         val toExempt = currentCornerstones[index]
+        // The view of the cornerstone shown next is prepared before the
+        // exemption takes effect, so a failed AI evaluation leaves the
+        // review unchanged.
+        val cornerstones = currentCornerstones - toExempt
+        val viewable = if (cornerstones.isEmpty()) null
+        else viewableCase(cornerstones[index.coerceAtMost(cornerstones.size - 1)])
         session.exemptCornerstone(toExempt)
-
-        val cornerstones = session.cornerstoneCases()
-        return if (cornerstones.isEmpty()) {
+        invalidatePendingOperations()
+        return if (viewable == null) {
             selectedCornerstone = null
             CornerstoneStatus()
         } else {
-            val newCC = cornerstones[index.coerceAtMost(cornerstones.size - 1)]
-            val viewable = viewableCase(newCC)
             selectedCornerstone = viewable
             cornerstoneStatus(viewable)
         }
@@ -968,6 +1112,7 @@ class RuleSessionManager(
         val newCC = caseInstance.copy(interpretation = Interpretation(caseInstance.caseId))
         val viewable = viewableCase(newCC)
         selectedCornerstone = viewable
+        invalidatePendingOperations()
         return CornerstoneStatus(viewable, index, cornerstones.size)
     }
 
@@ -1007,9 +1152,13 @@ class RuleSessionManager(
     // Translating the expression may call the LLM, so the KB lock is held only
     // around the attribute lookups and the validation, never across the call.
     override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult {
+        val guard = kbLock.withLock { operationGuard() }
         val attributeFor: AttributeFor = { kbLock.withLock { kb.attributeManager.getOrCreate(it) } }
         val condition = conditionParser.parse(expression, attributeFor)
-        return kbLock.withLock { validated(condition, case, expression) }
+        return kbLock.withLock {
+            guard()
+            validated(condition, case, expression)
+        }
     }
 
     override fun conditionForEditedSuggestion(
@@ -1039,7 +1188,7 @@ class RuleSessionManager(
     ): ConditionParsingResult {
         // Materialise the case so that derived attributes assigned by existing
         // rules are visible when validating the typed expression.
-        val materialisedCase = kb.ruleTree.materialise(case, kb.definitionResolver)
+        val materialisedCase = kb.materialise(case)
         //Only return the condition if non-null and holds for the case
         val caseAttributeNames = materialisedCase.attributes.map { it.name }.toSet()
         return if (condition == null) {
@@ -1130,11 +1279,17 @@ class RuleSessionManager(
         val case = kb.viewableCase(
             kb.getProcessedCase(caseId) ?: throw IllegalArgumentException("Case with id $caseId not found")
         )
-        ruleRequest.conditions.conditions.forEach { condition ->
-            logger.info("adding condition: $condition")
-            addConditionToCurrentRuleSession(condition)
+        val session = activeRuleSession()
+        val previous = session.conditions.toMutableSet()
+        try {
+            ruleRequest.conditions.conditions.forEach { condition ->
+                addCondition(condition, invalidate = false)
+            }
+            commitCurrentRuleSession()
+        } finally {
+            // A demand or refusal cannot leave half of this request in the active review.
+            if (ruleSession === session) session.conditions = previous
         }
-        commitCurrentRuleSession()
         logger.info("rule session committed")
         // Rebuild the viewable case so that the new rule's effects are shown,
         // with by-definition assignments resolved for display.
@@ -1148,6 +1303,14 @@ class RuleSessionManager(
      * Condition expressions are parsed deterministically from human-readable text.
      */
     fun buildRule(request: BuildRuleRequest) {
+        check(ruleSession == null) { "Session already in progress." }
+        // An all-in-one request owns a temporary review. A demand must not install
+        // or cancel the user's interactive session before the outer retry resumes.
+        RuleSessionManager(kb, webSocketManager, kbLock, userId).buildRuleAttempt(request)
+        invalidatePendingOperations()
+    }
+
+    private fun buildRuleAttempt(request: BuildRuleRequest) {
         logger.info("buildRule: case='${request.caseName}', diff=${request.diff}, conditions=${request.conditions}, assignAttribute=${request.assignAttribute}")
         val case = kb.getProcessedCaseByName(request.caseName)
         kb.interpret(case)
@@ -1185,7 +1348,7 @@ class RuleSessionManager(
             logger.info("buildRule: completed for case='${request.caseName}'")
         } catch (e: Exception) {
             logger.error("buildRule: failed for case='${request.caseName}': ${e.message}")
-            cancelRuleSession()
+            if (ruleSession != null) cancelRuleSession()
             throw e
         }
     }

@@ -286,10 +286,12 @@ fun OpenRDRUI(
     // ViewableCase) so it regenerates when the comments change but not on every
     // unrelated case refresh (e.g. after each chat message).
     val reportComments = currentCase?.viewableInterpretation?.latestText()
-    LaunchedEffect(reportVisible, currentCaseId, reportComments, ruleInProgress) {
+    val interpretationIncomplete = currentCase?.incomplete
+    LaunchedEffect(reportVisible, currentCaseId, reportComments, ruleInProgress, interpretationIncomplete) {
+        report = null
         withContext(dispatcher) {
             val caseId = currentCaseId
-            if (reportVisible && caseId != null && !ruleInProgress) {
+            if (reportVisible && caseId != null && !ruleInProgress && interpretationIncomplete == null) {
                 isLoadingReport = true
                 report = api.getCaseReport(caseId)
                 isLoadingReport = false

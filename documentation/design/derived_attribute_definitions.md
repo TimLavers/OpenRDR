@@ -40,3 +40,10 @@ A definition edit is checked for cycles like any other expression, and is refuse
 
 An impact summary when a definition is edited (how many cornerstones' values change); a cancelled assignment session
 leaves its stored definition, harmless because the next attempt overwrites it.
+
+## AI definitions
+
+`AiBoolean` is a stored `ValueExpression` with a primary source attribute, approved criteria, examples, revision
+and evaluation profile. It cannot be evaluated directly: server inference consumes prepared results. A semantic
+edit creates a new revision; source/target renaming preserves evaluation identity. New AI attributes use provisional
+IDs during authoring and receive live IDs only at commit. See [AI design](../tickets/ai_derived_attributes_design.md).

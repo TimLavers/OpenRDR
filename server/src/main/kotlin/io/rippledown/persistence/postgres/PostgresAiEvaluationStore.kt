@@ -36,6 +36,8 @@ class PostgresAiEvaluationStore(private val db: Database) : AiEvaluationStore {
         return@transaction select(key)
     }
 
+    override fun all() = transaction(db) { PGAiEvaluations.selectAll().map { it.toRecord() } }
+
     override fun insertIfAbsent(record: AiEvaluationRecord) = transaction(db) {
         PGAiEvaluations.insertIgnore {
             it[revision] = record.key.revision

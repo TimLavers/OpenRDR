@@ -46,6 +46,8 @@ class EvaluationContext private constructor(
 
     companion object {
         val EMPTY = EvaluationContext(emptyMap())
+
+        fun of(results: Map<AiEvaluationRequest, AiEvaluationResult>) = EvaluationContext(results)
     }
 }
 

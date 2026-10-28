@@ -37,3 +37,12 @@ edited; a configurable number of significant figures. See `tickets/TODO.md`.
 
 Design: [design/rule_tree_and_inference.md](../design/rule_tree_and_inference.md) and
 [design/derived_attribute_definitions.md](../design/derived_attribute_definitions.md).
+
+## AI Boolean definitions
+
+An expert can define a Boolean from one primary text attribute through chat. The saved criteria, labelled
+examples, profile and revision determine future classifications. A preview is accepted as an exact server-owned
+draft, then committed through normal rule building. Missing or blank latest-episode input is not evaluated;
+a valid false remains a value. Evaluation failures produce an incomplete interpretation and block reports.
+The Derived attributes panel shows these states separately and exposes saved evidence and time in its tooltip.
+See [the diabetes demo](../ai_derived_attribute_demo.md) for a ten-case chat demonstration and its run command.

@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 const val DEFAULT_FAILURE_COOLDOWN_MILLIS = 10_000L
@@ -37,6 +38,18 @@ class AiEvaluationService(
 ) {
     private val inFlight = ConcurrentHashMap<AiEvaluationRequest, Deferred<AiEvaluationResult>>()
     private val recentFailures = ConcurrentHashMap<AiEvaluationKey, RecentFailure>()
+
+    /** Reads provenance without giving an explanation request permission to classify new input. */
+    suspend fun savedEvaluation(request: AiEvaluationRequest): AiEvaluationResult = withContext(Dispatchers.IO) {
+        try {
+            store.recordFor(request.key())?.toResult()
+                ?: AiEvaluationResult.Failure("No saved evaluation exists for this definition and input.")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            AiEvaluationResult.Failure("Saved evaluations could not be read: ${e.message}")
+        }
+    }
 
     suspend fun evaluate(request: AiEvaluationRequest, retryAfterFailure: Boolean = false): AiEvaluationResult {
         val key = request.key()
