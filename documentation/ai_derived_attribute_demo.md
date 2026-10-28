@@ -8,7 +8,9 @@ Run one visible scenario from the repository root:
 
 Use the existing Cucumber setup with its server, desktop and Gemini credentials.
 `AI_EVALUATION_MODEL` optionally selects the runtime classification model when the
-definition is created; its default is `gemini-2.5-flash`. Chat uses its own configured model.
+definition is created. By default it uses `GEMINI_MODEL` from `Gemini.kt`, the same
+setting used by chat (currently `gemini-3.1-flash-lite`). The evaluation test uses this
+same selection. Existing definitions retain the model saved in their evaluation profile.
 The scenario opens a fresh default KB and uses synthetic notes only. It does not
 import a prepared diabetes definition or use a scripted classifier.
 

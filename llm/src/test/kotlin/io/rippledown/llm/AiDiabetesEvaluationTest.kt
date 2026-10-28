@@ -15,20 +15,20 @@ import java.io.File
 import java.util.UUID
 
 /**
- * Synthetic, opt-in model evaluation using fresh Gemini requests, without reusing saved classifications.
- * No KB or patient data is used.
+ * Opt-in model evaluation using fresh Gemini requests, without reusing saved classifications.
+ * Uses synthetic patient data.
  */
 @EnabledIfEnvironmentVariable(named = "RUN_AI_DERIVED_EVALUATION", matches = "true")
 class AiDiabetesEvaluationTest {
     @Serializable
-    private data class Observation(
+    internal data class Observation(
         val input: String, val suppliedExample: Boolean, val expected: Boolean,
         val actual: Boolean?, val evidence: String?, val reportedModel: String?,
         val repetition: Int, val elapsedMillis: Long, val failure: String?
     )
 
     @Serializable
-    private data class EvaluationReport(val definition: AiBoolean, val observations: List<Observation>)
+    internal data class EvaluationReport(val definition: AiBoolean, val observations: List<Observation>)
 
     @Test
     fun `evaluate the supplied examples and held out notes using fresh Gemini requests without reusing saved classifications`() = runBlocking {
@@ -59,7 +59,7 @@ class AiDiabetesEvaluationTest {
                 "Do not infer a diagnosis from medication or laboratory results alone. " +
                 "If contradictory or unintelligible notes provide no clear affirmative evidence, return false.",
             examples, "evaluation-${UUID.randomUUID()}",
-            AiEvaluationProfile(GEMINI_BOOLEAN_PROVIDER, System.getenv("AI_EVALUATION_MODEL") ?: "gemini-2.5-flash",
+            AiEvaluationProfile(GEMINI_BOOLEAN_PROVIDER, aiEvaluationModel(),
                 0.0, GEMINI_BOOLEAN_PROMPT_VERSION, GEMINI_BOOLEAN_SCHEMA_VERSION))
         val classifier = GeminiBooleanClassifier(GeminiStructuredTransport())
         val corpus = examples.map { Triple(it.input, it.expected, true) } + heldOut.map { Triple(it.first, it.second, false) }
@@ -78,7 +78,8 @@ class AiDiabetesEvaluationTest {
         }
         val reportFile = File("build/reports/ai-evaluation/${definition.revision}.json")
         reportFile.parentFile.mkdirs()
-        reportFile.writeText(Json { prettyPrint = true }.encodeToString(EvaluationReport(definition, observations)))
+        reportFile.writeText(Json { prettyPrint = true }.encodeToString(
+            EvaluationReport.serializer(), EvaluationReport(definition, observations)))
         println("Model evaluation: ${reportFile.absolutePath}")
         // Then the six supplied examples must pass; every extended disagreement is retained for owner review
         observations.filter { it.suppliedExample }.forEach { observation ->

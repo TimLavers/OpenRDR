@@ -3,6 +3,7 @@ package io.rippledown.kb.ai
 import io.rippledown.kb.KB
 import io.rippledown.kb.RuleSessionManager
 import io.rippledown.kb.levenshtein
+import io.rippledown.llm.aiEvaluationModel
 import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
 import io.rippledown.model.RDRCase
@@ -43,7 +44,7 @@ class AiDefinitionAuthoring(
     private val kb: KB,
     private val sessions: RuleSessionManager,
     private val profile: () -> AiEvaluationProfile = {
-        AiEvaluationPolicy.defaultProfile(System.getenv("AI_EVALUATION_MODEL") ?: "gemini-2.5-flash")
+        AiEvaluationPolicy.defaultProfile(aiEvaluationModel())
     }
 ) {
     var draft: AiDefinitionDraft? = null

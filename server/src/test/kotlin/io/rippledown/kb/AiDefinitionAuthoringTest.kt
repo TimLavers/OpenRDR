@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.rippledown.kb.ai.*
 import io.rippledown.kb.chat.LockedRuleService
+import io.rippledown.llm.GEMINI_MODEL
 import io.rippledown.model.*
 import io.rippledown.model.rule.*
 import io.rippledown.model.rule.evaluation.AiEvaluationRequest
@@ -64,6 +65,35 @@ class AiDefinitionAuthoringTest {
     private val criteria = "Personal diabetes history; exclude family history, suspected and gestational diabetes alone."
 
     private fun draft() = service.proposeAiDefinition("hasDiabetes", "clinical_notes", criteria, examples, case.id)
+
+    @Test
+    fun `new definitions use the configured Gemini model unless explicitly overridden`() {
+        // Given the configured chat model and optional evaluation override
+        val expectedModel = System.getenv("AI_EVALUATION_MODEL") ?: GEMINI_MODEL
+
+        // When an AI definition is drafted with the default configuration
+        val draft = draft()
+
+        // Then the selected model is captured in its saved evaluation profile
+        draft.definition.evaluationProfile.model shouldBe expectedModel
+    }
+
+    @Test
+    fun `editing a saved definition preserves its model when the default differs`() {
+        // Given a definition saved with an explicit model
+        val attribute = kb.attributeManager.getOrCreate("hasDiabetes", AttributeKind.DERIVED)
+        val savedProfile = AiEvaluationPolicy.defaultProfile("previously-selected-model")
+        kb.derivedDefinitionManager.store(attribute.id,
+            AiBoolean(notes, criteria, examples, "saved-revision", savedProfile))
+
+        // When its meaning is edited
+        val draft = service.proposeAiDefinition("hasDiabetes", "clinical_notes",
+            "Include gestational diabetes", examples, case.id, edit = true)
+
+        // Then changing the default does not replace the saved model
+        draft.definition.evaluationProfile shouldBe savedProfile
+        calls shouldBe 0
+    }
 
     @Test
     fun `draft preview and acceptance preserve the approved definition and all six labels`() {
