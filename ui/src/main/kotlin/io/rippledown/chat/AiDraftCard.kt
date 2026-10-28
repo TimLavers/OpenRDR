@@ -5,7 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -15,6 +14,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.rippledown.components.DefinitionDetailRow
 import io.rippledown.model.chat.AiDefinitionDraftView
 
 const val AI_DRAFT_CARD = "AI_DRAFT_CARD"
@@ -65,24 +65,7 @@ fun AiDraftCard(message: AiDefinitionDraftMessage, index: Int) {
 
 @Composable
 private fun DraftRow(heading: String, value: String) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        Text(
-            heading,
-            color = Color.DarkGray,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            modifier = Modifier.width(72.dp)
-        )
-        Text(
-            value,
-            color = Color.Black,
-            fontSize = 13.sp,
-            lineHeight = 17.sp,
-            modifier = Modifier
-                .weight(1f)
-                .testTag("$AI_DRAFT_VALUE_PREFIX$heading")
-        )
-    }
+    DefinitionDetailRow(heading, value, Modifier.testTag("$AI_DRAFT_VALUE_PREFIX$heading"))
 }
 
 fun main() = androidx.compose.ui.window.application {

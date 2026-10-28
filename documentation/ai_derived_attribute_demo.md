@@ -36,8 +36,8 @@ The gestational exclusion is an explicit choice in this demo's definition. A fal
 value means these notes do not establish the defined personal history. It is not a
 clinical conclusion that the patient does not have diabetes.
 
-Hover over a successful result to show the source, approved criteria, saved excerpt
-when one was returned, and evaluation time. The final step revisits Demo08 and asks
+Hover over a successful result to show a two-column card with the source, approved
+criteria and saved excerpt when one was returned. The final step revisits Demo08 and asks
 chat to explain its saved result. Revisiting and explaining use the stored classification.
 
 The six short notes are supplied examples. Demo07–09 demonstrate handling of wording

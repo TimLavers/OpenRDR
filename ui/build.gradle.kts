@@ -30,6 +30,14 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.awaitility)
     testImplementation(libs.assertJSwing)
+    testImplementation(platform("org.junit:junit-bom:5.10.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
+}
+
+// Support JUnit 5 tests while retaining the existing JUnit 4 Compose tests.
+tasks.test {
+    useJUnitPlatform()
 }
 
 val toolchainJavaHome: File = javaToolchains.launcherFor {
