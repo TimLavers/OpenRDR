@@ -10,25 +10,55 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
 
   Scenario: Define diabetes from notes in chat and review ten different cases
     Given case Demo01 is provided having data:
+      | age            | 58       |
+      | gender         | M        |
+      | glucose        | 9.5      |
       | clinical_notes | Diabetic |
     And case Demo02 is provided having data:
-      | clinical_notes | T2 Diab |
+      | age            | 64       |
+      | gender         | F        |
+      | glucose        | 8.2      |
+      | clinical_notes | T2 Diab  |
     And case Demo03 is provided having data:
-      | clinical_notes | T1 diab |
+      | age            | 22       |
+      | gender         | M        |
+      | glucose        | 10.4     |
+      | clinical_notes | T1 diab  |
     And case Demo04 is provided having data:
-      | clinical_notes | FH diab |
+      | age            | 45       |
+      | gender         | U        |
+      | glucose        | 5.6      |
+      | clinical_notes | FH diab  |
     And case Demo05 is provided having data:
+      | age            | 70       |
+      | gender         | F        |
+      | glucose        | 6.2      |
       | clinical_notes | ?diabetes |
     And case Demo06 is provided having data:
+      | age            | 31       |
+      | gender         | F        |
+      | glucose        | 5.9      |
       | clinical_notes | gest diabetes |
     And case Demo07 is provided having data:
+      | age            | 72       |
+      | gender         | M        |
+      | glucose        | 5.2      |
       | clinical_notes | No history of diabetes. Routine hypertension review. |
     And case Demo08 is provided having data:
+      | age            | 55       |
+      | gender         | M        |
+      | glucose        | 8.9      |
       | clinical_notes | Mother has diabetes; patient also has established type 2 diabetes. |
     And case Demo09 is provided having data:
+      | age            | 66       |
+      | gender         | F        |
+      | glucose        | 7.8      |
       | clinical_notes | Follow-up: longstanding T2DM, diagnosed in 2012. Attending annual review. No new symptoms. |
     And case Demo10 is provided having data:
-      | Visit | Annual review; notes not supplied |
+      | age            | 40       |
+      | gender         | U        |
+      | glucose        | 5.8      |
+      | Visit          | Annual review; notes not supplied |
     And I start the client application
     And I select the case Demo01
     And the chatbot has asked if I would like to add a comment

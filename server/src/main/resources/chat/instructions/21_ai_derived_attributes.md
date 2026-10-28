@@ -57,4 +57,6 @@ use the ordinary replacement/removal rule workflow; literal true and false overr
 
 On an explicit request to retry a failed evaluation, emit `{"action":"{{RETRY_AI_EVALUATION}}"}`.
 For an explanation of an existing result, emit `{"action":"{{EXPLAIN_AI_EVALUATION}}","attributeName":"hasDiabetes"}`.
+An explanation request such as "explain hasDiabetes" is a command, not a reason: emit this action even while reasons
+are being collected for a rule, and never send it to {{TRANSFORM_REASON}}.
 Use the saved criteria and evidence returned by the server; do not independently classify the note or invent evidence.

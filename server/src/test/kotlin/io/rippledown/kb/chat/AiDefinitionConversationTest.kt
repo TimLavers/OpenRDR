@@ -1,5 +1,9 @@
 package io.rippledown.kb.chat
 
+import com.google.common.collect.ImmutableList
+import com.google.genai.Chat
+import com.google.genai.types.FunctionCall
+import com.google.genai.types.GenerateContentResponse
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.string.shouldContain
@@ -8,7 +12,13 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.every
+import io.rippledown.chat.ChatService
+import io.rippledown.chat.Conversation
+import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
+import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.ConversationService
+import io.rippledown.chat.ReasonTransformer
+import io.rippledown.constants.chat.EXPLAIN_AI_EVALUATION
 import io.rippledown.fromJsonString
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
@@ -22,6 +32,7 @@ import io.rippledown.server.KBEndpoint
 import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.util.Optional
 
 class AiDefinitionConversationTest {
     private val kb = KB(InMemoryKB(KBInfo("chat_ai", "AI chat")))
@@ -253,6 +264,48 @@ class AiDefinitionConversationTest {
     }
 
     @Test
+    fun `a misrouted explanation request is corrected within the conversation and shows the explanation card`() = runTest {
+        // Given an accepted and committed classification with a saved evaluation for the case
+        chat.startConversation(view)
+        chat.processActionComment(json.fromJsonString())
+        chat.response("yes")
+        service.commitCurrentRuleSession()
+
+        // And a conversation whose model misroutes the explanation request into the reason
+        // transformer, then replies with the action JSON embedded in the correction it is sent
+        val sent = mutableListOf<String>()
+        val scriptedChat = mockk<Chat>()
+        every { scriptedChat.sendMessage(capture(sent)) } answers {
+            if (sent.size == 1) functionCallResponse(TRANSFORM_REASON, mapOf(REASON_PARAMETER to "explain hasDiabetes"))
+            else textResponse(sent.last().substringAfter("JSON object ").substringBefore(" and nothing else"))
+        }
+        val transformer = mockk<ReasonTransformer>()
+        val conversation = Conversation(
+            object : ChatService {
+                override fun startChat() = scriptedChat
+            },
+            mapOf(TRANSFORM_REASON to ReasonTransformHandler(transformer, service))
+        )
+        val modelChat = ChatManager(conversation, service, mockk())
+        modelChat.startConversation(kb.viewableCase(case))
+
+        // When the user asks for the explanation
+        val response = modelChat.response("explain hasDiabetes")
+
+        // Then the correction was handed back to the model and the emitted action showed the card
+        sent.size shouldBe 2
+        sent.last() shouldContain "Function results:"
+        sent.last() shouldContain EXPLAIN_AI_EVALUATION
+        response.text shouldContain "T2 Diab"
+        val card = requireNotNull(response.draft)
+        card.attributeName shouldBe "hasDiabetes"
+        card.evidence shouldBe "T2 Diab"
+        card.previewValue shouldBe "true"
+        calls shouldBe 1
+        coVerify(exactly = 0) { transformer.transform(any()) }
+    }
+
+    @Test
     fun `the production factory supplies authoring services in a KB without a selected case`() {
         // Given a real endpoint and a KB-only chat context
         val kbService = mockk<KnowledgeBaseService>()
@@ -272,4 +325,21 @@ class AiDefinitionConversationTest {
 
     private suspend fun chatFor(view: io.rippledown.model.caseview.ViewableCase): ChatManager =
         ChatManager(model, service, mockk()).also { it.startConversation(view) }
+
+    private fun functionCallResponse(name: String, args: Map<String, Any>): GenerateContentResponse {
+        val call = mockk<FunctionCall>()
+        every { call.name() } returns Optional.of(name)
+        every { call.args() } returns Optional.of(args)
+        return mockk<GenerateContentResponse>().also {
+            every { it.functionCalls() } returns ImmutableList.of(call)
+            every { it.text() } returns null
+            every { it.usageMetadata() } returns Optional.empty()
+        }
+    }
+
+    private fun textResponse(text: String): GenerateContentResponse = mockk<GenerateContentResponse>().also {
+        every { it.functionCalls() } returns null
+        every { it.text() } returns text
+        every { it.usageMetadata() } returns Optional.empty()
+    }
 }
