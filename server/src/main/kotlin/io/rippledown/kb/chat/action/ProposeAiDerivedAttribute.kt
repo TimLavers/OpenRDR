@@ -44,7 +44,10 @@ class AcceptAiDerivedAttribute(val draftId: String) : ChatAction {
             val accepted = ruleService.acceptAiDefinition(draftId, currentCase?.case)
             val status = accepted.cornerstoneStatus
             if (status == null) ChatResponse(accepted.message)
-            else respondAfterSessionStart(ruleService, requireNotNull(currentCase), status, accepted.reasons, modelResponder)
+            else respondAfterSessionStart(
+                ruleService, requireNotNull(currentCase), status, accepted.reasons, modelResponder,
+                acceptanceMessage = accepted.message
+            )
         }
 }
 

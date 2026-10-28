@@ -75,15 +75,27 @@ fun applyReasons(ruleService: RuleService, case: RDRCase, reasons: List<String>)
  * [RuleConversation.completeTurn] does after a typed reason. It cannot be left
  * to completeTurn because the model turn made here is nested inside the one
  * that produced the action, and sees the conditions as already present.
+ * For an accepted AI definition, [acceptanceMessage] makes the server ask for
+ * reasons directly. No model turn runs between acceptance and that question;
+ * suggestions are attached by [ChatResponseEnricher], and [RuleConversation]
+ * supplies the question as context with the user's next reply.
  */
 suspend fun respondAfterSessionStart(
     ruleService: RuleService,
     case: ViewableCase,
     cornerstoneStatus: CornerstoneStatus,
     reasons: List<String>,
-    modelResponder: ModelResponder
+    modelResponder: ModelResponder,
+    acceptanceMessage: String? = null
 ): ChatResponse {
     ruleService.sendCornerstoneStatus()
+    if (acceptanceMessage != null) {
+        val applied = applyReasons(ruleService, case.case, reasons)
+        return ChatResponse(
+            listOf(acceptanceMessage, applied.acknowledgementForUser(), MORE_REASONS_QUESTION)
+                .filter { it.isNotBlank() }.joinToString("\n\n")
+        )
+    }
     if (reasons.isEmpty()) return modelResponder.response(cornerstoneStatus.summary())
     val applied = applyReasons(ruleService, case.case, reasons)
     val summary = "${ruleService.cornerstoneStatus().summary()}\n${applied.summaryForModel()}"

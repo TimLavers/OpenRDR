@@ -59,6 +59,24 @@ Export/import was implemented separately as the final stage. Its Cucumber scenar
 tagged `@ai_evaluation_export`. It compares true/false values, downstream comments and full
 saved provenance after importing the archive. It is separate from the ten-case demo.
 
+## Headless chat workflow check
+
+The opt-in `AiDefinitionConversationModelTest` checks the authoring conversation with
+the configured Gemini chat model. It proposes a definition, accepts it, verifies that
+the server asks for reasons while the rule is pending, then declines reasons and checks
+that the rule is committed. It uses made-up notes in an in-memory KB and a fixed
+classifier; it checks the chat workflow, not classification quality. It needs `API_KEY`
+and does not open the desktop UI.
+
+```powershell
+$env:RUN_AI_AUTHORING_TEST = 'true'
+try {
+    .\gradlew.bat :server:cleanTest :server:test --tests 'io.rippledown.kb.chat.AiDefinitionConversationModelTest' --console=plain
+} finally {
+    Remove-Item Env:RUN_AI_AUTHORING_TEST
+}
+```
+
 ## Separate model evaluation
 
 The opt-in `AiDiabetesEvaluationTest` uses the six supplied examples, twelve held-out

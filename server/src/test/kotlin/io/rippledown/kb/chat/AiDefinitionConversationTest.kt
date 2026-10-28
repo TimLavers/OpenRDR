@@ -12,6 +12,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.every
+import io.mockk.slot
 import io.rippledown.chat.ChatService
 import io.rippledown.chat.Conversation
 import io.rippledown.chat.Conversation.Companion.REASON_PARAMETER
@@ -19,6 +20,8 @@ import io.rippledown.chat.Conversation.Companion.TRANSFORM_REASON
 import io.rippledown.chat.ConversationService
 import io.rippledown.chat.ReasonTransformer
 import io.rippledown.constants.chat.EXPLAIN_AI_EVALUATION
+import io.rippledown.constants.chat.COMMIT_RULE
+import io.rippledown.kb.chat.RuleConversation.Companion.MORE_REASONS_QUESTION
 import io.rippledown.fromJsonString
 import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
@@ -29,6 +32,7 @@ import io.rippledown.model.rule.AiBoolean
 import io.rippledown.model.rule.evaluation.AiEvaluationRequest
 import io.rippledown.persistence.inmemory.InMemoryKB
 import io.rippledown.server.KBEndpoint
+import io.rippledown.toJsonString
 import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -91,7 +95,15 @@ class AiDefinitionConversationTest {
         view.prompt shouldBe "Accept this definition?"
 
         // When the user accepts and completes the ordinary rule workflow
-        chat.response("yes")
+        val accepted = chat.response("yes")
+
+        // Then the server asks for reasons while the assignment rule is still pending
+        accepted.text shouldBe "Accepted the definition of \"hasDiabetes\".\n\n$MORE_REASONS_QUESTION"
+        manager.isRuleSessionActive() shouldBe true
+        kb.attributeManager.byName("hasDiabetes").shouldBeNull()
+        coVerify(exactly = 0) { model.response(any()) }
+
+        // When the rule is subsequently committed
         service.commitCurrentRuleSession()
 
         // Then the server's draft is committed unchanged
@@ -99,6 +111,27 @@ class AiDefinitionConversationTest {
         kb.derivedDefinitionManager.definitionFor(attribute.id) shouldBe draft.definition
         calls shouldBe 1
         coVerify(exactly = 0) { model.response("yes") }
+    }
+
+    @Test
+    fun `declining reasons after AI acceptance answers the server question and commits the pending rule`() = runTest {
+        // Given an accepted definition and the server's question about reasons
+        chat.startConversation(view)
+        chat.processActionComment(json.fromJsonString())
+        chat.response("yes")
+        val nextTurn = slot<String>()
+        coEvery { model.response(capture(nextTurn)) } returns ActionComment(COMMIT_RULE).toJsonString()
+
+        // When the expert declines to add reasons
+        chat.response("no")
+
+        // Then the model sees the actual pending question and the active rule's status
+        nextTurn.captured shouldContain "[The server asked the user: $MORE_REASONS_QUESTION]"
+        nextTurn.captured shouldContain "Current cornerstone status:"
+        manager.isRuleSessionActive() shouldBe false
+        val attribute = requireNotNull(kb.attributeManager.byName("hasDiabetes"))
+        kb.materialise(case).latestValue(attribute) shouldBe "true"
+        calls shouldBe 1
     }
 
     @Test
