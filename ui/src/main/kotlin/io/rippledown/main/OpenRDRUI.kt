@@ -27,9 +27,9 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.PresenceInfo
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.change.KbChange
-import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.report.CaseReport
@@ -76,6 +76,7 @@ fun OpenRDRUI(
     var kbListRead by remember { mutableStateOf(false) }
     var casesInfoKbId by remember { mutableStateOf<String?>(null) }
     var conversationStarted by remember { mutableStateOf(false) }
+    var conversationResetRevision by remember { mutableIntStateOf(0) }
     var kbImportRevision by remember { mutableIntStateOf(0) }
     // A user's windows share one conversation. A context this window took from
     // another window is shown but not started again, or it would reset the chat
@@ -108,6 +109,10 @@ fun OpenRDRUI(
     val seenChangeIds = remember { mutableMapOf<String, MutableSet<Int>>() }
     var socketConnected by remember { mutableStateOf(false) }
     var connectionRevision by remember { mutableIntStateOf(0) }
+    var recoveredContextConnection by remember { mutableIntStateOf(0) }
+    var contextRevision by remember { mutableIntStateOf(0) }
+    var sessionRevision by remember { mutableIntStateOf(0) }
+    var casesRevision by remember { mutableIntStateOf(0) }
     var connectionCursors by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
     // Keep a failed/interrupted replay's starting point, even if newer live frames arrive.
     val pendingRecoveryCursors = remember { mutableMapOf<String, Int?>() }
@@ -175,6 +180,7 @@ fun OpenRDRUI(
     val fileTransfers = remember(api, fileDialogs) {
         fileDialogs?.let { dialogs ->
             KbFileTransferController(dialogs, api, onImported = { imported ->
+                ++contextRevision
                 conversationStarted = false
                 casesInfoKbId = null
                 kbInfo = imported
@@ -248,15 +254,60 @@ fun OpenRDRUI(
         }
     }
 
+    // A user's other window can switch or close their shared conversation while
+    // this socket is down. Reconcile that context before any KB-scoped recovery.
+    // A new push wins over a late snapshot, both here and in Api.currentKB.
+    LaunchedEffect(api, connectionRevision, socketConnected, kbListRead, conversationStarted) {
+        if (!socketConnected || !kbListRead || !conversationStarted) return@LaunchedEffect
+        val revision = connectionRevision
+        if (recoveredContextConnection == revision) return@LaunchedEffect
+        while (isActive) {
+            val contextAtStart = contextRevision
+            try {
+                val recoveredContext = api.chatContext()
+                val context = recoveredContext ?: ChatContextInfo(null, null)
+                if (contextRevision == contextAtStart) {
+                    if (context.kbInfo?.id != kbInfo?.id || context.caseId != currentCaseId) {
+                        adopt(context)
+                    } else {
+                        // KBInfo equality ignores names; recover a missed rename too.
+                        kbInfo = context.kbInfo
+                    }
+                    if (recoveredContext == null) {
+                        // A restarted server has no conversation to adopt. Start
+                        // a fresh one even if this window already showed no KB.
+                        adoptedContext = null
+                        conversationStarted = false
+                        ++conversationResetRevision
+                    }
+                }
+                recoveredContextConnection = revision
+                break
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Keep chat disabled until its server context is known. A new
+                // connection or disposal cancels this retry loop.
+                delay(1_000)
+            }
+        }
+    }
+
+    val recoveryConnection = connectionRevision.takeIf {
+        socketConnected && recoveredContextConnection == it
+    }
+    val contextReady = connectionRevision == 0 || recoveryConnection != null
+
     // Capture the effect's key at composition time: startup can set kbInfo before
     // the initial (null-keyed) effect runs, which would otherwise fetch twice.
     val presenceKbId = kbInfo?.id
-    LaunchedEffect(api, presenceKbId, connectionRevision) {
+    LaunchedEffect(api, presenceKbId, connectionRevision, recoveryConnection) {
         pendingRefreshes.keys.retainAll(setOfNotNull(presenceKbId))
         if (presenceKbId == null) {
             presenceInfo = null
             return@LaunchedEffect
         }
+        if (!contextReady) return@LaunchedEffect
         val revisionAtStart = presenceRevision
         try {
             val users = api.presence()
@@ -270,11 +321,36 @@ fun OpenRDRUI(
         }
     }
 
-    val recoveryConnection = connectionRevision.takeIf { socketConnected }
-    LaunchedEffect(api, presenceKbId, recoveryConnection) {
+    LaunchedEffect(api, presenceKbId, recoveryConnection, casesInfoKbId) {
         val recoveryKbId = presenceKbId ?: return@LaunchedEffect
         val revision = recoveryConnection ?: return@LaunchedEffect
+        if (casesInfoKbId != recoveryKbId) return@LaunchedEffect
         retainRecoveryCursor(recoveryKbId)
+        fun stillCurrent() = kbInfo?.id == recoveryKbId && socketConnected && connectionRevision == revision
+        val sessionAtStart = sessionRevision
+        try {
+            val status = api.cornerstoneStatus()
+            if (stillCurrent() && sessionRevision == sessionAtStart) {
+                cornerstoneStatus = status
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Preserve the known session if its snapshot is unavailable.
+        }
+        val casesAtStart = casesRevision
+        try {
+            val snapshot = api.waitingCasesInfo()
+            if (stillCurrent() && casesRevision == casesAtStart) casesInfo = snapshot
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // A failed list fetch must not prevent replay of the change history.
+        }
+        if (!stillCurrent()) return@LaunchedEffect
+        if (cornerstoneStatus == null) {
+            pendingRefreshes.remove(recoveryKbId)?.let(::refreshForChanges)
+        }
         refreshForChanges(setOf(ChangeKind.RULES_ADDED))
         try {
             val records = api.changes(pendingRecoveryCursors[recoveryKbId])
@@ -341,8 +417,11 @@ fun OpenRDRUI(
                     }
                 }
                 if (currentCase?.case?.caseId?.id != currentCaseId) {
-                    currentCase = api.getCase(currentCaseId!!)
+                    currentCaseId?.let { currentCase = api.getCase(it) }
                 }
+            } else {
+                currentCaseId = null
+                currentCase = null
             }
             lastKnownCaseOrder = allIdValues
         }
@@ -367,7 +446,7 @@ fun OpenRDRUI(
         }
     }
 
-    LaunchedEffect(chatContext, kbImportRevision) {
+    LaunchedEffect(chatContext, kbImportRevision, conversationResetRevision) {
         val (kbId, caseId) = chatContext ?: return@LaunchedEffect
         if (chatContext == adoptedContext) {
             adoptedContext = null
@@ -419,9 +498,11 @@ fun OpenRDRUI(
         withContext(dispatcher) {
             handler.api.startWebSocketSession(
                 updateCornerstoneStatus = {
+                    ++sessionRevision
                     cornerstoneStatus = it
                 },
                 ruleSessionCompleted = {
+                    ++sessionRevision
                     cornerstoneStatus = null
                     val pending = kbInfo?.id?.let { pendingRefreshes.remove(it) }
                     if (pending != null) refreshForChanges(pending)
@@ -435,15 +516,21 @@ fun OpenRDRUI(
                     // calls like startConversation).
                     val current = kbInfo?.name
                     if (current == null || incoming.kbName.isBlank() || incoming.kbName == current) {
+                        ++casesRevision
                         casesInfo = incoming
                     }
                 },
                 kbInfoUpdated = {
+                    ++contextRevision
                     if (socketConnected && it.id != kbInfo?.id) retainRecoveryCursor(it.id)
                     kbInfo = it
                 },
-                kbClosed = { kbInfo = null },
+                kbClosed = {
+                    ++contextRevision
+                    kbInfo = null
+                },
                 chatContextChanged = { context ->
+                    ++contextRevision
                     // While this window's own start is in flight the push is its echo, or is
                     // about to be superseded by it; either way the response settles the context.
                     val differs = context.kbInfo?.id != kbInfo?.id || context.caseId != currentCaseId
@@ -471,7 +558,7 @@ fun OpenRDRUI(
 
     Scaffold(
         topBar = {
-            ApplicationBar(kbInfo, kbDescription, othersPresent.map { it.userId }, socketConnected)
+            ApplicationBar(kbInfo, kbDescription, othersPresent.map { it.userId }, socketConnected && contextReady)
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
@@ -489,6 +576,7 @@ fun OpenRDRUI(
 
                     // Set the selectCase callback after caseSelectorHandler is created
                     caseSelectorHandler.selectCase = { id: Long ->
+                        ++contextRevision
                         CoroutineScope(dispatcher).launch {
                             currentCase = api.getCase(id)
                             currentCaseId = id
@@ -539,7 +627,7 @@ fun OpenRDRUI(
                 ChatController(
                     id = chatId,
                     chatControllerHandler,
-                    conversationStarted = conversationStarted,
+                    conversationStarted = conversationStarted && contextReady,
                     voiceRecognitionService = voiceRecognitionService,
                     modifier = Modifier.width(chatPanelWidth),
                     state = chatState,

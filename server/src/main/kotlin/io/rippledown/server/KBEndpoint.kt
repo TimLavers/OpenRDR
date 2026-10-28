@@ -59,6 +59,10 @@ class KBEndpoint(
 
     fun cancelRuleSession(userId: UserId) = session.locked { ruleSessionManager(userId).cancelRuleSession() }
 
+    fun cornerstoneStatus(userId: UserId) = session.locked {
+        ruleSessionManager(userId).takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
+    }
+
     fun addConditionToCurrentRuleBuildingSession(condition: Condition, userId: UserId) = session.locked {
         ruleSessionManager(userId).addConditionToCurrentRuleSession(condition)
     }

@@ -129,8 +129,9 @@ is ms-scale, so one exclusive lock is the honest choice.
    stall short. That argument does not hold: Ktor's `send` suspends when a connection's outgoing queue is full, and a
    broadcast visits every connection, so one slow client on any KB could stall edits on this one. `WebSocketManager`
    therefore has a dispatcher: `broadcast` / `sendToUser` enqueue without suspending, a single consumer sends in order,
-   and a frame
-   that does not go within a bound is dropped and logged (the change log, below, is the recovery path). All pushes go
+   and a socket whose send fails or exceeds the timeout is removed and its connection coroutine cancelled.
+   Later broadcasts do not wait for that socket again; its other windows remain connected. Connection cleanup and
+   the presence notification run outside the dispatcher, and the client reconnects to recover its state. All pushes go
    through it; the engine never performs socket I/O under the lock. Synchronous persistence writes still run under
    the lock; the mutation and its change record are separate transactions, as described below.
 
@@ -264,7 +265,9 @@ reports every transition `(fromKbId, toKbId)` itself — from `startConversation
 `knowledgeBaseDeleted` alike; the latter two reset the context immediately, long before the client's next
 conversation start, so a hook on start alone would leave a departed user listed. A transition pushes for the KB left
 and the KB joined. Rule-session start, commit, and cancellation also push presence to update the editing flag.
-`usersEditing()` is read under the KB lock, since it reads session state the lock protects.
+Presence captures membership and editing state and enqueues its push under the same KB lock. This prevents a
+calculation waiting for that lock from publishing older membership after a newer update. The lock is reentrant
+because rule-session changes already hold it; no additional lock order is introduced.
 
 The push is `PRESENCE` + `{kbId, users}`, a broadcast filtered by the client on `kbId`, for the same reason
 `casesInfo` is (a client's conversation lags the KB its window shows). A window also fetches a snapshot (`GET PRESENCE`)
@@ -341,13 +344,22 @@ concurrent activity, not a proven cause; the wording says "since you started", n
 
 `WebSocketApi` reconnects after failed connection attempts or closed sessions, with backoff from 1 second up to
 30 seconds, reset after a successful connection. Cancellation stops the loop. While disconnected the application bar says so
-(*Reconnecting…*, a display). On reconnect the window resynchronises: it re-fetches presence and the displayed case,
-and fetches `GET CHANGES sinceId=<last id seen>` for its KB, posting the missed notices. Each window remembers the last
+(*Reconnecting…*, a display). Reconnection first re-reads the user's chat context, adopting a KB or case changed in
+another window or clearing a closed KB. A missing server conversation starts a fresh chat without a KB. Until the
+context is known, chat input and sending are disabled; failed context reads retry. The API selection and UI both
+reject a snapshot superseded by a newer context change.
+
+Once the context is settled, recovery re-fetches presence, rule-session status, case lists, and the displayed case.
+`GET CORNERSTONE_STATUS` returns 204 for an inactive session and a status for an active one, including a session
+without cornerstones. This clears review state when its completion frame was missed. Case-list recovery removes
+deleted cases, discovers added cases, and reconciles the selection. Live session and list pushes take precedence
+over snapshots already in flight. Recovery also fetches `GET CHANGES sinceId=<last id seen>` for its KB, posting
+the missed notices. Each window remembers the last
 change id it has seen per KB, and a record arriving twice (socket and replay) is dropped by `(kbId, id)`. The snapshot
 is fetched after the subscription is open, so nothing falls between them. Recovery captures its starting ID before
 live frames arrive and retains it if replay fails or the connection drops again, even before the recovery task runs.
 It requests all records after that ID rather than the endpoint's default newest 50. A case refresh is deferred while
-the window is building a rule; a response for a KB the window has left is discarded.
+the recovered server session is still active; a response for a KB the window has left is discarded.
 
 ### On demand: history and presence through the chat
 

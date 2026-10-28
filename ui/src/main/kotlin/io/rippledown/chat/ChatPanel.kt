@@ -241,7 +241,7 @@ fun ChatPanel(
                     .background(White, RoundedCornerShape(8.dp))
                     .semantics { contentDescription = CHAT_TEXT_FIELD }
                     .onPreviewKeyEvent { event ->
-                        if (event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
+                        if (sendIsEnabled && event.key == Key.Enter && event.type == KeyEventType.KeyDown) {
                             partialSuffixLength = 0
                             voiceRecognitionService?.resetAccumulatedText()
                             inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
@@ -307,7 +307,7 @@ fun ChatPanel(
                                 voiceRecognitionService?.resetAccumulatedText()
                                 inputText = sendUserMessage(inputText, onMessageSent, textAreaFocusRequester)
                             },
-                            enabled = inputText.text.isNotBlank(),
+                            enabled = sendIsEnabled && inputText.text.isNotBlank(),
                             modifier = Modifier.size(32.dp).pointerHoverIcon(PointerIcon.Hand),
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = LIGHT_BLUE
@@ -316,7 +316,7 @@ fun ChatPanel(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Send",
-                                tint = if (inputText.text.isNotBlank()) Blue else Color.Gray,
+                                tint = if (sendIsEnabled && inputText.text.isNotBlank()) Blue else Color.Gray,
                                 modifier = Modifier
                                     .size(18.dp)
                                     .semantics {

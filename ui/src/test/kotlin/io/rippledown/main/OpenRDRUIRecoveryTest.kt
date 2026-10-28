@@ -1,14 +1,19 @@
 package io.rippledown.main
 
-import androidx.compose.ui.test.*
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.*
 import io.kotest.matchers.shouldBe
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import io.rippledown.chat.ChatTestHook
 import io.rippledown.chat.NoticeMessage
 import io.rippledown.constants.kb.PRESENCE_DESCRIPTION
 import io.rippledown.model.*
-import io.rippledown.model.change.*
+import io.rippledown.model.change.ChangeKind
+import io.rippledown.model.change.ChangeRecord
+import io.rippledown.model.change.KbChange
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.rule.CornerstoneStatus
@@ -232,6 +237,7 @@ class OpenRDRUIRecoveryTest {
         setContent { OpenRDRUI(handler, dispatcher = Unconfined, voiceRecognition = voice) }
         onNodeWithText("Original comment.").assertExists()
         runOnIdle { sessionChanged(CornerstoneStatus()) }
+        coEvery { api.cornerstoneStatus() } returns CornerstoneStatus()
         coEvery { api.getCase(1) } returns caseWith("Recovered comment.")
         coEvery { api.changes(null) } returns listOf(record(1))
 

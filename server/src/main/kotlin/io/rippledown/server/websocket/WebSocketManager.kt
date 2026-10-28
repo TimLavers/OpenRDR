@@ -33,7 +33,9 @@ class WebSocketManager(
     // A null message is a drain marker: it carries only the deferred to complete.
     private class Outgoing(val targets: Set<UserId>?, val message: String?, val done: CompletableDeferred<Unit>? = null)
 
-    private val connections = ConcurrentHashMap<UserId, MutableSet<WebSocketSession>>()
+    private class Connection(val userId: UserId, val session: WebSocketSession, val lifetime: Job)
+
+    private val connections = ConcurrentHashMap<UserId, MutableSet<Connection>>()
     private val outgoing = Channel<Outgoing>(Channel.UNLIMITED)
     private val logger = lazyLogger
 
@@ -50,11 +52,12 @@ class WebSocketManager(
     }
 
     suspend fun setSession(userId: UserId, session: WebSocketSession, requestGeneration: Long? = null) {
+        val connection = Connection(userId, session, currentCoroutineContext().job)
         // One atomic step: a set returned by computeIfAbsent could be removed by a
         // disconnecting window's compute (below) before the add, orphaning this session.
         val register = {
             connections.compute(userId) { _, sessions ->
-                (sessions ?: ConcurrentHashMap.newKeySet()).apply { add(session) }
+                (sessions ?: ConcurrentHashMap.newKeySet()).apply { add(connection) }
             }
             Unit
         }
@@ -63,18 +66,20 @@ class WebSocketManager(
             session.close(CloseReason(CloseReason.Codes.GOING_AWAY, "Test server reset"))
             return
         }
-        connectionsChanged(userId)
         try {
+            connectionsChanged(userId)
             // Keep the session open until the client disconnects
             for (frame in session.incoming) {
                 frame.readBytes()
             }
         } finally {
-            connections.compute(userId) { _, sessions ->
-                sessions?.apply { remove(session) }?.takeIf { it.isNotEmpty() }
-            }
+            remove(connection)
             connectionsChanged(userId)
-            session.close()
+            // Cleanup belongs to the connection's coroutine, never the global
+            // dispatcher. A stalled close must not hold up another user's push.
+            withContext(NonCancellable) {
+                withTimeoutOrNull(sendTimeoutMillis) { session.close() }
+            }
         }
     }
 
@@ -128,12 +133,30 @@ class WebSocketManager(
     }
 
     // A dead or stalled connection must not fail the request that triggered the push.
-    private suspend fun send(session: WebSocketSession, message: String) {
+    private suspend fun send(connection: Connection, message: String) {
         try {
-            val sent = withTimeoutOrNull(sendTimeoutMillis) { session.send(message) }
-            if (sent == null) logger.warn("Gave up pushing to a client after ${sendTimeoutMillis}ms.")
+            val sent = withTimeoutOrNull(sendTimeoutMillis) { connection.session.send(message) }
+            if (sent == null) {
+                logger.warn("Gave up pushing to a client after ${sendTimeoutMillis}ms.")
+                retire(connection)
+            }
         } catch (e: Exception) {
+            currentCoroutineContext().ensureActive()
             logger.warn("Could not push to a client: ${e.message}")
+            retire(connection)
         }
+    }
+
+    private fun remove(connection: Connection) {
+        connections.compute(connection.userId) { _, sessions ->
+            sessions?.apply { remove(connection) }?.takeIf { it.isNotEmpty() }
+        }
+    }
+
+    private fun retire(connection: Connection) {
+        // Remove before cancelling: the next queued broadcast must not pay this
+        // connection's timeout again. Its finally block announces the departure.
+        remove(connection)
+        connection.lifetime.cancel(CancellationException("WebSocket delivery failed"))
     }
 }
