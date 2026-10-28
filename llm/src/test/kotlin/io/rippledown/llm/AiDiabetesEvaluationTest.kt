@@ -30,6 +30,8 @@ class AiDiabetesEvaluationTest {
     @Serializable
     internal data class EvaluationReport(val definition: AiBoolean, val observations: List<Observation>)
 
+    private val json = Json { prettyPrint = true }
+
     @Test
     fun `evaluate the supplied examples and held out notes using fresh Gemini requests without reusing saved classifications`() = runBlocking {
         // Given six supplied examples and a separate synthetic held-out corpus
@@ -78,7 +80,8 @@ class AiDiabetesEvaluationTest {
         }
         val reportFile = File("build/reports/ai-evaluation/${definition.revision}.json")
         reportFile.parentFile.mkdirs()
-        reportFile.writeText(Json { prettyPrint = true }.encodeToString(
+        reportFile.writeText(
+            json.encodeToString(
             EvaluationReport.serializer(), EvaluationReport(definition, observations)))
         println("Model evaluation: ${reportFile.absolutePath}")
         // Then the six supplied examples must pass; every extended disagreement is retained for owner review
