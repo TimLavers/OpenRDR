@@ -442,7 +442,7 @@ class RuleSessionManager(
         return try {
             startAssignmentSession(
                 case,
-                DerivedValueAddition(attributeName = attributeName, formula = expression.asText()),
+                DerivedValueAddition(attributeName = attributeName, formula = expression.summary()),
                 ChangeTreeToAddAssignment(assignment)
             )
         } catch (e: Throwable) {
@@ -472,7 +472,7 @@ class RuleSessionManager(
             case,
             DerivedValueReplacement(
                 attributeName = toBeReplaced.attribute.name,
-                newFormula = replacementExpression.asText()
+                newFormula = replacementExpression.summary()
             ),
             ChangeTreeToReplaceAssignment(toBeReplaced, replacement)
         )

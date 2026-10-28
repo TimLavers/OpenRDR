@@ -57,6 +57,14 @@ internal class AiBooleanTest {
     }
 
     @Test
+    fun `summary names the source without the criteria`() {
+        // Given the full criteria are available in the definition's text form
+        // When a compact display of the expression is needed, such as a pending-change cell
+        // Then only the kind and the source attribute are named
+        hasDiabetes.summary() shouldBe "AI derived attribute from clinical_notes"
+    }
+
+    @Test
     fun `alignment replaces the source by id and changes nothing else`() {
         // Given the KB now holds the source under a new name
         val renamed = Attribute(1, "Notes")

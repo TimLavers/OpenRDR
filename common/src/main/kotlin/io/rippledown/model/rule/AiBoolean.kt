@@ -60,6 +60,8 @@ data class AiBoolean(
 
     override fun asText() = "AI Boolean from ${sourceAttribute.name}: $instructions"
 
+    override fun summary() = "AI derived attribute from ${sourceAttribute.name}"
+
     override fun alignAttributes(idToAttribute: (Int) -> Attribute) =
         copy(sourceAttribute = idToAttribute(sourceAttribute.id))
 

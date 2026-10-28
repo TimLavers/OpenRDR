@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.rippledown.kb.ai.*
 import io.rippledown.model.*
 import io.rippledown.model.rule.*
+import io.rippledown.model.diff.DerivedValueAddition
 import io.rippledown.model.rule.evaluation.AiEvaluationRequest
 import io.rippledown.model.condition.isCondition
 import io.rippledown.kb.chat.LockedRuleService
@@ -240,7 +241,8 @@ class AiRuleSessionIntegrationTest {
         // Then the preview is evaluated, but no definition is live yet
         requests.single().definition shouldBe definition
         kb.derivedDefinitionManager.definitionFor(target.id).shouldBeNull()
-        manager.currentDerivedValueChange?.attributeName shouldBe "hasDiabetes"
+        manager.currentDerivedValueChange shouldBe
+            DerivedValueAddition("hasDiabetes", "AI derived attribute from clinical_notes")
 
         // When committed, the approved revision and its result are reused
         prepared { manager.commitCurrentRuleSession() }
