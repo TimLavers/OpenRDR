@@ -28,7 +28,7 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
       | age            | 45       |
       | gender         | U        |
       | glucose        | 5.6      |
-      | clinical_notes | FH diab  |
+      | clinical_notes | Mother has diabetes  |
     And case Demo05 is provided having data:
       | age            | 70       |
       | gender         | F        |
@@ -85,6 +85,7 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
 
       Please show me the definition and preview for this case for acceptance.
       """
+    And pause
     Then the chatbot response contains the following terms:
       | hasDiabetes             |
       | clinical_notes          |
@@ -92,7 +93,6 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
       | true                    |
       | Accept this definition? |
     When I confirm
-    And pause
     And the chatbot has asked if I want to provide any reasons and I decline
     Then the chatbot has completed the action
     And the UI should show the value for derived attribute "hasDiabetes" as "true"
