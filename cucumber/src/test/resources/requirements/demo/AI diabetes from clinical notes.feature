@@ -7,7 +7,7 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
 
   Background:
     Given a default KB is opened
-
+@single
   Scenario: Define diabetes from notes in chat and review ten different cases
     Given case Demo01 is provided having data:
       | age            | 58       |
@@ -66,7 +66,7 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
     # Author the meaning, not an algorithm or a literal classification.
     When I enter the following text into the chat panel:
       """
-      Create an AI-evaluated Boolean derived attribute called hasDiabetes from
+      Create an AI-evaluated derived attribute called hasDiabetes from
       clinical_notes. Assign true only when the notes clearly affirm that the
       patient personally has diabetes, including type 1 or type 2. Otherwise
       assign false. Family history alone, suspected or questioned diabetes,
@@ -85,7 +85,6 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
 
       Please show me the definition and preview for this case for acceptance.
       """
-    And pause
     Then the chatbot response contains the following terms:
       | hasDiabetes             |
       | clinical_notes          |
@@ -103,57 +102,46 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
       | hasDiabetes is "true" |
     Then the interpretation report should be "The clinical notes indicate a personal history of diabetes."
 
-    # Walk the case list visibly. Four seconds per case gives the audience
-    # time to compare the note, Boolean, and presence or absence of the comment.
+    # Walk the case list
     When I select the case Demo01
     Then the UI should show the value for derived attribute "hasDiabetes" as "true"
     And the interpretation report should be "The clinical notes indicate a personal history of diabetes."
-    And pause for 4 seconds
 
     When I select the case Demo02
     Then the UI should show the value for derived attribute "hasDiabetes" as "true"
     And the interpretation report should be "The clinical notes indicate a personal history of diabetes."
-    And pause for 4 seconds
 
     When I select the case Demo03
     Then the UI should show the value for derived attribute "hasDiabetes" as "true"
     And the interpretation report should be "The clinical notes indicate a personal history of diabetes."
-    And pause for 4 seconds
 
     When I select the case Demo04
     Then the UI should show the value for derived attribute "hasDiabetes" as "false"
     And the interpretation report should be ""
-    And pause for 4 seconds
 
     When I select the case Demo05
     Then the UI should show the value for derived attribute "hasDiabetes" as "false"
     And the interpretation report should be ""
-    And pause for 4 seconds
 
     When I select the case Demo06
     Then the UI should show the value for derived attribute "hasDiabetes" as "false"
     And the interpretation report should be ""
-    And pause for 4 seconds
 
     When I select the case Demo07
     Then the UI should show the value for derived attribute "hasDiabetes" as "false"
     And the interpretation report should be ""
-    And pause for 4 seconds
 
     When I select the case Demo08
     Then the UI should show the value for derived attribute "hasDiabetes" as "true"
     And the interpretation report should be "The clinical notes indicate a personal history of diabetes."
-    And pause for 4 seconds
 
     When I select the case Demo09
     Then the UI should show the value for derived attribute "hasDiabetes" as "true"
     And the interpretation report should be "The clinical notes indicate a personal history of diabetes."
-    And pause for 4 seconds
 
     When I select the case Demo10
     Then the UI should show the value for derived attribute "hasDiabetes" as "Not evaluated: no clinical_notes value"
     And the interpretation report should be ""
-    And pause for 4 seconds
 
     # Revisit a classified case and explain its stored result.
     When I select the case Demo08
@@ -165,5 +153,3 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
       | hasDiabetes |
       | true        |
       | clinical_notes |
-    And pause for 6 seconds
-
