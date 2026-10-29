@@ -217,7 +217,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
     fun deleteProcessedCaseWithName() = testApplication {
         setupServer()
         val caseName = "The Case"
-        every { kbEndpoint.deleteCase(caseName) } returns Unit
+        every { kbEndpoint.deleteCase(caseName, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns CasesInfo()
         val result = httpClient.delete(DELETE_CASE_WITH_NAME) {
             contentType(ContentType.Application.Json)
@@ -225,7 +225,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
             parameter("name", caseName)
         }
         result.status shouldBe HttpStatusCode.OK
-        verify { kbEndpoint.deleteCase(caseName) }
+        verify { kbEndpoint.deleteCase(caseName, testUser) }
     }
 
     @Test
@@ -234,7 +234,7 @@ class CaseManagementTest : OpenRDRServerTestBase() {
         setupServer()
         val caseName = "DeleteMe"
         val updatedCasesInfo = CasesInfo(listOf(CaseId(id = 2, name = "Remaining")), kbName = "TestKB")
-        every { kbEndpoint.deleteCase(caseName) } returns Unit
+        every { kbEndpoint.deleteCase(caseName, testUser) } returns Unit
         every { kbEndpoint.waitingCasesInfo() } returns updatedCasesInfo
 
         //When

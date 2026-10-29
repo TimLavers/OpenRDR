@@ -13,6 +13,11 @@ The acceptance features under `cucumber/src/test/resources/requirements/` are th
 requirements docs point at them by name. A folder per area maps to a Gradle task per folder, so one area can be run
 alone.
 
+Some multi-user scenarios use separate REST clients with user identities and live WebSockets, without opening
+desktop windows. Direct rule, history, and undo calls are deterministic; their chat steps still use the live model.
+The single two-window scenario checks rendered presence, notices, and case refresh. See
+[concurrent_users.md](concurrent_users.md#testing).
+
 ## Driving the real client
 
 The cucumber steps launch the Compose Desktop client and read and operate it through the **Java Accessibility API**:

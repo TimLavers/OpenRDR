@@ -14,6 +14,7 @@ class InMemoryKB(kbInfo: KBInfo) : PersistentKB {
     private val conditionStore = InMemoryConditionStore()
     private val ruleStore = InMemoryRuleStore()
     private val ruleSessionRecordStore = InMemoryRuleSessionRecordStore()
+    private val changeLogStore = InMemoryChangeLogStore()
     private val cornerstoneCasesStore = InMemoryCaseStore()
     private val metaDataStore = InMemoryKeyValueStore()
 
@@ -40,4 +41,6 @@ class InMemoryKB(kbInfo: KBInfo) : PersistentKB {
     override fun metaDataStore() = metaDataStore
 
     override fun ruleSessionRecordStore() = ruleSessionRecordStore
+
+    override fun changeLogStore() = changeLogStore
 }

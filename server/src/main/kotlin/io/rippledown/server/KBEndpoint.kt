@@ -1,7 +1,6 @@
 package io.rippledown.server
 
-import io.rippledown.kb.KBSession
-import io.rippledown.kb.RuleSessionManager
+import io.rippledown.kb.*
 import io.rippledown.kb.ai.AiBooleanClassifier
 import io.rippledown.kb.ai.AiEvaluationService
 import io.rippledown.kb.ai.AiInferenceCoordinator
@@ -13,6 +12,7 @@ import io.rippledown.kb.report.ReportService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.external.ExternalCase
@@ -49,9 +49,12 @@ class KBEndpoint(
 
     fun description() = session.locked { kb.description() }
 
-    fun setDescription(newDescription: String) = session.locked {
+    fun setDescription(newDescription: String, userId: UserId) = session.locked {
         kb.setDescription(newDescription)
+        kb.changeLog.record(userId, ChangeKind.DESCRIPTION_SET, descriptionSetSummary())
     }
+
+    fun changes(sinceId: Int?, limit: Int) = session.locked { kb.changeLog.since(sinceId).takeLast(limit) }
 
     fun descriptionOfMostRecentRule(userId: UserId) =
         session.locked { ruleSessionManager(userId).descriptionOfMostRecentRule() }
@@ -73,6 +76,10 @@ class KBEndpoint(
     }
 
     fun cancelRuleSession(userId: UserId) = session.locked { ruleSessionManager(userId).cancelRuleSession() }
+
+    fun cornerstoneStatus(userId: UserId) = session.locked {
+        ruleSessionManager(userId).takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
+    }
 
     fun addConditionToCurrentRuleBuildingSession(condition: Condition, userId: UserId) = session.locked {
         ruleSessionManager(userId).addConditionToCurrentRuleSession(condition)
@@ -164,12 +171,22 @@ class KBEndpoint(
 
     fun addCornerstoneCase(externalCase: ExternalCase) = session.locked { kb.addCornerstoneCase(externalCase) }
 
-    fun deleteCase(name: String) = session.locked { kb.deletedProcessedCaseWithName(name) }
+    fun deleteCase(name: String, userId: UserId) = session.locked {
+        if (kb.deletedProcessedCaseWithName(name)) {
+            kb.changeLog.record(userId, ChangeKind.CASE_DELETED, caseDeletedSummary(name))
+        }
+    }
 
-    fun moveAttribute(movedId: Int, targetId: Int) = session.locked {
+    fun moveAttribute(movedId: Int, targetId: Int, userId: UserId) = session.locked {
         val moved = kb.attributeManager.getById(movedId)
         val target = kb.attributeManager.getById(targetId)
         kb.caseViewManager.move(moved, target)
+        kb.changeLog.record(
+            userId,
+            ChangeKind.ATTRIBUTE_MOVED,
+            attributeMovedSummary(moved, target),
+            attributeIds = setOf(moved.id, target.id)
+        )
     }
 
     fun getOrCreateAttribute(name: String) = session.locked { kb.attributeManager.getOrCreate(name) }

@@ -98,7 +98,15 @@ const val KB_CLOSED = "KbClosed"
 // Pushed to every window of a user when their conversation's context changes. See concurrent_users.md.
 const val CHAT_CONTEXT_PREFIX = "ChatContext:"
 
+// Broadcast whenever who is on a KB changes; the client keeps the one for its KB. See concurrent_users.md.
+const val PRESENCE_PREFIX = "Presence:"
+const val KB_CHANGED_PREFIX = "KbChanged:"
+const val NOTICE_PREFIX = "NOTICE_"
+
 const val LIST_KNOWLEDGE_BASES = "ListKnowledgeBases"
+const val LIST_RECENT_CHANGES = "ListRecentChanges"
+const val LIST_USERS_PRESENT = "ListUsersPresent"
+const val POSITIVE_CHANGE_LIMIT_MESSAGE = "Please request at least one change."
 const val OPEN_KNOWLEDGE_BASE = "OpenKnowledgeBase"
 const val CREATE_KNOWLEDGE_BASE = "CreateKnowledgeBase"
 const val CLOSE_KNOWLEDGE_BASE = "CloseKnowledgeBase"

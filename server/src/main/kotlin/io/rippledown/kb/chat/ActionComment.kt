@@ -37,6 +37,8 @@ data class ActionComment(
     val instructions: String? = null,
     val examples: List<AiBooleanExample>? = null,
     val draftId: String? = null,
+    val limit: Int? = null,
+    val attribute: String? = null,
 ) {
     companion object {
         val logger = lazyLogger
@@ -79,6 +81,8 @@ data class ActionComment(
         if (instructions != null) asMap["instructions"] = instructions
         if (examples != null) asMap["examples"] = examples
         if (draftId != null) asMap["draftId"] = draftId
+        if (limit != null) asMap["limit"] = limit
+        if (attribute != null) asMap["attribute"] = attribute
 
         val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {

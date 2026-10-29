@@ -48,7 +48,7 @@ class OpenRDRUIWithChatTest {
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
         coEvery { api.sendUserMessage(any()) } returns ChatResponse("OK")
         coEvery { api.kbDescription(any()) } returns ""
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any()) } returns Unit
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
         coEvery { handler.api } returns api
         coEvery { handler.isClosing } returns { true }
     }
@@ -63,7 +63,10 @@ class OpenRDRUIWithChatTest {
                 updateCasesInfo = any(),
                 kbInfoUpdated = any(),
                 kbClosed = any(),
-                chatContextChanged = any()
+                chatContextChanged = any(),
+                presenceChanged = any(),
+                kbChanged = any(),
+                connected = any()
             )
         } coAnswers {
             kbInfoUpdated = arg(3)

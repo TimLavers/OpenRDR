@@ -9,6 +9,7 @@ import io.rippledown.constants.server.REFUSAL_HELD
 import io.rippledown.constants.server.REFUSAL_STALE
 import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.ai.InterpretationIncompleteException
+import io.rippledown.kb.UndoRuleRefusedException
 import io.rippledown.kb.projectHeldMessage
 import io.rippledown.model.StaleRuleSessionException
 
@@ -24,6 +25,10 @@ fun Application.refusals() {
         }
         exception<InterpretationIncompleteException> { call, incomplete ->
             call.respond(INCOMPLETE_INTERPRETATION_STATUS, incomplete.details)
+        }
+        exception<UndoRuleRefusedException> { call, undo ->
+            call.response.headers.append(REFUSAL_HEADER, REFUSAL_STALE)
+            call.respondText(undo.message, status = Conflict)
         }
     }
 }

@@ -7,6 +7,7 @@ import io.rippledown.constants.chat.*
 import io.rippledown.extractJsonFragments
 import io.rippledown.fromJsonString
 import io.rippledown.kb.ProjectHeldException
+import io.rippledown.kb.UndoRuleRefusedException
 import io.rippledown.kb.chat.action.ChatAction
 import io.rippledown.kb.chat.action.KbManagementAction
 import io.rippledown.kb.chat.action.ListCapabilities
@@ -65,6 +66,8 @@ class ChatManager(
         refused(held)
     } catch (stale: StaleRuleSessionException) {
         refused(stale)
+    } catch (undo: UndoRuleRefusedException) {
+        refused(undo)
     }
 
     private suspend fun respond(message: String): ChatResponse {
@@ -115,6 +118,8 @@ class ChatManager(
         refused(held)
     } catch (stale: StaleRuleSessionException) {
         refused(stale)
+    } catch (undo: UndoRuleRefusedException) {
+        refused(undo)
     } catch (e: Exception) {
         val context = if (opening) "start-conversation ActionComment" else "ActionComment"
         logger.error("Failed to process $context: $response", e)
@@ -129,6 +134,12 @@ class ChatManager(
     private fun refused(stale: StaleRuleSessionException): ChatResponse {
         logger.info("Refused: ${stale.message}")
         return ChatResponse(stale.message)
+    }
+
+    private fun refused(undo: UndoRuleRefusedException): ChatResponse {
+        logger.info("Refused undo: ${undo.message}")
+        rules.undoRefused(undo.message)
+        return ChatResponse(undo.message)
     }
 
     // The model sees the greeting in the form it would have written it, so the transcript stays in its own protocol.

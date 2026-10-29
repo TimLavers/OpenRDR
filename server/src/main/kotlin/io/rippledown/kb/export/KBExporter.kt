@@ -18,6 +18,7 @@ open class KBExportImport(val destination: File) {
     val conditionsDirectory = File(destination, "Conditions")
     val rulesDirectory = File(destination, "Rules")
     val ruleSessionsDirectory = File(destination, "RuleSessions")
+    val changeLogDirectory = File(destination, "ChangeLog")
 }
 
 class KBExporter(destination: File, val kb: KB,
@@ -71,5 +72,9 @@ class KBExporter(destination: File, val kb: KB,
             ruleSessionsDirectory,
             RuleSessionRecordsSource(kb.ruleSessionRecorder.allRuleSessionHistories())
         ).export()
+
+        // Change log
+        changeLogDirectory.mkdirs()
+        IdentifiedObjectExporter(changeLogDirectory, ChangeRecordsSource(kb.changeLog.all())).export()
     }
 }

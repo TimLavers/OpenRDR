@@ -24,9 +24,15 @@ class RuleConversation(private val service: RuleService?) {
 
     var state: State = State.Ready
         private set
+    private var undoRefusal: String? = null
 
     fun reset() {
         state = State.Ready
+        undoRefusal = null
+    }
+
+    fun undoRefused(message: String) {
+        undoRefusal = message
     }
 
     // A plain "yes" is an allowance only while the allow question is the one pending; "allow" always is.
@@ -67,9 +73,11 @@ class RuleConversation(private val service: RuleService?) {
 
     fun prepareTurn(message: String): Turn {
         val status = service?.takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
+        val input = undoRefusal?.let { "[The server refused the undo: $it]\n$message" } ?: message
+        undoRefusal = null
         val question = if (state == State.AwaitingReasonReply && status != null) {
-            "[The server asked the user: $MORE_REASONS_QUESTION]\n$message"
-        } else message
+            "[The server asked the user: $MORE_REASONS_QUESTION]\n$input"
+        } else input
         val contextualised = if (status == null) question
         else "$CURRENT_CORNERSTONE_STATUS_PREFIX${status.summary()}]\n$question"
         // A "no" to the allow question declines the allowance, not further reasons.
