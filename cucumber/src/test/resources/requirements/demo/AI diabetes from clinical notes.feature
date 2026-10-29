@@ -1,4 +1,4 @@
-@ai_diabetes_demo @delay_after_cuke
+@delay_after_cuke
 Feature: Demonstrate AI reading clinical notes and driving a downstream rule
   Synthetic cases only. Both chat authoring and classification use the configured
   real models. This is a visible demonstration with asserted outcomes, not a
@@ -7,7 +7,6 @@ Feature: Demonstrate AI reading clinical notes and driving a downstream rule
 
   Background:
     Given a default KB is opened
-@single
   Scenario: Define diabetes from notes in chat and review ten different cases
     Given case Demo01 is provided having data:
       | age            | 58       |
