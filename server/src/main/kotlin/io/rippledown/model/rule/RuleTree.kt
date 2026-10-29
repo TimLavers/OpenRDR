@@ -39,7 +39,7 @@ fun ValueExpression.resolvedFor(attribute: Attribute, resolver: DefinitionResolv
  * [Demand] asks the coordinator to obtain one classification and run again;
  * [Incomplete] reports that a classification failed. In both of the latter
  * the case's interpretation has been reset, so no partial result can be
- * published by mistake. See documentation/tickets/ai_derived_attributes_design.md.
+ * published by mistake. See documentation/design/ai_derived_attributes.md.
  */
 sealed class InferenceOutcome {
     data class Complete(val case: RDRCase, val provenance: Map<Attribute, AiProvenance>) : InferenceOutcome()

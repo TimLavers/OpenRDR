@@ -11,7 +11,7 @@ import io.rippledown.model.rule.ValueExpression
  * text. Two requests are the same evaluation if and only if these are equal,
  * which is why a definition edit (new revision) or a renamed source (same id)
  * behave as the design requires. Persistence derives its durable key from
- * this. See documentation/tickets/ai_derived_attributes_design.md.
+ * this. See documentation/design/ai_derived_attributes.md.
  */
 data class AiEvaluationRequest(val definition: AiBoolean, val input: String)
 

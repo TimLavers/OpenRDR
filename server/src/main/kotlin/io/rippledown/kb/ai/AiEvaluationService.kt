@@ -27,7 +27,7 @@ const val DEFAULT_FAILURE_COOLDOWN_MILLIS = 10_000L
  * cancelling does not cancel the result another waiter needs. Failures are
  * remembered for [failureCooldownMillis] to avoid request storms; they are
  * never persisted. Nothing here is called under the KB lock.
- * See documentation/tickets/ai_derived_attributes_design.md.
+ * See documentation/design/ai_derived_attributes.md.
  */
 class AiEvaluationService(
     private val store: AiEvaluationStore,

@@ -67,7 +67,7 @@ otherwise re-offer the condition just added. The server also fetches suggestions
 
 ## Not built
 
-- A pluggable strategy pipeline and a standalone `suggestions` module (needs `RuleTree` and friends in `common`).
+- A pluggable strategy pipeline and a standalone `suggestions` module (would require separating its current server-side dependencies).
 - LLM re-ranking or generation, and embedding-based comment matching, if usage shows the deterministic scorers fall
   short.
 - A free-form `ExpressionCondition` holding an expression string with a small interpreter, if compositional conditions

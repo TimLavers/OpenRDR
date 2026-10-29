@@ -1,50 +1,75 @@
 # Testing
 
-## Layers
+## Test layers
 
-| Layer                | Where                                      | What it pins                                                                                                                         |
-|----------------------|--------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| Unit tests           | each module's `src/test`                   | Every class; JUnit 5, kotest matchers, mockk. Chat policy classes are tested without a model; the model is stubbed at `ChatService`. |
-| Compose UI tests     | `ui/src/test`                              | Panels and their pure merge functions, through the Compose test rule.                                                                |
-| Postgres store tests | `server/src/test/.../persistence/postgres` | Need a local Postgres; the in-memory stores share the same contract tests.                                                           |
-| Acceptance tests     | `cucumber/`                                | The requirements, as Gherkin, against the real server, client and language model.                                                    |
+| Layer | Location and requirements |
+|---|---|
+| Unit tests | Module `src/test` directories. New tests use Kotlin, JUnit 5, Kotest and Mockk; legacy UI tests use JUnit 4 through the Vintage engine. |
+| Compose UI tests | `ui/src/test`; many open desktop windows. Pure presentation helpers also have headless tests. |
+| Store integration tests | `server/src/test/.../persistence/postgres`; require configured Postgres and database privileges. |
+| Model integration tests | Selected `chat`, `hints`, `llm` and `server` tests use Gemini and require `API_KEY`. Mocked tests do not establish model quality. |
+| Acceptance tests | Features under `cucumber/src/test/resources/requirements`, run through Cucumber tasks. Many use the desktop and live Gemini. |
+| Packaging smoke test | `packaging:test` builds the demo ZIP, extracts it and starts its server. |
 
-The acceptance features under `cucumber/src/test/resources/requirements/` are the executable requirements; the
-requirements docs point at them by name. A folder per area maps to a Gradle task per folder, so one area can be run
-alone.
+Follow [AGENTS.md](../../AGENTS.md), including approval before running more than one UI unit test or one Cucumber
+test. Compiling test sources does not execute them. Keep incidental console prints out of unit tests; use assertions
+and failure clues. Preserve logging assertions and acceptance-harness failure diagnostics.
 
-Some multi-user scenarios use separate REST clients with user identities and live WebSockets, without opening
-desktop windows. Direct rule, history, and undo calls are deterministic; their chat steps still use the live model.
-The single two-window scenario checks rendered presence, notices, and case refresh. See
-[concurrent_users.md](concurrent_users.md#testing).
+## Commands
 
-## Driving the real client
+Run from the repository root. Use `./gradlew` on Unix or `.\gradlew.bat` in PowerShell; no separate Gradle install
+is needed. Select known deterministic tests when credentials, a database or desktop access are unavailable.
 
-The cucumber steps launch the Compose Desktop client and read and operate it through the **Java Accessibility API**:
-every element a test needs carries a content description or test tag from the shared constants in `common`, so the same
-identifiers are used by the UI, its unit tests and the page objects. Typing and clicking go through the accessibility
-tree or `java.awt.Robot`.
+```powershell
+.\gradlew.bat :common:test
+.\gradlew.bat :server:test --tests 'io.rippledown.kb.KBSessionTest'
+.\gradlew.bat :llm:test --tests 'io.rippledown.llm.GeminiBooleanClassifierTest'
+.\gradlew.bat :ui:compileTestKotlin :cucumber:compileTestKotlin
+```
 
-Page objects are scoped to a section (`ProcessedCaseListPO`, `CornerstoneCaseListPO`, `FavouriteCaseListPO`) because a
-case name can appear in more than one list. State that is invisible to the accessibility tree — a background colour, a
-Markdown-rendered report — is exposed as a content description or on a hidden text node
-([previewing_pending_changes.md](previewing_pending_changes.md), [ai_report_generation.md](ai_report_generation.md)).
+A bare `test` may select several modules, including desktop and packaging tests; use module-qualified tasks.
+These acceptance commands are alternatives for when the desktop is available and required approval is given:
 
-Where the accessibility tree cannot give a test what it needs, the last resort is **OCR** of a screenshot of the
-component's bounds, using Gemini. Gemini was chosen over Tesseract so that nothing has to be installed and configured on
-a developer's machine; it has not proved too slow or costly, and reading what a human actually sees has some value of
-its own. It is used sparingly, since polling a component through a model call is slow; counting nodes in the
-accessibility tree is preferred wherever possible.
+```powershell
+.\gradlew.bat :cucumber:cucumberSingleTest
+.\gradlew.bat :cucumber:chat
+.\gradlew.bat :cucumber:cucumberFolderTest -Pfolder=chat
+.\gradlew.bat :cucumber:cucumberTest
+```
 
-Native file dialogs are stubbed at the dialog boundary (features tagged `@file-dialogs-are-fake`), so the HTTP transfer
-and application state stay real while the selection is scripted.
+`cucumberSingleTest` selects `@single` scenarios/features. Named folder tasks such as `:cucumber:chat` retry failed
+scenarios once in a fresh JVM; `cucumberFolderTest` does not add that retry. `cucumberTest` runs all named folder tasks.
+`cucumberDryRun` checks bindings without scenario hooks, desktop interactions or model calls:
 
-## The model in tests
+```powershell
+.\gradlew.bat :cucumber:cucumberDryRun
+```
 
-Acceptance tests run against the live Gemini model, so a scenario can fail through model variance. The steps therefore
-wait for server-composed messages (the reason acknowledgement, the cornerstone status, the completion message) rather
-than for model prose, and the chat carries deterministic text wherever the server has decided the outcome. Unit tests
-never call a model.
+The [AI demo guide](../ai_derived_attribute_demo.md) documents its desktop task and opt-in headless authoring and
+model-quality tests. Build a demo with `:demoZip`; `:verifyDemoZip` runs its smoke test.
 
-Some client-side behaviour that depends on the model is checked through `ChatTestHook`, which exposes the most recent
-structured response (suggestions, KB listing) to the page objects.
+## Observing the client
+
+Page objects use shared accessibility IDs, Java accessibility and Robot for input. Where the bridge cannot expose
+state reliably, hooks such as `ChatTestHook` and `CornerstoneTestHook` provide structured snapshots. Hooks are keyed
+by user so two windows do not overwrite each other's observations. Tooltips can be checked without moving the pointer.
+OCR through Gemini remains a fallback for rendered content, not the default polling path.
+
+Page objects are scoped to a list (`ProcessedCaseListPO`, `CornerstoneCaseListPO`, `UserCaseListPO`) because names
+can appear in several lists. Hidden text/semantics expose Markdown and pending-change state where needed.
+
+`@file-dialogs-are-fake` scripts native file selection while retaining real transfer behaviour. `@voice-is-fake`
+installs fake recognition for deterministic voice scenarios. Untagged voice input uses the microphone and Gemini;
+transcription appears only after recording stops.
+
+## Isolation and evidence
+
+The harness reuses an in-memory server within a feature, resets between scenarios and starts fresh clients.
+Postgres scenarios use separate server lifecycles. See [shared server design](shared_cucumber_server.md).
+Multi-user REST scenarios exercise independent identities; a two-window scenario verifies presence, notices and
+refresh. See [concurrent users](concurrent_users.md#testing).
+
+`ScenarioProgress` writes duration, Gemini calls and server-start duration to `cucumber/build/timings/<folder>.csv`.
+Failure artifacts include a screenshot and the scenario's server-log tail. Folder retries append timing rows, so a
+green result after retry is not a failure-free first run. Build reports and logs are local and may be overwritten;
+retain evidence separately when comparing runs.

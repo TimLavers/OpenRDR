@@ -14,7 +14,7 @@ enum class IncompleteCategory {
 /**
  * Why a case could not be interpreted. The case id is that of the stored
  * case, so that the caller can ask for it again rather than resubmit it.
- * See documentation/tickets/ai_derived_attributes_design.md.
+ * See documentation/design/ai_derived_attributes.md.
  */
 @Serializable
 data class IncompleteInterpretation(

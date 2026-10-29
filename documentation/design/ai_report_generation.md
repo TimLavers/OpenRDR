@@ -18,13 +18,14 @@ produced" as distinct from "the model returned nothing".
   call would leak the key and duplicate the serialisation.
 - **A one-shot call, not the chat machinery.** A report is a stateless request; the multi-turn function-calling loop
   built for rule building would add conversational state for no benefit. `generateText` in `llm` is the primitive, with
-  temperature 0 so that output is stable and caching is meaningful. `ReportService` wraps it in a tighter retry and
+  temperature 0 to reduce variation; this does not guarantee identical provider responses. `ReportService` wraps it in a tighter retry and
   timeout than the batch defaults because this is an interactive path whose worst case must stay bounded.
 - **The model sees the comment texts and the whole case.** Sending the case lets the report quote actual values. The
   comments' *names* are not yet sent, although now that comments are named attributes the name is a useful signal
   about a comment's role.
-- **Cache keyed on the hash of the comment text.** The report is a function of the comments, so this is exactly the
-  right invalidation: unchanged comments hit; a rule that changes a comment misses. Keying on the case id alone would
+- **Cache keyed on the hash of the comment text.** The current cache uses case ID plus a comment-text hash:
+  unchanged comments hit; a rule that changes a comment misses. Primary case data is also sent to the model, so
+  changing that data without changing comments is an invalidation limitation, tracked in the backlog. Keying on the case id alone would
   serve stale reports after a rule; keying on the whole case would regenerate on every unrelated refresh, such as each
   chat message.
 - **Visibility gates generation.** The panel is collapsed by default and nothing is fetched while it is, so browsing is

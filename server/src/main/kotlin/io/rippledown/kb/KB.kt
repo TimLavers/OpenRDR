@@ -29,7 +29,7 @@ class KB(private val persistentKB: PersistentKB) {
     /**
      * The classifications obtained so far, read by every interpretation under
      * the lock and added to by the coordinator outside it. See
-     * documentation/tickets/ai_derived_attributes_design.md.
+     * documentation/design/ai_derived_attributes.md.
      */
     val preparedEvaluations = PreparedEvaluations()
 

@@ -17,7 +17,7 @@ import a prepared diabetes definition or use a scripted classifier.
 The script creates `hasDiabetes` through chat, accepts the exact proposed definition,
 and adds “The clinical notes indicate a personal history of diabetes.” with the
 condition `hasDiabetes is "true"`. It then selects ten cases, checking both the
-derived-value row and the comment, with four seconds to present each one.
+derived-value row and the comment. The scenario currently advances without presentation pauses.
 
 | Case | Note | Expected display |
 |---|---|---|
@@ -54,7 +54,7 @@ Optional additions for a longer presentation:
 - Show a service failure and retry in chat; a failure is displayed as incomplete and cannot
   generate a report or masquerade as a negative classification.
 
-Export/import was implemented separately as the final stage. Its Cucumber scenario is
+The separate export/import Cucumber scenario is
 `cucumber/src/test/resources/requirements/inferencing/AI evaluation export import.feature`,
 tagged `@ai_evaluation_export`. It compares true/false values, downstream comments and full
 saved provenance after importing the archive. It is separate from the ten-case demo.
@@ -86,8 +86,11 @@ and never writes to a KB.
 
 ```powershell
 $env:RUN_AI_DERIVED_EVALUATION = 'true'
-.\gradlew.bat :llm:test --tests 'io.rippledown.llm.AiDiabetesEvaluationTest' --rerun-tasks --console=plain
-Remove-Item Env:RUN_AI_DERIVED_EVALUATION
+try {
+    .\gradlew.bat :llm:test --tests 'io.rippledown.llm.AiDiabetesEvaluationTest' --rerun-tasks --console=plain
+} finally {
+    Remove-Item Env:RUN_AI_DERIVED_EVALUATION
+}
 ```
 
 Reports under `llm/build/reports/ai-evaluation` record the full definition/profile,

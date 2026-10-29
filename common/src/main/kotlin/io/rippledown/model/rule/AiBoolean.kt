@@ -42,7 +42,7 @@ data class AiBooleanExample(
  * Evaluation needs a network call, so unlike the other expressions it is
  * never evaluated here: the server's evaluator reads a prepared result for
  * this definition and input. Direct evaluation is a programming error, as
- * for [ByDefinition]. See documentation/tickets/ai_derived_attributes_design.md.
+ * for [ByDefinition]. See documentation/design/ai_derived_attributes.md.
  */
 @Serializable
 @SerialName("AiBoolean")

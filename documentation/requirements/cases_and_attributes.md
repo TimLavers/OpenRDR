@@ -20,7 +20,7 @@ Every attribute has a kind, which decides where its values come from and where t
 | Kind       | Values come from                     | Shown in                                                                         |
 |------------|--------------------------------------|----------------------------------------------------------------------------------|
 | `EXTERNAL` | the system that sends the case       | the case data table                                                              |
-| `DERIVED`  | the rules, as a literal or a formula | the Derived attributes panel; see [derived_attributes.md](derived_attributes.md) |
+| `DERIVED`  | the rules: literals, formulas or AI Boolean definitions | the Derived attributes panel; see [derived_attributes.md](derived_attributes.md) |
 | `COMMENT`  | the rules, as a text                 | the Comments panel; see [comments.md](comments.md)                               |
 
 | Requirement            | Description                                                                                                                                                                                                                 | Validation                         |
@@ -43,21 +43,24 @@ Every attribute has a kind, which decides where its values come from and where t
 | Conditions on hover  | Hovering a comment or derived value shows the conditions of the rule that gave it, in the user's words with the formal text beneath.                                                                                                                                                                                                                                                      | `rulebuilding/Show conditions for rule action.feature`                      |
 | Pending changes      | While a rule is being built the panels preview what it will do. See [design/previewing_pending_changes.md](../design/previewing_pending_changes.md).                                                                                                                                                                                                                                      | `rulebuilding/*.feature`                                                    |
 
+Reordering updates the loaded KB and is included in export, but is not currently written back to the order store
+for server restart. See the [ordering backlog](../tickets/TODO.md#attribute-ordering).
+
 ## Case lists
 
-A knowledge base keeps three lists of cases, shown in sections of the case list panel.
+A knowledge base has two built-in lists and any number of user-defined lists, shown as sections of the case list panel.
 
 | List         | Purpose                                                                                                                                                                                                                                                                                                                                                     | Validation                               |
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------|
 | Processed    | Cases sent for interpretation, kept so that the user can review them and build rules.                                                                                                                                                                                                                                                                       | `cases/Case list.feature`                |
 | Cornerstones | Copies of the cases rules were built on, used to test the effect of every later rule. A case used for several rules is stored once; cornerstones cannot be deleted.                                                                                                                                                                                         | `rulebuilding/Cornerstone cases.feature` |
-| User-defined | Favourite cases, in user-defined case lists. Only the *current* case can be copied, because case names are not unique and the current case is the only one the user can point at unambiguously. A copied case can be given a new name when copied and can be deleted. User-defined case lists are included in an export.                                    | `cases/User defined case lists.feature`  |
+| User-defined | Named lists of copies of the selected case; see [user-defined case lists](user_defined_case_lists.md) for copying, deletion, naming and export.                                    | `cases/User defined case lists.feature`  |
 
-**Not implemented:** editing a favourite case through the chat (to assess how different values would be interpreted);
-renaming a favourite after it has been copied; a search-results list.
+**Not implemented:** a search-results list. Limitations on editing and renaming copies are listed in
+[user-defined case lists](user_defined_case_lists.md).
 
 | Requirement    | Description                                                                                    | Validation                                |
 |----------------|------------------------------------------------------------------------------------------------|-------------------------------------------|
 | Navigation     | The user selects a case by clicking it or with the arrow keys; the view follows the selection. | `cases/Navigate cases.feature`            |
 | Live case list | A case arriving through the REST interface appears in the list without a refresh.              | `interpreter/Interpreter Service.feature` |
-| Deletion       | A processed or favourite case can be deleted; deleting a copy leaves the original alone.       | `cases/Favourite cases.feature`           |
+| Deletion       | A processed case or user-list copy can be deleted; deleting a copy leaves the original alone.       | `cases/User defined case lists.feature`           |

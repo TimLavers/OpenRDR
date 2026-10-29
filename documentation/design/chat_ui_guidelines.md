@@ -3,7 +3,8 @@
 ## The chat is the general-purpose surface
 
 The chat exists to replace standing GUI controls, not to grow new ones. Open-ended input, typed or spoken, is the
-default way to do anything, and the model interprets it. No persistent control is added beside the chat. The
+default way to do anything, and the model interprets it. Persistent editing controls are avoided; navigation, filtering, panel disclosure and passive awareness displays
+remain in the surrounding GUI. The
 application bar shows the open KB's name as a read-only label with an info icon whose tooltip is the KB description;
 that is passive disclosure, not a control.
 

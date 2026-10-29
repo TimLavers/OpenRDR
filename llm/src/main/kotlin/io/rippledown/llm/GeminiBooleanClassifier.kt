@@ -60,7 +60,7 @@ data class ClassificationLimits(
  * only if it is exactly the specified JSON object with a Boolean `value`
  * and an evidence excerpt that occurs verbatim in the text; anything else
  * is a typed failure, never a coerced Boolean. Raw text and responses are
- * not logged. See documentation/tickets/ai_derived_attributes_design.md.
+ * not logged. See documentation/design/ai_derived_attributes.md.
  */
 class GeminiBooleanClassifier(
     private val transport: StructuredGenerationTransport,

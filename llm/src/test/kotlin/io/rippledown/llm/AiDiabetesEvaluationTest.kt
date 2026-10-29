@@ -83,11 +83,9 @@ class AiDiabetesEvaluationTest {
         reportFile.writeText(
             json.encodeToString(
             EvaluationReport.serializer(), EvaluationReport(definition, observations)))
-        println("Model evaluation: ${reportFile.absolutePath}")
         // Then the six supplied examples must pass; every extended disagreement is retained for owner review
         observations.filter { it.suppliedExample }.forEach { observation ->
             withClue(observation) { observation.actual shouldBe observation.expected }
         }
-        println("Held-out disagreements requiring review: ${observations.count { !it.suppliedExample && it.actual != it.expected }}")
     }
 }

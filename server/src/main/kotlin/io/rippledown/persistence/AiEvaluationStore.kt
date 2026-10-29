@@ -9,7 +9,7 @@ import io.rippledown.model.rule.evaluation.AiEvaluationRecord
  * the first record stored for a key is the one every caller uses, so
  * duplicate requests that race cannot produce different values. Records
  * are never expired; the KB's deletion removes them with its other data.
- * See documentation/tickets/ai_derived_attributes_design.md.
+ * See documentation/design/ai_derived_attributes.md.
  */
 interface AiEvaluationStore {
     /** Snapshot for export. Like record lookup, this may perform database I/O. */

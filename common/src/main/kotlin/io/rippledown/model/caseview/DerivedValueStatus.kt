@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Whether a derived attribute obtained a value for the case. A valid
  * `false` from an AI Boolean is an [Evaluated] value; [NoInput] and
  * [Failed] assign nothing and are shown as diagnostics, never as values.
- * See documentation/tickets/ai_derived_attributes_design.md.
+ * See documentation/design/ai_derived_attributes.md.
  */
 @Serializable
 sealed class DerivedValueStatus {

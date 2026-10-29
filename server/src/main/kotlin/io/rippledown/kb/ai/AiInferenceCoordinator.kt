@@ -39,7 +39,7 @@ data class PreparedInterpretation(val case: RDRCase, val provenance: Map<Attribu
  * nothing it computed against a stale KB survives. An operation must
  * therefore interpret before it mutates. A failed classification ends the
  * operation with a typed [InterpretationIncompleteException].
- * See documentation/tickets/ai_derived_attributes_design.md.
+ * See documentation/design/ai_derived_attributes.md.
  */
 class AiInferenceCoordinator(
     private val session: KBSession,
