@@ -24,6 +24,11 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.filekit.dialogs)
     testImplementation(libs.generativeai)
+    constraints {
+        testImplementation(libs.assertJCore) {
+            because("AssertJ Swing requests a version affected by CVE-2026-24400")
+        }
+    }
 }
 
 val cukeClassPath = configurations.testRuntimeClasspath.get()

@@ -30,8 +30,6 @@ versionCatalogUpdate = "1.1.0"
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 versionCatalogUpdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
 
