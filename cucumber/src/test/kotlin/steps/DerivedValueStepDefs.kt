@@ -4,6 +4,8 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
+import org.awaitility.Awaitility.await
+import java.time.Duration.ofSeconds
 
 class DerivedValueStepDefs(val chatDefs: ChatDefs) {
 
@@ -12,14 +14,14 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
     @When("I remember the saved AI provenance for {string}")
     fun rememberAiProvenance(attributeName: String) {
         val name = currentCaseName()
-        val row = restClient().getProcessedCaseWithName(name).derivedValues().single { it.name == attributeName }
+        val row = restClient().getProcessedCaseInChatContext(name).derivedValues().single { it.name == attributeName }
         savedAiProvenance[name to attributeName] = requireNotNull(row.provenance)
     }
 
     @Then("the saved AI provenance for {string} is unchanged")
     fun requireSameAiProvenance(attributeName: String) {
         val name = currentCaseName()
-        val row = restClient().getProcessedCaseWithName(name).derivedValues().single { it.name == attributeName }
+        val row = restClient().getProcessedCaseInChatContext(name).derivedValues().single { it.name == attributeName }
         row.provenance shouldBe requireNotNull(savedAiProvenance[name to attributeName])
     }
 
@@ -101,5 +103,8 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
         interpretationViewPO().waitForDerivedValuesEmptyState()
     }
 
-    private fun currentCaseName(): String = caseViewPO().nameShown() ?: error("No case name is currently shown")
+    private fun currentCaseName(): String = requireNotNull(
+        await().alias("displayed case name").atMost(ofSeconds(10))
+            .until({ caseViewPO().nameShown() }, { it != null })
+    )
 }

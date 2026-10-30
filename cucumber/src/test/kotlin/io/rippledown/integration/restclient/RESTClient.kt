@@ -73,6 +73,14 @@ class RESTClient(private val api: Api = Api()) {
             api.getCase(caseId.id!!)!!
         }
     }
+
+    fun getProcessedCaseInChatContext(name: String): ViewableCase = runBlocking {
+        // This client has no WebSocket subscription, so UI imports and KB switches
+        // do not update its selection. Read the context without selecting a KB again.
+        currentKB.set(checkNotNull(api.chatContext()?.kbInfo) { "No knowledge base is open in the chat context." })
+        getProcessedCaseWithName(name)
+    }
+
     fun deleteProcessedCaseWithName(name: String) {
         runBlocking {
             api.deleteCase(name)
@@ -127,7 +135,7 @@ class RESTClient(private val api: Api = Api()) {
     }
 
     fun createRuleToAddText(caseName: String, text: String, vararg conditions: String = arrayOf()): ViewableCase {
-        val currentCase = getProcessedCaseWithName(caseName)!!
+        val currentCase = getProcessedCaseWithName(caseName)
         val sessionStartRequest = SessionStartRequest(currentCase.id!!, Addition(text))
         runBlocking { api.startRuleSession(sessionStartRequest) }
 

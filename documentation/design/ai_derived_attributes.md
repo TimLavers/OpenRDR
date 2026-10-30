@@ -75,6 +75,20 @@ Default limits are two attempts, 30 seconds per attempt and 65 seconds overall i
 provider/transport failures are retried within that budget. Schema-valid output can still be wrong; model-quality
 evaluation is separate from deterministic response-validation tests.
 
+## Provenance
+
+**Provenance** means the record of how an AI-generated value was obtained. It records:
+
+- Which source attribute was used.
+- What instructions the AI received.
+- What evidence supported the result, if an evidence excerpt was returned.
+- Which model was used and which revision of the AI definition was evaluated.
+- When the evaluation happened.
+
+For example, alongside `hasDiabetes = true`, provenance records the source, criteria and saved evidence explaining
+how that result was obtained. The export/import test checks that the knowledge base preserves this original record
+alongside the value, including its evaluation timestamp and model information.
+
 ## Persistence and export
 
 Each KB owns an `AiEvaluationStore`, in-memory or Postgres. Its key combines the definition revision, a canonical
