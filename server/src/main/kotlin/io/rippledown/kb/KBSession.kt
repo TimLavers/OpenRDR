@@ -1,18 +1,31 @@
 package io.rippledown.kb
 
 import io.rippledown.model.UserId
+import io.rippledown.constants.chat.KB_CHANGED_PREFIX
+import io.rippledown.model.change.KbChange
+import io.rippledown.toJsonString
 import io.rippledown.server.websocket.WebSocketManager
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * @param sessionStateChanged called whenever a user's rule session starts or ends,
+ * so that who is editing can be re-announced. See concurrent_users.md.
+ */
 class KBSession(
     val kb: KB,
-    private val webSocketManager: WebSocketManager? = null
+    private val webSocketManager: WebSocketManager? = null,
+    private val sessionStateChanged: () -> Unit = {}
 ) {
     private val lock = ReentrantLock()
     private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
+
+    init {
+        kb.changeLog.onRecorded = { record ->
+            webSocketManager?.broadcast(KB_CHANGED_PREFIX + KbChange(kb.kbInfo.id, record).toJsonString())
+        }
+    }
 
     /**
      * The rule-building session of [userId] on this KB. Each user has their own
@@ -20,7 +33,9 @@ class KBSession(
      * See documentation/design/concurrent_users.md.
      */
     fun ruleSessionManagerFor(userId: UserId): RuleSessionManager =
-        ruleSessionManagers.computeIfAbsent(userId) { RuleSessionManager(kb, webSocketManager, lock, it) }
+        ruleSessionManagers.computeIfAbsent(userId) {
+            RuleSessionManager(kb, webSocketManager, lock, it, sessionStateChanged)
+        }
 
     /**
      * Runs [block] as the only thread touching this KB. Reads are included: interpreting
@@ -34,17 +49,18 @@ class KBSession(
      * is refused while anyone else is among them.
      * See documentation/design/concurrent_users.md.
      */
-    fun usersEditing(): Set<UserId> =
+    fun usersEditing(): Set<UserId> = locked {
         ruleSessionManagers.filterValues { it.isRuleSessionActive() }.keys
+    }
 
     /**
      * Cancels [userId]'s rule session, if any, and tells them, so their client
      * drops its session state. Used when the user closes the KB.
      */
-    fun cancelRuleSessionOf(userId: UserId) {
-        val ruleSessionManager = ruleSessionManagers[userId] ?: return
-        if (!ruleSessionManager.isRuleSessionActive()) return
+    fun cancelRuleSessionOf(userId: UserId) = locked {
+        val ruleSessionManager = ruleSessionManagers[userId] ?: return@locked
+        if (!ruleSessionManager.isRuleSessionActive()) return@locked
         ruleSessionManager.cancelRuleSession()
-        runBlocking { webSocketManager?.sendRuleSessionCompleted(userId) }
+        webSocketManager?.sendRuleSessionCompleted(userId)
     }
 }

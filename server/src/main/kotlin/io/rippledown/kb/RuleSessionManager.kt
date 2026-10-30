@@ -17,6 +17,7 @@ import io.rippledown.kb.chat.resolveCommentVariables
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
@@ -28,7 +29,6 @@ import io.rippledown.server.ConditionExpressionParser
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.suggestions.ConditionSuggester
 import io.rippledown.suggestions.SuggestionContext
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -48,7 +48,8 @@ class RuleSessionManager(
     private val kb: KB,
     private val webSocketManager: WebSocketManager? = null,
     private val kbLock: ReentrantLock = ReentrantLock(),
-    private val userId: UserId? = null
+    private val userId: UserId? = null,
+    private val sessionStateChanged: () -> Unit = {}
 ) : RuleService {
     val logger = lazyLogger
 
@@ -131,6 +132,8 @@ class RuleSessionManager(
     )
 
     private var pendingDefinition: PendingDefinition? = null
+    private var changeLogIdAtStart: Int? = null
+    private var pendingUndoRecordId: Int? = null
 
     private var selectedCornerstone: ViewableCase? = null
     private val conditionChatService = ConditionChatService()
@@ -157,7 +160,9 @@ class RuleSessionManager(
         ruleSession = RuleBuildingSession(
             kb.ruleManager, kb.ruleTree, case, action, kb.allCornerstoneCases(), sessionResolver()
         )
+        changeLogIdAtStart = kb.changeLog.mostRecent(1).firstOrNull()?.id
         logger.info("Rule session created")
+        sessionStateChanged()
         return cornerstoneStatus(null)
     }
 
@@ -503,11 +508,13 @@ class RuleSessionManager(
         checkDefinitionEditIsAcyclic(attribute, newExpression)
         val oldExpression = kb.derivedDefinitionManager.definitionFor(attribute.id)
         kb.derivedDefinitionManager.store(attribute.id, newExpression)
-        return if (oldExpression == null) {
+        val message = if (oldExpression == null) {
             "Defined \"${attribute.name}\" as ${newExpression.asText()}."
         } else {
             "Changed the definition of \"${attribute.name}\" from ${oldExpression.asText()} to ${newExpression.asText()}."
         }
+        recordChange(ChangeKind.DEFINITION_EDITED, message, attributeIds = setOf(attribute.id))
+        return message
     }
 
     /**
@@ -526,7 +533,9 @@ class RuleSessionManager(
         }
         val oldName = attribute.name
         val renamed = kb.attributeManager.rename(attribute, newName)
-        return renamedMessage(oldName, renamed.name)
+        val message = renamedMessage(oldName, renamed.name)
+        recordChange(ChangeKind.ATTRIBUTE_RENAMED, message, attributeIds = setOf(renamed.id))
+        return message
     }
 
     override fun renameCondition(conditionText: String, newPhrase: String): String {
@@ -548,11 +557,13 @@ class RuleSessionManager(
         ruleSession?.let { session ->
             session.conditions = session.conditions.map { if (it.id == id) renamed else it }.toMutableSet()
         }
-        return if (original.userExpression().isBlank()) {
+        val message = if (original.userExpression().isBlank()) {
             "Called condition \"${original.asText()}\" \"$newPhrase\"."
         } else {
             "Renamed condition \"${original.asText()}\" from \"${original.userExpression()}\" to \"$newPhrase\"."
         }
+        recordChange(ChangeKind.CONDITION_RENAMED, message)
+        return message
     }
 
     /**
@@ -676,12 +687,7 @@ class RuleSessionManager(
      * silent near-match would quietly compute a plausible number from the wrong
      * attribute for ever. A name that does not resolve exactly is asked about.
      */
-    private fun attributeNamedExactly(name: String): Attribute? {
-        val attributes = kb.attributeManager.all()
-        attributes.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
-        val target = name.normalizeForComparison()
-        return attributes.firstOrNull { it.name.normalizeForComparison() == target }
-    }
+    private fun attributeNamedExactly(name: String): Attribute? = kb.attributeManager.attributeNamedExactly(name)
 
     /**
      * The name of the attribute nearest [name], for suggesting the correction
@@ -698,12 +704,14 @@ class RuleSessionManager(
 
     /**
      * How an assignment reads to the user: a comment as its (truncated) text,
-     * resolved through the attribute's definition when the rule assigns it by
-     * definition, and anything else as the assignment itself.
+     * and a derived value as the attribute and its expression. Resolve stored
+     * definitions for both kinds so the user sees the actual definition.
      */
     private fun describe(assignment: AssignValue): String {
-        if (assignment.attribute.kind != AttributeKind.COMMENT) return assignment.asText()
         val expression = assignment.expression.resolvedFor(assignment.attribute, kb.definitionResolver)
+        if (assignment.attribute.kind != AttributeKind.COMMENT) {
+            return assignment.copy(expression = expression ?: assignment.expression).asText()
+        }
         val text = when (expression) {
             is CommentTemplate -> expression.textWithVariableNames { id -> attributeById(id) }
             is Literal -> expression.value
@@ -734,11 +742,11 @@ class RuleSessionManager(
 
     override fun sendCornerstoneStatus() {
         val cornerstoneStatus = cornerstoneStatus(selectedCornerstone)
-        runBlocking { webSocketManager?.sendStatus(addressee(), cornerstoneStatus) }
+        webSocketManager?.sendStatus(addressee(), cornerstoneStatus)
     }
 
     override fun sendRuleSessionCompleted() {
-        runBlocking { webSocketManager?.sendRuleSessionCompleted(addressee()) }
+        webSocketManager?.sendRuleSessionCompleted(addressee())
     }
 
     // A session that pushes belongs to a user; only test fixtures build one without.
@@ -761,12 +769,18 @@ class RuleSessionManager(
 
     fun cancelRuleSession() {
         check(ruleSession != null) { "No rule session in progress." }
+        clearSession()
+    }
+
+    private fun clearSession() {
+        changeLogIdAtStart = null
         ruleSession = null
         currentChange = null
         pendingDefinition = null
         commentAttributeInSession = null
         diffAttribute = null
         replacedDiffAttribute = null
+        sessionStateChanged()
     }
 
     override fun cancelCurrentRuleSession() = cancelRuleSession()
@@ -822,12 +836,14 @@ class RuleSessionManager(
         val rulesAdded = session.commit()
         kb.ruleSessionRecorder.recordRuleSessionCommitted(rulesAdded)
         kb.addCornerstoneCaseIfNoEquivalentAlreadyPresent(session.case)
-        ruleSession = null
-        currentChange = null
-        pendingDefinition = null
-        commentAttributeInSession = null
-        diffAttribute = null
-        replacedDiffAttribute = null
+        clearSession()
+        val exemplar = rulesAdded.first()
+        recordChange(
+            ChangeKind.RULES_ADDED,
+            rulesSummary(exemplar),
+            rulesAdded.map { it.id }.toSet(),
+            attributesConcernedBy(exemplar)
+        )
         sendCasesInfo()
     }
 
@@ -837,9 +853,15 @@ class RuleSessionManager(
      * cancelled and its user told. See documentation/design/concurrent_users.md.
      */
     private fun refuseStaleCommit(message: String): Nothing {
+        val changes = kb.changeLog.since(changeLogIdAtStart)
+            .filter { it.userId != userId?.value }
+            .takeLast(3)
+        val context = if (changes.isEmpty()) "" else changes.joinToString(
+            prefix = " Since you started: ", separator = "; "
+        ) { "${it.userId}: ${it.summary}" }
         cancelRuleSession()
         sendRuleSessionCompleted()
-        throw StaleRuleSessionException(message)
+        throw StaleRuleSessionException(message + context)
     }
 
     /**
@@ -857,25 +879,74 @@ class RuleSessionManager(
 
     override fun selectCornerstoneCase(index: Int) = selectCornerstone(index)
 
-    override fun descriptionOfMostRecentRule(): UndoRuleDescription {
+    override fun descriptionOfMostRecentRule(): UndoRuleDescription = kbLock.withLock {
         val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
-            ?: return UndoRuleDescription("There are no rules to undo.", false)
-        val idOfExemplar = record.idsOfRulesAddedInSession.random()
-        val exemplar = kb.ruleTree.ruleForId(idOfExemplar)
-        return UndoRuleDescription(exemplar.actionSummary { describe(it) }, true)
+        pendingUndoRecordId = record?.id
+        if (record == null) UndoRuleDescription("There are no rules to undo.", false)
+        else UndoRuleDescription(undoDescription(record), true)
+    }
+
+    // Also used to describe a stale refusal, without authorising another undo.
+    private fun undoDescription(record: RuleSessionRecord): String {
+        val exemplar = kb.ruleTree.ruleForId(record.idsOfRulesAddedInSession.first())
+        val description = exemplar.actionSummary { describe(it) }
+        val author = kb.changeLog.all().lastOrNull {
+            it.kind == ChangeKind.RULES_ADDED && it.ruleIds == record.idsOfRulesAddedInSession
+        }?.userId
+        return if (author != null && userId != null && author != userId.value)
+            "The most recent rule was added by $author: $description"
+        else description
     }
 
     fun ruleSessionHistories() = kb.ruleSessionRecorder.allRuleSessionHistories()
 
-    override fun undoLastRuleSession() {
-        val record = checkNotNull(kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()) {
-            "There are no rules to undo."
+    override fun undoLastRuleSession() = kbLock.withLock {
+        val record = kb.ruleSessionRecorder.idsOfRulesAddedInMostRecentSession()
+        val reviewedId = pendingUndoRecordId
+        pendingUndoRecordId = null
+        if (record == null) throw UndoRuleRefusedException("There are no rules to undo.")
+        if (reviewedId == null) {
+            throw UndoRuleRefusedException("Please review the most recent rule before undoing it.")
         }
+        if (record.id != reviewedId) {
+            throw UndoRuleRefusedException(
+                "The most recent rule changed since it was shown. ${undoDescription(record)} Undo it?"
+            )
+        }
+        // Taken before the deletion, which detaches each rule from its parent.
+        val exemplar = kb.ruleTree.ruleForId(record.idsOfRulesAddedInSession.first())
+        val summary = rulesUndoneSummary(rulesSummary(exemplar))
+        val attributeIds = attributesConcernedBy(exemplar)
         record.idsOfRulesAddedInSession.forEach {
             val toDelete = kb.ruleTree.ruleForId(it)
             kb.ruleManager.deleteLeafRule(toDelete)
         }
-        kb.ruleSessionRecorder.delete(kb.ruleSessionRecorder.allRuleSessionHistories().last())
+        kb.ruleSessionRecorder.delete(record)
+        recordChange(ChangeKind.RULES_UNDONE, summary, record.idsOfRulesAddedInSession, attributeIds)
+    }
+
+    /**
+     * The summary of a change to the rules, from one of the rules concerned:
+     * the rules of a session share an action and conditions.
+     */
+    private fun rulesSummary(exemplar: Rule) = rulesAddedSummary(exemplar) { describe(it) }
+
+    /**
+     * The attributes a rule assigns and, for a removal or replacement,
+     * retracts.
+     */
+    private fun attributesConcernedBy(rule: Rule) =
+        setOfNotNull(rule.assignment?.attribute?.id, rule.parent?.assignment?.attribute?.id)
+
+    // A manager with no user is a test fixture; its changes have no author to record.
+    private fun recordChange(
+        kind: ChangeKind,
+        summary: String,
+        ruleIds: Set<Int> = emptySet(),
+        attributeIds: Set<Int> = emptySet()
+    ) {
+        val author = userId ?: return
+        kb.changeLog.record(author, kind, summary, ruleIds, attributeIds)
     }
 
     private fun activeRuleSession(message: String = "Rule session not started."): RuleBuildingSession {
@@ -1073,6 +1144,7 @@ class RuleSessionManager(
 
     override fun deleteCaseFromUserList(case: ViewableCase) {
         kb.deleteCaseFromUserList(case.case)
+        recordChange(ChangeKind.CASE_DELETED, caseDeletedSummary(case.name, case.case.caseId.type.name))
         sendCasesInfo()
     }
 
@@ -1084,7 +1156,7 @@ class RuleSessionManager(
     )
 
     private fun sendCasesInfo() {
-        runBlocking { webSocketManager?.sendCasesInfo(casesInfo()) }
+        webSocketManager?.sendCasesInfo(casesInfo())
     }
 
     fun conditionForExpression(expression: String) = conditionForExpression(activeRuleSession().case, expression)
@@ -1097,6 +1169,11 @@ class RuleSessionManager(
         val attributeMoved = kb.attributeManager.all().first { it.name.equals(moved) }
         val attributeDestination = kb.attributeManager.all().first { it.name.equals(destination) }
         kb.caseViewManager.move(attributeMoved, attributeDestination)
+        recordChange(
+            ChangeKind.ATTRIBUTE_MOVED,
+            attributeMovedSummary(attributeMoved, attributeDestination),
+            attributeIds = setOf(attributeMoved.id, attributeDestination.id)
+        )
     }
 
     fun startRuleSession(sessionStartRequest: SessionStartRequest): CornerstoneStatus {

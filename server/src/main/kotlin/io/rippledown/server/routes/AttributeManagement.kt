@@ -17,7 +17,7 @@ fun Application.attributeManagement(application: ServerApplication) {
         post(MOVE_ATTRIBUTE) {
             val kbEndpoint = kbEndpoint(application)
             val attributeIdPair = call.receive<Pair<Int, Int>>()
-            kbEndpoint.moveAttribute(attributeIdPair.first, attributeIdPair.second)
+            kbEndpoint.moveAttribute(attributeIdPair.first, attributeIdPair.second, userId())
             call.respond(OK, OperationResult("Attribute moved"))
         }
         post(GET_OR_CREATE_ATTRIBUTE) {

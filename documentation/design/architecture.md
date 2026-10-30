@@ -19,10 +19,11 @@ All knowledge lives on the server. The client is a thin presenter: it fetches `V
 the user's chat messages. It never talks to a language model; the Gemini key and every prompt are server-side, so the
 model's output can be validated before it touches a knowledge base. See [chat_architecture.md](chat_architecture.md).
 
-The server has one `ServerApplication` holding a `KBManager` (the stored knowledge bases) and one `ChatCoordinator` (the
-current conversation). Each open KB has a `KBEndpoint`, through which the REST routes reach the `KB`: its managers for
-attributes, conditions, rules, definitions, cases and attribute order, and its `RuleSessionManager`, which owns the one
-rule session that may be in progress.
+The server has one `ServerApplication` holding a `KBManager` (the stored knowledge bases) and one `ChatCoordinator`
+with a conversation and open-KB context per user. Each loaded KB has a `KBSession` containing its shared `KB`, a lock,
+and a `RuleSessionManager` per user. REST routes reach that session through `KBEndpoint`; chat rule actions use
+`LockedRuleService`. Users can build rules concurrently, with each KB access serialised and each commit revalidated
+against the current knowledge. See [concurrent_users.md](concurrent_users.md).
 
 ## How the client learns of server changes
 
@@ -34,12 +35,18 @@ The client connects to a web socket on startup and the server pushes:
 | cornerstone status     | a rule session starts, a condition is added or removed, a cornerstone is allowed, a comment is renamed during a session |
 | rule session completed | a rule is committed or cancelled                                                                                        |
 | KB info / KB closed    | a knowledge base is opened, created, copied, renamed or closed through the chat                                         |
+| chat context           | the user's conversation starts with a KB and case context; their other windows adopt it                                 |
+| presence               | a connection, open-KB context, or rule-session state changes                                                            |
+| KB changed             | a logged edit supplies its author and summary and tells windows on that KB to refresh                                   |
 
 Pushing was chosen over polling because the cornerstone review is conversational: the panel must change the moment the
 chat says it has, and polling forces a trade-off between that latency and load.
 
 The client also re-fetches the current case after every chat message, since most chat actions change the interpretation
-of the case on screen.
+of the case on screen. Change pushes refresh other windows on the KB, including the author's other windows, while
+deferring case refresh during an active rule session. Only other users see the attributed notice. Socket delivery
+uses an ordered queue outside the KB lock; after a disconnect the client reconnects and recovers missed changes
+from the persisted log.
 
 ## Consequences
 
@@ -48,5 +55,6 @@ of the case on screen.
 - **One instance per object within a KB.** A loaded KB is one object graph in which equal objects are the same instance,
   so a change made through one manager is seen by every rule and condition that refers to it. Conditions restored from
   the store are re-pointed at the KB's attribute instances (`alignAttributes`).
-- **One user at a time.** There is one conversation per server and one rule session per KB. Concurrent users are a
-  known non-goal; see [../reviews/design_review_2026-08.md](../reviews/design_review_2026-08.md).
+- **User-scoped conversations and rule sessions.** Each user has one conversation and at most one active rule
+  session per KB. A user's windows share that identity and context. Shared knowledge is protected by the per-KB
+  lock, commit-time revalidation, and undo confirmation bound to the reviewed rule session.

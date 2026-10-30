@@ -62,6 +62,13 @@ class KBImporter(
         val ruleSessionRecordStore = persistentKB.ruleSessionRecordStore()
         ruleSessionRecordStore.load(DirectoryImporter(ruleSessionsDirectory, RuleSessionRecordsExporter(), true).import())
 
+        // Extract the change log. An export made before changes were logged
+        // has no such directory.
+        if (changeLogDirectory.isDirectory) {
+            persistentKB.changeLogStore()
+                .load(DirectoryImporter(changeLogDirectory, ChangeRecordsExporter(), true).import())
+        }
+
         // Create the result KB.
         val result = KB(persistentKB)
 

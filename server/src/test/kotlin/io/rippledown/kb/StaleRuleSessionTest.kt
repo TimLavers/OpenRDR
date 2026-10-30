@@ -3,6 +3,8 @@ package io.rippledown.kb
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
+import io.rippledown.model.change.ChangeKind
 import io.mockk.*
 import io.rippledown.model.*
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -20,6 +22,62 @@ import kotlin.test.Test
  * See documentation/design/concurrent_users.md.
  */
 class StaleRuleSessionTest {
+    @org.junit.jupiter.api.Test
+    fun `a stale refusal without other-user changes keeps its original message`() {
+        // Given
+        alice.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        kb.changeLog.record(aliceId, ChangeKind.DESCRIPTION_SET, "Alice's own change.")
+        val unlogged = RuleSessionManager(kb)
+        unlogged.startRuleSessionToAddComment(createCase("Case2"), "Go.")
+        unlogged.commitCurrentRuleSession()
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe interpretationChangedMessage("Case1")
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `a new session takes a fresh change log baseline after cancellation`() {
+        // Given
+        alice.startRuleSessionToAddComment(createCase("Cancelled case"), "Go.")
+        kb.changeLog.record(bobId, ChangeKind.DESCRIPTION_SET, "Before the new session.")
+        alice.cancelRuleSession()
+        alice.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        bob.startRuleSessionToAddComment(createCase("Case2"), "Go.")
+        bob.commitCurrentRuleSession()
+        val recent = kb.changeLog.mostRecent(1).single()
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe interpretationChangedMessage("Case1") + " Since you started: bob: ${recent.summary}"
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `a stale refusal includes only the last three other-user changes since this session started`() {
+        // Given
+        kb.changeLog.record(bobId, ChangeKind.DESCRIPTION_SET, "Before the session.")
+        alice.startRuleSessionToAddComment(createCase("Case1"), "Go.")
+        kb.changeLog.record(bobId, ChangeKind.DESCRIPTION_SET, "Older change.")
+        kb.changeLog.record(bobId, ChangeKind.DESCRIPTION_SET, "First recent change.")
+        kb.changeLog.record(aliceId, ChangeKind.DESCRIPTION_SET, "Alice's own change.")
+        kb.changeLog.record(bobId, ChangeKind.DESCRIPTION_SET, "Second recent change.")
+        bob.startRuleSessionToAddComment(createCase("Case2"), "Go.")
+        bob.commitCurrentRuleSession()
+        val bobRule = kb.changeLog.mostRecent(1).single()
+
+        // When
+        val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
+
+        // Then
+        stale.message shouldBe interpretationChangedMessage("Case1") +
+            " Since you started: bob: First recent change.; bob: Second recent change.; bob: ${bobRule.summary}"
+        alice.isRuleSessionActive() shouldBe false
+    }
+
     private lateinit var kb: KB
     private lateinit var alice: RuleSessionManager
     private lateinit var bob: RuleSessionManager
@@ -61,7 +119,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe interpretationChangedMessage("Case1")
+        stale.message shouldStartWith interpretationChangedMessage("Case1")
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
@@ -82,7 +140,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe interpretationChangedMessage("Case1")
+        stale.message shouldStartWith interpretationChangedMessage("Case1")
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
@@ -121,7 +179,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe cornerstonesChangedMessage()
+        stale.message shouldStartWith cornerstonesChangedMessage()
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
@@ -165,7 +223,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe cornerstonesChangedMessage()
+        stale.message shouldStartWith cornerstonesChangedMessage()
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
@@ -187,7 +245,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe dependencyCycleMessage()
+        stale.message shouldStartWith dependencyCycleMessage()
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         kb.ruleTree.rulesMatching { it.assignment?.attribute == a } shouldHaveSize 0
@@ -211,7 +269,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe interpretationChangedMessage("Case1")
+        stale.message shouldStartWith interpretationChangedMessage("Case1")
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         coVerify(exactly = 1) { webSocketManager.sendRuleSessionCompleted(aliceId) }
@@ -264,7 +322,7 @@ class StaleRuleSessionTest {
         val stale = shouldThrow<StaleRuleSessionException> { alice.commitCurrentRuleSession() }
 
         // Then
-        stale.message shouldBe definitionChangedMessage("Score")
+        stale.message shouldStartWith definitionChangedMessage("Score")
         alice.isRuleSessionActive() shouldBe false
         kb.ruleTree.rules() shouldHaveSize rulesBefore
         val score = kb.attributeManager.byName("Score")!!
