@@ -35,8 +35,8 @@ two jobs at once.
 `RuleSessionManager.conditionForExpression` refuses a translated condition unless all of:
 
 1. it parsed to a `Condition`;
-2. every attribute it names exists (names are resolved exactly, then punctuation-normalised, then by a single edit,
-   because model output is not trusted verbatim);
+2. every attribute it names exists (names are resolved exactly, then punctuation-normalised, then by bounded Levenshtein distance
+   (at most `maxOf(1, name.length / 4)`), because model output is not trusted verbatim);
 3. it holds for the case the rule is being built on;
 4. it creates no dependency cycle ([rule_tree_and_inference.md](rule_tree_and_inference.md)).
 

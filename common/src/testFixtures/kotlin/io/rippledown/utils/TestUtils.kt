@@ -15,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import kotlin.system.measureTimeMillis
 
 fun daysAgo(n: Int): Long {
     return defaultDate - n * 24 * 60 * 60 * 1000
@@ -29,10 +28,6 @@ fun randomString(length: Int): String {
     //https://stackoverflow.com/questions/46943860/idiomatic-way-to-generate-a-random-alphanumeric-string-in-kotlin
     val alphabet: List<Char> = ('a'..'z') + ('A'..'Z')
     return List(length) { alphabet.random() }.joinToString("")
-}
-
-fun printDuration(text: String, block: () -> Unit) {
-    System.out.print("${"Millis for $text"}: ${measureTimeMillis(block)}\n")
 }
 
 const val defaultDate = 1659752689505

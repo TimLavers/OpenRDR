@@ -1,33 +1,23 @@
 # User-defined case lists
-A Knowledge Base (KB) has two built-in lists of cases: `Processed Cases` and `Cornerstone Cases`.
-In addition, the user can create lists of cases as a way of organising the cases that are of interest to them.
-For example, in a diabetes KB, a user might want to copy one case to a "Borderline" case list, and another
-case to a "Gestational Diabetes" list.
 
-The user will create these lists "on demand": a list will be created when a case is copied to it.
+A knowledge base has built-in Processed and Cornerstone lists. Users can also organise copies of cases into named
+lists such as "Borderline". A list is created with its first copy and disappears when its last case is deleted;
+there is no separate list registry.
 
-List names are case-insensitive: "good" and "Good" refer to the same list. The spelling used
-when the list was created is retained for display.
+| Requirement | Behaviour | Validation |
+|---|---|---|
+| Copy | Copy the currently selected case through chat, supplying a list name and optionally a new name for the copy. The original is unchanged. | `cases/User defined case lists.feature` |
+| Current case only | Names are not unique across lists, so chat copies the selected case rather than guessing from a name. | `CopyCaseToListTest` |
+| List identity | Names are trimmed and compared without case sensitivity; an existing list retains its spelling. | `CaseListTypeTest`, `KBTest` |
+| Reserved names | Blank names and built-in names, including variants such as "Cornerstone Cases", are refused. | `cases/User defined case lists.feature`, `KBTest` |
+| Ordering | Lists follow the ID of their first case; cases within a list follow their IDs, preserving copy order. | `CaseManagerTest` |
+| Delete | Delete the selected copy from its user-defined list. Other copies and the original remain. | `cases/User defined case lists.feature` |
+| Export/import | User-defined cases round-trip with their list names. | `KBImporterTest`, `cases/User defined case lists.feature` |
 
-Copying the currently selected case will be done via the chat interface. The user will need to
-provide the name of the case list and, optionally, a new case name for the copy.
-Only the currently selected case can be copied.
+All user-defined cases are exported into one `UserDefinedCases` directory. Each case's serialised `CaseId.type`
+contains the list name, so list names do not become directory names and need no filesystem encoding.
 
-The reason we only allow copying the current case is that there might be more than one case with
-a given name, so in general there's no way for the user to specify a case other than that which
-is currently selected.
+**Not implemented:** editing a stored copy's values, renaming it after copying, and explicit list rename operations.
+A different case name can be supplied when making a new copy.
 
-## Operations available on user-defined lists
-It shall be possible to:
-- delete 
-- rename
-- edit (to be done)
-any case in a user-defined case list through.
-
-When a Knowledge Base is exported to a zip file, the user-defined case lists are included.
-
-## Allowed names for case lists
-When we export a KB to a zip, we put each list of cases into its own directory.
-A user could have a good reason for creating a list name that is not a valid
-directory name. To work around this, we will encode the list names
-
+See [cases and attributes](cases_and_attributes.md) for navigation and the built-in lists.

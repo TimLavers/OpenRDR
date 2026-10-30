@@ -10,6 +10,7 @@ class InMemoryKB(kbInfo: KBInfo) : PersistentKB {
     private val attributeStore = InMemoryAttributeStore()
     private val attributeOrderStore = InMemoryOrderStore()
     private val derivedDefinitionStore = InMemoryDerivedDefinitionStore()
+    private val aiEvaluationStore = InMemoryAiEvaluationStore()
     private val conditionStore = InMemoryConditionStore()
     private val ruleStore = InMemoryRuleStore()
     private val ruleSessionRecordStore = InMemoryRuleSessionRecordStore()
@@ -28,6 +29,8 @@ class InMemoryKB(kbInfo: KBInfo) : PersistentKB {
     override fun attributeOrderStore() = attributeOrderStore
 
     override fun derivedDefinitionStore() = derivedDefinitionStore
+
+    override fun aiEvaluationStore() = aiEvaluationStore
 
     override fun conditionStore() = conditionStore
 

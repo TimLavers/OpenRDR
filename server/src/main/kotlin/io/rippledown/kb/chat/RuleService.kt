@@ -4,14 +4,46 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.CommentVariable
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.AiDefinitionDraftView
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
+import io.rippledown.model.rule.AiBooleanExample
+import io.rippledown.kb.ai.AiDefinitionDraft
+import io.rippledown.kb.ai.AcceptedAiDefinition
 
 interface RuleService {
+    /** Captured and checked under the KB lock before each preparation attempt. */
+    fun operationGuard(): () -> Unit = {}
+
+    fun proposeAiDefinition(
+        attributeName: String, sourceName: String, instructions: String, examples: List<AiBooleanExample>,
+        caseId: Long?, reasons: List<String> = emptyList(), edit: Boolean = false
+    ): AiDefinitionDraft
+    fun currentAiDefinitionDraft(): AiDefinitionDraft?
+
+    /** The source name offered after a draft was refused for an unknown source, if any. */
+    fun currentAiSourceCorrection(): String?
+
+    /**
+     * [retryAfterFailure] is honoured by the orchestration boundary, which
+     * bypasses the evaluation service's failure cooldown; the delegate itself
+     * does not evaluate.
+     */
+    fun previewAiDefinition(draftId: String, case: RDRCase?, retryAfterFailure: Boolean = false): AiDefinitionDraftView
+    fun acceptAiDefinition(draftId: String, case: RDRCase?): AcceptedAiDefinition
+    fun cancelAiDefinitionDraft()
+
+    /**
+     * The value, evidence and approved criteria of an AI definition on [case],
+     * without starting a rule session.
+     */
+    fun explainAiEvaluation(attributeName: String, case: RDRCase?): AiDefinitionDraftView
+    fun retryAiEvaluation(case: RDRCase): String
+
     fun startRuleSessionToAddComment(
         viewableCase: ViewableCase,
         comment: String,

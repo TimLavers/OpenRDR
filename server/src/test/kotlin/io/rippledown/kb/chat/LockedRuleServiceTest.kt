@@ -3,6 +3,7 @@ package io.rippledown.kb.chat
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.kb.KBSession
+import io.rippledown.kb.ai.AiInferenceCoordinator
 import io.rippledown.model.Attribute
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -17,6 +18,7 @@ import kotlin.test.Test
 class LockedRuleServiceTest {
     private lateinit var session: KBSession
     private lateinit var delegate: RuleService
+    private lateinit var coordinator: AiInferenceCoordinator
     private lateinit var service: LockedRuleService
     private val viewableCase = mockk<ViewableCase>()
     private val case = mockk<RDRCase>()
@@ -28,7 +30,10 @@ class LockedRuleServiceTest {
         session = mockk()
         every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         delegate = mockk()
-        service = LockedRuleService(session, delegate)
+        coordinator = mockk()
+        coEvery { coordinator.withPreparedEvaluations<Any?>(any(), any(), any()) } coAnswers { thirdArg<() -> Any?>()() }
+        coEvery { coordinator.withPreparedEvaluations<Any?>(any(), any()) } coAnswers { secondArg<() -> Any?>()() }
+        service = LockedRuleService(session, delegate, coordinator)
     }
 
     private fun stubEditingCalls() {
@@ -132,19 +137,27 @@ class LockedRuleServiceTest {
         service.attributeById(1) shouldBe Attribute(1, "x")
         service.allAttributes() shouldBe setOf(Attribute(1, "x"))
 
-        // Then every call but the LLM-translating one ran under the lock
-        verify(exactly = 13) { session.locked(any<() -> Any?>()) }
+        // Then reads/pushes are locked, and translation has three short context-guard checks
+        verify(exactly = 16) { session.locked(any<() -> Any?>()) }
     }
 
     @Test
     fun `translating a condition expression is not wrapped in the KB lock`() {
         // Given
-        every { delegate.conditionForExpression(case, "x > 1") } returns ConditionParsingResult(condition)
+        var locked = false
+        every { session.locked(any<() -> Any?>()) } answers {
+            locked = true
+            try { firstArg<() -> Any?>().invoke() } finally { locked = false }
+        }
+        every { delegate.conditionForExpression(case, "x > 1") } answers {
+            locked shouldBe false
+            ConditionParsingResult(condition)
+        }
 
         // When
         service.conditionForExpression(case, "x > 1")
 
-        // Then the delegate holds the lock only around its own KB access, so none is taken here
-        verify(exactly = 0) { session.locked(any<() -> Any?>()) }
+        // Then only the context checks take this lock; translation above executes outside it
+        verify(exactly = 3) { session.locked(any<() -> Any?>()) }
     }
 }

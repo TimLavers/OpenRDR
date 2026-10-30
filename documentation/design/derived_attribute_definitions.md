@@ -38,5 +38,16 @@ A definition edit is checked for cycles like any other expression, and is refuse
 
 ## Not built
 
-An impact summary when a definition is edited (how many cornerstones' values change); a cancelled assignment session
-leaves its stored definition, harmless because the next attempt overwrites it.
+An impact summary when a definition is edited (how many cornerstones' values change).
+
+Assignment sessions stage definitions until commit. New AI attributes use provisional IDs, so cancelling an AI assignment does not reserve its name. Ordinary
+literal/formula sessions still create the attribute at start; cancellation can leave an unused attribute and prevent
+chat from reusing the name. This is tracked in the [backlog](../tickets/TODO.md). Competing definition changes are
+rechecked at commit.
+
+## AI definitions
+
+`AiBoolean` is a stored `ValueExpression` with a primary source attribute, approved criteria, examples, revision
+and evaluation profile. It cannot be evaluated directly: server inference consumes prepared results. A semantic
+edit creates a new revision; source/target renaming preserves evaluation identity. New AI attributes use provisional
+IDs during authoring and receive live IDs only at commit. See [AI design](ai_derived_attributes.md).

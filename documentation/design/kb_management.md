@@ -16,7 +16,7 @@ turn, context lost at the hand-off, duplicated dispatch.
 | `OpenKnowledgeBase(name)`                    | Exact stored match opens; partial match asks; a demonstration asks for a copy name.                         |
 | `CreateKnowledgeBase(name)`                  | Refuses a clash or a reserved title; asks on a near-duplicate.                                              |
 | `CopyDemonstrationKnowledgeBase`             | Server-only: validates the name like create, builds the sample, opens the copy.                             |
-| `CloseKnowledgeBase`                         | Tells the client to close; the server has no "current KB", requests carry the id.                           |
+| `CloseKnowledgeBase`                         | Clears the caller's open-KB context, cancels their session and draft, and tells their windows to close.                           |
 | `DeleteKnowledgeBase(name?)`                 | Refuses a demonstration; always confirms, defaulting to the open KB.                                        |
 | `RenameKnowledgeBase(newName)`               | Keeps the id, refuses reserved titles.                                                                      |
 | `ShowKnowledgeBaseDescription(name?)`        | Reads the description; a server action because the description is not in the prompt.                        |
@@ -24,8 +24,8 @@ turn, context lost at the hand-off, duplicated dispatch.
 | `AddDemonstrationCase`                       | Adds Einstein to an empty KB.                                                                               |
 | `ImportKnowledgeBase`, `ExportKnowledgeBase` | Return a one-use file-dialog request; the client does the transfer.                                         |
 
-Actions that change what the chat is about (open, create, copy, close, delete, import, export) are refused during a
-rule session.
+Actions that change what the chat is about (open, create, copy, delete, import, export) are refused during the caller's
+rule session. Closing is allowed: it cancels only the caller's unfinished session and leaves other users' sessions intact.
 
 ## Name resolution
 
@@ -48,7 +48,7 @@ also use; "opening" one is `createKBFromSample(newName, sample)`. There is there
 no flag to persist, and no startup logic to skip demonstrations. A stored, flagged copy would have needed a schema
 change, a deletion guard, a copy-with-new-id and a startup filter.
 
-Startup opens the first stored KB. No KB is created implicitly: the old lazy "Thyroids" default was removed so that the
+Startup adopts the user's existing chat context; only when none exists does it open the first stored KB. No KB is created implicitly: the old lazy "Thyroids" default was removed so that the
 acceptance tests load nothing a feature does not name, and the packaged demo starts empty and opens the Pathology
 demonstration through the chat, which is the feature being demonstrated.
 

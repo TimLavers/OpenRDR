@@ -39,6 +39,10 @@ class ChatManager(
     private val responses = ChatResponseEnricher(ruleService, suggestionsBuffer, suggestedConditionsHandler)
 
     suspend fun startConversation(viewableCase: ViewableCase?, greeting: String? = null): ChatResponse {
+        val retainedDraft = ruleService?.currentAiDefinitionDraft()?.takeIf {
+            currentCase == null && it.caseId == null && viewableCase != null
+        }
+        if (retainedDraft == null) ruleService?.cancelAiDefinitionDraft()
         currentCase = viewableCase
         knowledgeBases.reset()
         rules.reset()
@@ -50,6 +54,7 @@ class ChatManager(
             logger.error("Failed to start conversation", e)
             return ChatResponse(AI_UNAVAILABLE_MESSAGE)
         }
+        if (retainedDraft != null) return processActionComment(ActionComment(PREVIEW_AI_DEFINITION, draftId = retainedDraft.id))
         if (greeting != null) return knowledgeBases.greet(viewableCase, greeting)
         logger.info("$LOG_PREFIX_FOR_START_CONVERSATION_RESPONSE '$response'")
         return dispatchModelResponse(response, opening = true)

@@ -5,6 +5,7 @@ import io.rippledown.chat.FunctionCallHandler
 import io.rippledown.chat.ReasonTransformer
 import io.rippledown.constants.chat.COMMIT_RULE
 import io.rippledown.constants.chat.EXEMPT_CORNERSTONE
+import io.rippledown.constants.chat.EXPLAIN_AI_EVALUATION
 import io.rippledown.toJsonString
 
 class ReasonTransformHandler(
@@ -28,6 +29,15 @@ class ReasonTransformHandler(
                 declineWithCornerstonesToReviewCorrection(cornerstoneStatus.summary())
             } else {
                 DECLINE_CORRECTION
+            }
+        }
+        // The reason-collection instructions tell the model to transform ANY text, so a request to
+        // explain an AI-derived attribute's result ("explain hasDiabetes") can be routed here instead
+        // of the explanation action. When the text names a known attribute, redirect the model.
+        val explained = explanationRequestAttribute(reason)
+        if (explained != null) {
+            ruleService.attributeForName(explained)?.let {
+                return explainRequestCorrection(it.name)
             }
         }
         val transformation = reasonTransformer.transform(reason)
@@ -88,5 +98,16 @@ class ReasonTransformHandler(
 
         fun isDecline(reason: String) =
             reason.trim().trimEnd('.', '!').lowercase() in DECLINES
+
+        private val EXPLANATION_REQUEST = Regex("""^explain\s+(.+)$""", RegexOption.IGNORE_CASE)
+
+        fun explanationRequestAttribute(reason: String) =
+            EXPLANATION_REQUEST.find(reason.trim().trimEnd('.', '!'))?.groupValues?.get(1)
+
+        fun explainRequestCorrection(attributeName: String) =
+            "The user's reply is a request to explain the AI-derived attribute \"$attributeName\", not a " +
+                    "reason. Do NOT transform it as a condition. Your VERY NEXT response MUST be a single " +
+                    "JSON object ${ActionComment(EXPLAIN_AI_EVALUATION, attributeName = attributeName).toJsonString()} " +
+                    "and nothing else - no prose, no apology."
     }
 }

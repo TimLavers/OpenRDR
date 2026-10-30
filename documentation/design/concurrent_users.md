@@ -99,9 +99,8 @@ Ktor runs each request as its own coroutine on a thread pool, so without the per
 the KB's shared object graph at the same instant. Case ingestion from the laboratory is the one
 writer that is always running: `processCase` creates attributes while a user reorders them, interprets the new case
 while a commit adds a tree node, and two lab posts with the same new attribute name both see `byName == null`. Reads
-are not pure either: `KBEndpoint.case(id)` calls `kb.interpret(case)`, which writes the interpretation into the
-stored `RDRCase`. A read/write lock would therefore protect nothing an exclusive lock does not, and every KB access
-is ms-scale, so one exclusive lock is the honest choice.
+are not pure either: engine interpretation can mutate an `RDRCase`. AI-aware endpoint reads use isolated interpretations,
+but still inspect shared rules and definitions under the lock. A read/write lock would therefore protect nothing an exclusive lock does not, and local inference work is normally short, so one exclusive lock is the honest choice.
 
 1. **Primitive.** A `ReentrantLock` per `KBSession`, exposed as `fun <T> locked(block: () -> T): T`. The engine is
    non-suspend by design (CPU-bound, in-memory), so a coroutine `Mutex` would fit nothing that calls it, and `Mutex`
@@ -109,20 +108,19 @@ is ms-scale, so one exclusive lock is the honest choice.
    time. Reentrancy is needed: `KBEndpoint.commitRuleSession` → `RuleSessionManager.commitRuleSession` →
    `kb.interpret`.
 2. **Applied at the entry of each surface.**
-    - REST and ingestion: every public method of `KBEndpoint` runs its body in `session.locked { }`. REST routes, the
-      lab's posts and the sample-KB builders all go through `KBEndpoint`, a thin adapter, so wrapping it changes no
-      engine code.
+    - REST and ingestion: `KBEndpoint` protects shared KB access with `session.locked { }`. AI-dependent operations
+      prepare under the lock and suspend outside it for evaluation-record/provider I/O before retrying.
     - Chat: the chat's rule actions drive `RuleSessionManager` directly as `RuleService`, not through `KBEndpoint`, so
-      `ChatManagerFactory` wraps the user's manager in `LockedRuleService`, which runs every call under the lock.
+      `ChatManagerFactory` wraps the user's manager in `LockedRuleService`, which protects shared state and prepares demanded AI evaluations outside the lock.
     - `deleteKB` takes the doomed KB's lock (inside `kbSetLock`) so an in-flight mutation finishes before the KB
       goes.
-3. **LLM calls run outside the lock.** One engine entry calls the LLM synchronously:
+3. **LLM calls run outside the lock.** Condition translation calls the LLM through
    `RuleSessionManager.conditionForExpression`
    via `ConditionGenerator.conditionFor`. Holding the KB lock across that call would make a lab post wait up to the
    LLM timeout, so the entry wrappers do *not* lock `conditionForExpression`; `RuleSessionManager` holds the lock
    itself only around what touches the KB (the attribute lookups the translator is handed, and the validation
-   afterwards). `KBSession` passes its lock to the managers it creates for this. `buildRule` uses the deterministic
-   `ConditionExpressionParser` and is locked like everything else. `KBEndpoint.caseReport` reads the viewable case
+   afterwards). `KBSession` passes its lock to the managers it creates for this. `buildRule` parses reasons with the deterministic
+   `ConditionExpressionParser`; AI-dependent interpretation still uses preparation outside the lock. `KBEndpoint.caseReport` reads the viewable case
    under the lock and generates the report outside it.
 4. **Pushes are enqueued inside, sent outside.** `RuleSessionManager` originally sent web-socket frames with
    `runBlocking` from inside commit and cornerstone paths, on the argument that a local, buffered socket makes the
@@ -154,7 +152,7 @@ of `kb` for no gain.
   routes pass `userId()`. No wire-format change beyond the identity header. Sample builders and tests pass a fixed
   user.
 - **Chat.** `ChatManagerFactory.create(userId, context)` builds `LockedRuleService(session,
-  session.ruleSessionManagerFor(userId))`.
+  session.ruleSessionManagerFor(userId), endpoint.coordinator)`.
 - **Lifecycle.** Instances are created on first use and never removed while the server runs; one with no session in
   progress is a few fields. `KBSession.usersEditing()` is the set of users whose instance has a session in progress.
   `KBSession.cancelRuleSessionOf(userId)` cancels that user's session, if any, and pushes `RULE_SESSION_COMPLETED`
@@ -188,7 +186,7 @@ Two more things another user's commit can invalidate are checked the same way, i
   conditions are tested against the freshly materialised case first and a failure is a stale refusal.
 
 All checks run inside `commitCurrentRuleSession`, under the lock, so nothing changes between check and
-`session.commit()`.
+the revalidated candidate session's commit.
 
 **Assign-by-definition sessions stage their definition.** Comment attributes are keyed by their text, so two users
 adding the same comment share one attribute and neither overwrites the other. A derived attribute is keyed by name,
@@ -205,7 +203,7 @@ same minutes, so the lost work is rare and small.
 
 Surfaces:
 
-- `StaleRuleSessionException(message)` in `common` (`io.rippledown.model`), with four messages: "The interpretation of
+- `StaleRuleSessionException(message)` in `common` (`io.rippledown.model`), with explanations including "The interpretation of
   <case> changed while you were building this rule. The rule session has been cancelled; please look at the case
   again." and the same for "The cornerstones changed …", "The definition of <attribute> changed …" and "A rule added
   while you were building this rule means yours would make a derived attribute depend on itself. …".
@@ -224,7 +222,7 @@ them. Deleting pulls a half-built rule's KB out from under its user; nothing els
 | Situation                                  | Outcome                                                                                                                                                                            |
 |--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | B deletes the KB while A is mid-rule       | refused: "<KB> is being edited by <A>."                                                                                                                                            |
-| B deletes the case A is building a rule on | allowed. A's session holds the case; her commit still adds a sound rule and keeps her case as a cornerstone. Refusing would need a per-case ownership table for a rare event       |
+| B deletes the case A is building a rule on | deletion is allowed, but A's commit is refused if the stored source case was removed or changed during review       |
 | Two users overwrite the KB description     | allowed, last write wins. A one-shot overwrite of prose, with no session behind it                                                                                                 |
 | B renames the KB while A is editing        | allowed; nothing in a session depends on the KB name                                                                                                                               |
 | A closes the KB in the chat                | A's own session is cancelled; nobody else is affected                                                                                                                              |
@@ -245,10 +243,8 @@ the chat is where refusals are read.
 
 The lock and the revalidation keep two users' edits *sound*; they do nothing to keep them *comprehensible*. In use,
 user A saw their case's interpretation change under them with no indication of what had happened or who had done it.
-An earlier version of this document declined a "who is editing" indicator because it would need pushes to stay
-honest and the delete refusal already names the other user; that reasoning was about cost, not value, and the
-confusion has now been observed, so the call is reversed. Everything below is a display or a chat reply; no new
-standing controls (see [chat_ui_guidelines.md](chat_ui_guidelines.md)).
+Presence, attributed change notices and history make those edits visible. They supplement the locking and
+revalidation rules; see [chat UI guidelines](chat_ui_guidelines.md).
 
 ### Presence: who is here
 
@@ -280,10 +276,10 @@ the old popup. The current user's name stays in the window title.
 
 ### The change log: who did what, when
 
-Every mutation of a KB's knowledge is appended, under the KB lock, to a persisted per-KB `ChangeRecord(id, userId,
+The supported edit operations append, under the KB lock, to a persisted per-KB `ChangeRecord(id, userId,
 timestamp, kind, summary, ruleIds, attributeIds)`: a rule session committed or undone, a derived definition edited, an
-attribute or condition renamed, an attribute moved, a case deleted, the description set. Exactly one record per
-successful mutation; none for a refusal or a no-op (deleting a case that is not there is a no-op today).
+attribute or condition renamed, an attribute moved, a case deleted, the description set. These operations record successful changes; refusals and deleting a nonexistent processed case record nothing.
+Case ingestion, list copying and KB-set operations are not recorded by this log.
 
 The `summary` is one line written for history, by a formatter of its own — *Added comment "Go to the beach." when Sun
 is hot* — because `Rule.actionSummary` is laid out over several lines for the panel and omits the conditions, which
@@ -367,7 +363,7 @@ Two read-only actions: *"What has changed recently?"* / *"Who changed BMI?"* →
 attribute?)`, the log newest first with user and time, filtered by attribute id when one is named; *"Who else is
 working on this?"* → `ListUsersPresent`, the presence set with those in `usersEditing()` marked as mid-rule. Both are
 `KbManagementAction`s served through `KnowledgeBaseService` (`changesContext = false`): they are meaningful with a KB
-open and no case selected, and the case-less `ChatManager` has no `RuleService`. `ListCapabilities` lists them; the
+open and no case selected. The KB-only `ChatManager` also has a `RuleService` for AI definition drafts. `ListCapabilities` lists them; the
 capability card is built there, not from the instruction file.
 
 ### Undo across users
@@ -445,9 +441,17 @@ reselecting it.
   model updated case and change context on its next turn, without restarting the conversation, is a separate piece of
   work.
 - One persistence transaction for a mutation and its change record (see the change log's guarantee).
-- Coalescing a burst of `KB_CHANGED` pushes into one refresh. A case fetch is milliseconds; add it if a burst is ever
-  observed.
+- Coalescing a burst of `KB_CHANGED` pushes into one refresh. Cached case fetches are usually cheap, but an AI-dependent refresh can require provider work; measure
+  before adding coalescing.
 - A stateless, multi-instance server with the database as coordination point. It buys horizontal scalability nothing
   demands and forfeits the "one instance per object within a KB" invariant (see [architecture.md](architecture.md))
   that the rule engine relies on.
 - Merging two users' concurrent edits to the *same* rule session — a session belongs to one user.
+
+## AI work in flight
+
+The AI coordinator releases the KB lock before record I/O or provider work. Evaluation results are shared by
+key, while acceptance and rule-session mutations remain per user. Session changes and closing a KB invalidate
+waiting operation guards. Candidate cases and cornerstones use fresh interpretations. Failed condition changes
+and commit requests preserve the prior review; all-in-one rule creation uses a temporary session.
+Provider work has an operation deadline, and cancelling one waiter does not cancel shared work for other users.

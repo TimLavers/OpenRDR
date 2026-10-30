@@ -4,10 +4,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.rippledown.kb.KB
 import io.rippledown.kb.KBSession
 import io.rippledown.kb.RuleSessionManager
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UpdateCornerstoneRequest
+import kotlinx.coroutines.runBlocking
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -21,6 +23,9 @@ internal class KBEndpointDelegationTest {
     fun setup() {
         rsm = mockk<RuleSessionManager>()
         session = mockk<KBSession>()
+        val kb = mockk<KB>()
+        every { kb.aiEvaluationStore } returns mockk()
+        every { session.kb } returns kb
         every { session.ruleSessionManagerFor(TEST_USER) } returns rsm
         every { session.locked(any<() -> Any?>()) } answers { firstArg<() -> Any?>()() }
         endpoint = KBEndpoint(session)
@@ -44,7 +49,7 @@ internal class KBEndpointDelegationTest {
         every { rsm.updateCornerstone(request) } returns status
 
         // When
-        val result = endpoint.updateCornerstone(request, TEST_USER)
+        val result = runBlocking { endpoint.updateCornerstone(request, TEST_USER) }
 
         // Then
         result shouldBe status
@@ -58,7 +63,7 @@ internal class KBEndpointDelegationTest {
         every { rsm.exemptCornerstone(3) } returns status
 
         // When
-        val result = endpoint.exemptCornerstone(3, TEST_USER)
+        val result = runBlocking { endpoint.exemptCornerstone(3, TEST_USER) }
 
         // Then
         result shouldBe status

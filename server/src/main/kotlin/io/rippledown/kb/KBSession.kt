@@ -59,6 +59,7 @@ class KBSession(
      */
     fun cancelRuleSessionOf(userId: UserId) = locked {
         val ruleSessionManager = ruleSessionManagers[userId] ?: return@locked
+        ruleSessionManager.cancelAiDefinitionDraft()
         if (!ruleSessionManager.isRuleSessionActive()) return@locked
         ruleSessionManager.cancelRuleSession()
         webSocketManager?.sendRuleSessionCompleted(userId)

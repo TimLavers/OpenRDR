@@ -22,22 +22,6 @@ class PostgresPersistenceProviderTest {
     }
 
     @Test
-    fun cleanupAllDBs() {
-        val allDBs = allDatabasesInSystem()
-        println("allDBs BEFORE = ${allDBs}")
-        allDBs.forEach {
-            println("cleanup of :$it")
-            try {
-                dropDB(it)
-            } catch (e: Exception) {
-                println("Could not delete: $it")
-            }
-        }
-        val allDBsAfter = allDatabasesInSystem()
-        println("allDBs AFTER = $allDBsAfter")
-    }
-
-    @Test
     fun allDBS() {
         val allDBsAtStart = allDatabasesInSystem()
         allDBsAtStart shouldNotContain glucoseInfo.id

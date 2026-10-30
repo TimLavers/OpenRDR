@@ -5,8 +5,13 @@ import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.model.rule.AssignValue
+import io.rippledown.model.rule.AiBoolean
 import io.rippledown.model.rule.DefinitionResolver
 import io.rippledown.model.rule.RuleSessionRecorder
+import io.rippledown.model.rule.evaluation.EvaluationContext
+import io.rippledown.model.rule.evaluation.PreparedEvaluations
+import io.rippledown.model.rule.evaluation.DefaultValueExpressionEvaluator
+import io.rippledown.model.rule.evaluation.EvaluationOutcome
 import io.rippledown.model.rule.resolvedFor
 import io.rippledown.persistence.PersistentKB
 
@@ -19,6 +24,16 @@ class KB(private val persistentKB: PersistentKB) {
     val metaInfo = MetaInfo(persistentKB.metaDataStore())
     val attributeManager = AttributeManager(persistentKB.attributeStore())
     val derivedDefinitionManager = DerivedDefinitionManager(persistentKB.derivedDefinitionStore(), attributeManager)
+    val aiEvaluationStore = persistentKB.aiEvaluationStore()
+
+    /**
+     * The classifications obtained so far, read by every interpretation under
+     * the lock and added to by the coordinator outside it. See
+     * documentation/design/ai_derived_attributes.md.
+     */
+    val preparedEvaluations = PreparedEvaluations()
+
+    fun evaluationContext(): EvaluationContext = preparedEvaluations.context()
 
     /**
      * Resolves a derived attribute to its stored definition, so that
@@ -139,9 +154,15 @@ class KB(private val persistentKB: PersistentKB) {
 
     fun getCase(id: Long): RDRCase? = caseManager.getCase(id)
 
+    /**
+     * Stores the primary data of an externally supplied case without
+     * interpreting it, so that the data is retained even if the
+     * interpretation cannot be completed.
+     */
+    fun storeCase(externalCase: ExternalCase): RDRCase = caseManager.add(createRDRCase(externalCase))
+
     fun processCase(externalCase: ExternalCase): RDRCase {
-        val case = createRDRCase(externalCase)
-        val stored = caseManager.add(case)
+        val stored = storeCase(externalCase)
         interpret(stored)
         // Resolve ByDefinition assignments to their stored definitions so that
         // callers reading the interpretation directly (e.g. the interpreter API
@@ -181,17 +202,37 @@ class KB(private val persistentKB: PersistentKB) {
         }
     }
 
-    fun interpret(case: RDRCase) = ruleTree.apply(case, definitionResolver)
+    /**
+     * Interprets the case with the prepared classifications. Throws
+     * [io.rippledown.model.rule.IncompleteInferenceException] if one is
+     * missing; the coordinator obtains it outside the lock and calls again.
+     */
+    fun interpret(case: RDRCase) = ruleTree.apply(case, definitionResolver, evaluationContext())
 
-    fun viewableCase(case: RDRCase): ViewableCase {
-        val materialised = ruleTree.materialise(case, definitionResolver)
+    fun materialise(case: RDRCase): RDRCase = ruleTree.materialise(case, definitionResolver, evaluationContext())
+
+    fun viewableCase(case: RDRCase): ViewableCase = viewableCaseOf(materialise(case))
+
+    /**
+     * The view of a case whose derived values and interpretation have
+     * already been materialised.
+     */
+    fun viewableCaseOf(materialised: RDRCase): ViewableCase {
         // For display, a ByDefinition assignment is shown as the attribute's
         // stored definition text, so the panel and tooltip show the formula
         // rather than the sentinel. Inference structures are untouched.
         val resolvedInterpretation = materialised.interpretation.withResolvedDefinitions(definitionResolver)
         val viewableInterpretation =
             interpretationViewManager.viewableInterpretation(resolvedInterpretation, materialised)
-        return caseViewManager.getViewableCase(materialised, viewableInterpretation)
+        // Read only prepared results: rendering never initiates classification or store I/O.
+        val evaluator = DefaultValueExpressionEvaluator()
+        val context = evaluationContext()
+        val provenance = resolvedInterpretation.assignments().mapNotNull { assignment ->
+            val definition = assignment.expression as? AiBoolean ?: return@mapNotNull null
+            val outcome = evaluator.evaluate(definition, materialised, context) as? EvaluationOutcome.Value
+            outcome?.provenance?.let { assignment.attribute.id to it }
+        }.toMap()
+        return caseViewManager.getViewableCase(materialised, viewableInterpretation).copy(aiProvenance = provenance)
     }
 
     override fun equals(other: Any?): Boolean {

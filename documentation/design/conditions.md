@@ -61,9 +61,9 @@ invariant holds and a rename is seen everywhere. The user's phrase for a conditi
 
 ## Real numbers
 
-Values are `Double`. `BigDecimal` would be preferable for exactness but is not available to `common`, which must stay
-pure Kotlin so that the same condition code runs in the client. The domain tolerates this: pathology measurements are
-imprecise. What must not happen is a pathologist being confused by floating-point noise, e.g. a result of `0.95` against
+Numeric values use `Double`. The shared module currently targets the JVM, where `BigDecimal` is available;
+using it would require changing the numeric model and predicates. The current design uses approximate comparisons
+because pathology measurements have limited precision. What must not happen is a pathologist being confused by floating-point noise, e.g. a result of `0.95` against
 a limit computed as 95 % of `1.0`. Numeric predicates therefore treat values that are extremely close as equal; a user
 is far less likely to notice `0.9499999` being treated as `0.95` than to be baffled by a condition that is false on a
 value sitting exactly on its limit.

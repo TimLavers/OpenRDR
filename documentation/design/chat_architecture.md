@@ -19,7 +19,7 @@ protected by semantics, not by prompt discipline.
 
 ## Two conversations
 
-Both are server-side Gemini chats; the client never talks to a model.
+Both are server-side Gemini chats. Desktop voice transcription is separate; see [voice input](voice_input.md).
 
 | Conversation   | Owner                                                   | Job                                                                                                                          |
 |----------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
@@ -57,8 +57,8 @@ conversation is starting waits on a mutex in the coordinator.
 ### Protocol
 
 The system prompt is assembled from numbered Markdown sections under `server/src/main/resources/chat/instructions/`,
-with placeholders for the KB's names, the case's attribute names and its current comments. Attribute *values* are not
-sent: the operator model never needs case data, and the translator has what it needs.
+with placeholders for the KB's names, the case's attribute names and its current comments. Raw attribute values are not injected into the opening prompt. Rendered comments and later action results can
+contain values or AI evidence; the separate AI evaluator receives the selected primary source text.
 
 The model communicates three ways:
 
@@ -85,7 +85,7 @@ assembled (`ChatResponseEnricher`), because the model may fetch before it select
 | Delegate                    | State                                                                                                                     | Owns                                                                                                                     |
 |-----------------------------|---------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `KnowledgeBaseConversation` | `Idle`, `Greeting`, `Creating(stage, question, actionForName)`, `Confirming(offer)`                                       | KB greeting, the naming workflow for a new KB or demonstration copy, one-turn confirmations.                             |
-| `RuleConversation`          | `Ready`, `OfferedAssignment(action)`, `AwaitingReasonReply`, `AwaitingCornerstoneAllowance`; pending undo-refusal context | The "more reasons?" question, "did you mean" offers, cornerstone allow replies, and undo refusal on the next model turn. |
+| `RuleConversation`          | `Ready`, `OfferedAssignment`, `OfferedAiDefinition`, `OfferedSourceCorrection`, `AwaitingReasonReply`, `AwaitingCornerstoneAllowance`; pending undo-refusal context | The "more reasons?" question, "did you mean" offers, cornerstone allow replies, and undo refusal on the next model turn. |
 | `ChatResponseEnricher`      | one flag                                                                                                                  | Suggestion precedence and filtering; the once-per-conversation comment-variable tip.                                     |
 
 These are guards on specific transitions, not a rule-building state machine: `RuleService` remains the single authority
@@ -109,7 +109,8 @@ it Thyroid", "no", "actually, open Zoo" — the reply, the question and the stag
 (`CONFIRM`, `DENY`, `CONFIRM_WITH_NAME`, `UNCLEAR`, `OTHER_REQUEST`) and any name verbatim; the server chooses the
 transition. This handles any language without an acceptance-word list per language.
 
-Dispatch order each turn: explicit cornerstone allowance, KB workflow reply, accepted assignment offer, then the model.
+Dispatch order is explicit cornerstone allowance, KB workflow reply, assignment/AI-draft or source-correction
+reply, then the model. Offers are tied to server-held context.
 
 ## The rule-building workflow
 
@@ -169,3 +170,12 @@ The chat panel is a message list (model left, user right) with a text field, a m
 ([voice_input.md](voice_input.md)) and, when the server attaches them, suggestion chips, a clickable KB list or a
 capability card ([chat_ui_guidelines.md](chat_ui_guidelines.md)). The cornerstone under review is shown in the case
 area, not in the transcript: a pathologist should compare data in a table, not read a case out of prose.
+
+## AI attribute authoring
+
+Structured AI actions propose, preview, accept, edit and cancel server-owned drafts; ordinary formula parsing
+is unchanged. Bare acceptance is tied to the displayed draft ID. Source correction is a separate confirmation.
+A KB-only conversation can retain a draft until a case is selected; its first preview binds that case.
+`LockedRuleService` prepares demanded evaluations outside the lock and checks an operation guard on retries.
+`RetryAiEvaluation` also supports committed definitions. `ExplainAiEvaluation` uses saved evaluations only.
+An incomplete case can open chat with primary data and its diagnostic so retry remains available.

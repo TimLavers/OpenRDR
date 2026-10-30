@@ -1,6 +1,6 @@
 # Knowledge bases
 
-A knowledge base (KB) holds attributes, conditions, rules, definitions and cases. An OpenRDR server manages many; the
+A knowledge base (KB) holds attributes, conditions, rules, definitions and cases. An OpenRDR server manages many;
 each user has at most one open at a time, shared by that user's windows, and all management is done through the chat.
 
 ## Identity
@@ -58,13 +58,13 @@ Four demonstrations ship with the application, so that a new user can practise r
 |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
 | Copy on open    | Opening a demonstration asks for a name and gives the user their own copy under it. The copy is an ordinary KB; the demonstration never changes. | `kb/Knowledge Base Management.feature` |
 | Cannot delete   | A demonstration cannot be deleted; the user's copies can.                                                                                        | same                                   |
-| Cases and rules | Each demonstration contains its cases and the rules that interpret them (`samples/*.feature` build them and check the interpretations).          | `samples/*.feature`                    |
+| Cases and rules | The TSH, Contact Lens and Zoo demonstrations contain cases and rules; Pathology starts with cases only (`samples/*.feature` build them and check the interpretations).          | `samples/*.feature`                    |
 
 ## Import and export
 
 | Requirement  | Description                                                                                                                                                             | Validation                             |
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
-| Export       | "Export this KB" opens the operating system's Save dialog with a suggested file name; the open KB is written as a ZIP including its cases, cornerstones and favourites. | `kb/Knowledge Base Management.feature` |
+| Export       | "Export this KB" opens the operating system's Save dialog with a suggested file name; the open KB is written as a ZIP including cases, cornerstones, user-defined lists, definitions, change history and saved AI evaluations. | `kb/Knowledge Base Management.feature` |
 | Import       | "Import a KB" opens the Open dialog filtered to ZIP; the KB is imported with a fresh id and opened. No KB needs to be open.                                             | same                                   |
 | Name in use  | An archive whose KB name is in use is refused before anything is stored; restoring a backup means deleting or renaming the stored one first.                            | same                                   |
 | Cancellation | Cancelling either dialog changes nothing and says so in the chat.                                                                                                       | same                                   |
@@ -74,6 +74,6 @@ Four demonstrations ship with the application, so that a new user can practise r
 
 | Requirement    | Description                                                                                                             | Validation                                |
 |----------------|-------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| REST interface | An external system posts a case to the open KB and receives its interpretation; the case appears in the processed list. | `interpreter/Interpreter Service.feature` |
+| REST interface | An external system posts to the KB identified by kbId and receives its interpretation; primary data is retained if AI evaluation fails, with a typed incomplete response. | `interpreter/Interpreter Service.feature` |
 
 Design: [design/kb_management.md](../design/kb_management.md).

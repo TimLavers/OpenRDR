@@ -20,6 +20,14 @@ class PostgresDerivedDefinitionStoreTest : PostgresStoreTest() {
         )
     )
 
+    private val hasDiabetes = AiBoolean(
+        sourceAttribute = Attribute(3, "clinical_notes"),
+        instructions = "True if the notes affirm a personal history of diabetes.",
+        examples = listOf(AiBooleanExample("FH diab", false, "Family history only"), AiBooleanExample("T2 Diab", true)),
+        revision = "rev-1",
+        evaluationProfile = AiEvaluationProfile("gemini", "gemini-2.5-flash", 0.0, 1, 1)
+    )
+
     private lateinit var store: DerivedDefinitionStore
 
     @BeforeTest
@@ -75,6 +83,17 @@ class PostgresDerivedDefinitionStoreTest : PostgresStoreTest() {
         // Rebuild and check.
         reload()
         store.definitionFor(10) shouldBe corrected
+    }
+
+    @Test
+    fun `an AI Boolean definition survives a reload`() {
+        // When an AI Boolean definition is stored
+        store.store(12, hasDiabetes)
+
+        // Then it is retrieved unchanged, including after the store is rebuilt from the database
+        store.definitionFor(12) shouldBe hasDiabetes
+        reload()
+        store.definitionFor(12) shouldBe hasDiabetes
     }
 
     @Test

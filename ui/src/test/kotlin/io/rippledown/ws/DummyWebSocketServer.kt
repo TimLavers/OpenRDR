@@ -55,7 +55,6 @@ fun startServerAndSendRulesSessionCompleted(): TestServerInfo {
         }
     }.start(wait = false)
     val actualPort = runBlocking { server.engine.resolvedConnectors().first().port }
-    println("Server with websocket started on port $actualPort")
     return TestServerInfo(server, actualPort)
 }
 

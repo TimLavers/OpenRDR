@@ -1,6 +1,7 @@
 package io.rippledown.kb.export
 
 import io.rippledown.kb.KB
+import io.rippledown.model.rule.evaluation.AiEvaluationRecord
 import java.io.File
 
 open class KBExportImport(val destination: File) {
@@ -13,13 +14,16 @@ open class KBExportImport(val destination: File) {
     val userDefinedCasesDirectory = File(destination, "UserDefinedCases")
     val conclusionsDirectory = File(destination, "Conclusions")
     val definitionsDirectory = File(destination, "Definitions")
+    val evaluationsDirectory = File(destination, "AiEvaluations")
     val conditionsDirectory = File(destination, "Conditions")
     val rulesDirectory = File(destination, "Rules")
     val ruleSessionsDirectory = File(destination, "RuleSessions")
     val changeLogDirectory = File(destination, "ChangeLog")
 }
 
-class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
+class KBExporter(destination: File, val kb: KB,
+    private val evaluations: Collection<AiEvaluationRecord>? = null
+) : KBExportImport(destination) {
     init {
         checkDirectoryIsSuitableForExport(destination, "KB")
     }
@@ -41,6 +45,11 @@ class KBExporter(destination: File, val kb: KB) : KBExportImport(destination) {
         // Definitions of the derived and comment attributes.
         definitionsDirectory.mkdirs()
         IdentifiedObjectExporter(definitionsDirectory, DefinitionSource(kb.derivedDefinitionManager)).export()
+
+        // The endpoint supplies an empty collection here, then exports the append-only
+        // evaluation store after releasing the KB lock and freezing the remaining files.
+        evaluationsDirectory.mkdirs()
+        AiEvaluationArchive.export(evaluationsDirectory, evaluations ?: kb.aiEvaluationStore.all())
 
         // Conditions.
         conditionsDirectory.mkdirs()

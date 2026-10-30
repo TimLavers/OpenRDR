@@ -1,58 +1,68 @@
 # Backlog
 
-Open work only. Items that are done are removed, not ticked; the requirements docs record what exists.
+Open work only. Implemented behaviour belongs in requirements/design; completed plans and transient run notes
+are retained in Git history.
 
-**External attributes**
+## Attributes and case lists
 
-- Let the user create an external attribute and set its value, to build a case scenario to build rules on.
-- Let the user rename an external attribute (needs an alias table; see `design/rule_tree_and_inference.md`).
-- Show the external name → name mapping and the list of all external attributes.
+- Create external attributes and edit case values through chat for hypothetical scenarios.
+- Rename external attributes with a persisted alias mapping; show that mapping.
+- Delete derived attributes and list all derived attributes independently of the selected case.
+- Show the impact of a global definition edit, such as affected cornerstones.
+- Make significant figures configurable and support derived values for earlier episodes.
+- Edit or rename an existing user-list case, and rename a list. See
+  [case-list requirements](../requirements/user_defined_case_lists.md).
 
-**Derived attributes**
+- Fix cancellation of an ordinary literal/formula assignment leaving an unused derived attribute whose name
+  is then refused by chat. AI assignment names already remain provisional until commit.
 
-- Delete a derived attribute.
-- List all derived attributes, whether or not the case has them.
-- Impact summary (e.g. count of affected cornerstones) when a definition is edited globally.
-- Configurable significant figures, instead of the hard-coded 4.
-- Derived values for episodes other than the latest.
+## Attribute ordering
 
-**Comments**
+- Persist external-attribute reorder operations. `OrderedEntityManager` currently loads stored order but its
+  mutations only update memory; export captures the current order.
+- Add persisted user-controlled ordering to comments and derived-value panels. Comments currently sort by
+  attribute ID and derived values by name.
+- Reuse the shared attribute order where appropriate, with bulk upsert persistence, stable IDs for draggable rows,
+  and restart/export round-trip coverage. Pending rows and cornerstone views must not be reorderable.
 
-- List all comments.
-- Persisted, user-controlled ordering of comments and derived values: `attribute_ordering_plan.md`.
-- Show ancestor rules differently from the leaf rule in the conditions tooltip.
-- Grouping comments (e.g. GP vs specialist) so that one rule can remove a whole group. Motivating example: many
-  prescriptive comments drive a detailed GP report, but a referring specialist should get a single "Specialist
-  management noted" comment; today that is one removal rule per comment. Options: a group tag on `COMMENT` attributes
-  with a bulk-remove action, or a rule-given "report scope" honoured by the report generator.
+## AI-derived attributes
 
-**Rule building**
+The [core feature is implemented](../design/ai_derived_attributes.md). Outstanding review and coverage items
+carried forward from its implementation plan are:
 
-- Help with building a rule, and help on a specific topic generally (system prompt vs a help document behind a tool).
-- Cuke for cancelling when no rule is in progress.
-- Inline "Allow" / "Don't allow" for a cornerstone (passes the test in `design/chat_ui_guidelines.md`).
-- Restriction clauses and time-between-episodes conditions (`design/conditions.md`).
+- Audit mutation persistence failures and large cornerstone reviews; expose progress for lengthy evaluations.
+- Extend live authoring coverage for ambiguous/incomplete requests and long cornerstone conversations.
+- Review disagreements from the opt-in synthetic model-quality evaluation before adopting a profile. A mocked
+  classifier or binding-only dry run cannot establish model accuracy.
+- Record current desktop, Postgres and live-model validation when scheduled; old plan/run notes are not evidence
+  that the current revision has passed those checks.
+
+## Comments and rule building
+
+- List all comments, enforce the desired nonblank/maximum-length text constraint, and distinguish ancestor rules
+  from the leaf rule in condition tooltips.
+- Group comments (for example GP versus specialist advice), allowing a rule to suppress a whole group.
+- Help for rule building and individual topics.
+- Acceptance coverage for cancelling when no rule is active.
+- Inline cornerstone Allow/Don't allow choices, within [UI guidelines](../design/chat_ui_guidelines.md).
+- Restriction clauses and time-between-episodes conditions; see [conditions](../design/conditions.md).
 - Consider whether each rule should start a new conversation.
 
-**Report**
+## Reports, chat and awareness
 
-- Send the comments' names as well as their texts to the model.
-- Show or hide the report panel from the chat.
+- Send comment names as well as texts to report generation; let users choose which attributes are sent.
+- Show/hide the Report panel through chat.
+- Revisit report-cache invalidation when primary data changes without a comment-text change.
+- Stream model replies and support live voice transcription.
+- Remember chat-panel width and improve its focus indication.
+- Supply updated case/change context on the next model turn after a remote edit without restarting the conversation.
+- Make mutation and change-log persistence atomic; currently a logging failure leaves the mutation applied.
+- Coalesce burst change notifications if repeated case refresh becomes costly.
+- Convert remaining chat-based acceptance setup to deterministic backdoor setup where setup is not the behaviour
+  being tested; retain real chat for the action under test.
 
-**Chat panel and voice**
+## Infrastructure
 
-- Stream the model's reply.
-- Live transcription while speaking (Speech-to-Text with phrase hints; `design/voice_input.md`).
-- Remember the user-set width of the chat panel.
-- Flash the chat panel when it receives focus.
-
-**Infrastructure**
-
-- Run all tests in GitHub Actions on each push.
+- Run the appropriate test suites in CI on each push, accounting for desktop, database and model dependencies.
 - Convert to multiplatform.
-- Ability to download a client application from the server
-
-**Bugs**
-
-- Start to build a rule assigning derived attribute BMI, then cancel: the next attempt is refused with "BMI is already
-  in use". The cancelled session should not leave the attribute behind.
+- Allow downloading a client application from the server.

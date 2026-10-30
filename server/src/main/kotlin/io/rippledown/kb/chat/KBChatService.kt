@@ -138,6 +138,7 @@ object KBChatService {
         "14_general-guidelines.md",
         "16_listing_capabilities.md",
         "20_knowledge_base_management.md",
+        "21_ai_derived_attributes.md",
         "21_awareness.md",
     )
 
@@ -162,6 +163,7 @@ object KBChatService {
         "18_editing_derived_definition.md",
         "19_naming_and_renaming.md",
         "20_knowledge_base_management.md",
+        "21_ai_derived_attributes.md",
         "21_awareness.md",
         "25_user_defined_case_lists.md",
     )
@@ -209,6 +211,13 @@ object KBChatService {
         "REMOVE_DERIVED_VALUE" to REMOVE_DERIVED_VALUE,
         "REPLACE_DERIVED_VALUE" to REPLACE_DERIVED_VALUE,
         "EDIT_DERIVED_DEFINITION" to EDIT_DERIVED_DEFINITION,
+        "PROPOSE_AI_DERIVED_ATTRIBUTE" to PROPOSE_AI_DERIVED_ATTRIBUTE,
+        "EDIT_AI_DERIVED_DEFINITION" to EDIT_AI_DERIVED_DEFINITION,
+        "ACCEPT_AI_DERIVED_ATTRIBUTE" to ACCEPT_AI_DERIVED_ATTRIBUTE,
+        "PREVIEW_AI_DEFINITION" to PREVIEW_AI_DEFINITION,
+        "CANCEL_AI_DEFINITION_DRAFT" to CANCEL_AI_DEFINITION_DRAFT,
+        "RETRY_AI_EVALUATION" to RETRY_AI_EVALUATION,
+        "EXPLAIN_AI_EVALUATION" to EXPLAIN_AI_EVALUATION,
         "SHOW_CORNERSTONES" to SHOW_CORNERSTONES,
         "REMOVE" to REMOVE,
         "REPLACE" to REPLACE,

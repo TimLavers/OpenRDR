@@ -4,21 +4,28 @@ import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.kotest.matchers.shouldBe
+import org.awaitility.Awaitility.await
+import java.time.Duration.ofSeconds
 
 class DerivedValueStepDefs(val chatDefs: ChatDefs) {
 
-    private var lastDerivedValueName: String? = null
+    private val savedAiProvenance = mutableMapOf<Pair<String, String>, io.rippledown.model.caseview.AiProvenance>()
 
-    @When("I request that the derived attribute {string} be added with value {string} for reason {string}")
-    fun requestDerivedValueAssignment(attributeName: String, value: String, reason: String) {
-        with(chatDefs) {
-            enterChatTextAndSend("Assign value \"$value\" to the derived attribute \"$attributeName\"")
-            waitForBotSuggestions()
-            enterChatTextAndSend(reason)
-            decline() //no more reasons
-            waitForBotToSayDone()
-        }
+    @When("I remember the saved AI provenance for {string}")
+    fun rememberAiProvenance(attributeName: String) {
+        val name = currentCaseName()
+        val row = restClient().getProcessedCaseInChatContext(name).derivedValues().single { it.name == attributeName }
+        savedAiProvenance[name to attributeName] = requireNotNull(row.provenance)
     }
+
+    @Then("the saved AI provenance for {string} is unchanged")
+    fun requireSameAiProvenance(attributeName: String) {
+        val name = currentCaseName()
+        val row = restClient().getProcessedCaseInChatContext(name).derivedValues().single { it.name == attributeName }
+        row.provenance shouldBe requireNotNull(savedAiProvenance[name to attributeName])
+    }
+
+    private var lastDerivedValueName: String? = null
 
     @When("I request that the definition of the derived attribute {string} be changed to {string}")
     fun requestDefinitionEdit(attributeName: String, expression: String) {
@@ -85,5 +92,8 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
         interpretationViewPO().waitForDerivedValuesEmptyState()
     }
 
-    private fun currentCaseName(): String = caseViewPO().nameShown() ?: error("No case name is currently shown")
+    private fun currentCaseName(): String = requireNotNull(
+        await().alias("displayed case name").atMost(ofSeconds(10))
+            .until({ caseViewPO().nameShown() }, { it != null })
+    )
 }

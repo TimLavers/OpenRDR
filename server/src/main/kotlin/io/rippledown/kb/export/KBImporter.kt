@@ -2,6 +2,8 @@ package io.rippledown.kb.export
 
 import io.rippledown.kb.KB
 import io.rippledown.kb.requireUnreservedKbName
+import io.rippledown.kb.ai.validateAiBoolean
+import io.rippledown.model.rule.AiBoolean
 import io.rippledown.persistence.PersistenceProvider
 import java.io.File
 
@@ -24,6 +26,19 @@ class KBImporter(
             "This knowledge base was exported with conclusions, which are no longer supported."
         }
 
+        // Validate AI semantics and archive records before any persistent state is created.
+        val idToAttribute = AttributesImporter(attributesFile).import()
+        val definitions = if (definitionsDirectory.isDirectory)
+            DirectoryImporter(definitionsDirectory, DefinitionExporter(), true).import() else emptySet()
+        definitions.forEach { definition ->
+            require(idToAttribute.containsKey(definition.attributeId)) { "A definition refers to a missing target attribute." }
+            (definition.expression as? AiBoolean)?.let { validateAiBoolean(it, idToAttribute.values.toSet()) }
+        }
+        definitions.groupBy { it.attributeId }.forEach { (_, definitionsForAttribute) ->
+            require(definitionsForAttribute.distinct().size == 1) { "Conflicting definitions for one attribute." }
+        }
+        val evaluations = AiEvaluationArchive.read(evaluationsDirectory, idToAttribute.values.toSet())
+
         // Using the name and id, create a persistent KB.
         val persistentKB = persistenceProvider.createKBPersistence(kbInfo)
 
@@ -32,7 +47,6 @@ class KBImporter(
         persistentKB.metaDataStore().load(items)
 
         // Extract the attributes and load them into the persistent attribute store.
-        val idToAttribute = AttributesImporter(attributesFile).import()
         val attributeStore = persistentKB.attributeStore()
         attributeStore.load(idToAttribute.values.toSet())
 
@@ -45,10 +59,8 @@ class KBImporter(
         // Extract the definitions of the derived and comment attributes and
         // store them. An export made before definitions were exported has no
         // such directory.
-        if (definitionsDirectory.isDirectory) {
-            val definitions = DirectoryImporter(definitionsDirectory, DefinitionExporter(), true).import()
-            persistentKB.derivedDefinitionStore().load(definitions.associate { it.attributeId to it.expression })
-        }
+        persistentKB.derivedDefinitionStore().load(definitions.associate { it.attributeId to it.expression })
+        evaluations.forEach { persistentKB.aiEvaluationStore().insertIfAbsent(it) }
 
         // Extract the conditions and store them.
         val conditions = DirectoryImporter(conditionsDirectory, ConditionExporter(), true).import()

@@ -1,4 +1,4 @@
-﻿package io.rippledown.server
+package io.rippledown.server
 
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -58,4 +58,3 @@ class PresenceOrderingTest {
             .users.map { it.userId } shouldBe if (joining) listOf("Alice", "Bob") else listOf("Alice")
     }
 }
-

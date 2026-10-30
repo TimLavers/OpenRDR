@@ -1,11 +1,18 @@
 package io.rippledown.server
 
 import io.rippledown.kb.*
+import io.rippledown.kb.ai.AiBooleanClassifier
+import io.rippledown.kb.ai.AiEvaluationService
+import io.rippledown.kb.ai.AiInferenceCoordinator
+import io.rippledown.kb.ai.GeminiAiBooleanClassifier
+import io.rippledown.kb.ai.InterpretationIncompleteException
+import io.rippledown.kb.export.AiEvaluationArchive
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.kb.report.ReportService
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
+import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionList
@@ -20,10 +27,19 @@ import kotlin.io.path.createTempDirectory
 
 class KBEndpoint(
     val session: KBSession,
-    private val reportService: ReportService = ReportService()
+    private val reportService: ReportService = ReportService(),
+    classifier: AiBooleanClassifier = GeminiAiBooleanClassifier()
 ) {
     val kb get() = session.kb
     val logger = lazyLogger
+
+    /**
+     * Obtains AI evaluations outside the KB lock for every operation that
+     * interprets a case; see [AiInferenceCoordinator].
+     */
+    val coordinator by lazy {
+        AiInferenceCoordinator(session, AiEvaluationService(kb.aiEvaluationStore, classifier))
+    }
 
     private val reportCache = mutableMapOf<Long, Pair<Int, CaseReport>>() // caseId -> (commentsHash, report)
 
@@ -48,27 +64,36 @@ class KBEndpoint(
         ruleSessionManager(userId).undoLastRuleSession()
     }
 
-    fun exportKBToZip(): File = session.locked {
-        val tempDir: File = createTempDirectory().toFile()
-        KBExporter(tempDir, kb).export()
+    fun exportKBToZip(): File {
+        val tempDir = createTempDirectory().toFile()
+        val exporter = KBExporter(tempDir, kb, emptyList())
+        val (info, sourceIds) = session.locked {
+            exporter.export()
+            kb.kbInfo to kb.attributeManager.all()
+                .filter { it.kind == AttributeKind.EXTERNAL }.map { it.id }.toSet()
+        }
+        // Evaluations are append-only and persisted before a rule can use them.
+        // Reading them after the KB snapshot includes every result that snapshot used,
+        // without holding the KB lock during the store read. A later preview may use a
+        // newly created source, which must not introduce dangling references in the archive.
+        val evaluations = kb.aiEvaluationStore.all().filter { it.definition.sourceAttribute.id in sourceIds }
+        AiEvaluationArchive.export(exporter.evaluationsDirectory, evaluations)
         val bytes = Zipper(tempDir).zip()
-        val file = File(tempDir, "${kb.kbInfo}.zip")
-        file.writeBytes(bytes)
-        file
+        return File(tempDir, "$info.zip").also { it.writeBytes(bytes) }
     }
 
     fun cancelRuleSession(userId: UserId) = session.locked { ruleSessionManager(userId).cancelRuleSession() }
 
-    fun cornerstoneStatus(userId: UserId) = session.locked {
-        ruleSessionManager(userId).takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
+    suspend fun cornerstoneStatus(userId: UserId) = preparedSession(userId, null) { manager ->
+        manager.takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
     }
 
     fun addConditionToCurrentRuleBuildingSession(condition: Condition, userId: UserId) = session.locked {
         ruleSessionManager(userId).addConditionToCurrentRuleSession(condition)
     }
 
-    fun commitCurrentRuleSession(userId: UserId) =
-        session.locked { ruleSessionManager(userId).commitCurrentRuleSession() }
+    suspend fun commitCurrentRuleSession(userId: UserId) =
+        preparedSession(userId, null) { it.commitCurrentRuleSession() }
 
     fun waitingCasesInfo() = session.locked {
         CasesInfo(
@@ -79,16 +104,51 @@ class KBEndpoint(
         )
     }
 
-    fun case(id: Long): RDRCase = session.locked {
-        val case = uninterpretedCase(id)
-        kb.interpret(case)
-        case
+    /**
+     * The stored case with its interpretation. AI evaluations happen outside
+     * the KB lock; see [AiInferenceCoordinator].
+     */
+    suspend fun interpretedCase(id: Long): RDRCase = coordinator.interpretStored(id).case.withoutDerivedValues()
+
+    suspend fun viewableCase(id: Long): ViewableCase = try {
+        // Interpret and resolve display definitions in the same locked pass.
+        prepared(id) { session.locked {
+            val live = kb.getCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
+            kb.viewableCase(live.copy(interpretation = Interpretation(live.caseId)))
+        } }
+    } catch (failure: InterpretationIncompleteException) {
+        val details = session.locked {
+            kb.getCase(id)?.let { live ->
+                val primary = live.withoutDerivedValues().copy(interpretation = Interpretation(live.caseId))
+                val view = kb.viewableCaseOf(primary)
+                failure.details.copy(primaryCase = view.case, caseViewProperties = view.viewProperties)
+            } ?: failure.details
+        }
+        throw InterpretationIncompleteException(details)
     }
 
-    fun viewableCase(id: Long) = session.locked { kb.viewableCase(uninterpretedCase(id)) }
+    private suspend fun <T> prepared(caseId: Long?, operation: () -> T): T =
+        coordinator.withPreparedEvaluations(caseId, operation)
 
-    fun conditionHintsForCase(id: Long, userId: UserId): ConditionList =
-        session.locked { ruleSessionManager(userId).conditionHintsForCase(case(id)) }
+    private suspend fun <T> preparedSession(userId: UserId, caseId: Long?, operation: (RuleSessionManager) -> T): T {
+        var guard: (() -> Unit)? = null
+        return prepared(caseId) {
+            session.locked {
+                val manager = ruleSessionManager(userId)
+                if (guard == null) guard = manager.operationGuard()
+                guard.invoke()
+                operation(manager)
+            }
+        }
+    }
+
+    suspend fun conditionHintsForCase(id: Long, userId: UserId): ConditionList = prepared(id) {
+        session.locked {
+            val case = uninterpretedCase(id)
+            kb.interpret(case)
+            ruleSessionManager(userId).conditionHintsForCase(case)
+        }
+    }
 
     suspend fun caseReport(caseId: Long): CaseReport {
         val viewable = viewableCase(caseId)
@@ -102,7 +162,19 @@ class KBEndpoint(
         return report
     }
 
-    fun processCase(externalCase: ExternalCase) = session.locked { kb.processCase(externalCase) }
+    /**
+     * Stores the case, then interprets it. The primary data is retained even
+     * if the interpretation cannot be completed; the exception then names the
+     * stored case so that it can be requested again.
+     */
+    suspend fun processCase(externalCase: ExternalCase): RDRCase {
+        val stored = session.locked { kb.storeCase(externalCase) }
+        val interpreted = interpretedCase(requireNotNull(stored.id) { "A stored case has an id." })
+        // Callers reading the interpretation directly (e.g. the interpreter
+        // API) see CommentTemplate/Literal expressions, not sentinels.
+        session.locked { interpreted.interpretation.resolveDefinitions(kb.definitionResolver) }
+        return interpreted
+    }
 
     fun addCornerstoneCase(externalCase: ExternalCase) = session.locked { kb.addCornerstoneCase(externalCase) }
 
@@ -131,36 +203,43 @@ class KBEndpoint(
 
     fun getOrCreateCondition(condition: Condition) = session.locked { kb.conditionManager.getOrCreate(condition) }
 
-    fun startRuleSession(request: SessionStartRequest, userId: UserId) =
-        session.locked { ruleSessionManager(userId).startRuleSession(request) }
+    suspend fun startRuleSession(request: SessionStartRequest, userId: UserId) =
+        preparedSession(userId, request.caseId) { it.startRuleSession(request) }
 
-    fun commitRuleSession(request: RuleRequest, userId: UserId) =
-        session.locked { ruleSessionManager(userId).commitRuleSession(request) }
+    suspend fun commitRuleSession(request: RuleRequest, userId: UserId) =
+        preparedSession(userId, request.caseId) { it.commitRuleSession(request) }
 
     fun uninterpretedCase(id: Long) = session.locked {
         kb.getProcessedCase(id) ?: throw IllegalArgumentException("Case with id $id not found")
     }
 
-    fun updateCornerstone(request: UpdateCornerstoneRequest, userId: UserId) =
-        session.locked { ruleSessionManager(userId).updateCornerstone(request) }
+    suspend fun updateCornerstone(request: UpdateCornerstoneRequest, userId: UserId) =
+        preparedSession(userId, null) { it.updateCornerstone(request) }
 
-    fun selectCornerstone(index: Int, userId: UserId) =
-        session.locked { ruleSessionManager(userId).selectCornerstone(index) }
+    suspend fun selectCornerstone(index: Int, userId: UserId) =
+        preparedSession(userId, null) { it.selectCornerstone(index) }
 
-    fun exemptCornerstone(index: Int, userId: UserId) =
-        session.locked { ruleSessionManager(userId).exemptCornerstone(index) }
+    suspend fun exemptCornerstone(index: Int, userId: UserId) =
+        preparedSession(userId, null) { it.exemptCornerstone(index) }
 
     // Not locked here: the translation inside calls the LLM, so the
     // RuleSessionManager locks only the part that touches the KB.
-    fun conditionForExpression(expression: String, userId: UserId) =
-        ruleSessionManager(userId).conditionForExpression(expression)
+    suspend fun conditionForExpression(expression: String, userId: UserId): io.rippledown.model.condition.ConditionParsingResult {
+        val manager = ruleSessionManager(userId)
+        val guard = session.locked { manager.operationGuard() }
+        return prepared(null) {
+            session.locked { guard() }
+            val result = manager.conditionForExpression(expression)
+            session.locked { guard(); result }
+        }
+    }
 
     /**
      * Build a complete rule in one call, without using the UI.
      * Condition expressions are parsed deterministically from human-readable text.
      */
-    fun buildRule(request: BuildRuleRequest, userId: UserId) =
-        session.locked { ruleSessionManager(userId).buildRule(request) }
+    suspend fun buildRule(request: BuildRuleRequest, userId: UserId) =
+        preparedSession(userId, null) { it.buildRule(request) }
 
     private fun ruleSessionManager(userId: UserId): RuleSessionManager = session.ruleSessionManagerFor(userId)
 }

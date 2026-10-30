@@ -4,10 +4,17 @@ import io.rippledown.model.Attribute
 import io.rippledown.model.AttributeKind
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
+import io.rippledown.model.rule.evaluation.EvaluationContext
 
 abstract class RuleTreeChange {
-    abstract fun isApplicable(tree: RuleTree, case: RDRCase): Boolean
-    abstract fun createChanger(tree: RuleTree, ruleFactory: RuleFactory): RuleTreeChanger
+    abstract fun isApplicable(
+        tree: RuleTree, case: RDRCase,
+        resolver: DefinitionResolver = NO_DEFINITIONS, context: EvaluationContext = EvaluationContext.EMPTY
+    ): Boolean
+    abstract fun createChanger(
+        tree: RuleTree, ruleFactory: RuleFactory,
+        resolver: DefinitionResolver = NO_DEFINITIONS, context: EvaluationContext = EvaluationContext.EMPTY
+    ): RuleTreeChanger
 
     /**
      * The derived attribute whose assignment this change adds, removes or
@@ -24,10 +31,11 @@ abstract class RuleTreeChange {
 }
 
 class ChangeTreeToAddAssignment(val toBeAdded: AssignValue) : RuleTreeChange() {
-    override fun isApplicable(tree: RuleTree, case: RDRCase) = !tree.apply(case).assignments().contains(toBeAdded)
+    override fun isApplicable(tree: RuleTree, case: RDRCase, resolver: DefinitionResolver, context: EvaluationContext) =
+        !tree.apply(case, resolver, context).assignments().contains(toBeAdded)
 
-    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) =
-        AddAssignmentRuleTreeChanger(tree, ruleFactory, toBeAdded)
+    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory, resolver: DefinitionResolver, context: EvaluationContext) =
+        AddAssignmentRuleTreeChanger(tree, ruleFactory, toBeAdded, resolver, context)
 
     override fun assignedAttribute() = toBeAdded.attribute
 
@@ -38,10 +46,11 @@ class ChangeTreeToAddAssignment(val toBeAdded: AssignValue) : RuleTreeChange() {
 }
 
 class ChangeTreeToRemoveAssignment(val toBeRemoved: AssignValue) : RuleTreeChange() {
-    override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).assignments().contains(toBeRemoved)
+    override fun isApplicable(tree: RuleTree, case: RDRCase, resolver: DefinitionResolver, context: EvaluationContext) =
+        tree.apply(case, resolver, context).assignments().contains(toBeRemoved)
 
-    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) =
-        RemoveAssignmentRuleTreeChanger(tree, ruleFactory, toBeRemoved)
+    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory, resolver: DefinitionResolver, context: EvaluationContext) =
+        RemoveAssignmentRuleTreeChanger(tree, ruleFactory, toBeRemoved, resolver, context)
 
     override fun assignedAttribute() = toBeRemoved.attribute
 
@@ -63,10 +72,11 @@ class ChangeTreeToReplaceAssignment(val toBeReplaced: AssignValue, val replaceme
         }
     }
 
-    override fun isApplicable(tree: RuleTree, case: RDRCase) = tree.apply(case).assignments().contains(toBeReplaced)
+    override fun isApplicable(tree: RuleTree, case: RDRCase, resolver: DefinitionResolver, context: EvaluationContext) =
+        tree.apply(case, resolver, context).assignments().contains(toBeReplaced)
 
-    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory) =
-        ReplaceAssignmentRuleTreeChanger(tree, ruleFactory, toBeReplaced, replacement)
+    override fun createChanger(tree: RuleTree, ruleFactory: RuleFactory, resolver: DefinitionResolver, context: EvaluationContext) =
+        ReplaceAssignmentRuleTreeChanger(tree, ruleFactory, toBeReplaced, replacement, resolver, context)
 
     override fun assignedAttribute() = replacement.attribute
 

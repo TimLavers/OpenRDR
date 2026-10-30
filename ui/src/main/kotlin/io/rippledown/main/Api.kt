@@ -19,6 +19,8 @@ import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.caseview.IncompleteInterpretation
+import kotlinx.coroutines.CancellationException
 import io.rippledown.model.change.ChangeRecord
 import io.rippledown.model.change.KbChange
 import io.rippledown.model.chat.ChatContextInfo
@@ -235,10 +237,16 @@ class Api(
 
     suspend fun getCase(caseId: Long): ViewableCase? {
         return try {
-            client.get("$API_URL$CASE") {
+            val response = client.get("$API_URL$CASE") {
                 setKBParameter()
                 setCaseIdParameter(caseId)
-            }.body<ViewableCase>()
+                expectSuccess = false
+            }
+            if (response.status == HttpStatusCode.ServiceUnavailable) response.body<IncompleteInterpretation>().caseView()
+            else if (response.status.isSuccess()) response.body<ViewableCase>()
+            else null
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             null
         }

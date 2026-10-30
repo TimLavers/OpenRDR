@@ -23,7 +23,12 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.mockk)
     testImplementation(libs.filekit.dialogs)
-    testImplementation("com.google.genai:google-genai:1.46.0")
+    testImplementation(libs.generativeai)
+    constraints {
+        testImplementation(libs.assertJCore) {
+            because("AssertJ Swing requests a version affected by CVE-2026-24400")
+        }
+    }
 }
 
 val cukeClassPath = configurations.testRuntimeClasspath.get()
@@ -99,6 +104,7 @@ fun runCucumber(cukeArgs: List<String>): Int {
 featureFolders.forEach { folderName ->
     tasks.register(folderName) {
         group = "verification"
+        description = "Runs the Cucumber scenarios in the $folderName folder."
         dependsOn(prerequisiteTasks)
         doLast {
             val rerunFile = file("build/rerun_${folderName}.txt")
@@ -129,10 +135,13 @@ featureFolders.forEach { folderName ->
 }
 
 tasks.register("cucumberTest") {
+    group = "verification"
+    description = "Runs all Cucumber feature folders."
     dependsOn(featureFolders.map { folderName -> tasks.getByName(folderName) })
 }
 
 tasks.register<JavaExec>("cucumberSingleTest") {
+    description = "Runs Cucumber scenarios tagged @single."
     setupExec()
     // The scenario total is counted before the tag filter is applied, so it would be wrong here.
     systemProperty("scenarioProgress.hideTotal", "true")
@@ -150,6 +159,7 @@ tasks.register<JavaExec>("cucumberSingleTest") {
  * definitions: `gradlew :cucumber:cucumberDryRun`.
  */
 tasks.register<JavaExec>("cucumberDryRun") {
+    description = "Checks all Cucumber step definitions without running scenarios."
     setupExec()
     systemProperty("scenarioProgress.noTimings", "true")
     args = listOf("--glue", "steps", "--dry-run", "--plugin", "steps.ScenarioProgress", pathToRequirements)
@@ -157,10 +167,10 @@ tasks.register<JavaExec>("cucumberDryRun") {
 }
 
 tasks.register<JavaExec>("cucumberFolderTest") {
+    description = "Runs Cucumber scenarios in the folder specified with -Pfolder."
     setupExec()
-    val folder by extra {
-        project.properties["folder"] ?: error("Folder must be specified using -Pfolder=<folderName>")
-    }
+    val folder = providers.gradleProperty("folder").orNull
+        ?: error("Folder must be specified using -Pfolder=<folderName>")
     args = argsForCuke() + listOf(
         "$pathToRequirements/$folder",
         "--tags",

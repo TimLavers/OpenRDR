@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.CASE_REPORT
+import io.rippledown.kb.ai.InterpretationIncompleteException
 import io.rippledown.log.lazyLogger
 import io.rippledown.server.ServerApplication
 
@@ -16,6 +17,8 @@ fun Application.reportManagement(application: ServerApplication) {
                 val endpoint = kbEndpoint(application)
                 val report = endpoint.caseReport(caseId())
                 call.respond(report)
+            } catch (e: InterpretationIncompleteException) {
+                call.respondIncomplete(e)
             } catch (e: Exception) {
                 // Report generation failures are server-side (e.g. the LLM call),
                 // so respond 500 and keep the exception detail in the server log

@@ -1,4 +1,4 @@
-﻿package io.rippledown.server.websocket
+package io.rippledown.server.websocket
 
 import io.kotest.matchers.longs.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
@@ -65,4 +65,3 @@ class WebSocketFailureTest {
             departures shouldBe listOf(failedUser)
         }
 }
-

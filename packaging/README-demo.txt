@@ -17,9 +17,9 @@ Prerequisites
 
 - Windows 10+ / macOS 12+ / modern Linux. Native binaries are for the OS
   that built this zip (see the zip filename).
-- For the rule-condition assistant to work, a Google Gemini API key is
-  required. Without it the UI still runs; only rule-condition suggestions
-  generated from free-text expressions will fail.
+- Chat authoring, condition translation, AI-derived classifications, reports
+  and voice transcription require a Google Gemini API key. Deterministic
+  inference over existing non-AI rules does not require it.
 
   To get a key: https://ai.google.dev/gemini-api/docs/api-key
 
@@ -43,9 +43,8 @@ Running
    directory for logs/temp files).
 2. Windows:  double-click start-demo.bat
    macOS/Linux:  ./start-demo.sh  from a terminal
-3. A console window will open running the server on localhost:9090. The
-   server boots in in-memory mode. Shortly after, the OpenRDR desktop UI
-   will launch.
+3. The server starts on localhost:9090 in in-memory mode, followed by the UI.
+   Windows opens a server console; macOS/Linux write server output to logs/.
 4. In the chat, type:  open Pathology
    The chat will ask for a name for your own copy (suggest "Clinic").
    Type a name and press Enter. The Pathology demonstration KB is copied
@@ -63,7 +62,7 @@ The Pathology demonstration KB is seeded with three cases:
               (Glucose 5.2 mmol/L [ref < 5.1], Pregnant Y, Age 21).
               Used for the Spanish-language rule-building demo.
 
-    - Jane    cornerstone case, simple lab panel
+  - Jane      cornerstone case, simple lab panel
               Surfaced as a cornerstone when adding a comment to Lindsay.
 
   - Taylor   waiting case, used for the derived-attributes demo
@@ -86,95 +85,48 @@ Demo scenario 1: build a rule with Spanish conditions
    interpretation should now read:
        "La paciente presenta diabetes gestacional."
 
-5. Hover the mouse of the interpretation and you will see the formal conditions
+5. Hover over the interpretation and you will see the formal conditions
 6. The point is that the Spanish-language reasons have been understood and translated by the LLM into the underlying formal-syntax conditions (Glucose is high; Age < 50; Pregnant is "Y").
 
 Demo scenario 2: review a cornerstone case via chat
----------------------------------------------------
+--------------------------------------------------
 
-1. Select the case "Lindsay" if not already selected.
-2. In the chat, type:  Add the comment: "Oh to be young again."
-3. The chatbot will switch into rule-building mode and surface "Jane"
-   as a cornerstone case for review.
-3. The chatbot will offer condition suggestions and ask for reasons. Reply
-   with :
-       younger than 40
+1. Select Lindsay and ask: Add the comment: "Oh to be young again."
+2. Give the reason: younger than 40.
+3. Jane is also younger than 40. When asked whether the change should apply
+   to her, enter "allow".
+4. Decline further reasons to complete the rule.
+5. Hover over the comment to see the condition Age < 40.0.
 
-4. The chatbot will now ask if the report change should also apply to "Jane" as she is also younger than 40.
-5. Enter "allow"
-6. The chatbot will ask if you want to add any more conditions
-7. Enter "no"
-8. The chatbot will complete the rule
+The expert controls whether a rule's effect on a cornerstone is acceptable.
 
-5. Hover the mouse of the interpretation and you will see the formal condition age < 40.0
-6. The point is that user has control over the extent to which the rule change applies to the cornerstone cases.
+Demo scenario 3: derived attributes, repeat inference and the AI report
+---------------------------------------------------------------------
 
-Demo scenario 3: derived attributes, repeat inferencing and the AI report
--------------------------------------------------------------------------
+This sequence follows "Pathology demo script.feature" under
+cucumber/src/test/resources/requirements/demo/. It creates two derived
+attributes and two comments, then generates a report.
 
-This scenario is automated end-to-end by the cucumber feature
-"Pathology demo script.feature" (cucumber/src/test/resources/requirements/
-demo/), so if that cuke passes, this script is known to work.
+1. Select Taylor. The Derived attributes panel initially has no values.
+2. Ask: Add attribute BMI with formula weight / height^2.
+   Give the reason "Height is in case", then decline further reasons.
+   The panel shows BMI = 30.93. Hover to see the formula and condition.
+3. Ask: Add attribute "Diabetes status" with value diabetic.
+   Give the suggested reason "HbA1c is high", then decline further reasons.
+   The panel shows Diabetes status = diabetic.
+4. Ask: Add the comment: "Obesity. BMI {BMI}. Weight reduction."
+   Give the reason "BMI > 30", then decline further reasons.
+   The rendered comment is "Obesity. BMI 30.93. Weight reduction."
+5. Ask: Add the comment: "Diabetic. Dietary review. HbA1c above target. Repeat in 3 months."
+   Give both reasons: Diabetes status is "diabetic", and HbA1c is high.
+   Decline further reasons. Confirm wording if the chat asks.
+6. Open the Report panel. It uses the comments and case values to generate
+   readable prose and consolidate their follow-ups. Exact wording can vary;
+   the acceptance scenario checks the BMI and recommendation topics.
 
-Explain that we are going to build 2 derived attributes and 3 comments We will be demonstrating;
-- repeat inferencing by using derived attributes as conditions for comments,
-- inserting a value into a comment,
-- producing a formatted and narrative-style report from the set of comments.
-
-1. Select the case "Taylor". Note the "Derived attributes" panel under the
-   case data: it is empty ("None for this case"). Hover over the info icon
-   next to the heading for a short explanation of derived attributes.
-
-2. Create a formula-based derived attribute. In the chat, type:
-       Add attribute BMI with formula weight / height^2
-  Note that the height and weight suggestions are at the top of this list, as these are in the formula.
-  Add the single reason: "Height > 0".
-  The Derived attributes panel now shows
-   BMI = 30.93; hover over the name to see the formula and the condition.
-
-3. Create a rule-based derived attribute. In the chat, type:
-       Add attribute "Diabetes status" with value diabetic
-   The suggested conditions appear -- note that the FIRST suggestion is
-   "HbA1c is high": suggestions are prioritised by out-of-range values
-   and by the rule action. Reply with the reason:
-       HbA1c is high
-   Decline to add more reasons. The panel now also shows
-   Diabetes status = diabetic.
-
-4. Build a comment on the BMI value (repeat inferencing: the condition
-   refers to a derived attribute, not to raw case data). Type:
-       Add the comment: "Obesity. BMI is {BMI}. Weight reduction."
-   Reply with the reason:
-       BMI > 30
-   Decline to add more reasons. The comment appears with the actual BMI:
-   "Obesity. BMI 30.93. Weight reduction."
-   Note how clipped it is. A rule's comment is written once and then reused
-   verbatim on every case the rule fires for, so experts write them terse
-   and self-contained -- which is exactly why several of them landing on
-   the one case read as disconnected fragments.
-
-5. Build a comment on the diabetes status. Type:
-       Add the comment: "Diabetic. Dietary review."
-   Confirm if asked. Reply with the reason, which should be the first suggestion:
-       Diabetes status is "diabetic"
-   Decline to add more reasons.
-
-6. Build a third comment, this one on the raw out-of-range HbA1c. Type:
-       Add the comment: "HbA1c above target. Repeat in 3 months."
-   Confirm if asked. Reply with the reason:
-       HbA1c is high
-   Decline to add more reasons.
-
-7. Read the three comments in the Comments panel: each is correct, but they
-   are clipped, and each ends in its own dangling action.Now show the Report tool tip. Now open the
-   Report panel. The AI has done two things no rule can do:
-     - written the fragments up as flowing prose for THIS patient, quoting
-       the BMI and bolding the out-of-range HbA1c, and
-     - consolidated the three separate follow-ups into a single
-       "Recommendation" section.
-   The point to make to the audience: no individual rule could produce that
-   recommendation, because no rule knows what the other rules concluded.
-   Only the report sees all the comments at once.
+The BMI comment demonstrates repeat inference and substitution of a derived
+value. The report illustrates the difference between fixed rule-authored
+comments and a generated narrative that must be reviewed before release.
 
 Notes
 -----
