@@ -24,8 +24,8 @@ turn, context lost at the hand-off, duplicated dispatch.
 | `AddDemonstrationCase`                       | Adds Einstein to an empty KB.                                                                               |
 | `ImportKnowledgeBase`, `ExportKnowledgeBase` | Return a one-use file-dialog request; the client does the transfer.                                         |
 
-Actions that change what the chat is about (open, create, copy, close, delete, import, export) are refused during a
-rule session.
+Actions that change what the chat is about (open, create, copy, delete, import, export) are refused during the caller's
+rule session. Closing is allowed: it cancels only the caller's unfinished session and leaves other users' sessions intact.
 
 ## Name resolution
 

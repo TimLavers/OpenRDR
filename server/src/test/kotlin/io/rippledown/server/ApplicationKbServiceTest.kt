@@ -7,20 +7,28 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import io.rippledown.constants.chat.DEMO_CASE_NAME
+import io.rippledown.constants.chat.CLOSE_KNOWLEDGE_BASE
+import io.rippledown.constants.chat.kbClosedMessage
 import io.rippledown.kb.KbResolution
 import io.rippledown.kb.ProjectHeldException
 import io.rippledown.kb.chat.OpenKnowledgeBases
+import io.rippledown.kb.chat.ActionComment
+import io.rippledown.kb.chat.ChatManager
+import io.rippledown.kb.chat.LockedRuleService
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.UserId
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.rule.SessionStartRequest
+import io.rippledown.model.rule.RuleRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
 import io.rippledown.sample.SampleKB
 import io.rippledown.sample.SampleKB.ZOO
 import io.rippledown.server.websocket.WebSocketManager
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.Test
 
 class ApplicationKbServiceTest {
@@ -305,6 +313,44 @@ class ApplicationKbServiceTest {
         // Then
         endpoint.session.ruleSessionManagerFor(bob).isRuleSessionActive() shouldBe true
         coVerify(exactly = 0) { webSocketManager.sendRuleSessionCompleted(any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `closing through chat cancels only the caller's session and lets another user commit`(aliceEditing: Boolean) = runBlocking<Unit> {
+        // Given two users on the same KB, with Bob editing and optionally Alice editing too.
+        val thyroids = app.createKB("Thyroids", false)
+        val endpoint = app.kbForId(thyroids.id)
+        openKnowledgeBases.open[alice] = endpoint
+        openKnowledgeBases.open[bob] = endpoint
+        val caseId = requireNotNull(service.addDemonstrationCase().caseId.id)
+        if (aliceEditing) {
+            endpoint.startRuleSession(SessionStartRequest(caseId, Addition("Go to Bondi.")), alice)
+        }
+        endpoint.startRuleSession(SessionStartRequest(caseId, Addition("Go to Manly.")), bob)
+        val aliceRules = endpoint.session.ruleSessionManagerFor(alice)
+        val bobRules = endpoint.session.ruleSessionManagerFor(bob)
+        val chat = ChatManager(mockk(), LockedRuleService(endpoint.session, aliceRules, endpoint.coordinator), service)
+
+        // When Alice's close action goes through the same chat guard as a model response.
+        val response = chat.processActionComment(ActionComment(CLOSE_KNOWLEDGE_BASE))
+
+        // Then only Alice leaves the KB and loses her unfinished rule.
+        response.text shouldBe kbClosedMessage("Thyroids")
+        aliceRules.isRuleSessionActive() shouldBe false
+        bobRules.isRuleSessionActive() shouldBe true
+        openKnowledgeBases.open[alice].shouldBeNull()
+        openKnowledgeBases.open[bob] shouldBe endpoint
+        coVerify(exactly = 1) { webSocketManager.sendKbClosed(alice) }
+        coVerify(exactly = if (aliceEditing) 1 else 0) { webSocketManager.sendRuleSessionCompleted(alice) }
+        coVerify(exactly = 0) {
+            webSocketManager.sendKbClosed(bob)
+            webSocketManager.sendRuleSessionCompleted(bob)
+        }
+
+        // When Bob commits his existing session, then only his comment is saved.
+        endpoint.commitRuleSession(RuleRequest(caseId), bob).latestText() shouldBe "Go to Manly."
+        bobRules.isRuleSessionActive() shouldBe false
     }
 
     @Test

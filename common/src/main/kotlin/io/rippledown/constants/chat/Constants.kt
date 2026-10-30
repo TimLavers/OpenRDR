@@ -126,7 +126,7 @@ fun projectHeldChatMessage(kbName: String, holder: String) =
     "$kbName is being edited by $holder, so it cannot be deleted right now. " +
             "Try again when $holder has finished their rule."
 const val KB_ACTION_DURING_RULE_MESSAGE =
-    "Please finish or cancel the current rule before opening, creating, closing, deleting, importing or exporting a knowledge base."
+    "Please finish or cancel the current rule before opening, creating, deleting, importing or exporting a knowledge base."
 const val NO_KNOWLEDGE_BASES = "There are no knowledge bases."
 const val OPEN_SUFFIX = " (open)"
 const val KB_OPENED = "Opened"
