@@ -113,8 +113,6 @@ class RESTClient(private val api: Api = Api()) {
         return result
     }
 
-    suspend fun getCase(caseId: Long): ViewableCase? = api.getCase(caseId)
-
     fun addCornerstoneCase(externalCase: ExternalCase): RDRCase {
         val result = runBlocking {
             client.put(endpoint + ADD_CORNERSTONE_CASE) {
@@ -140,7 +138,7 @@ class RESTClient(private val api: Api = Api()) {
         runBlocking { api.startRuleSession(sessionStartRequest) }
 
         val listOfConditions = conditions.map { conditionText ->
-            getOrCreateCondition(parseToCondition(conditionText, { getOrCreateAttribute(it) }))
+            getOrCreateCondition(parseToCondition(conditionText) { getOrCreateAttribute(it) })
         }
 
         val ruleRequest = RuleRequest(currentCase.id!!, RuleConditionList(listOfConditions))
@@ -198,8 +196,6 @@ class RESTClient(private val api: Api = Api()) {
             parameter(KB_ID, kb.id)
         }.body()
     }
-
-    fun kbNames(): List<String> = runBlocking { api.kbList().map { it.name } }
 
     fun reset() = runBlocking {
         val response = api.client.post("$endpoint$RESET") { timeout { requestTimeoutMillis = 15_000 } }

@@ -27,17 +27,6 @@ class DerivedValueStepDefs(val chatDefs: ChatDefs) {
 
     private var lastDerivedValueName: String? = null
 
-    @When("I request that the derived attribute {string} be added with value {string} for reason {string}")
-    fun requestDerivedValueAssignment(attributeName: String, value: String, reason: String) {
-        with(chatDefs) {
-            enterChatTextAndSend("Assign value \"$value\" to the derived attribute \"$attributeName\"")
-            waitForBotSuggestions()
-            enterChatTextAndSend(reason)
-            decline() //no more reasons
-            waitForBotToSayDone()
-        }
-    }
-
     @When("I request that the definition of the derived attribute {string} be changed to {string}")
     fun requestDefinitionEdit(attributeName: String, expression: String) {
         with(chatDefs) {
