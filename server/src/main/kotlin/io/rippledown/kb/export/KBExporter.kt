@@ -46,7 +46,8 @@ class KBExporter(destination: File, val kb: KB,
         definitionsDirectory.mkdirs()
         IdentifiedObjectExporter(definitionsDirectory, DefinitionSource(kb.derivedDefinitionManager)).export()
 
-        // The endpoint supplies records loaded before taking the KB lock.
+        // The endpoint supplies an empty collection here, then exports the append-only
+        // evaluation store after releasing the KB lock and freezing the remaining files.
         evaluationsDirectory.mkdirs()
         AiEvaluationArchive.export(evaluationsDirectory, evaluations ?: kb.aiEvaluationStore.all())
 

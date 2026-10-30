@@ -6,6 +6,7 @@ import io.rippledown.kb.ai.AiEvaluationService
 import io.rippledown.kb.ai.AiInferenceCoordinator
 import io.rippledown.kb.ai.GeminiAiBooleanClassifier
 import io.rippledown.kb.ai.InterpretationIncompleteException
+import io.rippledown.kb.export.AiEvaluationArchive
 import io.rippledown.kb.export.KBExporter
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.kb.report.ReportService
@@ -64,21 +65,27 @@ class KBEndpoint(
     }
 
     fun exportKBToZip(): File {
-        val evaluations = kb.aiEvaluationStore.all()
-        return session.locked {
-            val tempDir: File = createTempDirectory().toFile()
-            KBExporter(tempDir, kb, evaluations).export()
-            val bytes = Zipper(tempDir).zip()
-            val file = File(tempDir, "${kb.kbInfo}.zip")
-            file.writeBytes(bytes)
-            file
+        val tempDir = createTempDirectory().toFile()
+        val exporter = KBExporter(tempDir, kb, emptyList())
+        val (info, sourceIds) = session.locked {
+            exporter.export()
+            kb.kbInfo to kb.attributeManager.all()
+                .filter { it.kind == AttributeKind.EXTERNAL }.map { it.id }.toSet()
         }
+        // Evaluations are append-only and persisted before a rule can use them.
+        // Reading them after the KB snapshot includes every result that snapshot used,
+        // without holding the KB lock during the store read. A later preview may use a
+        // newly created source, which must not introduce dangling references in the archive.
+        val evaluations = kb.aiEvaluationStore.all().filter { it.definition.sourceAttribute.id in sourceIds }
+        AiEvaluationArchive.export(exporter.evaluationsDirectory, evaluations)
+        val bytes = Zipper(tempDir).zip()
+        return File(tempDir, "$info.zip").also { it.writeBytes(bytes) }
     }
 
     fun cancelRuleSession(userId: UserId) = session.locked { ruleSessionManager(userId).cancelRuleSession() }
 
-    fun cornerstoneStatus(userId: UserId) = session.locked {
-        ruleSessionManager(userId).takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
+    suspend fun cornerstoneStatus(userId: UserId) = preparedSession(userId, null) { manager ->
+        manager.takeIf { it.isRuleSessionActive() }?.cornerstoneStatus()
     }
 
     fun addConditionToCurrentRuleBuildingSession(condition: Condition, userId: UserId) = session.locked {
@@ -129,7 +136,7 @@ class KBEndpoint(
             session.locked {
                 val manager = ruleSessionManager(userId)
                 if (guard == null) guard = manager.operationGuard()
-                guard?.invoke()
+                guard.invoke()
                 operation(manager)
             }
         }

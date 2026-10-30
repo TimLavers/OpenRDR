@@ -87,6 +87,10 @@ winner for racing requests; persistence failure leaves the operation incomplete.
 classifications; in-flight sharing and a retry cooldown limit repeated failures. Explicit retry is available in chat.
 Successful results are reused on case selection. New revisions require new results.
 
+Export freezes the KB files under its lock, then reads the append-only evaluation store outside the lock. This
+includes every saved result used by the snapshot. Records arriving for source attributes absent from that snapshot
+are excluded so the archive remains importable. A failed store read fails the export.
+
 `AiEvaluations` in a KB archive contains versioned records. Import checks definitions, source IDs, fingerprints,
 policy versions, model consistency and conflicting duplicates before creating persistent state. Older archives
 without records are accepted. Import makes no provider calls; missing results are obtained when needed.

@@ -363,7 +363,7 @@ Two read-only actions: *"What has changed recently?"* / *"Who changed BMI?"* →
 attribute?)`, the log newest first with user and time, filtered by attribute id when one is named; *"Who else is
 working on this?"* → `ListUsersPresent`, the presence set with those in `usersEditing()` marked as mid-rule. Both are
 `KbManagementAction`s served through `KnowledgeBaseService` (`changesContext = false`): they are meaningful with a KB
-open and no case selected, and the case-less `ChatManager` has no `RuleService`. `ListCapabilities` lists them; the
+open and no case selected. The KB-only `ChatManager` also has a `RuleService` for AI definition drafts. `ListCapabilities` lists them; the
 capability card is built there, not from the instruction file.
 
 ### Undo across users
