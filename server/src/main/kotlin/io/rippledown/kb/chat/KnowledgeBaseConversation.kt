@@ -79,7 +79,8 @@ class KnowledgeBaseConversation(
     suspend fun execute(action: KbManagementAction): ChatResponse {
         val naming = state as? State.Creating
         reset()
-        if (action.changesContext && ruleService?.isRuleSessionActive() == true) {
+        // Closing explicitly abandons the caller's session; the service cancels only that user's work.
+        if (action.changesContext && action !is CloseKnowledgeBase && ruleService?.isRuleSessionActive() == true) {
             return ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
         }
         return when (val outcome = action.doIt(service)) {

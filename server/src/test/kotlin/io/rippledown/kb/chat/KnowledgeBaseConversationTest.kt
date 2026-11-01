@@ -32,6 +32,29 @@ class KnowledgeBaseConversationTest {
     private val conversation = KnowledgeBaseConversation(service, interpreter, rules)
 
     @ParameterizedTest
+    @ValueSource(strings = [OPEN_KNOWLEDGE_BASE, CREATE_KNOWLEDGE_BASE, DELETE_KNOWLEDGE_BASE,
+        IMPORT_KNOWLEDGE_BASE, EXPORT_KNOWLEDGE_BASE])
+    fun `other context changes remain blocked during the caller's rule session`(actionName: String) = runTest {
+        // Given a caller with an unfinished rule.
+        every { rules.isRuleSessionActive() } returns true
+        val action = ActionComment(actionName, kbName = "Other").createActionInstance()
+            .shouldBeInstanceOf<KbManagementAction>()
+
+        // When
+        val response = conversation.execute(action)
+
+        // Then no KB is opened, created, deleted or prepared for file transfer.
+        response shouldBe ChatResponse(KB_ACTION_DURING_RULE_MESSAGE)
+        conversation.state shouldBe KnowledgeBaseConversation.State.Idle
+        coVerify(exactly = 0) {
+            service.open(any())
+            service.create(any())
+            service.delete(any())
+            service.openKnowledgeBase()
+        }
+    }
+
+    @ParameterizedTest
     @EnumSource(SampleKB::class, names = ["TSH", "CONTACT_LENSES", "ZOO", "PATHOLOGY"])
     fun `a demonstration title offered as the first reply asks for a copy name`(sample: SampleKB) = runTest {
         // Given

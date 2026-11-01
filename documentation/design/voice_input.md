@@ -18,7 +18,7 @@ An offline recogniser (Vosk, small US-English model) was the first implementatio
 conversational speech, accents and domain terms, no punctuation or casing, and a 40 MB model in the distribution.
 
 Google Cloud Speech-to-Text was compared. It offers true streaming partials, per-minute pricing, word confidences and
-**phrase hints**, which would let the KB's attribute names bias recognition, and it never hallucinates. Against that it
+**phrase hints** to bias recognition toward the KB's attribute names. Recognition errors would still need review. Against that it
 needs a GCP project, billing and credentials distinct from the AI Studio key that Gemini uses, plus another SDK.
 
 Gemini reuses the client, key and billing already in place, punctuates naturally, and uses context to get domain terms

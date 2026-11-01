@@ -15,3 +15,12 @@ pattern shapes the design:
 | Export format        | A KB exports as a ZIP of plain-text and JSON files, one directory per store, so that an archive is readable and diffable and can be checked into the test resources.                           | `KBExporterTest`, `KBImporterTest`                         |
 | No in-code migration | Schema changes are made in the table definitions only. An existing database is migrated by hand with the SQL given when the change is made; there are no `ALTER TABLE` statements in the code. |                                                            |
 | Single instance      | Within a loaded KB, equal objects are the same instance: every condition on `Glucose` refers to the one `Glucose` attribute, so a change to it is seen everywhere.                             | `ConditionManagerTest`                                     |
+
+## AI evaluation records
+
+Successful AI classifications are retained per KB by revision, canonical definition fingerprint and exact-input
+hash. Records include the definition snapshot, Boolean, optional evidence, timestamp and requested/returned model.
+Failures are not persisted as classifications. This makes repeat inference and server restarts reproducible.
+Exports include versioned AI evaluation records. Import validates their definitions, fingerprints and policy
+versions before creating persistent state, preserves their provenance and accepts older archives without records.
+Input text is not duplicated in the record: only its SHA-256 hash and an optional evidence excerpt are retained.

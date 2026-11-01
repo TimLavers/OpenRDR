@@ -199,13 +199,8 @@ internal fun DerivedValueRow(
                     fontSize = 13.sp,
                     color = Color.Black,
                     modifier = Modifier
-                        .weight(columnWidths.scrollableAreaWeight())
+                        .weight(1f - columnWidths.attributeColumnWeight)
                         .semantics { contentDescription = valueDescription }
-                )
-                Spacer(
-                    modifier = Modifier.weight(
-                        1f - columnWidths.attributeColumnWeight - columnWidths.scrollableAreaWeight()
-                    )
                 )
             }
         }
@@ -227,6 +222,6 @@ internal fun valueAnnotatedString(row: DerivedValueRowState) = buildAnnotatedStr
             append(row.newFormula)
         }
     } else {
-        append(row.info.value)
+        append(row.info.displayValue())
     }
 }

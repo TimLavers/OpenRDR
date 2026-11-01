@@ -3,10 +3,10 @@ package io.rippledown.integration.pageobjects
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.rippledown.constants.caseview.CASE_NAME_PREFIX
-import io.rippledown.integration.utils.Cyborg
 import io.rippledown.integration.utils.findAllByDescriptionPrefix
 import io.rippledown.integration.utils.findExact
 import io.rippledown.integration.utils.mouseClickAtCentre
+import io.rippledown.integration.pause
 import io.rippledown.integration.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 import org.awaitility.Awaitility.await
@@ -46,13 +46,33 @@ abstract class AbstractCaseSectionListPO(private val contextProvider: () -> Acce
     fun select(caseName: String) {
         // Resolve and act in one poll: the list can recompose between a lookup
         // and the action while the window is still settling after start-up.
+        // Clicking is also repeated: the accessibility bridge can drop an
+        // action invoked on a node that recomposition has just made stale (a
+        // case becoming a cornerstone inserts a section and recomposes the
+        // list), and doAccessibleAction gives no sign that nothing happened.
         waitUntilAsserted {
             val caseNameContext = caseNameContext(caseName)
             caseNameContext shouldNotBe null
-            execute {
-                caseNameContext!!.accessibleAction.doAccessibleAction(0)
+            if (!isCaseSelected(caseName)) {
+                execute {
+                    caseNameContext!!.accessibleAction.doAccessibleAction(0)
+                }
+                // Give the selection request a chance to complete before
+                // asserting, so a slow response doesn't trigger click spam.
+                pause(200)
             }
+            isCaseSelected(caseName) shouldBe true
         }
+    }
+
+    // `selected` is set by case id, so for a case listed in more than one
+    // section (a processed case that is also a cornerstone) the row that
+    // lights up may be the twin in another section, not the one clicked. The
+    // check therefore covers every node with this case's name in the panel.
+    private fun isCaseSelected(caseName: String): Boolean = execute<Boolean> {
+        contextProvider().findAllByDescriptionPrefix(CASE_NAME_PREFIX)
+            .filter { it.accessibleDescription == "$CASE_NAME_PREFIX$caseName" }
+            .any { it.accessibleStateSet.contains(SELECTED) }
     }
 
     /**
@@ -82,9 +102,6 @@ abstract class AbstractCaseSectionListPO(private val contextProvider: () -> Acce
         }
     }
 
-    fun requireCaseToBeShown(caseName: String) {
-        waitUntilAsserted { caseNameContext(caseName) shouldNotBe null }
-    }
 
     fun requireCaseToBeSelected(caseName: String) {
         waitUntilAsserted {
@@ -94,11 +111,4 @@ abstract class AbstractCaseSectionListPO(private val contextProvider: () -> Acce
         }
     }
 
-    fun pressDownArrow() {
-        Cyborg().downArrow()
-    }
-
-    fun pressUpArrow() {
-        Cyborg().upArrow()
-    }
 }

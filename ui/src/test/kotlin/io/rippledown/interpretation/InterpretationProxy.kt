@@ -16,7 +16,6 @@ import io.kotest.matchers.ints.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.interpretation.*
 import io.rippledown.decoration.BACKGROUND_COLOR
-import io.rippledown.utils.dump
 import io.rippledown.utils.waitUntilAsserted
 import org.assertj.swing.edt.GuiActionRunner.execute
 
@@ -323,12 +322,9 @@ fun ComposeTestRule.requireCommentOptionsToBeDisplayed(prefix: String, options: 
 }
 
 fun ComposeTestRule.requireCommentOptionsToExist(prefix: String, options: List<String>) {
-    onNodeWithContentDescription("Options").dump()
     options.forEach { option ->
-        println("CommentSelectorTest: looking for option $option")
         onNodeWithContentDescription(prefix + option, useUnmergedTree = true)
             .assertExists()
-        println("CommentSelectorTest: found       option $option")
     }
 }
 

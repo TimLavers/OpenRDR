@@ -22,6 +22,12 @@ sealed class ValueExpression {
 
     abstract fun asText(): String
 
+    /**
+     * The compact form shown where the full [asText] would dominate the
+     * display, such as the cell that previews a pending rule change.
+     */
+    open fun summary(): String = asText()
+
     abstract fun alignAttributes(idToAttribute: (Int) -> Attribute): ValueExpression
 }
 

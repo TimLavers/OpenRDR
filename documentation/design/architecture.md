@@ -4,8 +4,8 @@
 
 | Module      | Role                                                                                                                                                                                                                                   |
 |-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `common`    | The model shared by server and client: attributes, cases, conditions, rules, value expressions, view types, wire types and constants. Kotlin only, no JVM-specific libraries, so that the same condition code evaluates on both sides. |
-| `llm`       | The Gemini client and the one-shot primitives built on it: text generation and audio transcription.                                                                                                                                    |
+| `common`    | The model shared by server and client: attributes, cases, conditions, rules, value expressions, view types, wire types and constants. Built as Kotlin/JVM and shared by the server and Compose Desktop client; it is not currently a multiplatform module. |
+| `llm`       | The Gemini client and the one-shot primitives built on it: text generation, structured Boolean classification and audio transcription.                                                                                                                                    |
 | `hints`     | Translation of a natural-language expression into a `Condition` (`ConditionGenerator`, `ConditionChatService`).                                                                                                                        |
 | `chat`      | The multi-turn conversation loop with function calling, retries and timeouts (`Conversation`, `ChatService`).                                                                                                                          |
 | `server`    | Ktor server: knowledge bases, persistence, inference, rule sessions, condition suggestion, the operator chat and its actions, the report service, REST and web-socket routes.                                                          |
@@ -16,8 +16,9 @@
 ## Server and client
 
 All knowledge lives on the server. The client is a thin presenter: it fetches `ViewableCase`s, renders them, and sends
-the user's chat messages. It never talks to a language model; the Gemini key and every prompt are server-side, so the
-model's output can be validated before it touches a knowledge base. See [chat_architecture.md](chat_architecture.md).
+the user's chat messages. Authoring, condition translation, AI classification and report generation run on the
+server and validate model output there. Voice transcription is the exception: the desktop client calls Gemini
+through the shared `llm` module and needs the API key locally. See [chat_architecture.md](chat_architecture.md).
 
 The server has one `ServerApplication` holding a `KBManager` (the stored knowledge bases) and one `ChatCoordinator`
 with a conversation and open-KB context per user. Each loaded KB has a `KBSession` containing its shared `KB`, a lock,

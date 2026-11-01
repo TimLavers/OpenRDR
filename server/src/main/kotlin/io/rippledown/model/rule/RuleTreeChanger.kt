@@ -3,8 +3,13 @@ package io.rippledown.model.rule
 import io.rippledown.model.RDRCase
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.evaluation.EvaluationContext
 
-abstract class RuleTreeChanger(val ruleTree: RuleTree, val ruleFactory: RuleFactory) {
+abstract class RuleTreeChanger(
+    val ruleTree: RuleTree, val ruleFactory: RuleFactory,
+    protected val resolver: DefinitionResolver = NO_DEFINITIONS,
+    protected val context: EvaluationContext = EvaluationContext.EMPTY
+) {
     abstract fun isApplicable(case: RDRCase): Boolean
 
     abstract fun updateRuleTree(case: RDRCase, conditions: Set<Condition> = setOf()): Set<Rule>
@@ -20,10 +25,12 @@ abstract class RuleTreeChanger(val ruleTree: RuleTree, val ruleFactory: RuleFact
     }
 }
 
-class AddAssignmentRuleTreeChanger(ruleTree: RuleTree, ruleFactory: RuleFactory, val assignmentToAdd: AssignValue) :
-    RuleTreeChanger(ruleTree, ruleFactory) {
+class AddAssignmentRuleTreeChanger(
+    ruleTree: RuleTree, ruleFactory: RuleFactory, val assignmentToAdd: AssignValue,
+    resolver: DefinitionResolver = NO_DEFINITIONS, context: EvaluationContext = EvaluationContext.EMPTY
+) : RuleTreeChanger(ruleTree, ruleFactory, resolver, context) {
     override fun isApplicable(case: RDRCase): Boolean {
-        return !ruleTree.apply(case).assignments().contains(assignmentToAdd)
+        return !ruleTree.apply(case, resolver, context).assignments().contains(assignmentToAdd)
     }
 
     override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
@@ -40,14 +47,15 @@ open class ModifyAssignmentRuleTreeChanger(
     ruleTree: RuleTree,
     ruleFactory: RuleFactory,
     internal val assignmentToBeRemoved: AssignValue,
-    internal val assignmentToAdd: AssignValue?
-) : RuleTreeChanger(ruleTree, ruleFactory) {
+    internal val assignmentToAdd: AssignValue?,
+    resolver: DefinitionResolver = NO_DEFINITIONS, context: EvaluationContext = EvaluationContext.EMPTY
+) : RuleTreeChanger(ruleTree, ruleFactory, resolver, context) {
     override fun isApplicable(case: RDRCase): Boolean {
-        return ruleTree.apply(case).assignments().contains(assignmentToBeRemoved)
+        return ruleTree.apply(case, resolver, context).assignments().contains(assignmentToBeRemoved)
     }
 
     override fun updateRuleTree(case: RDRCase, conditions: Set<Condition>): Set<Rule> {
-        ruleTree.apply(case)
+        ruleTree.apply(case, resolver, context)
         val interpretation = case.interpretation
         val rulesChanged = mutableSetOf<Rule>()
         val ruleIds = interpretation.idsOfRulesMakingAssignment(assignmentToBeRemoved)
@@ -59,8 +67,10 @@ open class ModifyAssignmentRuleTreeChanger(
     }
 }
 
-open class RemoveAssignmentRuleTreeChanger(ruleTree: RuleTree, ruleFactory: RuleFactory, toBeRemoved: AssignValue) :
-    ModifyAssignmentRuleTreeChanger(ruleTree, ruleFactory, toBeRemoved, null) {
+open class RemoveAssignmentRuleTreeChanger(
+    ruleTree: RuleTree, ruleFactory: RuleFactory, toBeRemoved: AssignValue,
+    resolver: DefinitionResolver = NO_DEFINITIONS, context: EvaluationContext = EvaluationContext.EMPTY
+) : ModifyAssignmentRuleTreeChanger(ruleTree, ruleFactory, toBeRemoved, null, resolver, context) {
     override fun toString(): String {
         return "RemoveAssignmentRuleTreeChanger(toBeRemoved=$assignmentToBeRemoved)"
     }
@@ -70,8 +80,9 @@ class ReplaceAssignmentRuleTreeChanger(
     ruleTree: RuleTree,
     ruleFactory: RuleFactory,
     toBeReplaced: AssignValue,
-    replacement: AssignValue
-) : ModifyAssignmentRuleTreeChanger(ruleTree, ruleFactory, toBeReplaced, replacement) {
+    replacement: AssignValue,
+    resolver: DefinitionResolver = NO_DEFINITIONS, context: EvaluationContext = EvaluationContext.EMPTY
+) : ModifyAssignmentRuleTreeChanger(ruleTree, ruleFactory, toBeReplaced, replacement, resolver, context) {
     override fun toString(): String {
         return "ReplaceAssignmentRuleTreeChanger(toBeReplaced=$assignmentToBeRemoved replacement=$assignmentToAdd)"
     }

@@ -11,6 +11,7 @@ made by the rules that fired.
 
 | `ValueExpression` | Meaning                                                                                                                     |
 |-------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `AiBoolean` | classification of one primary text attribute using an approved definition and prepared results; see [AI-derived attributes](ai_derived_attributes.md) |
 | `Literal`         | a fixed value, e.g. `"diabetic"`                                                                                            |
 | `Formula`         | arithmetic over the latest values of attributes, e.g. `weight / height ^ 2`; no assignment if an input is missing           |
 | `CommentTemplate` | a comment text with positional `${}` variables bound to attributes                                                          |
@@ -65,7 +66,7 @@ prevented at rule-building time.
 attributes by id, edge extraction is exact. Every entry point checks it: the condition suggester never offers a
 condition
 that would create a cycle, a typed reason that would is refused with the cycle named ("would make X depend on itself:
-X → Y → X"), and a value expression or definition edit that would is refused the same way. No check is needed at commit.
+X → Y → X"), and a value expression or definition edit that would is refused the same way. Commit rechecks the graph, since another user's intervening edit can create a cycle.
 The check is conservative — it aggregates per attribute across rules, so mutually exclusive rules on one attribute can
 be
 refused although no runtime cycle exists — which is accepted for the guarantee it gives.
@@ -83,7 +84,7 @@ Whether unquoted text is a formula is a guess about the user's intent, made cons
   "Did you mean `weight / height`?").
 
 Exact resolution, not the one-edit tolerance used for names mentioned in passing: `weight` and `height` differ by one
-character, and a definition is stored and applied to every later case without its text being shown again. The
+character, and a definition is stored and applied to later cases without a new confirmation. The
 attribute being defined is validated before it is created, so a refused expression leaves the KB unchanged; and an
 expression naming the attribute it defines is refused as a self-reference without consulting the graph.
 
@@ -108,5 +109,13 @@ conditions hold the id.
 ## Not built
 
 Derived values in earlier episodes (re-interpreting with the latest episode stripped would give them); grouping derived
-attributes; assigning a value by asking the model to read a note; persisted user-controlled ordering of comments and
-derived values (see `tickets/attribute_ordering_plan.md`).
+attributes; persisted user-controlled ordering of comments and derived values (see the
+[backlog](../tickets/TODO.md#attribute-ordering)).
+
+## Demand-driven AI evaluation
+
+An active `AiBoolean` assignment reads the KB's prepared evaluation context. Missing input assigns nothing;
+a missing prepared result returns a demand and stops the speculative inference. The coordinator obtains the
+persisted result or classification outside the KB lock and repeats preparation. Failures cannot activate
+absence-based rules or publish partial comments. Canonical true/false values support normal downstream conditions.
+Display and explanation use saved provenance; they never call the classifier directly.

@@ -44,7 +44,7 @@ class InterpManagementRealServerTest {
         }
     }
 
-    private fun getCCAndSerializeIt() {
+    private suspend fun getCCAndSerializeIt() {
         val status = kbEndpoint.selectCornerstone(0, TEST_USER)
         status shouldBe serializeDeserialize(status)
     }

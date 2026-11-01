@@ -1,18 +1,23 @@
 package io.rippledown.model.rule
 
 import io.rippledown.model.RDRCase
+import io.rippledown.model.Interpretation
 import io.rippledown.model.RuleFactory
 import io.rippledown.model.condition.Condition
+import io.rippledown.model.rule.evaluation.EvaluationContext
 import kotlin.random.Random
 
 class RuleBuildingSession(
     private val ruleFactory: RuleFactory,
     private val tree: RuleTree,
-    val case: RDRCase,
+    case: RDRCase,
     val action: RuleTreeChange,
     cornerstones: List<RDRCase>,
-    private val resolver: DefinitionResolver = NO_DEFINITIONS
+    private val resolver: DefinitionResolver = NO_DEFINITIONS,
+    private val context: EvaluationContext = EvaluationContext.EMPTY,
+    private val originalResolver: DefinitionResolver = resolver
 ) {
+    val case = case.isolated()
     var conditions = mutableSetOf<Condition>()
     private val cornerstonesNotExempted = mutableSetOf<RDRCase>()
 
@@ -30,6 +35,7 @@ class RuleBuildingSession(
      * evaluated during rule building.
      */
     val materialisedCase: RDRCase
+    val previewCase: RDRCase
     private val materialisedCornerstones = mutableMapOf<RDRCase, RDRCase>()
 
     class TemporaryRuleFactory : RuleFactory {
@@ -41,8 +47,9 @@ class RuleBuildingSession(
         // Get a copy of the rule tree.
         val copyOfTree = tree.copy()
         // Make the change to the copied tree.
-        copyOfTree.apply(case, resolver)
-        action.createChanger(copyOfTree, TemporaryRuleFactory()).updateRuleTree(case, emptySet())
+        copyOfTree.apply(this.case, originalResolver, context)
+        action.createChanger(copyOfTree, TemporaryRuleFactory(), originalResolver, context).updateRuleTree(this.case, emptySet())
+        previewCase = copyOfTree.materialise(this.case.isolated(), resolver, context)
 
         // Interpret each cornerstone against the modified tree
         // and also the original. Those cases for which these interpretations
@@ -50,16 +57,16 @@ class RuleBuildingSession(
         cornerstones
             .filter { case.name != it.name }
             .forEach {
-                copyOfTree.apply(it, resolver)
-                val assignmentsGivenByModifiedTree = it.interpretation.assignments()
-                val materialised = tree.materialise(it, resolver)
-                val assignmentsGivenByOriginalTree = it.interpretation.assignments()
+                val candidate = copyOfTree.materialise(it.isolated(), resolver, context)
+                val assignmentsGivenByModifiedTree = candidate.interpretation.assignments()
+                val materialised = tree.materialise(it.isolated(), originalResolver, context)
+                val assignmentsGivenByOriginalTree = materialised.interpretation.assignments()
                 if (assignmentsGivenByModifiedTree != assignmentsGivenByOriginalTree) {
                     cornerstonesNotExempted.add(it)
                     materialisedCornerstones[it] = materialised
                 }
             }
-        materialisedCase = tree.materialise(case, resolver)
+        materialisedCase = tree.materialise(this.case, originalResolver, context)
         idsOfConflictingCornerstonesAtStart = cornerstonesNotExempted.map { it.id }.toSet()
     }
 
@@ -92,7 +99,9 @@ class RuleBuildingSession(
         return this
     }
 
-    fun commit(): Set<Rule> {
-        return action.createChanger(tree, ruleFactory).updateRuleTree(case, conditions)
+    fun commit(action: RuleTreeChange = this.action): Set<Rule> {
+        return action.createChanger(tree, ruleFactory, originalResolver, context).updateRuleTree(case, conditions)
     }
+
+    private fun RDRCase.isolated() = copy(interpretation = Interpretation(caseId))
 }

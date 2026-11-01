@@ -17,5 +17,13 @@ data class DerivedValueInfo(
     val name: String,
     val value: String,
     val formula: String,
-    val conditions: List<ConditionText>
-)
+    val conditions: List<ConditionText>,
+    val status: DerivedValueStatus = DerivedValueStatus.Evaluated,
+    val provenance: AiProvenance? = null
+) {
+    fun displayValue(): String = when (val state = status) {
+        DerivedValueStatus.Evaluated -> value
+        is DerivedValueStatus.NoInput -> "Not evaluated: no ${state.sourceName} value"
+        is DerivedValueStatus.Failed -> "Evaluation failed: ${state.reason}"
+    }
+}

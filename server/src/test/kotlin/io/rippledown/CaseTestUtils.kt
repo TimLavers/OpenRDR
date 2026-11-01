@@ -6,6 +6,7 @@ import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.KBEndpoint
 import io.rippledown.utils.defaultDate
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.apache.commons.io.FileUtils
 import java.io.File
@@ -13,7 +14,7 @@ import java.nio.charset.StandardCharsets
 
 fun supplyCaseFromFile(caseName: String, kb: KBEndpoint): RDRCase {
     val externalCase = CaseTestUtils.getCase(caseName)
-    return kb.processCase(externalCase)
+    return runBlocking { kb.processCase(externalCase) }
 }
 
 internal object CaseTestUtils {

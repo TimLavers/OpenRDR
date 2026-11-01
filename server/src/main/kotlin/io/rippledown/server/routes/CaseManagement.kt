@@ -7,6 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.api.*
+import io.rippledown.kb.ai.InterpretationIncompleteException
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.external.ExternalCase
 import io.rippledown.server.ServerApplication
@@ -28,6 +29,9 @@ fun Application.caseManagement(application: ServerApplication) {
                 val kbEndpoint = kbEndpoint(application)
                 val caseId = caseId()
                 kbEndpoint.viewableCase(caseId)
+            } catch (e: InterpretationIncompleteException) {
+                call.respondIncomplete(e)
+                return@get
             } catch (e: Exception) {
                 call.respond(BadRequest, e.message.toString())
                 return@get
@@ -40,8 +44,12 @@ fun Application.caseManagement(application: ServerApplication) {
             val endpoint = kbEndpoint(application)
             val str = call.receiveText()
             val externalCase = jsonAllowSMK.decodeFromString(ExternalCase.serializer(), str)
-            val case = endpoint.processCase(externalCase)
-            call.respond(HttpStatusCode.Accepted, case)
+            try {
+                val case = endpoint.processCase(externalCase)
+                call.respond(HttpStatusCode.Accepted, case)
+            } catch (e: InterpretationIncompleteException) {
+                call.respondIncomplete(e)
+            }
             application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }
         put(ADD_CORNERSTONE_CASE) {

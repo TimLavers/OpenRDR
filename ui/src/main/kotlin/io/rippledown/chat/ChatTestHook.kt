@@ -64,7 +64,8 @@ object ChatTestHook {
      */
     fun update(userId: UserId, messages: List<ChatMessage>, sendIsEnabled: Boolean) {
         val mostRecentBot = messages.lastOrNull {
-            it is BotMessage || it is WarningMessage || it is KbChoiceListMessage || it is CapabilityListMessage
+            it is BotMessage || it is WarningMessage || it is KbChoiceListMessage || it is CapabilityListMessage ||
+                    it is AiDefinitionDraftMessage
         }?.text
         val mostRecentSuggestion = (messages.lastOrNull { it is SuggestionListMessage } as? SuggestionListMessage)
             ?.let { msg ->

@@ -38,7 +38,7 @@ class RefusalsTest : OpenRDRServerTestBase() {
         setupServer()
         val request = RuleRequest(1L, RuleConditionList())
         val message = interpretationChangedMessage("Case1")
-        every { kbEndpoint.commitRuleSession(request, testUser) } throws StaleRuleSessionException(message)
+        coEvery { kbEndpoint.commitRuleSession(request, testUser) } throws StaleRuleSessionException(message)
 
         // When
         val result = httpClient.post(COMMIT_RULE_SESSION) {

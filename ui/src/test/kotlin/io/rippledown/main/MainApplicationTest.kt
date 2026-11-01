@@ -274,15 +274,12 @@ private fun AccessibleContext.find(description: String, role: AccessibleRole): A
 }
 
 private fun AccessibleContext.find(
-    matcher: (AccessibleContext) -> Boolean,
-    debug: Boolean = false
+    matcher: (AccessibleContext) -> Boolean
 ): AccessibleContext? {
-    if (debug) println("find, this.name: ${this.accessibleName}, this.description: ${this.accessibleDescription}, this.role: ${this.accessibleRole}")
     if (matcher(this)) return this
     val childCount = accessibleChildrenCount
-    if (debug) println("Searching amongst children, of which there are $childCount")
     for (i in 0..<childCount) {
-        val child = getAccessibleChild(i).accessibleContext.find(matcher, debug)
+        val child = getAccessibleChild(i).accessibleContext.find(matcher)
         if (child != null) return child
     }
     return null

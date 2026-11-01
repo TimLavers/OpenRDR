@@ -213,7 +213,6 @@ fun main() {
             val handler = object : ChatControllerHandler {
                 override fun sendUserMessage(message: String) {
                     runBlocking {
-                        println("User message sent: $message")
                         // Simulate a delay for the bot response
                         delay(1000)
                         onBotMessageReceived(ChatResponse("The answer to '$message' is 42"))

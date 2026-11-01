@@ -9,6 +9,9 @@ import io.mockk.coEvery
 import io.rippledown.constants.api.CASE_REPORT
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.kb.ai.InterpretationIncompleteException
+import io.rippledown.model.caseview.IncompleteCategory
+import io.rippledown.model.caseview.IncompleteInterpretation
 import io.rippledown.model.report.CaseReport
 import io.rippledown.server.OpenRDRServerTestBase
 import kotlin.test.Test
@@ -48,5 +51,23 @@ class ReportManagementTest : OpenRDRServerTestBase() {
 
         // Then
         result.status shouldBe HttpStatusCode.InternalServerError
+    }
+
+    @Test
+    fun `an incomplete interpretation is answered with the diagnosis rather than a report`() = testApplication {
+        // Given
+        setupServer()
+        val incomplete = IncompleteInterpretation(42L, IncompleteCategory.ABANDONED, null, "The case no longer exists.")
+        coEvery { kbEndpoint.caseReport(42L) } throws InterpretationIncompleteException(incomplete)
+
+        // When
+        val result = httpClient.get(CASE_REPORT) {
+            parameter(KB_ID, kbId)
+            parameter(CASE_ID, 42L)
+        }
+
+        // Then
+        result.status shouldBe INCOMPLETE_INTERPRETATION_STATUS
+        result.body<IncompleteInterpretation>() shouldBe incomplete
     }
 }

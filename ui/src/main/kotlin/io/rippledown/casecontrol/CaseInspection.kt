@@ -150,6 +150,13 @@ fun CaseInspection(
                     change = derivedValueChange,
                     ruleConditions = ruleConditions
                 )
+                case.incomplete?.let { failure ->
+                    Text(
+                        "Interpretation incomplete: ${failure.reason}. Ask in chat to retry evaluation.",
+                        color = MaterialTheme.colors.error,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                    )
+                }
                 InterpretationView(
                     interpretation = case.viewableInterpretation,
                     diff = diff,
@@ -157,7 +164,7 @@ fun CaseInspection(
                     columnWidths = columnWidths,
                     handler = handler
                 )
-                if (showReport) {
+                if (showReport && case.incomplete == null) {
                     ReportView(
                         reportText = reportText,
                         isVisible = reportVisible,

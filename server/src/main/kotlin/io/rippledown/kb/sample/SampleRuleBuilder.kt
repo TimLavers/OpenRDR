@@ -13,6 +13,7 @@ import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.server.KBEndpoint
+import kotlinx.coroutines.runBlocking
 
 /**
  * Rule sessions are per user; sample rules are built before any user has touched
@@ -55,8 +56,7 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
     fun addCommentForCase(caseName: String, comment: String, vararg conditions: Condition) {
         val case = kbe.kb.getCaseByName(caseName)
         val sessionStartRequest = SessionStartRequest(case.id!!, Addition(comment))
-        kbe.startRuleSession(sessionStartRequest, SAMPLE_BUILDER)
-        addConditionsAndCommitRule(*conditions)
+        startSessionAndCommitRule(sessionStartRequest, *conditions)
     }
 
     fun replaceCommentForCase(
@@ -67,8 +67,7 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
     ) {
         val case = kbe.kb.getCaseByName(caseName)
         val sessionStartRequest = SessionStartRequest(case.id!!, Replacement(toGo, replacement))
-        kbe.startRuleSession(sessionStartRequest, SAMPLE_BUILDER)
-        addConditionsAndCommitRule(*conditions)
+        startSessionAndCommitRule(sessionStartRequest, *conditions)
     }
 
     fun removeCommentForCase(
@@ -78,11 +77,12 @@ open class SampleRuleBuilder(val kbe: KBEndpoint) {
     ) {
         val case = kbe.kb.getCaseByName(caseName)
         val sessionStartRequest = SessionStartRequest(case.id!!, Removal(toGo))
-        kbe.startRuleSession(sessionStartRequest, SAMPLE_BUILDER)
-        addConditionsAndCommitRule(*conditions)
+        startSessionAndCommitRule(sessionStartRequest, *conditions)
     }
 
-    private fun addConditionsAndCommitRule(vararg conditions: Condition) {
+    // Sample rules never need an AI evaluation, so blocking here never waits on a classifier.
+    private fun startSessionAndCommitRule(request: SessionStartRequest, vararg conditions: Condition) = runBlocking {
+        kbe.startRuleSession(request, SAMPLE_BUILDER)
         conditions.forEach {
             kbe.addConditionToCurrentRuleBuildingSession(it, SAMPLE_BUILDER)
         }

@@ -38,6 +38,7 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     private val attributeStore = PostgresAttributeStore(db)
     private val attributeOrderStore = PostgresAttributeOrderStore(db)
     private val derivedDefinitionStore = PostgresDerivedDefinitionStore(db)
+    private val aiEvaluationStore = PostgresAiEvaluationStore(db)
     private val conditionStore = PostgresConditionStore(db)
     private val ruleStore = PostgresRuleStore(db)
     private val ruleSessionRecordStore = PostgresRuleSessionRecordStore(db)
@@ -69,6 +70,8 @@ class PostgresKB internal constructor(private val dbName: String): PersistentKB 
     override fun attributeOrderStore() = attributeOrderStore
 
     override fun derivedDefinitionStore() = derivedDefinitionStore
+
+    override fun aiEvaluationStore() = aiEvaluationStore
 
     override fun conditionStore() = conditionStore
 
