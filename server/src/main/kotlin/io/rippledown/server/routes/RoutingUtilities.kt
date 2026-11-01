@@ -1,11 +1,13 @@
 package io.rippledown.server.routes
 
 import io.ktor.http.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.rippledown.constants.server.CASE_ID
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.constants.server.KB_NAME
 import io.rippledown.constants.server.USER_ID_HEADER
+import io.rippledown.kb.ai.InterpretationIncompleteException
 import io.rippledown.model.UserId
 import io.rippledown.server.KBEndpoint
 import io.rippledown.server.ServerApplication
@@ -37,6 +39,15 @@ fun RoutingContext.kbEndpointByName(serverApplication: ServerApplication): KBEnd
     val kbId = call.parameterValue(KB_NAME, MISSING_KB_NAME)
     return serverApplication.kbForName(kbId)
 }
+
+/**
+ * The case is stored but could not be interpreted now: the body says why,
+ * and names the case so that the client can ask for it again.
+ */
+val INCOMPLETE_INTERPRETATION_STATUS = HttpStatusCode.ServiceUnavailable
+
+suspend fun RoutingCall.respondIncomplete(e: InterpretationIncompleteException) =
+    respond(INCOMPLETE_INTERPRETATION_STATUS, e.details)
 
 fun RoutingCall.parameterValue(key: String, errorMessage: String): String {
     val value = this.parameters[key] ?: error(errorMessage)

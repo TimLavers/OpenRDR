@@ -10,8 +10,8 @@ import io.rippledown.model.caseview.ViewableCase
 
 /**
  * Builds the [ChatManager] for a [ChatContext]. With a case the manager has the
- * rule service, the reason transformer and the suggestion handlers; without one
- * it has none of them, and the model can only talk and manage knowledge bases.
+ * rule service, the reason transformer and the suggestion handlers. A KB-only
+ * context also has a rule service for drafting AI definitions before case selection.
  */
 class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseService) {
 
@@ -27,14 +27,18 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
                     context.viewableCase,
                     LockedRuleService(
                         context.endpoint.session,
-                        context.endpoint.session.ruleSessionManagerFor(userId)
+                        context.endpoint.session.ruleSessionManagerFor(userId),
+                        context.endpoint.coordinator
                     ),
                     kbName,
                     kbNames,
                     demonstrationNames
                 )
 
-            else -> caseLess(kbService, kbName, kbNames, demonstrationNames)
+            is ChatContext.KnowledgeBaseOnly -> caseLess(kbService, kbName, kbNames, demonstrationNames,
+                LockedRuleService(context.endpoint.session, context.endpoint.session.ruleSessionManagerFor(userId),
+                    context.endpoint.coordinator))
+            is ChatContext.NoKnowledgeBase -> caseLess(kbService, kbName, kbNames, demonstrationNames)
         }
     }
 
@@ -42,12 +46,14 @@ class ChatManagerFactory(private val kbServiceFor: (UserId) -> KnowledgeBaseServ
         kbService: KnowledgeBaseService,
         kbName: String?,
         kbNames: List<String>,
-        demonstrationNames: List<String>
+        demonstrationNames: List<String>,
+        ruleService: RuleService? = null
     ): ChatManager {
         val chatService =
-            KBChatService.createKBChatService(null, kbName, kbNames, demonstrationNames = demonstrationNames)
+            KBChatService.createKBChatService(null, kbName, kbNames,
+                allAttributes = ruleService?.allAttributes().orEmpty(), demonstrationNames = demonstrationNames)
         val conversation = Conversation(chatService, emptyMap())
-        return ChatManager(conversation, null, kbService)
+        return ChatManager(conversation, ruleService, kbService)
     }
 
     private fun forCase(

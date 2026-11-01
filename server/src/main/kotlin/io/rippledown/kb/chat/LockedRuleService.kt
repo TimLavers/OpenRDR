@@ -1,6 +1,7 @@
 package io.rippledown.kb.chat
 
 import io.rippledown.kb.KBSession
+import io.rippledown.kb.ai.AiInferenceCoordinator
 import io.rippledown.model.CommentVariable
 import io.rippledown.model.RDRCase
 import io.rippledown.model.caseview.ViewableCase
@@ -10,17 +11,50 @@ import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.edit.EditableCondition
 import io.rippledown.model.rule.CornerstoneStatus
 import io.rippledown.model.rule.UndoRuleDescription
+import kotlinx.coroutines.runBlocking
+import io.rippledown.model.rule.AiBooleanExample
 
 /**
- * The chat's view of a KB's [RuleService]: every call runs under the KB's lock.
- * See documentation/design/concurrent_users.md.
+ * The chat's view of a KB's [RuleService]: every call runs under the KB's lock,
+ * and any AI evaluation it needs is obtained with the lock released. The
+ * interface is synchronous, so the calling thread waits for the evaluation;
+ * the lock is never held during it. See documentation/design/concurrent_users.md.
  */
 class LockedRuleService(
     private val session: KBSession,
-    private val delegate: RuleService
+    private val delegate: RuleService,
+    private val coordinator: AiInferenceCoordinator
 ) : RuleService {
 
-    private fun <T> locked(action: RuleService.() -> T): T = session.locked { delegate.action() }
+    override fun proposeAiDefinition(
+        attributeName: String, sourceName: String, instructions: String, examples: List<AiBooleanExample>,
+        caseId: Long?, reasons: List<String>, edit: Boolean
+    ) = locked { proposeAiDefinition(attributeName, sourceName, instructions, examples, caseId, reasons, edit) }
+
+    override fun currentAiDefinitionDraft() = locked { currentAiDefinitionDraft() }
+    override fun currentAiSourceCorrection() = locked { currentAiSourceCorrection() }
+    override fun previewAiDefinition(draftId: String, case: RDRCase?, retryAfterFailure: Boolean) =
+        locked(retryAfterFailure) { previewAiDefinition(draftId, case) }
+    override fun acceptAiDefinition(draftId: String, case: RDRCase?) = locked { acceptAiDefinition(draftId, case) }
+    override fun cancelAiDefinitionDraft() = locked { cancelAiDefinitionDraft() }
+    override fun explainAiEvaluation(attributeName: String, case: RDRCase?) =
+        locked(savedOnly = true) { explainAiEvaluation(attributeName, case) }
+    override fun retryAiEvaluation(case: RDRCase) = locked(retryAfterFailure = true) { retryAiEvaluation(case) }
+
+    private fun <T> locked(retryAfterFailure: Boolean = false, savedOnly: Boolean = false, action: RuleService.() -> T): T {
+        var guard: (() -> Unit)? = null
+        return runBlocking {
+            val operation = {
+                session.locked {
+                    val currentGuard = guard ?: delegate.operationGuard().also { guard = it }
+                    currentGuard()
+                    delegate.action()
+                }
+            }
+            if (savedOnly) coordinator.withSavedEvaluations(null, operation)
+            else coordinator.withPreparedEvaluations(null, retryAfterFailure, operation)
+        }
+    }
 
     override fun nameOfCommentAttributeInSession() = locked { nameOfCommentAttributeInSession() }
 
@@ -29,8 +63,14 @@ class LockedRuleService(
 
     // Translates the expression, which may call the LLM: the delegate locks only
     // the part that touches the KB, so this must not be wrapped here.
-    override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult =
-        delegate.conditionForExpression(case, expression)
+    override fun conditionForExpression(case: RDRCase, expression: String): ConditionParsingResult {
+        val guard = session.locked { delegate.operationGuard() }
+        return runBlocking { coordinator.withPreparedEvaluations(case.id) {
+            session.locked { guard() }
+            val result = delegate.conditionForExpression(case, expression)
+            session.locked { guard(); result }
+        } }
+    }
 
     override fun conditionForEditedSuggestion(
         case: RDRCase,

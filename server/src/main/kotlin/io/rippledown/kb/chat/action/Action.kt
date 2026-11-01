@@ -29,8 +29,9 @@ sealed class KbManagementOutcome {
 
 interface KbManagementAction : Action {
     /**
-     * Whether carrying out the action changes what the chat is about, in which
-     * case it is refused while a rule is being built.
+     * Whether carrying out the action changes what the chat is about. Such actions
+     * are refused while a rule is being built, except [CloseKnowledgeBase], which
+     * cancels the caller's unfinished session as part of closing.
      */
     val changesContext: Boolean get() = true
 

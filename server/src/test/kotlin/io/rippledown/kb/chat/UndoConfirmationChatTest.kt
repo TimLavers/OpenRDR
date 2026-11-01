@@ -14,6 +14,7 @@ import io.rippledown.model.KBInfo
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.UserId
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.server.KBEndpoint
 import io.rippledown.toJsonString
 import io.rippledown.utils.defaultDate
 import kotlinx.coroutines.test.runTest
@@ -96,7 +97,7 @@ class UndoConfirmationChatTest {
                 SHOW_LAST_RULE_FOR_UNDO else UNDO_LAST_RULE
             ActionComment(action).toJsonString()
         }
-        val manager = ChatManager(conversation, LockedRuleService(session, alice), mockk())
+        val manager = ChatManager(conversation, LockedRuleService(session, alice, KBEndpoint(session).coordinator), mockk())
         manager.response("undo")
         session.locked {
             kb.interpret(case)

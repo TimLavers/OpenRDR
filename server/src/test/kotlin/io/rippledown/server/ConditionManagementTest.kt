@@ -5,6 +5,8 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import io.rippledown.constants.api.CONDITION_HINTS
@@ -46,7 +48,7 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
                 NonEditableSuggestedCondition(isLow(2, Attribute(2, "SeaTemp")))
             )
         )
-        every { kbEndpoint.conditionHintsForCase(caseId, testUser) } returns conditionList
+        coEvery { kbEndpoint.conditionHintsForCase(caseId, testUser) } returns conditionList
 
         val result = httpClient.get(CONDITION_HINTS) {
             parameter(KB_ID, kbId)
@@ -55,6 +57,6 @@ class ConditionManagementTest: OpenRDRServerTestBase() {
 
         result.status shouldBe HttpStatusCode.OK
         result.body<ConditionList>() shouldBe conditionList
-        verify { kbEndpoint.conditionHintsForCase(caseId, testUser) }
+        coVerify { kbEndpoint.conditionHintsForCase(caseId, testUser) }
     }
  }

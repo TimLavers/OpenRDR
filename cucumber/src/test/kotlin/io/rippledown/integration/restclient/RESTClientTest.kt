@@ -8,18 +8,100 @@ import io.rippledown.constants.api.*
 import io.rippledown.constants.server.KB_ID
 import io.rippledown.constants.server.RESET
 import io.rippledown.main.Api
+import io.rippledown.model.CaseId
+import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.KnowledgeBaseHeldException
+import io.rippledown.model.RDRCase
+import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.sample.SampleKB
+import io.rippledown.toJsonString
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 
 class RESTClientTest {
 
     @Test
-    fun `successful reset clears the wrapped API selection`() = runBlocking {
+    fun `case checks in chat context read the imported KB without changing the conversation`() {
+        // Given a REST client still pointing at the original KB after the UI re-imported it.
+        val original = KBInfo("original", "Thyroids")
+        val imported = KBInfo("imported", "Thyroids")
+        val caseId = CaseId(7L, "Export01")
+        val view = ViewableCase(RDRCase(caseId))
+        val jsonHeaders = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                CREATE_KB -> respond(Json.encodeToString(original), headers = jsonHeaders)
+                CHAT_CONTEXT -> respond(Json.encodeToString(ChatContextInfo(imported, caseId.id)), headers = jsonHeaders)
+                WAITING_CASES -> {
+                    request.url.parameters[KB_ID] shouldBe imported.id
+                    respond(Json.encodeToString(CasesInfo(caseIds = listOf(caseId))), headers = jsonHeaders)
+                }
+                CASE -> {
+                    request.url.parameters[KB_ID] shouldBe imported.id
+                    respond(view.toJsonString(), headers = jsonHeaders)
+                }
+                else -> error("Unexpected request: ${request.url}")
+            }
+        }
+        val client = RESTClient(Api(engine))
+        try {
+            client.createKB(original.name)
+
+            // When
+            val result = client.getProcessedCaseInChatContext(caseId.name)
+
+            // Then the assertion reads the new KB using only GET requests.
+            result shouldBe view
+            engine.requestHistory.drop(1).map { it.method to it.url.encodedPath } shouldBe listOf(
+                HttpMethod.Get to CHAT_CONTEXT,
+                HttpMethod.Get to WAITING_CASES,
+                HttpMethod.Get to CASE
+            )
+        } finally {
+            client.close()
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `case checks cannot fall back to an old KB when chat has none`(conversationExists: Boolean) {
+        // Given an old local selection and either no conversation or a conversation without a KB.
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                CREATE_KB -> respond(
+                    Json.encodeToString(KBInfo("old", "Thyroids")),
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                )
+                CHAT_CONTEXT -> if (conversationExists) respond(
+                    Json.encodeToString(ChatContextInfo()),
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                ) else respond("", HttpStatusCode.NoContent)
+                else -> error("Unexpected request: ${request.url}")
+            }
+        }
+        val client = RESTClient(Api(engine))
+        try {
+            client.createKB("Thyroids")
+
+            // When
+            val error = shouldThrow<IllegalStateException> { client.getProcessedCaseInChatContext("Export01") }
+
+            // Then no case request is sent to the old KB.
+            error.message shouldBe "No knowledge base is open in the chat context."
+            engine.requestHistory.map { it.url.encodedPath } shouldBe listOf(CREATE_KB, CHAT_CONTEXT)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `successful reset clears the wrapped API selection`() = runBlocking<Unit> {
         // Given
         val kb = KBInfo("old", "Old")
         val engine = MockEngine { request ->
@@ -51,7 +133,7 @@ class RESTClientTest {
 
     @ParameterizedTest
     @CsvSource("409", "500", "404")
-    fun `unsuccessful reset fails without clearing selection`(status: Int) = runBlocking {
+    fun `unsuccessful reset fails without clearing selection`(status: Int) = runBlocking<Unit> {
         // Given
         val kb = KBInfo("old", "Old")
         val api = Api(MockEngine { request ->
@@ -63,7 +145,11 @@ class RESTClientTest {
             client.createKB("Old")
 
             // When
-            shouldThrow<IllegalStateException> { client.reset() }
+            if (status == HttpStatusCode.Conflict.value) {
+                shouldThrow<KnowledgeBaseHeldException> { client.reset() }
+            } else {
+                shouldThrow<IllegalStateException> { client.reset() }
+            }
 
             // Then
             api.kbInfo() shouldBe kb

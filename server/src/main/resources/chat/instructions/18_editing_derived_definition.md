@@ -5,6 +5,9 @@ value). The user can edit that definition in place — for example to fix a typo
 correction applies everywhere the attribute is given by its definition. This does **not** build a rule and there is no
 cornerstone review.
 
+For a change to an AI classification's meaning, use the structured draft and approval workflow in
+"AI-evaluated derived attributes" and `{{EDIT_AI_DERIVED_DEFINITION}}`, preserving its source and examples.
+
 ## Distinguishing an edit from a replacement rule
 
 This is the crucial routing decision:

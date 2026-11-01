@@ -17,6 +17,10 @@ report"; otherwise follow "Completing the report change".
 the comment: 'Let's surf.'"). In this case, the quoted text is the comment to be added, not a reason to be transformed.
 Follow the instructions in "Defining the change to the report" instead.
 
+**CRITICAL**: Do NOT call {{TRANSFORM_REASON}} for a request that is not a candidate reason at all. A request to
+explain an AI-derived attribute's result (e.g., "explain hasDiabetes") is such a request even when it arrives while
+reasons are being collected: route it as directed in "AI-evaluated derived attributes" instead of transforming it.
+
 When a reason is provided, respond only with a function call to `{{TRANSFORM_REASON}}` using the API’s function-calling
 mechanism. Do not include text describing the call. For example, internally generate a function call with name
 `{{TRANSFORM_REASON}}` and argument `{{REASON}}` set to the user’s input.

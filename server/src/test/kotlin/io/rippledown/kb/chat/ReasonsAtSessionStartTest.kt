@@ -178,4 +178,46 @@ class ReasonsAtSessionStartTest {
         response.text shouldBe "${TRANSFORMATION_MESSAGE.format(glucoseHigh.asText())}\n\n$MORE_REASONS_QUESTION"
         response.suggestions shouldBe listOf("Age ≥ 50")
     }
+
+    @Test
+    fun `AI acceptance asks for reasons without a model turn`() = runTest {
+        // Given a session started after the user accepted the definition
+        val status = CornerstoneStatus(numberOfCornerstones = 0)
+        every { ruleService.sendCornerstoneStatus() } returns Unit
+
+        // When
+        val response = respondAfterSessionStart(
+            ruleService, viewableCase, status, emptyList(), modelResponder,
+            acceptanceMessage = "Accepted the definition of \"hasDiabetes\"."
+        )
+
+        // Then the question cannot be replaced by a model's unrelated request
+        response.text shouldBe "Accepted the definition of \"hasDiabetes\".\n\n$MORE_REASONS_QUESTION"
+        verify(exactly = 1) { ruleService.sendCornerstoneStatus() }
+        verify(exactly = 0) { ruleService.conditionForExpression(any(), any()) }
+        coVerify(exactly = 0) { modelResponder.response(any()) }
+    }
+
+    @Test
+    fun `AI acceptance applies supplied reasons and asks for more without a model turn`() = runTest {
+        // Given
+        val status = CornerstoneStatus(indexOfCornerstoneToReview = 0, numberOfCornerstones = 1)
+        every { ruleService.sendCornerstoneStatus() } returns Unit
+        every { ruleService.conditionForExpression(case, "glucose high") } returns
+                ConditionParsingResult(glucoseHigh, expression = "glucose high")
+        every { ruleService.addConditionToCurrentRuleSession(glucoseHigh) } returns Unit
+        every { ruleService.cornerstoneStatus() } returns status
+
+        // When
+        val response = respondAfterSessionStart(
+            ruleService, viewableCase, status, listOf("glucose high"), modelResponder,
+            acceptanceMessage = "Accepted the definition."
+        )
+
+        // Then the reason is applied once and acknowledged before the next question
+        response.text shouldBe "Accepted the definition.\n\n" +
+                "${TRANSFORMATION_MESSAGE.format(glucoseHigh.asText())}\n\n$MORE_REASONS_QUESTION"
+        verify(exactly = 1) { ruleService.addConditionToCurrentRuleSession(glucoseHigh) }
+        coVerify(exactly = 0) { modelResponder.response(any()) }
+    }
 }

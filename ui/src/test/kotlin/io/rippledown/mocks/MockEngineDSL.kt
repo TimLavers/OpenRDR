@@ -156,7 +156,6 @@ private class EngineBuilder(private val config: EngineConfig) {
             }
 
             KB_INFO -> {
-                println("api call to KB_INFO")
                 httpResponseData(json.encodeToString(config.returnKBInfo))
             }
 

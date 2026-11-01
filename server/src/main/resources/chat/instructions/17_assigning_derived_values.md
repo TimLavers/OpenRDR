@@ -9,6 +9,9 @@ a case. Examples:
 
 Use the operations below when the user wants to create, remove, or change such a value.
 
+For AI classification of primary text on each future case, follow "AI-evaluated derived attributes" instead of
+inventing a formula or storing the current classification as a literal.
+
 ## Step 1: Identify the intent
 
 Common intents that trigger a derived-value action:

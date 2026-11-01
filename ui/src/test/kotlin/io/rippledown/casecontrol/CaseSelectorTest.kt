@@ -819,7 +819,6 @@ class CaseSelectorTest {
             }
 
             // Verify scrollbar is not present when content fits
-            onRoot().printToLog("UI Tree - No scrollbar expected")
             // Note: Since scrollbars are only shown when content overflows, 
             // we verify by checking that scrolling is not possible
             // The scrollbar itself doesn't have a test tag, so we verify behavior
@@ -1303,7 +1302,7 @@ fun main() = application {
             CaseId(id = i.toLong(), name = "case $i")
         }
         CaseSelector(caseIds, handler = object : CaseSelectorHandler {
-            override var selectCase: (id: Long) -> Unit = { println("selectCaseID = $it") }
+            override var selectCase: (id: Long) -> Unit = {}
             override var requestFocusOnSelectedCase: () -> Unit = {}
         })
     }

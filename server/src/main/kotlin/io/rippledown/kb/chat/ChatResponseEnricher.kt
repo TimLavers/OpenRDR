@@ -122,6 +122,7 @@ class ChatResponseEnricher(
         val SESSION_STARTING_ACTIONS = setOf(
             ADD_COMMENT, REMOVE_COMMENT, REPLACE_COMMENT,
             ASSIGN_DERIVED_VALUE, REMOVE_DERIVED_VALUE, REPLACE_DERIVED_VALUE,
+            ACCEPT_AI_DERIVED_ATTRIBUTE,
         )
 
         fun commentVariableTip(exampleAttributeName: String) =

@@ -36,8 +36,14 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.awaitility)
     testImplementation(libs.assertJSwing)
+    constraints {
+        testImplementation(libs.assertJCore) {
+            because("AssertJ Swing requests a version affected by CVE-2026-24400")
+        }
+    }
 }
 
+// Support JUnit 5 tests while retaining the existing JUnit 4 Compose tests.
 tasks.test {
     useJUnitPlatform()
 }
@@ -111,6 +117,7 @@ compose.desktop {
 }
 compose.resources {
     generateResClass = always
+    packageOfResClass = "openrdr.ui.generated.resources"
 }
 
 // The Compose Desktop runtime image is jlinked from `javaHome` (set above). Its

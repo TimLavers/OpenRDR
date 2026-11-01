@@ -3,7 +3,8 @@
 ## The chat is the general-purpose surface
 
 The chat exists to replace standing GUI controls, not to grow new ones. Open-ended input, typed or spoken, is the
-default way to do anything, and the model interprets it. No persistent control is added beside the chat. The
+default way to do anything, and the model interprets it. Persistent editing controls are avoided; navigation, filtering, panel disclosure and passive awareness displays
+remain in the surrounding GUI. The
 application bar shows the open KB's name as a read-only label with an info icon whose tooltip is the KB description;
 that is passive disclosure, not a control.
 
@@ -45,6 +46,7 @@ If either fails, the answer belongs in the text field.
 | Delete knowledge base chip                 | No                 | Irreversible; the confirmation is the point.                                                                                                                                            |
 | Anything needing a value or an explanation | No                 | Not a closed set.                                                                                                                                                                       |
 | Warning row                                | Built (display)    | A GUI action the server refused is reported in the chat with a warning icon, saying what was not done and why. No controls. (No GUI action is currently refusable; the row type stays.) |
+| AI definition draft card                   | Built (display)    | The draft offer is rendered as a two-column card (headings left, values right, no grid lines) from a server-attached `AiDefinitionDraftView`; the message text stays the full blob so matching and accessibility are unchanged. No controls — acceptance is typed. |
 | App-bar people icon and count             | Built             | Other connected users with this KB open; hover, click, or keyboard focus shows a bulleted list of names. Kept current by pushes and snapshots; see [concurrent_users.md](concurrent_users.md). |
 | Notice row                                 | Built (display)    | Another user's change, named and attributed, in the transcript next to the case it altered. Not a bot turn, not model history, no controls.                                             |
 
