@@ -1,5 +1,6 @@
 package io.rippledown.kb.sample.vltsh
 
+import io.rippledown.kb.sample.SAMPLE_BUILDER
 import io.rippledown.kb.sample.SampleRuleBuilder
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.SeriesCondition
@@ -38,12 +39,12 @@ class TSHSampleBuilder(private val kbe: KBEndpoint)  {
 
     fun buildTSHRules() {
         setupTSHSampleCases()
-        kbe.setDescription(TSH_DESCRIPTION)
+        kbe.setDescription(TSH_DESCRIPTION, SAMPLE_BUILDER)
         TSHRulesBuilder(kbe).buildRules()
     }
 
     fun setupTSHSampleCases() {
-        kbe.setDescription(TSH_CASES_DESCRIPTION)
+        kbe.setDescription(TSH_CASES_DESCRIPTION, SAMPLE_BUILDER)
         setupTSHAttributes()
         val tshCases = TSHCases(kbe.kb.attributeManager)
         kbe.kb.addProcessedCase(tshCases.TSH1)

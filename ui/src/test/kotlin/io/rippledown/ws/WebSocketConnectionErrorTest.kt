@@ -1,41 +1,64 @@
 package io.rippledown.ws
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.websocket.*
 import io.rippledown.main.WebSocketApi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
+import kotlinx.coroutines.*
+import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class WebSocketConnectionErrorTest {
     @Test
-    fun `should handle WebSocket connection error`() = runTest {
+    fun `connection failures back off from one second to thirty and propagate cancellation`() = runBlocking<Unit> {
         // Given
-        val mockEngine = MockEngine.Companion { _ ->
-            throw Exception("Connection failed")
-        }
-        val client = createMockHttpClient(mockEngine)
-        val webSocketManager = WebSocketApi(client)
-        var errorOccurred = false
-
-        // When
+        val client = HttpClient(MockEngine { throw IllegalStateException("Offline") }) { install(WebSockets) }
+        val delays = mutableListOf<Long>()
+        val connections = mutableListOf<Boolean>()
+        val socket = WebSocketApi(client, retryDelay = {
+            delays.add(it)
+            if (delays.size == 7) throw CancellationException("Stop")
+        })
         try {
-            webSocketManager.startSession(
-                updateCornerstoneStatus = {},
-                ruleSessionCompleted = {}
-            )
-        } catch (_: Exception) {
-            errorOccurred = true
-        }
+            // When
+            val failure = shouldThrow<CancellationException> {
+                socket.startSession({}, {}, connected = { connections.add(it) })
+            }
 
-        // Then
-        errorOccurred shouldBe true
+            // Then
+            failure.message shouldBe "Stop"
+            delays shouldBe listOf(1_000L, 2_000L, 4_000L, 8_000L, 16_000L, 30_000L, 30_000L)
+            connections shouldBe listOf(false)
+        } finally {
+            client.close()
+        }
     }
 
-    private fun createMockHttpClient(engine: MockEngine) = HttpClient(engine) {
-        install(WebSockets)
+    @Test
+    fun `cancellation while backing off prevents another attempt`() = runBlocking<Unit> {
+        // Given
+        val client = HttpClient(MockEngine { throw IllegalStateException("Offline") }) { install(WebSockets) }
+        val waiting = CompletableDeferred<Unit>()
+        var retries = 0
+        val socket = WebSocketApi(client, retryDelay = {
+            ++retries
+            waiting.complete(Unit)
+            awaitCancellation()
+        })
+        val session = launch { socket.startSession({}, {}) }
+        try {
+            withTimeout(5_000) { waiting.await() }
+
+            // When
+            session.cancelAndJoin()
+
+            // Then
+            session.isCancelled shouldBe true
+            retries shouldBe 1
+        } finally {
+            session.cancelAndJoin()
+            client.close()
+        }
     }
 }

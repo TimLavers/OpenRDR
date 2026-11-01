@@ -21,13 +21,16 @@ protected by semantics, not by prompt discipline.
 
 Both are server-side Gemini chats; the client never talks to a model.
 
-| Conversation   | Owner                                                 | Job                                                                                                                          |
-|----------------|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| **Operator**   | `ChatManager` (one, held by `ChatCoordinator`)        | Understands the user's request, asks clarifying questions, emits actions, relays server results.                             |
-| **Translator** | `ConditionChatService` (one per `RuleSessionManager`) | Turns one natural-language reason into a `ConditionSpecification`; see [condition_translation.md](condition_translation.md). |
+| Conversation   | Owner                                                   | Job                                                                                                                          |
+|----------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| **Operator**   | `ChatManager` (one per user, held by `ChatCoordinator`) | Understands the user's request, asks clarifying questions, emits actions, relays server results.                             |
+| **Translator** | `ConditionChatService` (one per `RuleSessionManager`)   | Turns one natural-language reason into a `ConditionSpecification`; see [condition_translation.md](condition_translation.md). |
 
 Keeping them separate keeps each prompt small and single-purpose. Gemini is used for both because the client and key
 were already in place; a second provider would buy little for the operator's task.
+
+Each user has their own `RuleSessionManager` for each KB, so translators and rule reviews are also isolated by user.
+A user's windows share the operator conversation and open-KB context; see [concurrent_users.md](concurrent_users.md).
 
 ## The operator conversation
 
@@ -66,8 +69,10 @@ The model communicates three ways:
 | Plain text                             | questions and explanations, shown to the user                                                                                                                                               |
 
 `Action` is a sealed interface: `ChatAction`s work on the open KB and case through `RuleService` (implemented by
-`RuleSessionManager`), `KbManagementAction`s work on the set of KBs through `KnowledgeBaseService`, and
-`ListCapabilities` needs neither. `ChatManager` dispatches on kind and refuses a `ChatAction` when no KB is open.
+`RuleSessionManager`), and `KbManagementAction`s work through `KnowledgeBaseService` on the KB set or the open KB's
+metadata, history, and presence. `ListCapabilities` needs neither. `ChatManager` dispatches on kind and refuses a
+`ChatAction` when no rule service is available. History and presence remain available with a KB open and no case
+selected, and during rule building.
 
 `SuggestionsBuffer` holds the suggestion list the model fetched, so the model never has to echo the list back; the
 chips are attached to the response deterministically. Suggestions already in the rule are filtered where the response is
@@ -77,21 +82,27 @@ assembled (`ChatResponseEnricher`), because the model may fetch before it select
 
 `ChatManager` is a mediator; three delegates own policy and are unit-tested directly:
 
-| Delegate                    | State                                                                               | Owns                                                                                         |
-|-----------------------------|-------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| `KnowledgeBaseConversation` | `Idle`, `Greeting`, `Creating(stage, question, actionForName)`, `Confirming(offer)` | KB greeting, the naming workflow for a new KB or demonstration copy, one-turn confirmations. |
-| `RuleConversation`          | `Ready`, `OfferedAssignment(action)`, `AwaitingReasonReply`                         | The "more reasons?" question, "did you mean" offers, cornerstone allow replies.              |
-| `ChatResponseEnricher`      | one flag                                                                            | Suggestion precedence and filtering; the once-per-conversation comment-variable tip.         |
+| Delegate                    | State                                                                                                                     | Owns                                                                                                                     |
+|-----------------------------|---------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `KnowledgeBaseConversation` | `Idle`, `Greeting`, `Creating(stage, question, actionForName)`, `Confirming(offer)`                                       | KB greeting, the naming workflow for a new KB or demonstration copy, one-turn confirmations.                             |
+| `RuleConversation`          | `Ready`, `OfferedAssignment(action)`, `AwaitingReasonReply`, `AwaitingCornerstoneAllowance`; pending undo-refusal context | The "more reasons?" question, "did you mean" offers, cornerstone allow replies, and undo refusal on the next model turn. |
+| `ChatResponseEnricher`      | one flag                                                                                                                  | Suggestion precedence and filtering; the once-per-conversation comment-variable tip.                                     |
 
 These are guards on specific transitions, not a rule-building state machine: `RuleService` remains the single authority
 on whether a session is active and what the cornerstone status is. Sealed types and exhaustive `when`s make the pending
 server question explicit without a framework.
 
-**The server holds every confirmation.** An action needing the user's say-so returns a question and a lambda that has
+**The server holds KB-management confirmations.** An action needing the user's say-so returns a question and a lambda
+that has
 already captured the resolved target; a plain acceptance runs the lambda without consulting the model, anything else
 drops it. The model is told never to ask for confirmation itself, and a lambda gives it nothing to name to skip the
 question. The acceptance-word check runs before the model for a server question, since a model that did not ask the
 question would answer "yes" with a clarification.
+
+Undo uses a separate model-driven pair of actions: `ShowLastRuleForUndo` records the reviewed rule-session ID for
+the user, then `UndoLastRule` checks under the KB lock that it is still the latest. Another user's intervening
+commit causes a refusal without deleting anything. The refusal reaches the model on the next turn; a fresh preview
+and subsequent confirmation are required. See [undo across users](concurrent_users.md#undo-across-users).
 
 **Server-owned workflow, model-interpreted language.** Where the reply to a server question is not a plain yes — "call
 it Thyroid", "no", "actually, open Zoo" — the reply, the question and the stage go to the model, which returns an intent
@@ -138,7 +149,7 @@ flowchart TD
    more reasons, `CornerstoneReviewMessage` appends an imperative to commit, because without it the model loops back
    to offering suggestions.
 5. **Commit.** `CommitRule` adds the rule and the case becomes a cornerstone. `CancelRule` discards the session;
-   `UndoLastRule` (after `ShowLastRuleForUndo`) removes the last committed rule.
+   `UndoLastRule` (after `ShowLastRuleForUndo`) removes the reviewed rule session only if it remains the latest.
 
 Why the acknowledgement is composed where the reasons are applied rather than by the turn-completion check: the
 session-starting action's feedback to the model is a nested turn, and by then the conditions it added are already the

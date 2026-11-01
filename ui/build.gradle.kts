@@ -24,12 +24,30 @@ dependencies {
     implementation(project(":llm"))
 
     testImplementation(testFixtures(project(":common")))
+    // Keep the existing Compose rule tests on JUnit 4 while new tests use Jupiter.
+    testImplementation(kotlin("test-junit"))
+    testImplementation(platform("org.junit:junit-bom:5.10.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation(libs.kotlinxCoroutinesTest)
     testImplementation(libs.kotestAssertions)
     testImplementation(libs.mockk)
     testImplementation(libs.awaitility)
     testImplementation(libs.assertJSwing)
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+configurations.configureEach {
+    // useJUnitPlatform would otherwise remap legacy kotlin.test annotations to Jupiter,
+    // bypassing those tests' JUnit 4 @Rule and @Before methods.
+    resolutionStrategy.capabilitiesResolution.withCapability("org.jetbrains.kotlin:kotlin-test-framework-impl") {
+        select("org.jetbrains.kotlin:kotlin-test-junit:${libs.versions.kotlin.get()}")
+    }
 }
 
 val toolchainJavaHome: File = javaToolchains.launcherFor {

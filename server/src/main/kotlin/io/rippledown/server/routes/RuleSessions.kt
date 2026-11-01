@@ -18,6 +18,12 @@ fun Application.ruleSession(application: ServerApplication) {
     val logger = lazyLogger
     routing {
 
+        get(CORNERSTONE_STATUS) {
+            val status = kbEndpoint(application).cornerstoneStatus(userId())
+            if (status == null) call.respond(HttpStatusCode.NoContent)
+            else call.respond(HttpStatusCode.OK, status)
+        }
+
         post(START_RULE_SESSION) {
             logger.info(START_RULE_SESSION)
             val sessionStartRequest = call.receive<SessionStartRequest>()

@@ -4,6 +4,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.rippledown.chat.*
 import io.rippledown.constants.chat.AI_UNAVAILABLE_MESSAGE
+import io.rippledown.constants.chat.NOTICE_PREFIX
 import io.rippledown.constants.chat.SYSTEM_ERROR_PREFIX
 import io.rippledown.integration.utils.find
 import io.rippledown.integration.utils.findExact
@@ -164,6 +165,13 @@ class ChatPO(private val userId: UserId, private val contextProvider: () -> Acce
     fun numberOfTipMessages(): Int =
         snapshot().messageList.count { it is TipMessage }
 
+    fun hasNoticeContaining(text: String): Boolean = execute<Boolean> {
+        chatRoot()?.find(matcher = { context ->
+            val description = context.accessibleDescription
+            description?.startsWith(NOTICE_PREFIX) == true && description.contains(text)
+        }) != null
+    }
+
     fun mostRecentBotRowDoesNotContainTheTerm(term: String) {
         val text = snapshot().mostRecentBotText
         val found = text != null && text.contains(term, ignoreCase = true)
@@ -277,4 +285,3 @@ class ChatPO(private val userId: UserId, private val contextProvider: () -> Acce
         return if (isTerminal) text else null
     }
 }
-

@@ -1,6 +1,7 @@
 package io.rippledown.server
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -11,6 +12,7 @@ import io.rippledown.CaseTestUtils
 import io.rippledown.kb.*
 import io.rippledown.kb.report.ReportService
 import io.rippledown.model.AttributeKind
+import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.condition.Condition
 import io.rippledown.model.condition.ConditionParsingResult
 import io.rippledown.model.condition.greaterThanOrEqualTo
@@ -66,8 +68,35 @@ internal class KBEndpointTest {
     fun descriptionTest() {
         endpoint.description() shouldBe ""
         val newDescription = "lots of rules"
-        endpoint.setDescription(newDescription)
+        endpoint.setDescription(newDescription, TEST_USER)
         endpoint.description() shouldBe newDescription
+    }
+
+    @Test
+    fun `setting the description is recorded`() {
+        // When
+        endpoint.setDescription("lots of rules", TEST_USER)
+
+        // Then
+        val record = endpoint.kb.changeLog.all().single()
+        record.userId shouldBe TEST_USER.value
+        record.kind shouldBe ChangeKind.DESCRIPTION_SET
+        record.summary shouldBe descriptionSetSummary()
+    }
+
+    @Test
+    fun `changes are those after the given id, oldest first, keeping the newest up to the limit`() {
+        // Given
+        repeat(5) { endpoint.setDescription("version $it", TEST_USER) }
+        val all = endpoint.kb.changeLog.all()
+        all.map { it.id } shouldBe listOf(1, 2, 3, 4, 5)
+
+        // Then
+        endpoint.changes(null, 50) shouldBe all
+        endpoint.changes(2, 50) shouldBe all.drop(2)
+        endpoint.changes(null, 2) shouldBe all.takeLast(2)
+        endpoint.changes(2, 2) shouldBe all.takeLast(2)
+        endpoint.changes(5, 50) shouldBe emptyList()
     }
 
     @Test
@@ -220,8 +249,31 @@ internal class KBEndpointTest {
         val externalCase2 = CaseTestUtils.getCase("Case2")
         val case2 = endpoint.processCase(externalCase2)
         endpoint.kb.allProcessedCases() shouldBe listOf(case1, case2)
-        endpoint.deleteCase(case2.name)
+        endpoint.deleteCase(case2.name, TEST_USER)
         endpoint.kb.allProcessedCases() shouldBe listOf(case1)
+    }
+
+    @Test
+    fun `deleting a processed case is recorded`() {
+        // Given
+        val case = endpoint.processCase(CaseTestUtils.getCase("Case1"))
+
+        // When
+        endpoint.deleteCase(case.name, TEST_USER)
+
+        // Then
+        val record = endpoint.kb.changeLog.all().single()
+        record.kind shouldBe ChangeKind.CASE_DELETED
+        record.summary shouldBe caseDeletedSummary("Case1")
+    }
+
+    @Test
+    fun `deleting a case that does not exist records nothing`() {
+        // When
+        endpoint.deleteCase("Nobody", TEST_USER)
+
+        // Then
+        endpoint.kb.changeLog.all().shouldBeEmpty()
     }
 
     @Test
@@ -268,11 +320,27 @@ internal class KBEndpointTest {
         val retrieved = endpoint.viewableCase(id)
         val attributesBefore = retrieved.attributes()
         attributesBefore.size shouldBe 2 // sanity
-        endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[1].id)
+        endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[1].id, TEST_USER)
         // Get the case again and check that the order has been applied.
         val retrievedAfter = endpoint.viewableCase(id)
         retrievedAfter.attributes()[0] shouldBe attributesBefore[1]
         retrievedAfter.attributes()[1] shouldBe attributesBefore[0]
+    }
+
+    @Test
+    fun `moving an attribute is recorded`() {
+        // Given
+        val id = supplyCaseFromFile("Case1", endpoint).caseId.id!!
+        val attributes = endpoint.viewableCase(id).attributes()
+
+        // When
+        endpoint.moveAttribute(attributes[0].id, attributes[1].id, TEST_USER)
+
+        // Then
+        val record = endpoint.kb.changeLog.all().single()
+        record.kind shouldBe ChangeKind.ATTRIBUTE_MOVED
+        record.summary shouldBe attributeMovedSummary(attributes[0], attributes[1])
+        record.attributeIds shouldBe setOf(attributes[0].id, attributes[1].id)
     }
 
     @Test
@@ -337,7 +405,7 @@ internal class KBEndpointTest {
         viewableCase5.case.interpretation.assignments() shouldBe emptySet()
         endpoint.startRuleSessionToAddComment(caseId, "Whatever")
 
-        endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[3].id)
+        endpoint.moveAttribute(attributesBefore[0].id, attributesBefore[3].id, TEST_USER)
         val attributesAfterMove = endpoint.viewableCase(caseId).attributes()
         attributesAfterMove.size shouldBe 4
         attributesAfterMove[0] shouldBe attributesBefore[1]

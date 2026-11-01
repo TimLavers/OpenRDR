@@ -4,6 +4,7 @@ const val TITLE = "OpenRDR"
 const val MAIN_HEADING = "Open RippleDown"
 const val APPLICATION_BAR_ID = "application_bar"
 const val APPLICATION_BAR_DESCRIPTION = "Application Bar"
+const val RECONNECTING_DESCRIPTION = "Reconnecting"
 const val MAIN_HEADING_ID = "main_heading"
 
 const val CREATE = "Create"

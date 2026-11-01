@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 
 class ListCapabilitiesTest {
     @Test
-    fun `help without a case contains only KB operations and their prerequisites`() {
+    fun `help without a case contains KB operations and awareness with their prerequisites`() {
         // Given
         val action = ActionComment("ListCapabilities").createActionInstance().shouldBeInstanceOf<ListCapabilities>()
 
@@ -16,7 +16,9 @@ class ListCapabilitiesTest {
         val response = action.response(hasCase = false)
 
         // Then
-        response.capabilities.map { it.heading } shouldBe listOf("Knowledge bases")
+        response.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users")
+        response.text shouldContain "show recent changes and who made them, optionally for a named attribute (requires an open knowledge base)"
+        response.text shouldContain "show who else is working on the open knowledge base and who is building a rule"
         response.text shouldContain "import a knowledge base from a ZIP archive (no knowledge base needs to be open)"
         response.text shouldContain "export the open knowledge base to a ZIP archive"
         response.text shouldContain "your own named copy of a demonstration knowledge base"
@@ -37,6 +39,7 @@ class ListCapabilitiesTest {
         // Then
         response.capabilities.map { it.heading } shouldBe listOf(
             "Knowledge bases",
+            "Other users",
             "Report comments",
             "Derived attributes",
             "Building a rule",

@@ -1,7 +1,7 @@
 # Knowledge bases
 
 A knowledge base (KB) holds attributes, conditions, rules, definitions and cases. An OpenRDR server manages many; the
-client has at most one open at a time, and all management is done through the chat.
+each user has at most one open at a time, shared by that user's windows, and all management is done through the chat.
 
 ## Identity
 
@@ -15,18 +15,33 @@ client has at most one open at a time, and all management is done through the ch
 
 ## Management by chat
 
-| Requirement        | Description                                                                                                                                                          | Validation                             |
-|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
-| List               | Stored KBs and demonstrations are listed under separate headings, the open one marked; the list is clickable.                                                        | `kb/Knowledge Base Management.feature` |
-| Open               | An exact name opens at once; a unique partial match asks first; several matches are listed.                                                                          | same                                   |
-| Create             | A new, empty KB is created by name and opened. A near-duplicate of an existing name asks first.                                                                      | same                                   |
-| Close              | Closing leaves no KB open; the chat continues without one.                                                                                                           | same                                   |
-| Delete             | Deletion of the open or a named KB is always confirmed first, even on an exact match, because it is irreversible.                                                    | same                                   |
-| Rename             | The open KB can be renamed.                                                                                                                                          | same                                   |
-| Description        | A KB has a Markdown description that can be read or replaced (not edited piecewise) through the chat, and is shown on hover over the KB name in the application bar. | same                                   |
-| Demonstration case | An empty KB offers a demonstration case (Einstein) so that rule building can be tried without an external system.                                                    | same                                   |
-| During a rule      | Open, create, copy, close, delete, import and export are refused while a rule is being built. Rename, describe and list are not.                                     | same                                   |
-| Startup            | The client opens the first stored KB; with none, the greeting offers to create one or open a demonstration. No KB is created implicitly.                             | same                                   |
+| Requirement        | Description                                                                                                                                                                                                    | Validation                                              |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| List               | Stored KBs and demonstrations are listed under separate headings, the open one marked; the list is clickable.                                                                                                  | `kb/Knowledge Base Management.feature`                  |
+| Open               | An exact name opens at once; a unique partial match asks first; several matches are listed.                                                                                                                    | same                                                    |
+| Create             | A new, empty KB is created by name and opened. A near-duplicate of an existing name asks first.                                                                                                                | same                                                    |
+| Close              | Closing leaves no KB open; the chat continues without one.                                                                                                                                                     | same                                                    |
+| Delete             | Deletion of the open or a named KB is always confirmed first, even on an exact match, because it is irreversible.                                                                                              | same                                                    |
+| Rename             | The open KB can be renamed.                                                                                                                                                                                    | same                                                    |
+| Description        | A KB has a Markdown description that can be read or replaced (not edited piecewise) through the chat, and is shown on hover over the KB name in the application bar.                                           | same                                                    |
+| Demonstration case | An empty KB offers a demonstration case (Einstein) so that rule building can be tried without an external system.                                                                                              | same                                                    |
+| During a rule      | Open, create, copy, close, delete, import and export are refused while a rule is being built. Rename, describe and list are not.                                                                               | same                                                    |
+| Startup            | A new window adopts its user's existing conversation and open KB. With no conversation, it opens the first stored KB; with none, it offers to create one or open a demonstration. No KB is created implicitly. | `OpenRDRUITest`, `kb/Knowledge Base Management.feature` |
+
+## Awareness of other users
+
+Users can ask "What has changed recently?" to see recorded edits with their authors and times, or "Who changed BMI?"
+to restrict history to an attribute. "Who else is working on this?" lists connected users with this KB open and marks
+those building rules. These requests work without a selected case and during rule building.
+
+The application bar shows other users present on the KB. Their edits produce attributed notices and refresh the
+displayed case, with refresh deferred during the user's own rule review. Closing a KB removes that user from its
+presence list even if their socket remains connected. A socket reconnect recovers missed changes.
+
+Validation: `ListRecentChangesTest` and `AwarenessChatTest` cover chat history; `ListUsersPresentTest` covers chat
+presence. `kb/Concurrent Users.feature` covers REST history and presence transitions, and
+`kb/Concurrent Users with windows.feature` covers the presence icon and names popup, notice, and case refresh. See
+[the concurrent-users design](../design/concurrent_users.md) for lifecycle and persistence guarantees.
 
 ## Demonstration knowledge bases
 

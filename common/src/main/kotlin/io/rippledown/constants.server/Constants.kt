@@ -14,6 +14,9 @@ const val KB_ID = "kb"
 const val KB_NAME = "kb_name"
 const val CASE_ID = "caseId"
 const val USER_ID_HEADER = "X-User-Id"
+const val SINCE_ID = "sinceId"
+const val LIMIT = "limit"
+const val DEFAULT_CHANGES_LIMIT = 50
 
 // Why a 409 was sent: the KB is held by another user, or the rule session went stale.
 const val REFUSAL_HEADER = "X-Refusal"

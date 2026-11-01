@@ -7,15 +7,49 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.verify
-import io.rippledown.constants.api.KB_DESCRIPTION
-import io.rippledown.constants.api.KB_INFO
-import io.rippledown.constants.api.LAST_RULE_DESCRIPTION
+import io.rippledown.constants.api.*
+import io.rippledown.constants.server.DEFAULT_CHANGES_LIMIT
 import io.rippledown.constants.server.KB_ID
+import io.rippledown.constants.server.LIMIT
+import io.rippledown.constants.server.SINCE_ID
 import io.rippledown.model.KBInfo
+import io.rippledown.model.PresentUser
+import io.rippledown.model.change.ChangeKind
+import io.rippledown.model.change.ChangeRecord
 import io.rippledown.model.rule.UndoRuleDescription
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class KBEditingTest: OpenRDRServerTestBase() {
+
+    @Test
+    fun `presence returns the snapshot for the requested KB including editing flags`() = testApplication {
+        // Given
+        setupServer()
+        val users = listOf(PresentUser("Alice", false), PresentUser("Bob", true))
+        every { serverApplication.presence.present(kbId) } returns users
+
+        // When
+        val response = httpClient.get(PRESENCE) { parameter(KB_ID, kbId) }
+
+        // Then
+        response.status shouldBe HttpStatusCode.OK
+        response.body<List<PresentUser>>() shouldBe users
+        verify(exactly = 1) { serverApplication.presence.present(kbId) }
+    }
+
+    @Test
+    fun `presence returns an empty list when nobody is present`() = testApplication {
+        // Given
+        setupServer()
+        every { serverApplication.presence.present(kbId) } returns emptyList()
+
+        // When
+        val response = httpClient.get(PRESENCE) { parameter(KB_ID, kbId) }
+
+        // Then
+        response.status shouldBe HttpStatusCode.OK
+        response.body<List<PresentUser>>() shouldBe emptyList()
+    }
 
     @Test
     fun kbDescription() = testApplication {
@@ -57,7 +91,7 @@ class KBEditingTest: OpenRDRServerTestBase() {
             setBody(newDescription)
         }
         result.status shouldBe HttpStatusCode.OK
-        verify { kbEndpoint.setDescription(newDescription) }
+        verify { kbEndpoint.setDescription(newDescription, testUser) }
 
     }
 
@@ -89,6 +123,53 @@ class KBEditingTest: OpenRDRServerTestBase() {
         result.status shouldBe HttpStatusCode.OK
         result.body<UndoRuleDescription>() shouldBe undoRuleDescription
         verify { kbEndpoint.descriptionOfMostRecentRule(testUser) }
+    }
+
+    @Test
+    fun changes() = testApplication {
+        // Given
+        setupServer()
+        val records = listOf(
+            ChangeRecord(
+                1,
+                "alice",
+                10L,
+                ChangeKind.RULES_ADDED,
+                "Added comment \"Go.\" when Glucose is high.",
+                setOf(5),
+                setOf(3)
+            ),
+            ChangeRecord(2, "bob", 20L, ChangeKind.DESCRIPTION_SET, "Changed the description.")
+        )
+        every { kbEndpoint.changes(null, DEFAULT_CHANGES_LIMIT) } returns records
+
+        // When
+        val result = httpClient.get(CHANGES) {
+            parameter(KB_ID, kbId)
+        }
+
+        // Then
+        result.status shouldBe HttpStatusCode.OK
+        result.body<List<ChangeRecord>>() shouldBe records
+    }
+
+    @Test
+    fun `changes since an id, limited`() = testApplication {
+        // Given
+        setupServer()
+        val records = listOf(ChangeRecord(8, "bob", 20L, ChangeKind.DESCRIPTION_SET, "Changed the description."))
+        every { kbEndpoint.changes(7, 3) } returns records
+
+        // When
+        val result = httpClient.get(CHANGES) {
+            parameter(KB_ID, kbId)
+            parameter(SINCE_ID, 7)
+            parameter(LIMIT, 3)
+        }
+
+        // Then
+        result.status shouldBe HttpStatusCode.OK
+        result.body<List<ChangeRecord>>() shouldBe records
     }
 
     @Test

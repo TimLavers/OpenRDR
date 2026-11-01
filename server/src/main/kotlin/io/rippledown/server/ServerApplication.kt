@@ -35,8 +35,18 @@ class ServerApplication(
     // Users on different KBs do not contend, but they all share the set of KBs,
     // so its mutations are serialised here.
     private val kbSetLock = Any()
-    val chatCoordinator = ChatCoordinator(ChatManagerFactory(::kbServiceFor), ::kbServiceFor) { userId, context ->
-        webSocketManager.sendChatContext(userId, context.info())
+    val chatCoordinator = ChatCoordinator(
+        ChatManagerFactory(::kbServiceFor),
+        ::kbServiceFor,
+        contextChanged = { userId, context -> webSocketManager.sendChatContext(userId, context.info()) },
+        openKbChanged = { from, to -> presence.transition(from, to) }
+    )
+    val presence: Presence = Presence(chatCoordinator, webSocketManager) { idToKBEndpoint[it]?.session }
+
+    init {
+        webSocketManager.connectionsChanged = { userId ->
+            chatCoordinator.openEndpointFor(userId)?.kbInfo()?.id?.let(presence::push)
+        }
     }
 
     fun kbServiceFor(userId: UserId): KnowledgeBaseService =
@@ -57,6 +67,8 @@ class ServerApplication(
                 }
                 chatCoordinator.reset()
             }
+            // Pushes queued by the finished test must not reach the next test's connections.
+            webSocketManager.drain()
         }
     }
 
@@ -142,7 +154,8 @@ class ServerApplication(
         kb.kbInfo
     }
 
-    private fun kbEndpoint(kb: KB) = KBEndpoint(KBSession(kb, webSocketManager))
+    private fun kbEndpoint(kb: KB) =
+        KBEndpoint(KBSession(kb, webSocketManager) { presence.push(kb.kbInfo.id) })
 
     private fun loadKnownKB(kbInfo: KBInfo) {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity

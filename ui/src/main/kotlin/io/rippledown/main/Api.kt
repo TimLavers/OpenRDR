@@ -19,6 +19,8 @@ import io.rippledown.constants.server.*
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.change.ChangeRecord
+import io.rippledown.model.change.KbChange
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
 import io.rippledown.model.condition.ConditionList
@@ -36,6 +38,8 @@ class Api(
     private val webSocketPort: Int = PORT,
     val userId: UserId = defaultUserId()
 ) {
+    private val selectionLock = Any()
+    private var selectionRevision = 0L
     // @Volatile ensures that writes to `currentKB` from coroutines resumed on
     // background I/O threads (e.g. inside [createKBFromSample]) are visible to
     // coroutines resumed on other threads that subsequently build requests via
@@ -44,6 +48,10 @@ class Api(
     // the wrong KB on the server (e.g. kb=thyroids&caseId=1 → 500).
     @Volatile
     private var currentKB: KBInfo? = null
+        set(value) = synchronized(selectionLock) {
+            field = value
+            ++selectionRevision
+        }
 
     val client = HttpClient(engine) {
         install(ContentNegotiation) {
@@ -82,7 +90,10 @@ class Api(
         updateCasesInfo: (CasesInfo) -> Unit = {},
         kbInfoUpdated: (KBInfo) -> Unit = {},
         kbClosed: () -> Unit = {},
-        chatContextChanged: (ChatContextInfo) -> Unit = {}
+        chatContextChanged: (ChatContextInfo) -> Unit = {},
+        presenceChanged: (PresenceInfo) -> Unit = {},
+        kbChanged: (KbChange) -> Unit = {},
+        connected: (Boolean) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -101,7 +112,10 @@ class Api(
             chatContextChanged = {
                 currentKB = it.kbInfo
                 chatContextChanged(it)
-            }
+            },
+            presenceChanged = presenceChanged,
+            kbChanged = kbChanged,
+            connected = connected
         )
     }
     fun shutdown() {
@@ -141,6 +155,21 @@ class Api(
     }
 
     suspend fun kbInfo(): KBInfo = checkNotNull(currentKB) { "No knowledge base is open." }
+
+    /**
+     * The users on the open KB as a snapshot, for a window that started after
+     * the last presence push. See concurrent_users.md.
+     */
+    suspend fun presence(): List<PresentUser> = client.get("$API_URL$PRESENCE") {
+        setKBParameter()
+    }.body()
+
+    suspend fun changes(sinceId: Int? = null): List<ChangeRecord> = client.get("$API_URL$CHANGES") {
+        setKBParameter()
+        sinceId?.let { parameter(SINCE_ID, it) }
+        // The default limit keeps only the newest 50. Recovery needs every missed record.
+        parameter(LIMIT, Int.MAX_VALUE)
+    }.body()
 
     fun clearKnowledgeBaseSelection() {
         currentKB = null
@@ -240,11 +269,11 @@ class Api(
         setKBParameter()
     }.body()
 
-    // Retrieves the current cornerstone status for an ongoing rule session, if any
-    //todo implement the backend for this. Use the conditions and currre
-    suspend fun cornerstoneStatus(): CornerstoneStatus? = client.get("$API_URL$CORNERSTONE_STATUS") {
-        setKBParameter()
-    }.body()
+    // An active session without cornerstones still returns a non-null status.
+    suspend fun cornerstoneStatus(): CornerstoneStatus? {
+        val response = client.get("$API_URL$CORNERSTONE_STATUS") { setKBParameter() }
+        return if (response.status == HttpStatusCode.NoContent) null else response.body()
+    }
 
     suspend fun moveAttribute(moved: Int, target: Int): OperationResult {
         return client.post("$API_URL$MOVE_ATTRIBUTE") {
@@ -371,6 +400,7 @@ class Api(
      * [kbInfo], whose lazy default-KB fetch would create a KB behind the user's back.
      */
     suspend fun startConversation(kbId: String?, caseId: Long?): ChatResponse = try {
+        synchronized(selectionLock) { ++selectionRevision }
         val response = client.post("$API_URL$START_CONVERSATION") {
             contentType(Plain)
             kbId?.let { parameter(KB_ID, it) }
@@ -387,9 +417,15 @@ class Api(
      * A new window adopts it instead of opening a KB of its own.
      */
     suspend fun chatContext(): ChatContextInfo? {
+        val revision = synchronized(selectionLock) { selectionRevision }
         val response = client.get("$API_URL$CHAT_CONTEXT")
-        if (response.status == HttpStatusCode.NoContent) return null
-        return response.body<ChatContextInfo>().also { currentKB = it.kbInfo }
+        val context = if (response.status == HttpStatusCode.NoContent) null else response.body<ChatContextInfo>()
+        synchronized(selectionLock) {
+            // The UI also guards its snapshot. Guard the API selection here so
+            // a later REST request cannot silently target a superseded KB.
+            if (selectionRevision == revision) currentKB = context?.kbInfo
+        }
+        return context
     }
 
     suspend fun sendUserMessage(message: String): ChatResponse = try {

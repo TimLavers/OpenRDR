@@ -10,6 +10,7 @@ import io.rippledown.constants.server.*
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
 import io.rippledown.model.OperationResult
+import io.rippledown.model.PresentUser
 import io.rippledown.model.caseview.ViewableCase
 import io.rippledown.model.chat.ChatContextInfo
 import io.rippledown.model.chat.ChatResponse
@@ -34,6 +35,7 @@ class EngineConfig {
     var returnCornerstone: ViewableCase = createViewableCase("The Case")
     var returnCornerstoneStatus: CornerstoneStatus = CornerstoneStatus()
     var returnConditionList: ConditionList = ConditionList()
+    var returnPresence: List<PresentUser> = emptyList()
     var returnResponse: ChatResponse = ChatResponse("")
     var returnCaseReport: CaseReport? = null
     var caseReportShouldFail = false
@@ -160,6 +162,11 @@ private class EngineBuilder(private val config: EngineConfig) {
 
             KB_LIST -> {
                 httpResponseData(json.encodeToString(config.returnKBList))
+            }
+
+            PRESENCE -> {
+                config.expectedKbId?.let { request.url.parameters[KB_ID] shouldBe it }
+                httpResponseData(json.encodeToString(config.returnPresence))
             }
 
             CREATE_KB -> {

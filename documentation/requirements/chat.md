@@ -11,16 +11,18 @@ state; the chat carries intent. Rules for when an inline control is acceptable a
 The chat's own catalogue, returned when the user asks what it can do, is the authoritative list
 (`chat/List chat capabilities.feature`). It is grouped as:
 
-| Group              | Operations                                                                                                                                                                                            | Requirements                                                     |
-|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
-| Knowledge bases    | list, open, create, close, delete, rename; show or change the description; open a named copy of a demonstration; import from and export to a ZIP; add a demonstration case to an empty knowledge base | [knowledge_bases.md](knowledge_bases.md)                         |
-| Report comments    | add, remove or replace a comment with a rule; insert a case value into a comment with `{name}`                                                                                                        | [comments.md](comments.md), [rule_building.md](rule_building.md) |
-| Derived attributes | assign, remove or replace a derived value with a rule; edit a definition everywhere                                                                                                                   | [derived_attributes.md](derived_attributes.md)                   |
-| Building a rule    | suggested reasons; add, list or remove reasons; review cornerstones; cancel; undo the last rule                                                                                                       | [rule_building.md](rule_building.md)                             |
-| Names and layout   | rename a comment or derived attribute; rename a condition's phrase; reorder the attributes                                                                                                            | [cases_and_attributes.md](cases_and_attributes.md)               |
-| Favourite cases    | copy the current case to favourites, optionally renamed; delete it from favourites                                                                                                                    | [cases_and_attributes.md](cases_and_attributes.md)               |
+| Group              | Operations                                                                                                                                                                                            | Requirements                                                      |
+|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| Knowledge bases    | list, open, create, close, delete, rename; show or change the description; open a named copy of a demonstration; import from and export to a ZIP; add a demonstration case to an empty knowledge base | [knowledge_bases.md](knowledge_bases.md)                          |
+| Other users        | show recent changes and their authors, optionally for a named attribute; show who else has the KB open and who is building a rule                                                                     | [knowledge_bases.md](knowledge_bases.md#awareness-of-other-users) |
+| Report comments    | add, remove or replace a comment with a rule; insert a case value into a comment with `{name}`                                                                                                        | [comments.md](comments.md), [rule_building.md](rule_building.md)  |
+| Derived attributes | assign, remove or replace a derived value with a rule; edit a definition everywhere                                                                                                                   | [derived_attributes.md](derived_attributes.md)                    |
+| Building a rule    | suggested reasons; add, list or remove reasons; review cornerstones; cancel; undo the last rule                                                                                                       | [rule_building.md](rule_building.md)                              |
+| Names and layout   | rename a comment or derived attribute; rename a condition's phrase; reorder the attributes                                                                                                            | [cases_and_attributes.md](cases_and_attributes.md)                |
+| Favourite cases    | copy the current case to favourites, optionally renamed; delete it from favourites                                                                                                                    | [cases_and_attributes.md](cases_and_attributes.md)                |
 
-Without an open case only the knowledge-base group is offered, since nothing else has a subject.
+Without an open case the knowledge-base and other-users groups are offered. History and presence require an open
+KB, but no case selection.
 
 ## Behaviour
 

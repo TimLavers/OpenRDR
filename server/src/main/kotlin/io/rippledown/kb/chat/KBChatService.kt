@@ -138,6 +138,7 @@ object KBChatService {
         "14_general-guidelines.md",
         "16_listing_capabilities.md",
         "20_knowledge_base_management.md",
+        "21_awareness.md",
     )
 
     val systemPromptMainSections = listOf(
@@ -161,6 +162,7 @@ object KBChatService {
         "18_editing_derived_definition.md",
         "19_naming_and_renaming.md",
         "20_knowledge_base_management.md",
+        "21_awareness.md",
         "25_user_defined_case_lists.md",
     )
 
@@ -236,6 +238,8 @@ object KBChatService {
         "COPY_CASE_TO_LIST" to COPY_CASE_TO_LIST,
         "DELETE_CASE_FROM_LIST" to DELETE_CASE_FROM_LIST,
         "LIST_KNOWLEDGE_BASES" to LIST_KNOWLEDGE_BASES,
+        "LIST_RECENT_CHANGES" to LIST_RECENT_CHANGES,
+        "LIST_USERS_PRESENT" to LIST_USERS_PRESENT,
         "OPEN_KNOWLEDGE_BASE" to OPEN_KNOWLEDGE_BASE,
         "CREATE_KNOWLEDGE_BASE" to CREATE_KNOWLEDGE_BASE,
         "CLOSE_KNOWLEDGE_BASE" to CLOSE_KNOWLEDGE_BASE,

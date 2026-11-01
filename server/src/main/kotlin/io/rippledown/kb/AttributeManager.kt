@@ -101,6 +101,14 @@ class AttributeManager(private val attributeStore: AttributeStore): AttributePro
 
     fun byName(name: String): Attribute? = nameToAttribute[name]
 
+    /** Exact name resolution for chat: ignore case, quotes and spacing, but never guess a near match. */
+    fun attributeNamedExactly(name: String): Attribute? {
+        val attributes = all()
+        attributes.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
+        val target = name.normalizeForComparison()
+        return attributes.firstOrNull { it.name.normalizeForComparison() == target }
+    }
+
     fun all(): Set<Attribute> {
         return nameToAttribute.values.toSet()
     }

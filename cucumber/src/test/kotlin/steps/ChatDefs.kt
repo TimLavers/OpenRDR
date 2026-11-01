@@ -418,6 +418,8 @@ class ChatDefs {
     fun requestOnlyCommentBeRemovedWithoutConfirmation() {
         waitForBotQuestion()
         enterChatTextAndSend("Remove the comment")
+        // The next step may inspect cornerstones; let the model finish starting this session first.
+        waitForBotSuggestions()
     }
 
     @And("I request that the derived value {string} be removed")
@@ -446,6 +448,7 @@ class ChatDefs {
     fun requestTheOnlyCommentBeReplacedWithoutConfirmationBy(comment: String) {
         waitForBotQuestion()
         enterChatTextAndSend("Replace the comment by \"$comment\"")
+        waitForBotSuggestions()
     }
 
     fun requestCommentBeReplacedWithoutConfirmationBy(comment: String, replacement: String) {

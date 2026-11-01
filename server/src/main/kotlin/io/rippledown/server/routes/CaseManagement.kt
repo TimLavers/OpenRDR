@@ -55,7 +55,7 @@ fun Application.caseManagement(application: ServerApplication) {
         delete(DELETE_CASE_WITH_NAME) {
             val endpoint = kbEndpoint(application)
             val caseName = call.parameters["name"] ?: error("Invalid case name.")
-            endpoint.deleteCase(caseName)
+            endpoint.deleteCase(caseName, userId())
             call.respond(HttpStatusCode.OK)
             application.webSocketManager.sendCasesInfo(endpoint.waitingCasesInfo())
         }

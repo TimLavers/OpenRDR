@@ -29,6 +29,7 @@ class KB(private val persistentKB: PersistentKB) {
     val conditionManager = ConditionManager(attributeManager, persistentKB.conditionStore())
     val interpretationViewManager = InterpretationViewManager()
     val ruleSessionRecorder = RuleSessionRecorder(persistentKB.ruleSessionRecordStore())
+    val changeLog = ChangeLog(persistentKB.changeLogStore())
     internal val ruleManager =
         RuleManager(conditionManager, attributeManager, persistentKB.ruleStore())
     private val caseManager = CaseManager(persistentKB.caseStore(), attributeManager)
@@ -128,11 +129,10 @@ class KB(private val persistentKB: PersistentKB) {
 
     fun allProcessedCases() = caseManager.all(CaseListType.Processed)
 
-    fun deletedProcessedCaseWithName(name: String) {
-        val toGo = processedCaseIds().firstOrNull { it.name == name }
-        if (toGo != null) {
-            caseManager.delete(toGo.id!!)
-        }
+    fun deletedProcessedCaseWithName(name: String): Boolean {
+        val toGo = processedCaseIds().firstOrNull { it.name == name } ?: return false
+        caseManager.delete(requireNotNull(toGo.id) { "A processed case has an id." })
+        return true
     }
 
     fun getProcessedCase(id: Long): RDRCase? = caseManager.getCase(id)

@@ -14,6 +14,7 @@ Feature: Two users work in the one knowledge base, each in their own window
     And the interpretation of the case Case2 includes "Comment 2." because of condition "x is in case"
     And Alice starts the client application
     And Bob starts the client application
+    Then Bob's window should show that Alice is also here
     And I see the case Case1 as the current case
     And the interpretation should be "Comment 2."
     When I switch to Alice's window
@@ -29,6 +30,5 @@ Feature: Two users work in the one knowledge base, each in their own window
     And the chatbot has completed the action
     Then the interpretation should be "Comment 2. Comment 4."
     When I switch to Bob's window
-    Then the interpretation should be "Comment 2."
-    When I select the case Case2
     Then the interpretation should be "Comment 2. Comment 4."
+    And Bob's window should show a notice containing "Alice: Added comment \"Comment 4.\""

@@ -618,6 +618,7 @@ class RuleSessionManagerTest {
         kb.interpret(otherCase)
         kb.commentsFor(otherCase) shouldBe setOf("Go.")
 
+        rsm.descriptionOfMostRecentRule()
         // When
         rsm.undoLastRuleSession()
 

@@ -326,7 +326,7 @@ class KBTest {
     fun deleteProcessedCaseWithName() {
         val externalCase1 = createExternalCase("Case1", "g1")
         kb.processCase(externalCase1)
-        kb.deletedProcessedCaseWithName(externalCase1.caseName)
+        kb.deletedProcessedCaseWithName(externalCase1.caseName) shouldBe true
         kb.allProcessedCases() shouldBe emptyList()
     }
 
@@ -351,7 +351,7 @@ class KBTest {
     fun `deleted processed case with unknown name does nothing`() {
         val externalCase1 = createExternalCase("Case1", "g1")
         kb.processCase(externalCase1)
-        kb.deletedProcessedCaseWithName("Unknown")
+        kb.deletedProcessedCaseWithName("Unknown") shouldBe false
         kb.allProcessedCases().size shouldBe 1
     }
 
@@ -1174,6 +1174,7 @@ class KBTest {
         kb.interpret(otherCase)
         kb.commentsFor(otherCase) shouldBe setOf("Whatever.") // Sanity
 
+        rsm.descriptionOfMostRecentRule()
         rsm.undoLastRuleSession()
         kb.interpret(otherCase)
         kb.commentsFor(otherCase) shouldBe emptySet()

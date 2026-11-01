@@ -3,6 +3,7 @@ package io.rippledown.kb.export
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.rippledown.constants.chat.kbNameReservedMessage
@@ -11,6 +12,7 @@ import io.rippledown.kb.KBSession
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.export.util.Zipper
 import io.rippledown.model.*
+import io.rippledown.model.change.ChangeKind
 import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.episodic.predicate.LessThanOrEquals
 import io.rippledown.model.condition.episodic.signature.Current
@@ -99,6 +101,7 @@ class KBImporterTest : ExporterTestBase() {
         rebuilt.caseViewManager.allInOrder().size shouldBe 0
         rebuilt.ruleTree.size() shouldBe 1
         rebuilt.ruleSessionRecorder.allRuleSessionHistories().size shouldBe 0
+        rebuilt.changeLog.all() shouldBe emptyList()
     }
 
     @Test
@@ -153,7 +156,41 @@ class KBImporterTest : ExporterTestBase() {
             first().idsOfRulesAddedInSession shouldContain rebuiltFirstRule.id
         }
 
+        rebuilt.changeLog.all() shouldBe kb.changeLog.all()
+        rebuilt.changeLog.all().single().ruleIds shouldBe setOf(rebuiltFirstRule.id)
+
         persistenceProvider.idStore().data() shouldHaveSize 2
+    }
+
+    @Test
+    fun `a change recorded after an import gets an id above the imported ones`() {
+        // Given an imported KB with a change log
+        val kb = buildDummyKB("Whatever")
+        KBExporter(tempDir, kb).export()
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+        val importedId = requireNotNull(rebuilt.changeLog.all().single().id)
+
+        // When a change is recorded
+        val record = rebuilt.changeLog.record(TEST_USER, ChangeKind.DESCRIPTION_SET, "Changed the description.")
+
+        // Then
+        requireNotNull(record.id) shouldBeGreaterThan importedId
+        rebuilt.changeLog.all().map { it.id } shouldBe listOf(importedId, record.id)
+    }
+
+    @Test
+    fun `an export made before changes were logged imports with an empty change log`() {
+        // Given an export with no change log directory
+        val kb = buildDummyKB("Whatever")
+        KBExporter(tempDir, kb).export()
+        KBExportImport(tempDir).changeLogDirectory.deleteRecursively() shouldBe true
+
+        // When
+        val rebuilt = KBImporter(tempDir, persistenceProvider).import()
+
+        // Then
+        rebuilt.changeLog.all() shouldBe emptyList()
+        rebuilt.ruleTree.size() shouldBe 2
     }
 
     private fun buildDummyKB(kbName: String): KB {
@@ -255,5 +292,6 @@ class KBImporterTest : ExporterTestBase() {
         val rootDir = subDirectories[0]
         val rebuilt = KBImporter(rootDir, persistenceProvider).import()
         rebuilt.kbInfo.name shouldBe kbName
+        rebuilt.changeLog.all() shouldBe emptyList()
     }
 }

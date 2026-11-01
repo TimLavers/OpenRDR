@@ -94,7 +94,7 @@ fun Application.module(
         }
         staticResources("/", "")
     }
-    val webSocketManager = WebSocketManager(gate)
+    val webSocketManager = WebSocketManager(gate, scope = this)
     val application = ServerApplication(persistence, webSocketManager, gate)
     refusals()
     serverManagement()

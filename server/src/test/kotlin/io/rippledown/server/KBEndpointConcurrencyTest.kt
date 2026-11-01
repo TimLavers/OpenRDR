@@ -70,7 +70,11 @@ class KBEndpointConcurrencyTest {
             repeat(20) { i ->
                 try {
                     val attributes = endpoint.session.locked { kb.caseViewManager.allInOrder() }
-                    if (attributes.size >= 2) endpoint.moveAttribute(attributes.last().id, attributes.first().id)
+                    if (attributes.size >= 2) endpoint.moveAttribute(
+                        attributes.last().id,
+                        attributes.first().id,
+                        TEST_USER
+                    )
                     endpoint.buildRule(
                         BuildRuleRequest("Seed", Addition("Comment $i."), listOf("""Shared is "1"""")), TEST_USER
                     )

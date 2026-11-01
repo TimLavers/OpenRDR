@@ -1,5 +1,6 @@
 package io.rippledown.kb.sample.demo
 
+import io.rippledown.kb.sample.SAMPLE_BUILDER
 import io.rippledown.kb.sample.defaultDate
 import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.ReferenceRange
@@ -31,7 +32,7 @@ A small demonstration KB used to show OpenRDR features:
 class DemoSampleBuilder(private val kbe: KBEndpoint) {
 
     fun setupCases() {
-        kbe.setDescription(DEMO_SAMPLE_DESCRIPTION)
+        kbe.setDescription(DEMO_SAMPLE_DESCRIPTION, SAMPLE_BUILDER)
         addLindsayWaitingCase()
         addJaneCornerstoneCase()
         addTaylorWaitingCase()
