@@ -43,6 +43,20 @@ abstract class AbstractCaseSectionListPO(private val contextProvider: () -> Acce
         waitUntilAsserted { casesListed() shouldBe expectedCaseNames }
     }
 
+    /**
+     * The section shows exactly the given cases, in any order: search results
+     * are added to their destination list in no guaranteed order, so their
+     * order must not be asserted. Duplicate names are compared by count, so
+     * a case and its copy both appearing is distinguished from one of them.
+     */
+    fun requireCaseNamesInAnyOrder(expectedCaseNames: List<String>) {
+        waitUntilAsserted {
+            val listed = casesListed()
+            listed.size shouldBe expectedCaseNames.size
+            listed.groupingBy { it }.eachCount() shouldBe expectedCaseNames.groupingBy { it }.eachCount()
+        }
+    }
+
     fun select(caseName: String) {
         // Resolve and act in one poll: the list can recompose between a lookup
         // and the action while the window is still settling after start-up.
