@@ -53,7 +53,11 @@ class RuleSessionManager(
     private val webSocketManager: WebSocketManager? = null,
     private val kbLock: ReentrantLock = ReentrantLock(),
     private val userId: UserId? = null,
-    private val sessionStateChanged: () -> Unit = {}
+    private val sessionStateChanged: () -> Unit = {},
+    // Whether a case search is running on this KB, so that rule building can
+    // be refused while one is. Supplied by the KB session; false when there
+    // is no search coordinator.
+    private val searchInProgress: () -> Boolean = { false }
 ) : RuleService {
     val logger = lazyLogger
 
@@ -224,6 +228,7 @@ class RuleSessionManager(
     ): CornerstoneStatus {
         logger.info("Starting rule session for case ${case.name} and action $action")
         logger.info("Current comments are: ${case.interpretation.commentTexts(case)} ")
+        check(!searchInProgress()) { "Please finish or cancel the current search before building a rule." }
         check(ruleSession == null) { "Session already in progress." }
         val isolated = case.copy(interpretation = Interpretation(case.caseId))
         check(action.isApplicable(kb.ruleTree, isolated, kb.definitionResolver, kb.evaluationContext())) {

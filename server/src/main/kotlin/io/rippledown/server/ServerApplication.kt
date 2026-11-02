@@ -10,6 +10,7 @@ import io.rippledown.kb.chat.KnowledgeBaseService
 import io.rippledown.kb.export.KBImporter
 import io.rippledown.kb.export.util.Unzipper
 import io.rippledown.kb.sample.loadSampleKB
+import io.rippledown.kb.search.SearchCoordinator
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.KBInfo
 import io.rippledown.model.UserId
@@ -43,6 +44,8 @@ class ServerApplication(
     )
     val presence: Presence = Presence(chatCoordinator, webSocketManager) { idToKBEndpoint[it]?.session }
 
+    val searchCoordinator = SearchCoordinator(::kbForId, chatCoordinator)
+
     init {
         webSocketManager.connectionsChanged = { userId ->
             chatCoordinator.openEndpointFor(userId)?.kbInfo()?.id?.let(presence::push)
@@ -56,6 +59,7 @@ class ServerApplication(
         val gate = checkNotNull(testRequestGate) { "Test reset is not enabled" }
         gate.reset(webSocketManager::connectedUsers) {
             synchronized(kbSetLock) {
+                searchCoordinator.cancelAll()
                 logger.info("Resetting test server; deleting ${kbManager.all().size} knowledge bases")
                 kbManager.all().forEach { info ->
                     val endpoint = kbForId(info.id)
@@ -103,6 +107,8 @@ class ServerApplication(
         val endpoint = kbForId(id)
         // Under the KB's own lock too, so a mutation in flight finishes before the KB goes.
         endpoint.session.locked {
+            // The search stops before its next case, which would otherwise touch a KB that is gone.
+            searchCoordinator.cancel(id)
             (endpoint.session.usersEditing() - userId).firstOrNull()?.let { editor ->
                 throw ProjectHeldException(endpoint.kbInfo().name, editor)
             }
@@ -155,7 +161,14 @@ class ServerApplication(
     }
 
     private fun kbEndpoint(kb: KB) =
-        KBEndpoint(KBSession(kb, webSocketManager) { presence.push(kb.kbInfo.id) })
+        KBEndpoint(
+            KBSession(
+                kb,
+                webSocketManager,
+                { presence.push(kb.kbInfo.id) },
+                { searchCoordinator.isRunning(kb.kbInfo.id) }
+            )
+        )
 
     private fun loadKnownKB(kbInfo: KBInfo) {
         val kb = (kbManager.openKB(kbInfo.id) as EntityRetrieval.Success<KB>).entity

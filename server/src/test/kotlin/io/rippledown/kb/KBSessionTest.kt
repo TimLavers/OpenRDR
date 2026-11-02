@@ -361,7 +361,7 @@ class KBSessionTest {
     fun `the session state hook fires when a rule session starts, commits or is cancelled`() {
         // Given
         var changes = 0
-        session = KBSession(kb, webSocketManager) { changes++ }
+        session = KBSession(kb, webSocketManager, sessionStateChanged = { changes++ })
         val rsm = session.ruleSessionManagerFor(alice)
 
         // When / Then
@@ -379,7 +379,7 @@ class KBSessionTest {
     fun `the session state hook does not fire for operations that leave the session as it was`() {
         // Given
         var changes = 0
-        session = KBSession(kb, webSocketManager) { changes++ }
+        session = KBSession(kb, webSocketManager, sessionStateChanged = { changes++ })
         val rsm = session.ruleSessionManagerFor(alice)
         rsm.startRuleSessionToAddComment(createCase("Case1"), "Go.")
         changes shouldBe 1

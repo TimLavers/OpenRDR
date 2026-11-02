@@ -15,10 +15,19 @@ import io.rippledown.kb.chat.OpenKnowledgeBases
 import io.rippledown.kb.chat.ActionComment
 import io.rippledown.kb.chat.ChatManager
 import io.rippledown.kb.chat.LockedRuleService
+import io.rippledown.kb.search.CaseSearchSpec
+import io.rippledown.kb.search.ParsedSearchCondition
+import io.rippledown.kb.search.SearchConnector
+import io.rippledown.model.CaseListType
 import io.rippledown.model.CasesInfo
 import io.rippledown.model.KBInfo
+import io.rippledown.model.RDRCaseBuilder
 import io.rippledown.model.UserId
+import io.rippledown.model.condition.EpisodicCondition
+import io.rippledown.model.condition.episodic.predicate.GreaterThanButWithDelay
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
+import io.rippledown.utils.defaultDate
 import io.rippledown.model.rule.SessionStartRequest
 import io.rippledown.model.rule.RuleRequest
 import io.rippledown.persistence.inmemory.InMemoryPersistenceProvider
@@ -136,6 +145,33 @@ class ApplicationKbServiceTest {
 
         // Then
         resolution shouldBe KbResolution.Demonstration(ZOO)
+    }
+
+    @Test
+    fun `deleting a KB cancels its running search`() {
+        // Given a KB with a slow search in progress on it
+        val thyroids = app.createKB("Thyroids", false)
+        val endpoint = app.kbForId(thyroids.id)
+        val tsh = endpoint.kb.attributeManager.getOrCreate("TSH")
+        repeat(5) { index ->
+            endpoint.kb.addProcessedCase(
+                RDRCaseBuilder().apply { addValue(tsh, defaultDate, "6.7") }.build("Case$index")
+            )
+        }
+        val condition = EpisodicCondition(null, tsh, GreaterThanButWithDelay(4.0, 100), Current)
+        val spec = CaseSearchSpec(
+            listOf(ParsedSearchCondition("TSH is greater than 4", condition)),
+            SearchConnector.ALL, null, listOf(CaseListType.Processed), "found"
+        )
+        app.searchCoordinator.start(thyroids.id, spec)
+        app.searchCoordinator.isRunning(thyroids.id) shouldBe true
+
+        // When the KB is deleted
+        runBlocking { service.delete(thyroids) }
+
+        // Then the search is terminated and forgotten, its found cases lost with the KB
+        app.searchCoordinator.awaitCompletion(thyroids.id) shouldBe true
+        app.searchCoordinator.isRunning(thyroids.id) shouldBe false
     }
 
     @Test

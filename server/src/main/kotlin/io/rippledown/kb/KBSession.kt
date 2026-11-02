@@ -16,7 +16,11 @@ import kotlin.concurrent.withLock
 class KBSession(
     val kb: KB,
     private val webSocketManager: WebSocketManager? = null,
-    private val sessionStateChanged: () -> Unit = {}
+    private val sessionStateChanged: () -> Unit = {},
+    // Whether a case search is running on this KB, so that rule building can
+    // be refused while one is. Supplied by the application's search
+    // coordinator; false when there is none.
+    private val searchInProgress: () -> Boolean = { false }
 ) {
     private val lock = ReentrantLock()
     private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
@@ -34,7 +38,7 @@ class KBSession(
      */
     fun ruleSessionManagerFor(userId: UserId): RuleSessionManager =
         ruleSessionManagers.computeIfAbsent(userId) {
-            RuleSessionManager(kb, webSocketManager, lock, it, sessionStateChanged)
+            RuleSessionManager(kb, webSocketManager, lock, it, sessionStateChanged, searchInProgress)
         }
 
     /**

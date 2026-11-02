@@ -82,6 +82,21 @@ class RuleSessionManagerTest {
     }
 
     @Test
+    fun `should throw if starting a rule session while a search is in progress`() {
+        // Given a KB on which a search is in progress
+        val sessionWithSearch = KBSession(kb, searchInProgress = { true })
+        val manager = sessionWithSearch.ruleSessionManagerFor(UserId("expert"))
+        val sessionCase = createCase("Case1")
+
+        // When a rule session is started
+        // Then it is refused
+        shouldThrow<IllegalStateException> {
+            manager.startRuleSessionToAddComment(sessionCase, "Go.")
+        }.message shouldBe "Please finish or cancel the current search before building a rule."
+        manager.isRuleSessionActive() shouldBe false
+    }
+
+    @Test
     fun `should throw if action is not applicable to the session case`() {
         // Given - add a rule so the case already has the comment
         val sessionCase = createCase("Case1", value = "1.0")
