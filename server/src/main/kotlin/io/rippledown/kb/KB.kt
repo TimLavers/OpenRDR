@@ -113,6 +113,12 @@ class KB(private val persistentKB: PersistentKB) {
 
     fun userDefinedCaseLists() = caseManager.userDefinedCaseLists()
 
+    /**
+     * The ids of the cases of one list, snapshot for a search: a case added
+     * after the snapshot is taken is not found by that search.
+     */
+    internal fun caseIds(type: CaseListType) = caseManager.ids(type)
+
     fun copyCaseToList(id: Long, listName: String, newName: String? = null): RDRCase {
         val requestedName = listName.trim()
         require(requestedName.isNotEmpty()) { "Cannot copy the case to a list with a blank name." }
