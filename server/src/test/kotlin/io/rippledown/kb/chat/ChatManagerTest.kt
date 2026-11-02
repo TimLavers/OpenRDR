@@ -51,8 +51,8 @@ class ChatManagerTest {
         val withCase = chatManager.response("What can you do?")
 
         // Then
-        noCase.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users")
-        withCase.capabilities.size shouldBe 7
+        noCase.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users", "Searching")
+        withCase.capabilities.size shouldBe 8
         coVerify(exactly = 0) { ruleService.commitCurrentRuleSession() }
     }
 
@@ -722,7 +722,7 @@ class ChatManagerTest {
 
         // Then
         lateYes shouldBe ChatResponse("Yes to what?")
-        help.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users")
+        help.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users", "Searching")
         coVerify(exactly = 0) { kbService.create(any()) }
     }
 

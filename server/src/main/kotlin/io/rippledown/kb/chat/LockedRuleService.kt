@@ -166,4 +166,17 @@ class LockedRuleService(
         locked { copyCaseToList(case, listName, newName) }
 
     override fun deleteCaseFromUserList(case: ViewableCase) = locked { deleteCaseFromUserList(case) }
+
+    // Translating the condition texts may call the LLM: the delegate locks
+    // only its KB reads, so this must not be wrapped here, like
+    // conditionForExpression above.
+    override fun searchCases(
+        conditions: List<String>,
+        connector: String,
+        limit: Int?,
+        lists: List<String>,
+        destination: String
+    ): String = delegate.searchCases(conditions, connector, limit, lists, destination)
+
+    override fun stopCaseSearch(): String = delegate.stopCaseSearch()
 }

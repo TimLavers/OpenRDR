@@ -1,5 +1,8 @@
 package io.rippledown.kb
 
+import io.rippledown.constants.chat.NO_SEARCH_IN_PROGRESS_MESSAGE
+import io.rippledown.constants.chat.SEARCH_TERMINATED_MESSAGE
+import io.rippledown.constants.chat.SEARCH_UNDER_WAY_MESSAGE
 import io.rippledown.constants.chat.cannotRenameMessage
 import io.rippledown.constants.chat.renamedMessage
 import io.rippledown.constants.rule.CONDITION_IS_NOT_TRUE
@@ -16,6 +19,9 @@ import io.rippledown.kb.chat.action.didYouMeanFormulaMessage
 import io.rippledown.kb.chat.action.nameClashWithExistingExternalAttributeMessage
 import io.rippledown.kb.chat.action.unknownAttributeInFormulaMessage
 import io.rippledown.kb.chat.resolveCommentVariables
+import io.rippledown.kb.search.SearchCoordinator
+import io.rippledown.kb.search.SearchRequestParser
+import io.rippledown.kb.search.SearchLock
 import io.rippledown.log.lazyLogger
 import io.rippledown.model.*
 import io.rippledown.model.caseview.ViewableCase
@@ -57,7 +63,11 @@ class RuleSessionManager(
     // Whether a case search is running on this KB, so that rule building can
     // be refused while one is. Supplied by the KB session; false when there
     // is no search coordinator.
-    private val searchInProgress: () -> Boolean = { false }
+    private val searchInProgress: () -> Boolean = { false },
+    // The application's search coordinator, which starts and stops the
+    // searches on this KB. Null when there is none, as in tests that do not
+    // involve searching.
+    private val searchCoordinator: SearchCoordinator? = null
 ) : RuleService {
     val logger = lazyLogger
 
@@ -1300,6 +1310,34 @@ class RuleSessionManager(
         kb.deleteCaseFromUserList(case.case)
         recordChange(ChangeKind.CASE_DELETED, caseDeletedSummary(case.name, case.case.caseId.type.name))
         sendCasesInfo()
+    }
+
+    // Translating the condition texts may call the LLM, so the KB lock is held
+    // only around the reads inside parsing, never across the call.
+    override fun searchCases(
+        conditions: List<String>,
+        connector: String,
+        limit: Int?,
+        lists: List<String>,
+        destination: String
+    ): String {
+        val spec = SearchRequestParser(kb, conditionParser, searchLock())
+            .parse(conditions, connector, limit, lists, destination)
+        requireSearchCoordinator().start(kb.kbInfo.id, spec)
+        return SEARCH_UNDER_WAY_MESSAGE
+    }
+
+    override fun stopCaseSearch(): String {
+        check(requireSearchCoordinator().cancel(kb.kbInfo.id)) { NO_SEARCH_IN_PROGRESS_MESSAGE }
+        return SEARCH_TERMINATED_MESSAGE
+    }
+
+    private fun requireSearchCoordinator() = checkNotNull(searchCoordinator) {
+        "Searching is not available for this knowledge base."
+    }
+
+    private fun searchLock(): SearchLock = object : SearchLock {
+        override fun <T> withLock(block: () -> T): T = kbLock.withLock(block)
     }
 
     private fun casesInfo() = CasesInfo(

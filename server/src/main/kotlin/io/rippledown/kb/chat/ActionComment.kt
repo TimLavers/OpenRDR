@@ -39,6 +39,9 @@ data class ActionComment(
     val draftId: String? = null,
     val limit: Int? = null,
     val attribute: String? = null,
+    val searchConditions: List<String>? = null,
+    val connector: String? = null,
+    val searchLists: List<String>? = null,
 ) {
     companion object {
         val logger = lazyLogger
@@ -83,6 +86,9 @@ data class ActionComment(
         if (draftId != null) asMap["draftId"] = draftId
         if (limit != null) asMap["limit"] = limit
         if (attribute != null) asMap["attribute"] = attribute
+        if (searchConditions != null) asMap["searchConditions"] = searchConditions
+        if (connector != null) asMap["connector"] = connector
+        if (searchLists != null) asMap["searchLists"] = searchLists
 
         val paramMap = mutableMapOf<KParameter, Any>()
         fn.parameters.forEach {

@@ -16,7 +16,9 @@ class ListCapabilitiesTest {
         val response = action.response(hasCase = false)
 
         // Then
-        response.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users")
+        response.capabilities.map { it.heading } shouldBe listOf("Knowledge bases", "Other users", "Searching")
+        response.text shouldContain "search the case lists for cases matching conditions, with the results put into a case list (no case needs to be selected)"
+        response.text shouldContain "stop the search currently running"
         response.text shouldContain "show recent changes and who made them, optionally for a named attribute (requires an open knowledge base)"
         response.text shouldContain "show who else is working on the open knowledge base and who is building a rule"
         response.text shouldContain "import a knowledge base from a ZIP archive (no knowledge base needs to be open)"
@@ -40,12 +42,15 @@ class ListCapabilitiesTest {
         response.capabilities.map { it.heading } shouldBe listOf(
             "Knowledge bases",
             "Other users",
+            "Searching",
             "Report comments",
             "Derived attributes",
             "Building a rule",
             "Names and layout",
             "User-defined case lists"
         )
+        response.text shouldContain "search the case lists for cases matching conditions, with the results put into a case list (no case needs to be selected)"
+        response.text shouldContain "stop the search currently running"
         response.text shouldContain "edit a derived attribute's definition everywhere it is used (without building a rule)"
         response.text shouldContain "add, list or remove reasons in the current rule"
         response.text shouldContain "rename a condition's phrase everywhere it is used"

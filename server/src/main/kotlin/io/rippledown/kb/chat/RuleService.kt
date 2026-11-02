@@ -155,4 +155,20 @@ interface RuleService {
     fun copyCaseToList(case: ViewableCase, listName: String, newName: String? = null): RDRCase
 
     fun deleteCaseFromUserList(case: ViewableCase)
+
+    /**
+     * Start a search of the KB's case lists for cases matching the given
+     * conditions, copies of which are put into the destination list as they
+     * are found. Returns the message telling the user the search is under
+     * way; the report of its completion arrives separately. Refused with a
+     * message the user sees if a parameter is invalid, a search is already
+     * running, or a rule is being built on the KB.
+     */
+    fun searchCases(conditions: List<String>, connector: String, limit: Int?, lists: List<String>, destination: String): String
+
+    /**
+     * Stop the search currently running on the KB, keeping the cases found
+     * so far. Refused if no search is in progress.
+     */
+    fun stopCaseSearch(): String
 }

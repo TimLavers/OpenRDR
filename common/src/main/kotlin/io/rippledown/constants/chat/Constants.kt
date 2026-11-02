@@ -91,6 +91,13 @@ const val CANCEL_RULE = "CancelRule"
 const val COPY_CASE_TO_LIST = "CopyCaseToList"
 const val DELETE_CASE_FROM_LIST = "DeleteCaseFromList"
 
+// Case search by conditions. See documentation/requirements/search_cases_by_condition.md.
+const val SEARCH_CASES = "SearchCases"
+const val STOP_CASE_SEARCH = "StopCaseSearch"
+const val SEARCH_UNDER_WAY_MESSAGE = "The search is under way. The results will be reported when it's complete."
+const val SEARCH_TERMINATED_MESSAGE = "The search has been terminated."
+const val NO_SEARCH_IN_PROGRESS_MESSAGE = "There is no search in progress for this knowledge base."
+
 // Knowledge base management by chat. See documentation/design/kb_management.md.
 const val KB_INFO_PREFIX = "KbInfo:"
 const val KB_CLOSED = "KbClosed"

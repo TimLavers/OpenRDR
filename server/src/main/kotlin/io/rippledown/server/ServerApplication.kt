@@ -166,7 +166,8 @@ class ServerApplication(
                 kb,
                 webSocketManager,
                 { presence.push(kb.kbInfo.id) },
-                { searchCoordinator.isRunning(kb.kbInfo.id) }
+                { searchCoordinator.isRunning(kb.kbInfo.id) },
+                searchCoordinator
             )
         )
 

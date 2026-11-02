@@ -9,19 +9,30 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import io.rippledown.constants.chat.NO_SEARCH_IN_PROGRESS_MESSAGE
+import io.rippledown.constants.chat.SEARCH_TERMINATED_MESSAGE
+import io.rippledown.constants.chat.SEARCH_UNDER_WAY_MESSAGE
+import io.rippledown.kb.chat.OpenKnowledgeBases
+import io.rippledown.kb.search.SearchCoordinator
 import io.rippledown.model.*
 import io.rippledown.model.caseview.CaseViewProperties
 import io.rippledown.model.caseview.ViewableCase
+import io.rippledown.model.condition.Condition
+import io.rippledown.model.condition.EpisodicCondition
 import io.rippledown.model.condition.isCondition
 import io.rippledown.model.condition.isPresent
 import io.rippledown.model.condition.lessThanOrEqualTo
+import io.rippledown.model.condition.episodic.predicate.GreaterThan
+import io.rippledown.model.condition.episodic.signature.Current
 import io.rippledown.model.diff.Addition
 import io.rippledown.model.diff.Removal
 import io.rippledown.model.diff.Replacement
 import io.rippledown.model.rule.*
 import io.rippledown.persistence.inmemory.InMemoryKB
+import io.rippledown.server.KBEndpoint
 import io.rippledown.server.websocket.WebSocketManager
 import io.rippledown.utils.defaultDate
+import java.util.concurrent.Executor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -94,6 +105,80 @@ class RuleSessionManagerTest {
             manager.startRuleSessionToAddComment(sessionCase, "Go.")
         }.message shouldBe "Please finish or cancel the current search before building a rule."
         manager.isRuleSessionActive() shouldBe false
+    }
+
+    @Test
+    fun `searchCases parses the request, starts the search and confirms it is under way`() {
+        // Given a session whose manager is wired to a search coordinator, and a parser for the condition
+        val session = KBSession(kb, searchCoordinator = testSearchCoordinator())
+        val manager = session.ruleSessionManagerFor(UserId("expert"))
+        manager.setConditionParser(object : ConditionParser {
+            override fun parse(expression: String, attributeFor: (String) -> Attribute): Condition? {
+                val match = Regex("^(.+) is greater than ([0-9]+(?:\\.[0-9]+)?)$").find(expression.trim())
+                    ?: return null
+                return EpisodicCondition(null, attributeFor(match.groupValues[1]), GreaterThan(match.groupValues[2].toDouble()), Current)
+            }
+        })
+        kb.addProcessedCase(createCase("Case1", value = "2.1"))
+        kb.addProcessedCase(createCase("Case2", value = "6.7"))
+
+        // When a search is requested through the manager
+        val message = manager.searchCases(listOf("Glucose is greater than 4"), "and", null, listOf("processed"), "high")
+
+        // Then the search has run, copying the matching case to the destination list
+        message shouldBe SEARCH_UNDER_WAY_MESSAGE
+        kb.userDefinedCaseLists().single().caseIds.map { it.name } shouldBe listOf("Case2")
+    }
+
+    @Test
+    fun `searchCases surfaces the coordinator's refusal of a second search`() {
+        // Given a session whose manager is wired to a search coordinator, and a search already running
+        val coordinator = testSearchCoordinator(background = true)
+        val session = KBSession(kb, searchCoordinator = coordinator)
+        val manager = session.ruleSessionManagerFor(UserId("expert"))
+        kb.addProcessedCase(createCase("Case1", value = "6.7"))
+        kb.addProcessedCase(createCase("Case2", value = "8.9"))
+        manager.searchCases(listOf("Glucose is greater than but with delay 4"), "and", null, listOf("processed"), "slow")
+        coordinator.isRunning(kb.kbInfo.id) shouldBe true
+
+        // When a second search is requested while the first is running
+        // Then it is refused
+        shouldThrow<IllegalStateException> {
+            manager.searchCases(listOf("Glucose is greater than but with delay 5"), "and", null, listOf("processed"), "second")
+        }.message shouldBe "A search is already in progress for this knowledge base."
+
+        // And the first can be stopped
+        manager.stopCaseSearch() shouldBe SEARCH_TERMINATED_MESSAGE
+        coordinator.awaitCompletion(kb.kbInfo.id) shouldBe true
+    }
+
+    @Test
+    fun `stopCaseSearch refuses when there is no search in progress`() {
+        // Given a session whose manager is wired to a search coordinator, with no search running
+        val session = KBSession(kb, searchCoordinator = testSearchCoordinator())
+        val manager = session.ruleSessionManagerFor(UserId("expert"))
+
+        // When a stop is requested
+        // Then it is refused
+        shouldThrow<IllegalStateException> {
+            manager.stopCaseSearch()
+        }.message shouldBe NO_SEARCH_IN_PROGRESS_MESSAGE
+    }
+
+    private fun testSearchCoordinator(background: Boolean = false): SearchCoordinator {
+        val session = KBSession(kb)
+        val endpoint = KBEndpoint(session)
+        val executor = if (background) {
+            Executor { command -> Thread(command).apply { isDaemon = true }.start() }
+        } else {
+            Executor { it.run() }
+        }
+        return SearchCoordinator({ endpoint }, object : OpenKnowledgeBases {
+            override fun openEndpointFor(userId: UserId): KBEndpoint? = null
+            override fun knowledgeBaseClosed(userId: UserId) {}
+            override fun knowledgeBaseDeleted(kbId: String): Set<UserId> = emptySet()
+            override fun usersOn(kbId: String): Set<UserId> = emptySet()
+        }, { _, _ -> }, executor)
     }
 
     @Test

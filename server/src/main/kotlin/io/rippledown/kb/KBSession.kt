@@ -2,6 +2,7 @@ package io.rippledown.kb
 
 import io.rippledown.model.UserId
 import io.rippledown.constants.chat.KB_CHANGED_PREFIX
+import io.rippledown.kb.search.SearchCoordinator
 import io.rippledown.model.change.KbChange
 import io.rippledown.toJsonString
 import io.rippledown.server.websocket.WebSocketManager
@@ -20,7 +21,11 @@ class KBSession(
     // Whether a case search is running on this KB, so that rule building can
     // be refused while one is. Supplied by the application's search
     // coordinator; false when there is none.
-    private val searchInProgress: () -> Boolean = { false }
+    private val searchInProgress: () -> Boolean = { false },
+    // The application's search coordinator, passed to the rule session
+    // managers so that they can start and stop searches. Null when there is
+    // none, as in tests that do not involve searching.
+    private val searchCoordinator: SearchCoordinator? = null
 ) {
     private val lock = ReentrantLock()
     private val ruleSessionManagers = ConcurrentHashMap<UserId, RuleSessionManager>()
@@ -38,7 +43,7 @@ class KBSession(
      */
     fun ruleSessionManagerFor(userId: UserId): RuleSessionManager =
         ruleSessionManagers.computeIfAbsent(userId) {
-            RuleSessionManager(kb, webSocketManager, lock, it, sessionStateChanged, searchInProgress)
+            RuleSessionManager(kb, webSocketManager, lock, it, sessionStateChanged, searchInProgress, searchCoordinator)
         }
 
     /**

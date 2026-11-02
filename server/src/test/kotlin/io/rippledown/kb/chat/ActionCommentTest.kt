@@ -79,6 +79,68 @@ class ActionCommentTest {
     }
 
     @Test
+    fun `should create SearchCases with all its parameters from JSON`() {
+        // Given json in which every search parameter is given
+        val json = """
+            {
+                "action": "$SEARCH_CASES",
+                "searchConditions": ["TSH is greater than 4", "Age is greater than 50"],
+                "connector": "and",
+                "limit": 5,
+                "searchLists": ["processed", "cornerstones"],
+                "destination": "highTSH"
+            }
+        """
+
+        // When the action instance is created
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
+
+        // Then it is a SearchCases with those parameters
+        val searchAction = action.shouldBeInstanceOf<SearchCases>()
+        searchAction.searchConditions shouldBe listOf("TSH is greater than 4", "Age is greater than 50")
+        searchAction.connector shouldBe "and"
+        searchAction.limit shouldBe 5
+        searchAction.searchLists shouldBe listOf("processed", "cornerstones")
+        searchAction.destination shouldBe "highTSH"
+    }
+
+    @Test
+    fun `should create SearchCases with only the required parameters from JSON`() {
+        // Given json in which the connector and limit are omitted
+        val json = """
+            {
+                "action": "$SEARCH_CASES",
+                "searchConditions": ["Borderline is in case"],
+                "searchLists": ["processed"],
+                "destination": "borderline"
+            }
+        """
+
+        // When the action instance is created
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
+
+        // Then it is a SearchCases with no connector and no limit
+        val searchAction = action.shouldBeInstanceOf<SearchCases>()
+        searchAction.searchConditions shouldBe listOf("Borderline is in case")
+        searchAction.connector shouldBe null
+        searchAction.limit shouldBe null
+        searchAction.searchLists shouldBe listOf("processed")
+        searchAction.destination shouldBe "borderline"
+    }
+
+    @Test
+    fun `should create StopCaseSearch without arguments from JSON`() {
+        // Given json naming the stop action alone
+        val json = """{"action": "$STOP_CASE_SEARCH"}"""
+
+        // When the action instance is created
+        val action = json.fromJsonString<ActionComment>().createActionInstance()
+
+        // Then it is a StopCaseSearch
+        action.shouldBeInstanceOf<StopCaseSearch>()
+    }
+
+    @Test
     fun `should handle error when action class cannot be instantiated`() {
         // Given
         val invalidAction = "NonExistentAction"

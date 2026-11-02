@@ -91,6 +91,23 @@ class KBChatServiceTest {
     }
 
     @Test
+    fun `the searching contract is available with and without a case`() {
+        // Given
+        val cases = listOf(null, createCaseWithInterpretation("Test Case"))
+
+        cases.forEach { case ->
+            // When
+            val prompt = KBChatService.systemPrompt(case)
+
+            // Then the searching section is present with its action contracts
+            prompt shouldContain "# Searching for cases by conditions"
+            prompt shouldContain "\"action\": \"SearchCases\""
+            prompt shouldContain "\"action\": \"StopCaseSearch\""
+            prompt shouldNotContain "{{"
+        }
+    }
+
+    @Test
     fun `system instruction should not contain placeholders`() {
         // Given
         val case = createCaseWithInterpretation("Test Case")

@@ -22,11 +22,17 @@ import io.rippledown.model.condition.episodic.signature.Current
  * for any particular case, and no rule session is involved. The test-only
  * delayed comparison is recognised here deterministically, before the
  * condition parser is consulted.
+ *
+ * The KB reads inside parsing are made under [lock], so that they do not race
+ * other operations on the KB; the LLM translation inside the condition parser
+ * runs without it.
  */
 class SearchRequestParser(
     private val kb: KB,
-    private val conditionParser: ConditionParser = generatorBackedConditionParser(kb)
+    conditionParser: ConditionParser? = null,
+    private val lock: SearchLock = SearchLock.NONE
 ) {
+    private val parser: ConditionParser = conditionParser ?: generatorBackedConditionParser(kb, lock)
 
     fun parse(
         conditionTexts: List<String>,
@@ -53,7 +59,7 @@ class SearchRequestParser(
             return ParsedSearchCondition(trimmed, EpisodicCondition(null, attribute, predicate, Current, trimmed))
         }
         val condition = try {
-            conditionParser.parse(trimmed, ::existingAttribute)
+            parser.parse(trimmed, ::existingAttribute)
         } catch (_: Exception) {
             null
         }
@@ -71,7 +77,7 @@ class SearchRequestParser(
      * so the refusal is reported by [parseCondition] with the whole condition.
      */
     private fun existingAttribute(name: String): Attribute =
-        kb.attributeManager.byName(name)
+        lock.withLock { kb.attributeManager.byName(name) }
             ?: throw IllegalArgumentException("There is no attribute named \"$name\".")
 
     private fun parseConnector(text: String): SearchConnector = when (text.trim().lowercase()) {
@@ -90,7 +96,7 @@ class SearchRequestParser(
                 CaseListType.isReservedListName(trimmed) ->
                     if (trimmed.lowercase().contains("cornerstone")) CaseListType.Cornerstone else CaseListType.Processed
 
-                else -> kb.userDefinedCaseLists()
+                else -> lock.withLock { kb.userDefinedCaseLists() }
                     .firstOrNull { it.name.equals(trimmed, ignoreCase = true) }
                     ?.let { CaseListType(it.name) }
                     ?: throw IllegalArgumentException("Cannot search: there is no case list named \"$trimmed\".")
@@ -119,11 +125,11 @@ class SearchRequestParser(
  * The parser rule building uses for a user's own words, with the same chat
  * service and the KB's attribute names.
  */
-private fun generatorBackedConditionParser(kb: KB): ConditionParser {
+private fun generatorBackedConditionParser(kb: KB, lock: SearchLock): ConditionParser {
     val conditionChatService = ConditionChatService()
     return object : ConditionParser {
         override fun parse(expression: String, attributeFor: (String) -> Attribute): io.rippledown.model.condition.Condition? {
-            val attributeNames = kb.attributeNames()
+            val attributeNames = lock.withLock { kb.attributeNames() }
             return ConditionGenerator(attributeFor, conditionChatService, attributeNames).conditionFor(expression)
         }
     }

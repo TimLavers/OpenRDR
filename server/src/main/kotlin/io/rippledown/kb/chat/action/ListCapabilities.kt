@@ -25,6 +25,14 @@ class ListCapabilities : Action {
                     )
                 )
             )
+            add(
+                CapabilitySection(
+                    "Searching", listOf(
+                        "search the case lists for cases matching conditions, with the results put into a case list (no case needs to be selected)",
+                        "stop the search currently running"
+                    )
+                )
+            )
             if (hasCase) {
                 add(
                     CapabilitySection(

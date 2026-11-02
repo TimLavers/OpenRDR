@@ -140,6 +140,7 @@ object KBChatService {
         "20_knowledge_base_management.md",
         "21_ai_derived_attributes.md",
         "21_awareness.md",
+        "26_searching_for_cases.md",
     )
 
     val systemPromptMainSections = listOf(
@@ -166,6 +167,7 @@ object KBChatService {
         "21_ai_derived_attributes.md",
         "21_awareness.md",
         "25_user_defined_case_lists.md",
+        "26_searching_for_cases.md",
     )
 
     fun mainSectionsFor(hasCase: Boolean) = if (hasCase) systemPromptMainSections else caseLessSections
@@ -246,6 +248,8 @@ object KBChatService {
         "SELECT_SUGGESTION" to SELECT_SUGGESTED_CONDITION,
         "COPY_CASE_TO_LIST" to COPY_CASE_TO_LIST,
         "DELETE_CASE_FROM_LIST" to DELETE_CASE_FROM_LIST,
+        "SEARCH_CASES" to SEARCH_CASES,
+        "STOP_CASE_SEARCH" to STOP_CASE_SEARCH,
         "LIST_KNOWLEDGE_BASES" to LIST_KNOWLEDGE_BASES,
         "LIST_RECENT_CHANGES" to LIST_RECENT_CHANGES,
         "LIST_USERS_PRESENT" to LIST_USERS_PRESENT,

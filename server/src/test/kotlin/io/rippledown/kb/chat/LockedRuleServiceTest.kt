@@ -160,4 +160,33 @@ class LockedRuleServiceTest {
         // Then only the context checks take this lock; translation above executes outside it
         verify(exactly = 3) { session.locked(any<() -> Any?>()) }
     }
+
+    @Test
+    fun `searching is delegated without wrapping the KB lock`() {
+        // Given a delegate that records whether the KB lock is held while it runs
+        var locked = false
+        every { session.locked(any<() -> Any?>()) } answers {
+            locked = true
+            try { firstArg<() -> Any?>().invoke() } finally { locked = false }
+        }
+        every {
+            delegate.searchCases(listOf("x > 1"), "and", 2, listOf("processed"), "found")
+        } answers {
+            locked shouldBe false
+            "under way"
+        }
+        every { delegate.stopCaseSearch() } answers {
+            locked shouldBe false
+            "terminated"
+        }
+
+        // When a search is started and stopped through the locked service
+        val started = service.searchCases(listOf("x > 1"), "and", 2, listOf("processed"), "found")
+        val stopped = service.stopCaseSearch()
+
+        // Then both are delegated, and the KB lock is never held around them
+        started shouldBe "under way"
+        stopped shouldBe "terminated"
+        verify(exactly = 0) { session.locked(any<() -> Any?>()) }
+    }
 }
