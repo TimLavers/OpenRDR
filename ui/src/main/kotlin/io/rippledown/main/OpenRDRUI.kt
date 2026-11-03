@@ -553,6 +553,13 @@ fun OpenRDRUI(
                         ++connectionRevision
                     }
                     socketConnected = connected
+                },
+                searchReportReceived = { report ->
+                    // The report of a completed search arrives unbidden, like the
+                    // greeting does, and is shown through the same state that the
+                    // responses to requests are.
+                    ++chatId
+                    pendingConversationResponse = ChatResponse(report)
                 }
             )
         }

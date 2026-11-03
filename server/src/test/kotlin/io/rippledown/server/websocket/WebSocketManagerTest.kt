@@ -8,6 +8,7 @@ import io.rippledown.constants.chat.CASES_INFO_PREFIX
 import io.rippledown.constants.chat.CHAT_CONTEXT_PREFIX
 import io.rippledown.constants.chat.KB_CLOSED
 import io.rippledown.constants.chat.KB_INFO_PREFIX
+import io.rippledown.constants.chat.SEARCH_REPORT_PREFIX
 import io.rippledown.fromJsonString
 import io.rippledown.model.*
 import io.rippledown.model.chat.ChatContextInfo
@@ -100,6 +101,20 @@ class WebSocketManagerTest {
         sent.size shouldBe 1
         sent[0] shouldStartWith CHAT_CONTEXT_PREFIX
         sent[0].removePrefix(CHAT_CONTEXT_PREFIX).fromJsonString<ChatContextInfo>() shouldBe context
+    }
+
+    @Test
+    fun `sendSearchReport sends the prefix followed by the report`() = withConnectedManager { manager, sent ->
+        //Given the report of a completed search
+        val report = "Search complete. 2 cases found. Lists searched: Processed. Results in: highTSH."
+
+        //When
+        manager.sendSearchReport(carol, report)
+        manager.drain()
+
+        //Then
+        sent.size shouldBe 1
+        sent[0] shouldBe SEARCH_REPORT_PREFIX + report
     }
 
     @Test

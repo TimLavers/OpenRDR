@@ -39,7 +39,8 @@ open class WebSocketApi(
         chatContextChanged: (ChatContextInfo) -> Unit = {},
         presenceChanged: (PresenceInfo) -> Unit = {},
         kbChanged: (KbChange) -> Unit = {},
-        connected: (Boolean) -> Unit = {}
+        connected: (Boolean) -> Unit = {},
+        searchReportReceived: (String) -> Unit = {}
     ) {
         var backoffMillis = 1_000L
         connected(false)
@@ -81,6 +82,9 @@ open class WebSocketApi(
 
                                 receivedText.startsWith(KB_CHANGED_PREFIX) ->
                                     handleKbChange(receivedText, kbChanged)
+
+                                receivedText.startsWith(SEARCH_REPORT_PREFIX) ->
+                                    searchReportReceived(receivedText.removePrefix(SEARCH_REPORT_PREFIX))
 
                                 else -> handleCornerstoneStatus(receivedText, updateCornerstoneStatus)
                             }

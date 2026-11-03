@@ -95,7 +95,8 @@ class Api(
         chatContextChanged: (ChatContextInfo) -> Unit = {},
         presenceChanged: (PresenceInfo) -> Unit = {},
         kbChanged: (KbChange) -> Unit = {},
-        connected: (Boolean) -> Unit = {}
+        connected: (Boolean) -> Unit = {},
+        searchReportReceived: (String) -> Unit = {}
     ) {
         // currentKB is set before the UI hears of the change, so that anything the
         // UI then asks for goes to the right KB.
@@ -117,7 +118,8 @@ class Api(
             },
             presenceChanged = presenceChanged,
             kbChanged = kbChanged,
-            connected = connected
+            connected = connected,
+            searchReportReceived = searchReportReceived
         )
     }
     fun shutdown() {

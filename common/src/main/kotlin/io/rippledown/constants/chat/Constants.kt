@@ -105,6 +105,9 @@ const val KB_CLOSED = "KbClosed"
 // Pushed to every window of a user when their conversation's context changes. See concurrent_users.md.
 const val CHAT_CONTEXT_PREFIX = "ChatContext:"
 
+// Pushed to the users on a KB when a search of it completes. See search_cases_by_condition.md.
+const val SEARCH_REPORT_PREFIX = "SearchReport:"
+
 // Broadcast whenever who is on a KB changes; the client keeps the one for its KB. See concurrent_users.md.
 const val PRESENCE_PREFIX = "Presence:"
 const val KB_CHANGED_PREFIX = "KbChanged:"

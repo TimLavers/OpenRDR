@@ -64,7 +64,7 @@ class OpenRDRUIReconnectStateTest {
         )
         coEvery { api.kbDescription(any()) } returns ""
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
             sessionChanged = arg(0)
             sessionCompleted = arg(1)
             casesChanged = arg(2)

@@ -109,6 +109,10 @@ class WebSocketManager(
         sendToUser(userId, CHAT_CONTEXT_PREFIX + context.toJsonString<ChatContextInfo>())
     }
 
+    fun sendSearchReport(userId: UserId, report: String) {
+        sendToUser(userId, SEARCH_REPORT_PREFIX + report)
+    }
+
     fun sendToUser(userId: UserId, message: String) {
         outgoing.trySend(Outgoing(setOf(userId), message))
     }

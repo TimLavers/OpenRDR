@@ -44,7 +44,9 @@ class ServerApplication(
     )
     val presence: Presence = Presence(chatCoordinator, webSocketManager) { idToKBEndpoint[it]?.session }
 
-    val searchCoordinator = SearchCoordinator(::kbForId, chatCoordinator)
+    val searchCoordinator = SearchCoordinator(::kbForId, chatCoordinator, notifyUsers = { users, report ->
+        users.forEach { webSocketManager.sendSearchReport(it, report) }
+    })
 
     init {
         webSocketManager.connectionsChanged = { userId ->

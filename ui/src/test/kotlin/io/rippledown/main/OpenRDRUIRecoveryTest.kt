@@ -57,7 +57,7 @@ class OpenRDRUIRecoveryTest {
         coEvery { api.getCase(1) } returns caseWith("Original comment.")
         coEvery { api.kbDescription(any()) } returns ""
         coEvery { api.startConversation(any(), any()) } returns ChatResponse("")
-        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
+        coEvery { api.startWebSocketSession(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } coAnswers {
             sessionChanged = arg(0)
             sessionCompleted = arg(1)
             contextChanged = arg(5)
